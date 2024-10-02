@@ -1,0 +1,8 @@
+include(CMakeFindDependencyMacro)
+
+find_dependency(GPUNTT REQUIRED)
+find_dependency(GPUFFT REQUIRED)
+find_dependency(rmm REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/@HEonGPU_TARGETS_EXPORT_NAME@.cmake")
+

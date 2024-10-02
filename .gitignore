@@ -1,32 +1,29 @@
-# Prerequisites
-*.d
+# CMake build and output files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
 
-# Compiled Object files
-*.slo
-*.lo
+# Output directories
+/bin/
+/build/
+/lib/
+/out/
+
+# Compiled source files
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
 *.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
 *.a
+*.dll
 *.lib
-
-# Executables
 *.exe
-*.out
-*.app
+
+# IDE specific files
+.idea/
+.vscode/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.DS_Store
