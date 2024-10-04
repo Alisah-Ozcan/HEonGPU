@@ -7,7 +7,7 @@ The goal of HEonGPU is to provide:
 - A user-friendly C++ interface that requires no prior knowledge of GPU programming, with all CUDA kernels encapsulated in easy-to-use classes.
 - An optimized multi-stream architecture that ensures efficient memory management and concurrent execution of encrypted computations on the GPU.
 
-For more information about HEonGPU:
+For more information about HEonGPU: https://eprint.iacr.org/2024/1543
 
 ## Installation
 
@@ -174,10 +174,12 @@ set_target_properties(<your-target> PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 Please use the below BibTeX, to cite HEonGPU in academic papers.
 
 ```
-@misc{cryptoeprint:2024/....,
-      ....
-      ....
-      ....
+@misc{cryptoeprint:2024/1543,
+      author = {Ali Şah Özcan and Erkay Savaş},
+      title = {{HEonGPU}: a {GPU}-based Fully Homomorphic Encryption Library 1.0},
+      howpublished = {Cryptology {ePrint} Archive, Paper 2024/1543},
+      year = {2024},
+      url = {https://eprint.iacr.org/2024/1543}
 }
 ```
 
