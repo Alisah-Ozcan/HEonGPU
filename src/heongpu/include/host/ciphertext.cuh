@@ -18,16 +18,21 @@ namespace heongpu
 
       public:
         /**
+         * @brief Constructs an empty Ciphertext object.
+         */
+        __host__ Ciphertext();
+
+        /**
          * @brief Constructs a new Ciphertext object with specified parameters.
          *
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
-         * @param cipher_scale The scale to be used for the ciphertext, default
+         * @param scale The scale to be used for the ciphertext, default
          * is 0.
-         * @param cipher_depth The depth of the ciphertext, default is 0.
+         * @param depth The depth of the ciphertext, default is 0.
          */
-        __host__ Ciphertext(Parameters& context, double cipher_scale = 0,
-                            int cipher_depth = 0);
+        __host__ Ciphertext(Parameters& context, double scale = 0,
+                            int depth = 0);
 
         /**
          * @brief Constructs a new Ciphertext object with specified parameters
@@ -37,12 +42,12 @@ namespace heongpu
          * encryption parameters.
          * @param stream Reference to the HEStream object representing the CUDA
          * stream for the ciphertext operations.
-         * @param cipher_scale The scale to be used for the ciphertext, default
+         * @param scale The scale to be used for the ciphertext, default
          * is 0.
-         * @param cipher_depth The depth of the ciphertext, default is 0.
+         * @param depth The depth of the ciphertext, default is 0.
          */
         __host__ Ciphertext(Parameters& context, HEStream& steram,
-                            double cipher_scale = 0, int cipher_depth = 0);
+                            double scale = 0, int depth = 0);
 
         /**
          * @brief Constructs a new Ciphertext object from a vector of data.
@@ -51,13 +56,13 @@ namespace heongpu
          * ciphertext.
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
-         * @param cipher_scale The scale to be used for the ciphertext, default
+         * @param scale The scale to be used for the ciphertext, default
          * is 0.
-         * @param cipher_depth The depth of the ciphertext, default is 0.
+         * @param depth The depth of the ciphertext, default is 0.
          */
         __host__ Ciphertext(const std::vector<Data>& cipher,
-                            Parameters& context, double cipher_scale = 0,
-                            int cipher_depth = 0);
+                            Parameters& context, double scale = 0,
+                            int depth = 0);
 
         /**
          * @brief Constructs a new Ciphertext object from a vector of data with
@@ -69,13 +74,13 @@ namespace heongpu
          * encryption parameters.
          * @param stream Reference to the HEStream object representing the CUDA
          * stream for the ciphertext operations.
-         * @param cipher_scale The scale to be used for the ciphertext, default
+         * @param scale The scale to be used for the ciphertext, default
          * is 0.
-         * @param cipher_depth The depth of the ciphertext, default is 0.
+         * @param depth The depth of the ciphertext, default is 0.
          */
         __host__ Ciphertext(const std::vector<Data>& cipher,
                             Parameters& context, HEStream& steram,
-                            double cipher_scale = 0, int cipher_depth = 0);
+                            double scale = 0, int depth = 0);
 
         /**
          * @brief Returns a pointer to the underlying data of the ciphertext.
@@ -83,6 +88,20 @@ namespace heongpu
          * @return Data* Pointer to the data.
          */
         Data* data();
+
+        /**
+         * @brief Resizes the ciphertext to the new specified size using the
+         * given CUDA stream.
+         *
+         * @param new_size The new size of the ciphertext.
+         * @param stream CUDA stream to be used for the resize operation,
+         * default is cudaStreamLegacy.
+         */
+        void resize(int new_size, cudaStream_t stream = cudaStreamLegacy)
+        {
+            // locations_.resize(0, stream);
+            locations_.resize(new_size, stream);
+        }
 
         /**
          * @brief Copies the data from the device to the host.
@@ -132,7 +151,7 @@ namespace heongpu
          *
          * @return int Size of the ciphertext.
          */
-        inline int cipher_size() const noexcept { return cipher_size_; }
+        inline int size() const noexcept { return cipher_size_; }
 
         /**
          * @brief Returns the depth level of the ciphertext.
@@ -177,7 +196,7 @@ namespace heongpu
             return relinearization_required_;
         }
 
-        Ciphertext() = default;
+        // Ciphertext() = default;
 
         Ciphertext(const Ciphertext& copy)
             : ring_size_(copy.ring_size_),
@@ -187,11 +206,9 @@ namespace heongpu
               scale_(copy.scale_), rescale_required_(copy.rescale_required_),
               relinearization_required_(copy.relinearization_required_)
         {
-            device_locations_.resize(copy.device_locations_.size(),
-                                     cudaStreamLegacy);
-            cudaMemcpyAsync(device_locations_.data(),
-                            copy.device_locations_.data(),
-                            copy.device_locations_.size() * sizeof(Data),
+            locations_.resize(copy.locations_.size(), cudaStreamLegacy);
+            cudaMemcpyAsync(locations_.data(), copy.locations_.data(),
+                            copy.locations_.size() * sizeof(Data),
                             cudaMemcpyDeviceToDevice,
                             cudaStreamLegacy); // TODO: use cudaStreamPerThread
         }
@@ -207,9 +224,9 @@ namespace heongpu
               rescale_required_(std::move(assign.rescale_required_)),
               relinearization_required_(
                   std::move(assign.relinearization_required_)),
-              device_locations_(std::move(assign.device_locations_))
+              locations_(std::move(assign.locations_))
         {
-            // device_locations_ = std::move(assign.device_locations_);
+            // locations_ = std::move(assign.locations_);
         }
 
         Ciphertext& operator=(const Ciphertext& copy)
@@ -227,20 +244,20 @@ namespace heongpu
                 rescale_required_ = copy.rescale_required_;
                 relinearization_required_ = copy.relinearization_required_;
 
-                // device_locations_ = copy.device_locations_;
-                // device_locations_.resize(copy.device_locations_.size(),
+                // locations_ = copy.locations_;
+                // locations_.resize(copy.locations_.size(),
                 // cudaStreamLegacy); cudaMemcpyAsync(
-                //    device_locations_.data(), copy.device_locations_.data(),
-                //    copy.device_locations_.size() * sizeof(Data),
+                //    locations_.data(), copy.locations_.data(),
+                //    copy.locations_.size() * sizeof(Data),
                 //    cudaMemcpyDeviceToDevice,
                 //    cudaStreamLegacy); // TODO: use cudaStreamPerThread
 
-                device_locations_.resize(copy.device_locations_.size(),
-                                         copy.device_locations_.stream());
-                cudaMemcpyAsync(
-                    device_locations_.data(), copy.device_locations_.data(),
-                    copy.device_locations_.size() * sizeof(Data),
-                    cudaMemcpyDeviceToDevice, copy.device_locations_.stream());
+                locations_.resize(copy.locations_.size(),
+                                  copy.locations_.stream());
+                cudaMemcpyAsync(locations_.data(), copy.locations_.data(),
+                                copy.locations_.size() * sizeof(Data),
+                                cudaMemcpyDeviceToDevice,
+                                copy.locations_.stream());
             }
             return *this;
         }
@@ -261,24 +278,26 @@ namespace heongpu
                 relinearization_required_ =
                     std::move(assign.relinearization_required_);
 
-                device_locations_ = std::move(assign.device_locations_);
+                locations_ = std::move(assign.locations_);
             }
             return *this;
         }
 
       private:
+        scheme_type scheme_;
+
         int ring_size_;
         int coeff_modulus_count_;
         int cipher_size_;
         int depth_;
-        scheme_type scheme_;
+
         bool in_ntt_domain_;
 
         double scale_;
         bool rescale_required_;
         bool relinearization_required_;
 
-        DeviceVector<Data> device_locations_;
+        DeviceVector<Data> locations_;
     };
 } // namespace heongpu
 #endif // CIPHERTEXT_H

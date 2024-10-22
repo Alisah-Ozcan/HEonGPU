@@ -10,7 +10,7 @@ namespace heongpu
 
     __host__ HEOperator::HEOperator(Parameters& context)
     {
-        scheme = context.scheme_;
+        scheme_ = context.scheme_;
 
         n = context.n;
 
@@ -157,7 +157,7 @@ namespace heongpu
         prime_vector_ = context.prime_vector;
 
         // Temp
-        if (scheme == scheme_type::bfv)
+        if (scheme_ == scheme_type::bfv)
         {
             temp_mul = DeviceVector<Data>((4 * n * (bsk_mod_count_ + Q_size_)) +
                                           (3 * n * (bsk_mod_count_ + Q_size_)));
@@ -218,7 +218,7 @@ namespace heongpu
             temp_plain_mul = DeviceVector<Data>(n * Q_size_);
             temp1_plain_mul = temp_plain_mul.data();
         }
-        else if (scheme == scheme_type::ckks)
+        else if (scheme_ == scheme_type::ckks)
         {
             if (context.keyswitching_type_ ==
                 keyswitching_type::KEYSWITHING_METHOD_I)
@@ -352,16 +352,33 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        if (input1.locations_.size() <
+                (cipher_size * n * current_decomp_count) ||
+            input2.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count));
+        }
+
         addition<<<dim3((n >> 8), current_decomp_count, cipher_size), 256>>>(
             input1.data(), input2.data(), output.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
+        output.scheme_ = scheme_;
+        output.ring_size_ = n;
+        output.coeff_modulus_count_ = Q_size_;
+        output.cipher_size_ = cipher_size;
         output.depth_ = input1.depth_;
+        output.in_ntt_domain_ = input1.in_ntt_domain_;
+        output.scale_ = input1.scale_;
         output.rescale_required_ =
             (input1.rescale_required_ || input2.rescale_required_);
         output.relinearization_required_ = input1.relinearization_required_;
-        output.in_ntt_domain_ = input1.in_ntt_domain_;
     }
 
     __host__ void HEOperator::add(Ciphertext& input1, Ciphertext& input2,
@@ -389,16 +406,33 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        if (input1.locations_.size() <
+                (cipher_size * n * current_decomp_count) ||
+            input2.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count), stream);
+        }
+
         addition<<<dim3((n >> 8), current_decomp_count, cipher_size), 256, 0,
                    stream.stream>>>(input1.data(), input2.data(), output.data(),
                                     modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
+        output.scheme_ = scheme_;
+        output.ring_size_ = n;
+        output.coeff_modulus_count_ = Q_size_;
+        output.cipher_size_ = cipher_size;
         output.depth_ = input1.depth_;
+        output.in_ntt_domain_ = input1.in_ntt_domain_;
+        output.scale_ = input1.scale_;
         output.rescale_required_ =
             (input1.rescale_required_ || input2.rescale_required_);
         output.relinearization_required_ = input1.relinearization_required_;
-        output.in_ntt_domain_ = input1.in_ntt_domain_;
     }
 
     __host__ void HEOperator::sub(Ciphertext& input1, Ciphertext& input2,
@@ -426,16 +460,33 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        if (input1.locations_.size() <
+                (cipher_size * n * current_decomp_count) ||
+            input2.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count));
+        }
+
         substraction<<<dim3((n >> 8), current_decomp_count, cipher_size),
                        256>>>(input1.data(), input2.data(), output.data(),
                               modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
+        output.scheme_ = scheme_;
+        output.ring_size_ = n;
+        output.coeff_modulus_count_ = Q_size_;
+        output.cipher_size_ = cipher_size;
         output.depth_ = input1.depth_;
+        output.in_ntt_domain_ = input1.in_ntt_domain_;
+        output.scale_ = input1.scale_;
         output.rescale_required_ =
             (input1.rescale_required_ || input2.rescale_required_);
         output.relinearization_required_ = input1.relinearization_required_;
-        output.in_ntt_domain_ = input1.in_ntt_domain_;
     }
 
     __host__ void HEOperator::sub(Ciphertext& input1, Ciphertext& input2,
@@ -463,17 +514,34 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        if (input1.locations_.size() <
+                (cipher_size * n * current_decomp_count) ||
+            input2.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count), stream);
+        }
+
         substraction<<<dim3((n >> 8), current_decomp_count, cipher_size), 256,
                        0, stream.stream>>>(input1.data(), input2.data(),
                                            output.data(), modulus_->data(),
                                            n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
+        output.scheme_ = scheme_;
+        output.ring_size_ = n;
+        output.coeff_modulus_count_ = Q_size_;
+        output.cipher_size_ = cipher_size;
         output.depth_ = input1.depth_;
+        output.in_ntt_domain_ = input1.in_ntt_domain_;
+        output.scale_ = input1.scale_;
         output.rescale_required_ =
             (input1.rescale_required_ || input2.rescale_required_);
         output.relinearization_required_ = input1.relinearization_required_;
-        output.in_ntt_domain_ = input1.in_ntt_domain_;
     }
 
     __host__ void HEOperator::negate(Ciphertext& input1, Ciphertext& output)
@@ -482,14 +550,29 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count));
+        }
+
         negation<<<dim3((n >> 8), current_decomp_count, cipher_size), 256>>>(
             input1.data(), output.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
+        output.scheme_ = scheme_;
+        output.ring_size_ = n;
+        output.coeff_modulus_count_ = Q_size_;
+        output.cipher_size_ = cipher_size;
         output.depth_ = input1.depth_;
+        output.in_ntt_domain_ = input1.in_ntt_domain_;
+        output.scale_ = input1.scale_;
         output.rescale_required_ = input1.rescale_required_;
         output.relinearization_required_ = input1.relinearization_required_;
-        output.in_ntt_domain_ = input1.in_ntt_domain_;
     }
 
     __host__ void HEOperator::negate(Ciphertext& input1, Ciphertext& output,
@@ -499,15 +582,30 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count), stream);
+        }
+
         negation<<<dim3((n >> 8), current_decomp_count, cipher_size), 256, 0,
                    stream.stream>>>(input1.data(), output.data(),
                                     modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
+        output.scheme_ = scheme_;
+        output.ring_size_ = n;
+        output.coeff_modulus_count_ = Q_size_;
+        output.cipher_size_ = cipher_size;
         output.depth_ = input1.depth_;
+        output.in_ntt_domain_ = input1.in_ntt_domain_;
+        output.scale_ = input1.scale_;
         output.rescale_required_ = input1.rescale_required_;
         output.relinearization_required_ = input1.relinearization_required_;
-        output.in_ntt_domain_ = input1.in_ntt_domain_;
     }
 
     __host__ void HEOperator::add_plain_bfv(Ciphertext& input1,
@@ -523,12 +621,29 @@ namespace heongpu
 
         int cipher_size = input1.relinearization_required_ ? 3 : 2;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < n)
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count));
+        }
+
         addition_plain_bfv_poly<<<
             dim3((n >> 8), current_decomp_count, cipher_size), 256>>>(
             input1.data(), input2.data(), output.data(), modulus_->data(),
             plain_modulus_, Q_mod_t_, upper_threshold_,
             coeeff_div_plainmod_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        output.cipher_size_ = cipher_size;
     }
 
     __host__ void HEOperator::add_plain_bfv(Ciphertext& input1,
@@ -545,6 +660,21 @@ namespace heongpu
 
         int cipher_size = input1.relinearization_required_ ? 3 : 2;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < n)
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count), stream);
+        }
+
         addition_plain_bfv_poly<<<dim3((n >> 8), current_decomp_count,
                                        cipher_size),
                                   256, 0, stream.stream>>>(
@@ -552,6 +682,8 @@ namespace heongpu
             plain_modulus_, Q_mod_t_, upper_threshold_,
             coeeff_div_plainmod_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        output.cipher_size_ = cipher_size;
     }
 
     __host__ void HEOperator::add_plain_bfv_inplace(Ciphertext& input1,
@@ -563,6 +695,18 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
+
+        int cipher_size = input1.relinearization_required_ ? 3 : 2;
+
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < n)
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
 
         addition_plain_bfv_poly_inplace<<<
             dim3((n >> 8), current_decomp_count, 1), 256>>>(
@@ -582,6 +726,18 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
+
+        int cipher_size = input1.relinearization_required_ ? 3 : 2;
+
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < n)
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
 
         addition_plain_bfv_poly_inplace<<<
             dim3((n >> 8), current_decomp_count, 1), 256, 0, stream.stream>>>(
@@ -604,11 +760,28 @@ namespace heongpu
 
         int cipher_size = input1.relinearization_required_ ? 3 : 2;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < (n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count));
+        }
+
         addition_plain_ckks_poly<<<
             dim3((n >> 8), current_decomp_count, cipher_size), 256>>>(
             input1.data(), input2.data(), output.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        output.cipher_size_ = cipher_size;
     }
 
     __host__ void HEOperator::add_plain_ckks(Ciphertext& input1,
@@ -625,12 +798,29 @@ namespace heongpu
 
         int cipher_size = input1.relinearization_required_ ? 3 : 2;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < (n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count), stream);
+        }
+
         addition_plain_ckks_poly<<<dim3((n >> 8), current_decomp_count,
                                         cipher_size),
                                    256, 0, stream.stream>>>(
             input1.data(), input2.data(), output.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        output.cipher_size_ = cipher_size;
     }
 
     __host__ void HEOperator::add_plain_ckks_inplace(Ciphertext& input1,
@@ -642,6 +832,18 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
+
+        int cipher_size = input1.relinearization_required_ ? 3 : 2;
+
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < (n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
 
         addition<<<dim3((n >> 8), current_decomp_count, 1), 256>>>(
             input1.data(), input2.data(), input1.data(), modulus_->data(),
@@ -659,6 +861,18 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
+
+        int cipher_size = input1.relinearization_required_ ? 3 : 2;
+
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < (n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
 
         addition<<<dim3((n >> 8), current_decomp_count, 1), 256, 0,
                    stream.stream>>>(input1.data(), input2.data(), input1.data(),
@@ -679,12 +893,29 @@ namespace heongpu
 
         int cipher_size = input1.relinearization_required_ ? 3 : 2;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < n)
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count));
+        }
+
         substraction_plain_bfv_poly<<<
             dim3((n >> 8), current_decomp_count, cipher_size), 256>>>(
             input1.data(), input2.data(), output.data(), modulus_->data(),
             plain_modulus_, Q_mod_t_, upper_threshold_,
             coeeff_div_plainmod_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        output.cipher_size_ = cipher_size;
     }
 
     __host__ void HEOperator::sub_plain_bfv(Ciphertext& input1,
@@ -701,6 +932,21 @@ namespace heongpu
 
         int cipher_size = input1.relinearization_required_ ? 3 : 2;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < n)
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count), stream);
+        }
+
         substraction_plain_bfv_poly<<<dim3((n >> 8), current_decomp_count,
                                            cipher_size),
                                       256, 0, stream.stream>>>(
@@ -708,6 +954,8 @@ namespace heongpu
             plain_modulus_, Q_mod_t_, upper_threshold_,
             coeeff_div_plainmod_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        output.cipher_size_ = cipher_size;
     }
 
     __host__ void HEOperator::sub_plain_bfv_inplace(Ciphertext& input1,
@@ -719,6 +967,18 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
+
+        int cipher_size = input1.relinearization_required_ ? 3 : 2;
+
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < n)
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
 
         substraction_plain_bfv_poly_inplace<<<
             dim3((n >> 8), current_decomp_count, 1), 256>>>(
@@ -738,6 +998,18 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
+
+        int cipher_size = input1.relinearization_required_ ? 3 : 2;
+
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < n)
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
 
         substraction_plain_bfv_poly_inplace<<<
             dim3((n >> 8), current_decomp_count, 1), 256, 0, stream.stream>>>(
@@ -760,11 +1032,28 @@ namespace heongpu
 
         int cipher_size = input1.relinearization_required_ ? 3 : 2;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < (n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count));
+        }
+
         substraction_plain_ckks_poly<<<
             dim3((n >> 8), current_decomp_count, cipher_size), 256>>>(
             input1.data(), input2.data(), output.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        output.cipher_size_ = cipher_size;
     }
 
     __host__ void HEOperator::sub_plain_ckks(Ciphertext& input1,
@@ -781,12 +1070,29 @@ namespace heongpu
 
         int cipher_size = input1.relinearization_required_ ? 3 : 2;
 
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < (n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
+        if (output.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            output.resize((cipher_size * n * current_decomp_count), stream);
+        }
+
         substraction_plain_ckks_poly<<<dim3((n >> 8), current_decomp_count,
                                             cipher_size),
                                        256, 0, stream.stream>>>(
             input1.data(), input2.data(), output.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        output.cipher_size_ = cipher_size;
     }
 
     __host__ void HEOperator::sub_plain_ckks_inplace(Ciphertext& input1,
@@ -798,6 +1104,18 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
+
+        int cipher_size = input1.relinearization_required_ ? 3 : 2;
+
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < (n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
 
         substraction<<<dim3((n >> 8), current_decomp_count, 1), 256>>>(
             input1.data(), input2.data(), input1.data(), modulus_->data(),
@@ -816,6 +1134,18 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        int cipher_size = input1.relinearization_required_ ? 3 : 2;
+
+        if (input1.locations_.size() < (cipher_size * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (input2.size() < (n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Plaintext size!");
+        }
+
         substraction<<<dim3((n >> 8), current_decomp_count, 1), 256, 0,
                        stream.stream>>>(input1.data(), input2.data(),
                                         input1.data(), modulus_->data(),
@@ -831,6 +1161,17 @@ namespace heongpu
             (input2.in_ntt_domain_ != false))
         {
             throw std::invalid_argument("Ciphertexts should be in same domain");
+        }
+
+        if (input1.locations_.size() < (2 * n * Q_size_) ||
+            input2.locations_.size() < (2 * n * Q_size_))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (3 * n * Q_size_))
+        {
+            output.resize((3 * n * Q_size_));
         }
 
         fast_convertion<<<dim3((n >> 8), 4, 1), 256>>>(
@@ -894,6 +1235,17 @@ namespace heongpu
             (input2.in_ntt_domain_ != false))
         {
             throw std::invalid_argument("Ciphertexts should be in same domain");
+        }
+
+        if (input1.locations_.size() < (2 * n * Q_size_) ||
+            input2.locations_.size() < (2 * n * Q_size_))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (3 * n * Q_size_))
+        {
+            output.resize((3 * n * Q_size_), stream);
         }
 
         fast_convertion<<<dim3((n >> 8), 4, 1), 256, 0, stream.stream>>>(
@@ -962,6 +1314,17 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        if (input1.locations_.size() < (2 * n * current_decomp_count) ||
+            input2.locations_.size() < (2 * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (3 * n * current_decomp_count))
+        {
+            output.resize((3 * n * current_decomp_count));
+        }
+
         cross_multiplication<<<dim3((n >> 8), (current_decomp_count), 1),
                                256>>>(input1.data(), input2.data(),
                                       output.data(), modulus_->data(), n_power,
@@ -969,7 +1332,7 @@ namespace heongpu
 
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        if (scheme == scheme_type::ckks)
+        if (scheme_ == scheme_type::ckks)
         {
             output.scale_ = input1.scale_ * input2.scale_;
         }
@@ -987,6 +1350,17 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
+        if (input1.locations_.size() < (2 * n * current_decomp_count) ||
+            input2.locations_.size() < (2 * n * current_decomp_count))
+        {
+            throw std::invalid_argument("Invalid Ciphertexts size!");
+        }
+
+        if (output.locations_.size() < (3 * n * current_decomp_count))
+        {
+            output.resize((3 * n * current_decomp_count), stream);
+        }
+
         cross_multiplication<<<dim3((n >> 8), (current_decomp_count), 1), 256,
                                0, stream.stream>>>(
             input1.data(), input2.data(), output.data(), modulus_->data(),
@@ -994,7 +1368,7 @@ namespace heongpu
 
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        if (scheme == scheme_type::ckks)
+        if (scheme_ == scheme_type::ckks)
         {
             output.scale_ = input1.scale_ * input2.scale_;
         }
@@ -1121,7 +1495,7 @@ namespace heongpu
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        if (scheme == scheme_type::ckks)
+        if (scheme_ == scheme_type::ckks)
         {
             output.scale_ = input1.scale_ * input2.scale_;
         }
@@ -1145,7 +1519,7 @@ namespace heongpu
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        if (scheme == scheme_type::ckks)
+        if (scheme_ == scheme_type::ckks)
         {
             output.scale_ = input1.scale_ * input2.scale_;
         }
@@ -2294,7 +2668,7 @@ namespace heongpu
 
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        if (scheme == scheme_type::ckks)
+        if (scheme_ == scheme_type::ckks)
         {
             input1.scale_ = input1.scale_ /
                             static_cast<double>(
@@ -2369,7 +2743,7 @@ namespace heongpu
 
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        if (scheme == scheme_type::ckks)
+        if (scheme_ == scheme_type::ckks)
         {
             input1.scale_ = input1.scale_ /
                             static_cast<double>(
@@ -2446,8 +2820,6 @@ namespace heongpu
                                   256>>>(input1.data(), input2.data(),
                                          current_decomp_count, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-        input2.depth_ = input1.depth_ + 1;
     }
 
     __host__ void HEOperator::mod_drop_ckks_leveled(Ciphertext& input1,
@@ -2501,8 +2873,6 @@ namespace heongpu
                                 256, 0, stream.stream>>>(
             input1.data(), input2.data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-        input2.depth_ = input1.depth_ + 1;
     }
 
     __host__ void HEOperator::mod_drop_ckks_plaintext_inplace(Plaintext& input1)
@@ -4657,10 +5027,6 @@ namespace heongpu
             upper_halfincrement_->data(), upper_threshold_, n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        // int new_size = Q_size_ << n_power;
-        int new_size = Q_size_ * n;
-        output.resize(new_size);
-
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
@@ -4671,8 +5037,6 @@ namespace heongpu
         GPU_NTT(temp1_plain_mul, output.data(), ntt_table_->data(),
                 modulus_->data(), cfg_ntt, Q_size_, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-        output.in_ntt_domain_ = true;
     }
 
     __host__ void HEOperator::transform_to_ntt_bfv_plain(Plaintext& input1,
@@ -4684,9 +5048,6 @@ namespace heongpu
             upper_halfincrement_->data(), upper_threshold_, n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        int new_size = Q_size_ << n_power;
-        output.resize(new_size, stream.stream);
-
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
@@ -4697,8 +5058,6 @@ namespace heongpu
         GPU_NTT(temp1_plain_mul, output.data(), ntt_table_->data(),
                 modulus_->data(), cfg_ntt, Q_size_, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-        output.in_ntt_domain_ = true;
     }
 
     __host__ void HEOperator::transform_to_ntt_bfv_cipher(Ciphertext& input1,

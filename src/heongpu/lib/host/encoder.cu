@@ -10,12 +10,12 @@ namespace heongpu
 
     __host__ HEEncoder::HEEncoder(Parameters& context)
     {
-        scheme = context.scheme_;
+        scheme_ = context.scheme_;
 
         n = context.n;
         n_power = context.n_power;
 
-        if (scheme == scheme_type::bfv)
+        if (scheme_ == scheme_type::bfv)
         {
             slot_count_ = n;
 
@@ -129,10 +129,6 @@ namespace heongpu
     __host__ void HEEncoder::encode_bfv(Plaintext& plain,
                                         const std::vector<uint64_t>& message)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<Data> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(Data), cudaMemcpyHostToDevice);
@@ -159,10 +155,6 @@ namespace heongpu
                                         const std::vector<uint64_t>& message,
                                         HEStream& stream)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<Data> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data), cudaMemcpyHostToDevice,
@@ -189,10 +181,6 @@ namespace heongpu
     __host__ void HEEncoder::encode_bfv(Plaintext& plain,
                                         const std::vector<int64_t>& message)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<Data> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(Data), cudaMemcpyHostToDevice);
@@ -219,10 +207,6 @@ namespace heongpu
                                         const std::vector<int64_t>& message,
                                         HEStream& stream)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<Data> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data), cudaMemcpyHostToDevice,
@@ -251,10 +235,6 @@ namespace heongpu
     __host__ void HEEncoder::encode_bfv(Plaintext& plain,
                                         const HostVector<uint64_t>& message)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<Data> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(Data), cudaMemcpyHostToDevice);
@@ -281,10 +261,6 @@ namespace heongpu
                                         const HostVector<uint64_t>& message,
                                         HEStream& stream)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<Data> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data), cudaMemcpyHostToDevice,
@@ -311,10 +287,6 @@ namespace heongpu
     __host__ void HEEncoder::encode_bfv(Plaintext& plain,
                                         const HostVector<int64_t>& message)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<Data> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(Data), cudaMemcpyHostToDevice);
@@ -341,10 +313,6 @@ namespace heongpu
                                         const HostVector<int64_t>& message,
                                         HEStream& stream)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<Data> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data), cudaMemcpyHostToDevice,
@@ -609,10 +577,6 @@ namespace heongpu
                                          const std::vector<double>& message,
                                          const double scale)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<double> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(double), cudaMemcpyHostToDevice);
@@ -650,18 +614,12 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
-
-        plain.scale_ = scale;
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
                                          const std::vector<double>& message,
                                          const double scale, HEStream& stream)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<double> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(double), cudaMemcpyHostToDevice,
@@ -702,8 +660,6 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
-
-        plain.scale_ = scale;
     }
 
     //
@@ -712,10 +668,6 @@ namespace heongpu
                                          const HostVector<double>& message,
                                          const double scale)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<double> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(double), cudaMemcpyHostToDevice);
@@ -753,18 +705,12 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
-
-        plain.scale_ = scale;
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
                                          const HostVector<double>& message,
                                          const double scale, HEStream& stream)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<double> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(double), cudaMemcpyHostToDevice,
@@ -805,8 +751,6 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
-
-        plain.scale_ = scale;
     }
 
     //
@@ -815,10 +759,6 @@ namespace heongpu
                                          const std::vector<COMPLEX_C>& message,
                                          const double scale)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<COMPLEX> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(COMPLEX), cudaMemcpyHostToDevice);
@@ -856,18 +796,12 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
-
-        plain.scale_ = scale;
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
                                          const std::vector<COMPLEX_C>& message,
                                          const double scale, HEStream& stream)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(COMPLEX),
@@ -908,8 +842,6 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
-
-        plain.scale_ = scale;
     }
 
     //
@@ -918,10 +850,6 @@ namespace heongpu
                                          const HostVector<COMPLEX_C>& message,
                                          const double scale)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<COMPLEX> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(COMPLEX), cudaMemcpyHostToDevice);
@@ -959,18 +887,12 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
-
-        plain.scale_ = scale;
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
                                          const HostVector<COMPLEX_C>& message,
                                          const double scale, HEStream& stream)
     {
-        if (message.size() > slot_count_)
-            throw std::invalid_argument(
-                "Vector size can not be higher than slot count!");
-
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(COMPLEX),
@@ -1011,8 +933,6 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
-
-        plain.scale_ = scale;
     }
 
     //

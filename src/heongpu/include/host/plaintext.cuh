@@ -29,12 +29,17 @@ namespace heongpu
 
       public:
         /**
+         * @brief Constructs an empty Plaintext object.
+         */
+        __host__ Plaintext();
+
+        /**
          * @brief Constructs a new Plaintext object with specified parameters.
          *
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ Plaintext(Parameters& context);
+        explicit __host__ Plaintext(Parameters& context);
 
         /**
          * @brief Constructs a new Plaintext object with specified parameters
@@ -45,7 +50,7 @@ namespace heongpu
          * @param stream Reference to the HEStream object representing the CUDA
          * stream for operations involving the plaintext.
          */
-        __host__ Plaintext(Parameters& context, HEStream& stream);
+        explicit __host__ Plaintext(Parameters& context, HEStream& stream);
 
         /**
          * @brief Constructs a new Plaintext object from a vector of data.
@@ -55,7 +60,8 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ Plaintext(const std::vector<Data>& plain, Parameters& context);
+        explicit __host__ Plaintext(const std::vector<Data>& plain,
+                                    Parameters& context);
 
         /**
          * @brief Constructs a new Plaintext object from a vector of data with
@@ -68,8 +74,8 @@ namespace heongpu
          * @param stream Reference to the HEStream object representing the CUDA
          * stream for operations involving the plaintext.
          */
-        __host__ Plaintext(const std::vector<Data>& plain, Parameters& context,
-                           HEStream& stream);
+        explicit __host__ Plaintext(const std::vector<Data>& plain,
+                                    Parameters& context, HEStream& stream);
 
         /**
          * @brief Returns a pointer to the underlying plaintext data.
@@ -88,7 +94,7 @@ namespace heongpu
          */
         void resize(int new_size, cudaStream_t stream = cudaStreamLegacy)
         {
-            locations_.resize(0, stream);
+            // locations_.resize(0, stream);
             locations_.resize(new_size, stream);
             plain_size_ = new_size;
         }
@@ -134,10 +140,10 @@ namespace heongpu
          *
          * @return int Size of the plaintext.
          */
-        inline int plain_size() const noexcept { return plain_size_; }
+        inline int size() const noexcept { return plain_size_; }
 
         /**
-         * @brief Returns the depth level of the plaintext.
+         * @brief Returns the current depth level of the plaintext.
          *
          * @return int Depth level of the plaintext.
          */
@@ -158,7 +164,7 @@ namespace heongpu
          */
         inline bool in_ntt_domain() const noexcept { return in_ntt_domain_; }
 
-        Plaintext() = default;
+        // Plaintext() = default;
 
         Plaintext(const Plaintext& copy)
             : scheme_(copy.scheme_), plain_size_(copy.plain_size_),

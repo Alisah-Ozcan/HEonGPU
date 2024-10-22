@@ -11,7 +11,7 @@ namespace heongpu
     __host__ HEEncryptor::HEEncryptor(Parameters& context,
                                       Publickey& public_key)
     {
-        scheme = context.scheme_;
+        scheme_ = context.scheme_;
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -26,7 +26,6 @@ namespace heongpu
         Q_size_ = context.Q_size;
         P_size_ = context.P_size;
 
-        // modulus_ = context.modulus_.data();
         modulus_ = context.modulus_;
 
         last_q_modinv_ = context.last_q_modinv_;
@@ -43,7 +42,7 @@ namespace heongpu
         n = context.n;
         n_power = context.n_power;
 
-        if (scheme == scheme_type::bfv)
+        if (scheme_ == scheme_type::bfv)
         {
             plain_modulus_ = context.plain_modulus_;
 
@@ -197,8 +196,6 @@ namespace heongpu
         cipher_message_add<<<dim3((n >> 8), Q_size_, 1), 256>>>(
             ciphertext.data(), plaintext.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-        ciphertext.scale_ = plaintext.scale_;
     }
 
     __host__ void HEEncryptor::encrypt_ckks(Ciphertext& ciphertext,
@@ -251,8 +248,6 @@ namespace heongpu
                              stream.stream>>>(
             ciphertext.data(), plaintext.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-        ciphertext.scale_ = plaintext.scale_;
     }
 
 } // namespace heongpu

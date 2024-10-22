@@ -7,6 +7,7 @@
 
 namespace heongpu
 {
+    __host__ Plaintext::Plaintext() {}
 
     __host__ Plaintext::Plaintext(Parameters& context)
     {

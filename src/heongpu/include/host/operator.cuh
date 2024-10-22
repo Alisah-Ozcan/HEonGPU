@@ -210,7 +210,7 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -225,7 +225,6 @@ namespace heongpu
                 case 2: // CKKS
                 {
                     add_plain_ckks(input1, input2, output);
-                    output.scale_ = input1.scale_;
                     break;
                 }
                 case 3: // BGV
@@ -236,10 +235,14 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
             output.depth_ = input1.depth_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.scale_ = input1.scale_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -267,7 +270,7 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -282,7 +285,6 @@ namespace heongpu
                 case 2: // CKKS
                 {
                     add_plain_ckks(input1, input2, output, stream);
-                    output.scale_ = input1.scale_;
                     break;
                 }
                 case 3: // BGV
@@ -293,10 +295,14 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
             output.depth_ = input1.depth_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.scale_ = input1.scale_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -320,7 +326,7 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -368,7 +374,7 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -416,7 +422,7 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -431,7 +437,6 @@ namespace heongpu
                 case 2: // CKKS
                 {
                     sub_plain_ckks(input1, input2, output);
-                    output.scale_ = input1.scale_;
                     break;
                 }
                 case 3: // BGV
@@ -442,10 +447,14 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
             output.depth_ = input1.depth_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.scale_ = input1.scale_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -480,7 +489,7 @@ namespace heongpu
                     "Ciphertext and Plaintext should be in same domain");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -495,7 +504,6 @@ namespace heongpu
                 case 2: // CKKS
                 {
                     sub_plain_ckks(input1, input2, output, stream);
-                    output.scale_ = input1.scale_;
                     break;
                 }
                 case 3: // BGV
@@ -506,10 +514,14 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
             output.depth_ = input1.depth_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.scale_ = input1.scale_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -533,7 +545,7 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -581,7 +593,7 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -633,10 +645,11 @@ namespace heongpu
                     "noise!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     multiply_bfv(input1, input2, output);
+                    output.scale_ = 0;
                     break;
                 case 2: // CKKS
                     multiply_ckks(input1, input2, output);
@@ -650,10 +663,13 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 3;
             output.depth_ = input1.depth_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = true;
             output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.relinearization_required_ = true;
         }
 
         /**
@@ -686,10 +702,11 @@ namespace heongpu
                     "noise!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     multiply_bfv(input1, input2, output, stream);
+                    output.scale_ = 0;
                     break;
                 case 2: // CKKS
                     multiply_ckks(input1, input2, output, stream);
@@ -703,10 +720,13 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 3;
             output.depth_ = input1.depth_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = true;
             output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.relinearization_required_ = true;
         }
 
         /**
@@ -758,7 +778,19 @@ namespace heongpu
                     "operation!");
             }
 
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (3 * n * current_decomp_count))
+            {
+                output.resize((3 * n * current_decomp_count));
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -767,11 +799,22 @@ namespace heongpu
                         throw std::logic_error("BFV ciphertext or plaintext "
                                                "should be not in same domain");
                     }
+
+                    if (input2.size() < n)
+                    {
+                        throw std::invalid_argument("Invalid Plaintext size!");
+                    }
+
                     multiply_plain_bfv(input1, input2, output);
                     output.rescale_required_ = input1.rescale_required_;
                     break;
                 }
                 case 2: // CKKS
+                    if (input2.size() < (n * current_decomp_count))
+                    {
+                        throw std::invalid_argument("Invalid Plaintext size!");
+                    }
+
                     multiply_plain_ckks(input1, input2, output);
                     output.rescale_required_ = true;
                     break;
@@ -783,9 +826,13 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
-            output.relinearization_required_ = input1.relinearization_required_;
             output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.relinearization_required_ = input1.relinearization_required_;
         }
 
         /**
@@ -810,7 +857,19 @@ namespace heongpu
                     "operation!");
             }
 
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (3 * n * current_decomp_count))
+            {
+                output.resize((3 * n * current_decomp_count), stream);
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                 {
@@ -819,11 +878,22 @@ namespace heongpu
                         throw std::logic_error("BFV ciphertext or plaintext "
                                                "should be not in same domain");
                     }
+
+                    if (input2.size() < n)
+                    {
+                        throw std::invalid_argument("Invalid Plaintext size!");
+                    }
+
                     multiply_plain_bfv(input1, input2, output, stream);
                     output.rescale_required_ = input1.rescale_required_;
                     break;
                 }
                 case 2: // CKKS
+                    if (input2.size() < (n * current_decomp_count))
+                    {
+                        throw std::invalid_argument("Invalid Plaintext size!");
+                    }
+
                     multiply_plain_ckks(input1, input2, output, stream);
                     output.rescale_required_ = true;
                     break;
@@ -835,9 +905,13 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
-            output.relinearization_required_ = input1.relinearization_required_;
             output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.relinearization_required_ = input1.relinearization_required_;
         }
 
         /**
@@ -888,10 +962,17 @@ namespace heongpu
                     "non-linear part!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (3 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
             switch (static_cast<int>(relin_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -901,7 +982,7 @@ namespace heongpu
 
                         relinearize_seal_method_inplace(input1, relin_key);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         relinearize_seal_method_inplace_ckks(input1, relin_key);
                     }
@@ -913,7 +994,7 @@ namespace heongpu
                     break;
                 case 2: // KEYSWITHING_METHOD_II
 
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -924,7 +1005,7 @@ namespace heongpu
                         relinearize_external_product_method2_inplace(input1,
                                                                      relin_key);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         relinearize_external_product_method2_inplace_ckks(
                             input1, relin_key);
@@ -938,7 +1019,7 @@ namespace heongpu
                     break;
                 case 3: // KEYSWITHING_METHOD_III
 
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -949,7 +1030,7 @@ namespace heongpu
                         relinearize_external_product_method_inplace(input1,
                                                                     relin_key);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         relinearize_external_product_method_inplace_ckks(
                             input1, relin_key);
@@ -988,10 +1069,17 @@ namespace heongpu
                     "non-linear part!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (3 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
             switch (static_cast<int>(relin_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1002,7 +1090,7 @@ namespace heongpu
                         relinearize_seal_method_inplace(input1, relin_key,
                                                         stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         relinearize_seal_method_inplace_ckks(input1, relin_key,
                                                              stream);
@@ -1015,7 +1103,7 @@ namespace heongpu
                     break;
                 case 2: // KEYSWITHING_METHOD_II
 
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1026,7 +1114,7 @@ namespace heongpu
                         relinearize_external_product_method2_inplace(
                             input1, relin_key, stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         relinearize_external_product_method2_inplace_ckks(
                             input1, relin_key, stream);
@@ -1040,7 +1128,7 @@ namespace heongpu
                     break;
                 case 3: // KEYSWITHING_METHOD_III
 
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1051,7 +1139,7 @@ namespace heongpu
                         relinearize_external_product_method_inplace(
                             input1, relin_key, stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         relinearize_external_product_method_inplace_ckks(
                             input1, relin_key, stream);
@@ -1088,10 +1176,22 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count));
+            }
+
             switch (static_cast<int>(galois_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1101,7 +1201,7 @@ namespace heongpu
 
                         rotate_method_I(input1, output, galois_key, shift);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         rotate_ckks_method_I(input1, output, galois_key, shift);
                     }
@@ -1112,7 +1212,7 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1122,7 +1222,7 @@ namespace heongpu
 
                         rotate_method_II(input1, output, galois_key, shift);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         rotate_ckks_method_II(input1, output, galois_key,
                                               shift);
@@ -1145,10 +1245,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1171,10 +1276,22 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count), stream);
+            }
+
             switch (static_cast<int>(galois_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1185,7 +1302,7 @@ namespace heongpu
                         rotate_method_I(input1, output, galois_key, shift,
                                         stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         rotate_ckks_method_I(input1, output, galois_key, shift,
                                              stream);
@@ -1197,7 +1314,7 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1208,7 +1325,7 @@ namespace heongpu
                         rotate_method_II(input1, output, galois_key, shift,
                                          stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         rotate_ckks_method_II(input1, output, galois_key, shift,
                                               stream);
@@ -1231,10 +1348,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1284,10 +1406,22 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count));
+            }
+
             switch (static_cast<int>(galois_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1297,7 +1431,7 @@ namespace heongpu
 
                         rotate_columns_method_I(input1, output, galois_key);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         throw std::invalid_argument("Unsupported scheme");
                     }
@@ -1308,11 +1442,11 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         rotate_columns_method_II(input1, output, galois_key);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         throw std::invalid_argument("Unsupported scheme");
                     }
@@ -1334,10 +1468,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1358,10 +1497,22 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count), stream);
+            }
+
             switch (static_cast<int>(galois_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1372,7 +1523,7 @@ namespace heongpu
                         rotate_columns_method_I(input1, output, galois_key,
                                                 stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         throw std::invalid_argument("Unsupported scheme");
                     }
@@ -1383,12 +1534,12 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         rotate_columns_method_II(input1, output, galois_key,
                                                  stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         throw std::invalid_argument("Unsupported scheme");
                     }
@@ -1410,10 +1561,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1435,10 +1591,22 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count));
+            }
+
             switch (static_cast<int>(galois_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1449,7 +1617,7 @@ namespace heongpu
                         apply_galois_method_I(input1, output, galois_key,
                                               galois_elt);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         apply_galois_ckks_method_I(input1, output, galois_key,
                                                    galois_elt);
@@ -1461,7 +1629,7 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1472,7 +1640,7 @@ namespace heongpu
                         apply_galois_method_II(input1, output, galois_key,
                                                galois_elt);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         apply_galois_ckks_method_II(input1, output, galois_key,
                                                     galois_elt);
@@ -1495,10 +1663,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1523,10 +1696,22 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count), stream);
+            }
+
             switch (static_cast<int>(galois_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1537,7 +1722,7 @@ namespace heongpu
                         apply_galois_method_I(input1, output, galois_key,
                                               galois_elt, stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         apply_galois_ckks_method_I(input1, output, galois_key,
                                                    galois_elt, stream);
@@ -1549,7 +1734,7 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1560,7 +1745,7 @@ namespace heongpu
                         apply_galois_method_II(input1, output, galois_key,
                                                galois_elt, stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         apply_galois_ckks_method_II(input1, output, galois_key,
                                                     galois_elt, stream);
@@ -1583,10 +1768,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1640,10 +1830,22 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count));
+            }
+
             switch (static_cast<int>(switch_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1653,7 +1855,7 @@ namespace heongpu
 
                         switchkey_method_I(input1, output, switch_key);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         switchkey_ckks_method_I(input1, output, switch_key);
                     }
@@ -1664,7 +1866,7 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1674,7 +1876,7 @@ namespace heongpu
 
                         switchkey_method_II(input1, output, switch_key);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         switchkey_ckks_method_II(input1, output, switch_key);
                     }
@@ -1696,10 +1898,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1721,10 +1928,22 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count), stream);
+            }
+
             switch (static_cast<int>(switch_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1734,7 +1953,7 @@ namespace heongpu
 
                         switchkey_method_I(input1, output, switch_key, stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         switchkey_ckks_method_I(input1, output, switch_key,
                                                 stream);
@@ -1746,7 +1965,7 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme == scheme_type::bfv)
+                    if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
                         {
@@ -1756,7 +1975,7 @@ namespace heongpu
 
                         switchkey_method_II(input1, output, switch_key, stream);
                     }
-                    else if (scheme == scheme_type::ckks)
+                    else if (scheme_ == scheme_type::ckks)
                     {
                         switchkey_ckks_method_II(input1, output, switch_key,
                                                  stream);
@@ -1779,10 +1998,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1798,7 +2022,14 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertexts can not be rescaled!");
             }
 
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -1830,7 +2061,14 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertexts can not be rescaled!");
             }
 
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -1864,7 +2102,19 @@ namespace heongpu
                     "Ciphertext's modulus can not be dropped!!");
             }
 
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * (current_decomp_count - 1)))
+            {
+                output.resize((2 * n * (current_decomp_count - 1)));
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -1879,10 +2129,15 @@ namespace heongpu
                     break;
             }
 
-            output.depth_ = input1.depth_;
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
+            output.depth_ = input1.depth_ + 1;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1905,7 +2160,19 @@ namespace heongpu
                     "Ciphertext's modulus can not be dropped!!");
             }
 
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * (current_decomp_count - 1)))
+            {
+                output.resize((2 * n * (current_decomp_count - 1)), stream);
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -1919,10 +2186,16 @@ namespace heongpu
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
-            output.depth_ = input1.depth_;
+
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
+            output.depth_ = input1.depth_ + 1;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1935,7 +2208,19 @@ namespace heongpu
          */
         __host__ void mod_drop(Plaintext& input1, Plaintext& output)
         {
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.size() < (n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Plaintext size!");
+            }
+
+            if (output.size() < (n * (current_decomp_count - 1)))
+            {
+                output.resize((n * (current_decomp_count - 1)));
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -1950,7 +2235,11 @@ namespace heongpu
                     break;
             }
 
-            output.depth_ = input1.depth_;
+            output.scheme_ = input1.scheme_;
+            output.plain_size_ = (n * (current_decomp_count - 1));
+            output.depth_ = input1.depth_ + 1;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1966,7 +2255,19 @@ namespace heongpu
         __host__ void mod_drop(Plaintext& input1, Plaintext& output,
                                HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.size() < (n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Plaintext size!");
+            }
+
+            if (output.size() < (n * (current_decomp_count - 1)))
+            {
+                output.resize((n * (current_decomp_count - 1)), stream);
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -1981,7 +2282,11 @@ namespace heongpu
                     break;
             }
 
-            output.depth_ = input1.depth_;
+            output.scheme_ = input1.scheme_;
+            output.plain_size_ = (n * (current_decomp_count - 1));
+            output.depth_ = input1.depth_ + 1;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1992,7 +2297,14 @@ namespace heongpu
          */
         __host__ void mod_drop_inplace(Plaintext& input1)
         {
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.size() < (n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Plaintext size!");
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -2018,7 +2330,14 @@ namespace heongpu
          */
         __host__ void mod_drop_inplace(Plaintext& input1, HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.size() < (n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Plaintext size!");
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -2042,7 +2361,14 @@ namespace heongpu
          */
         __host__ void mod_drop_inplace(Ciphertext& input1)
         {
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -2068,7 +2394,14 @@ namespace heongpu
          */
         __host__ void mod_drop_inplace(Ciphertext& input1, HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     // TODO: implement leveled BFV.
@@ -2087,7 +2420,7 @@ namespace heongpu
         __host__ void multiply_power_of_X(Ciphertext& input1,
                                           Ciphertext& output, int index)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     if (index != 0)
@@ -2096,6 +2429,17 @@ namespace heongpu
                         {
                             throw std::invalid_argument(
                                 "Ciphertext should be in intt domain");
+                        }
+
+                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        {
+                            throw std::invalid_argument(
+                                "Invalid Ciphertexts size!");
+                        }
+
+                        if (output.locations_.size() < (2 * n * Q_size_))
+                        {
+                            output.resize((2 * n * Q_size_));
                         }
 
                         negacyclic_shift_poly_coeffmod(input1, output, index);
@@ -2110,17 +2454,22 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         __host__ void multiply_power_of_X(Ciphertext& input1,
                                           Ciphertext& output, int index,
                                           HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     if (index != 0)
@@ -2129,6 +2478,17 @@ namespace heongpu
                         {
                             throw std::invalid_argument(
                                 "Ciphertext should be in intt domain");
+                        }
+
+                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        {
+                            throw std::invalid_argument(
+                                "Invalid Ciphertexts size!");
+                        }
+
+                        if (output.locations_.size() < (2 * n * Q_size_))
+                        {
+                            output.resize((2 * n * Q_size_), stream);
                         }
 
                         negacyclic_shift_poly_coeffmod(input1, output, index,
@@ -2144,10 +2504,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -2160,11 +2525,22 @@ namespace heongpu
          */
         __host__ void transform_to_ntt(Plaintext& input1, Plaintext& output)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     if (!input1.in_ntt_domain_)
                     {
+                        if (input1.size() < n)
+                        {
+                            throw std::invalid_argument(
+                                "Invalid Ciphertexts size!");
+                        }
+
+                        if (output.size() < (n * Q_size_))
+                        {
+                            output.resize((n * Q_size_));
+                        }
+
                         transform_to_ntt_bfv_plain(input1, output);
                     }
                     break;
@@ -2176,6 +2552,12 @@ namespace heongpu
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
+
+            output.scheme_ = input1.scheme_;
+            output.plain_size_ = (n * Q_size_);
+            output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = true;
         }
 
         /**
@@ -2191,11 +2573,22 @@ namespace heongpu
         __host__ void transform_to_ntt(Plaintext& input1, Plaintext& output,
                                        HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     if (!input1.in_ntt_domain_)
                     {
+                        if (input1.size() < n)
+                        {
+                            throw std::invalid_argument(
+                                "Invalid Ciphertexts size!");
+                        }
+
+                        if (output.size() < (n * Q_size_))
+                        {
+                            output.resize((n * Q_size_), stream);
+                        }
+
                         transform_to_ntt_bfv_plain(input1, output, stream);
                     }
                     break;
@@ -2207,6 +2600,12 @@ namespace heongpu
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
+
+            output.scheme_ = input1.scheme_;
+            output.plain_size_ = (n * Q_size_);
+            output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = true;
         }
 
         /**
@@ -2250,11 +2649,22 @@ namespace heongpu
                     "Ciphertexts can not be transformed to NTT!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     if (!input1.in_ntt_domain_)
                     {
+                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        {
+                            throw std::invalid_argument(
+                                "Invalid Ciphertexts size!");
+                        }
+
+                        if (output.locations_.size() < (2 * n * Q_size_))
+                        {
+                            output.resize((2 * n * Q_size_));
+                        }
+
                         transform_to_ntt_bfv_cipher(input1, output);
                     }
                     break;
@@ -2267,10 +2677,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = true;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = true;
         }
 
         /**
@@ -2292,11 +2707,22 @@ namespace heongpu
                     "Ciphertexts can not be transformed to NTT!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     if (!input1.in_ntt_domain_)
                     {
+                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        {
+                            throw std::invalid_argument(
+                                "Invalid Ciphertexts size!");
+                        }
+
+                        if (output.locations_.size() < (2 * n * Q_size_))
+                        {
+                            output.resize((2 * n * Q_size_), stream);
+                        }
+
                         transform_to_ntt_bfv_cipher(input1, output, stream);
                     }
                     break;
@@ -2309,10 +2735,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = true;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = true;
         }
 
         /**
@@ -2356,11 +2787,22 @@ namespace heongpu
                     "Ciphertexts can not be transformed from NTT!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     if (input1.in_ntt_domain_)
                     {
+                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        {
+                            throw std::invalid_argument(
+                                "Invalid Ciphertexts size!");
+                        }
+
+                        if (output.locations_.size() < (2 * n * Q_size_))
+                        {
+                            output.resize((2 * n * Q_size_));
+                        }
+
                         transform_from_ntt_bfv_cipher(input1, output);
                     }
                     break;
@@ -2373,10 +2815,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = false;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = false;
         }
 
         /**
@@ -2398,11 +2845,22 @@ namespace heongpu
                     "Ciphertexts can not be transformed from NTT!");
             }
 
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     if (input1.in_ntt_domain_)
                     {
+                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        {
+                            throw std::invalid_argument(
+                                "Invalid Ciphertexts size!");
+                        }
+
+                        if (output.locations_.size() < (2 * n * Q_size_))
+                        {
+                            output.resize((2 * n * Q_size_), stream);
+                        }
+
                         transform_from_ntt_bfv_cipher(input1, output, stream);
                     }
                     break;
@@ -2415,10 +2873,15 @@ namespace heongpu
                     break;
             }
 
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
             output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = false;
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
-            output.in_ntt_domain_ = false;
         }
 
         /**
@@ -2766,7 +3229,7 @@ namespace heongpu
                                                     HEStream& stream);
 
       private:
-        scheme_type scheme;
+        scheme_type scheme_;
 
         int n;
 

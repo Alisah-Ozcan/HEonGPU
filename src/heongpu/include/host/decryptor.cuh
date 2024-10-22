@@ -51,13 +51,33 @@ namespace heongpu
          */
         __host__ void decrypt(Plaintext& plaintext, Ciphertext& ciphertext)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (plaintext.size() != n)
+                    {
+                        plaintext.resize(n);
+                    }
+
                     decrypt_bfv(plaintext, ciphertext);
+
+                    plaintext.scheme_ = scheme_;
+                    plaintext.depth_ = 0;
+                    plaintext.scale_ = 0;
+                    plaintext.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
+                    if (plaintext.size() != (n * (Q_size_ - ciphertext.depth_)))
+                    {
+                        plaintext.resize((n * (Q_size_ - ciphertext.depth_)));
+                    }
+
                     decrypt_ckks(plaintext, ciphertext);
+
+                    plaintext.scheme_ = scheme_;
+                    plaintext.depth_ = ciphertext.depth_;
+                    plaintext.scale_ = ciphertext.scale_;
+                    plaintext.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -77,7 +97,7 @@ namespace heongpu
          */
         __host__ int remainder_noise_budget(Ciphertext& ciphertext)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     return noise_budget_calculation(ciphertext);
@@ -111,7 +131,7 @@ namespace heongpu
         __host__ int noise_budget_calculation(Ciphertext& ciphertext);
 
       private:
-        scheme_type scheme;
+        scheme_type scheme_;
 
         Data* secret_key_;
 
@@ -119,7 +139,7 @@ namespace heongpu
 
         int n_power;
 
-        int decomp_mod_count_;
+        int Q_size_;
 
         std::shared_ptr<DeviceVector<Modulus>> modulus_;
 

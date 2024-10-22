@@ -54,10 +54,24 @@ namespace heongpu
                              const std::vector<uint64_t>& message,
                              double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != n)
+                    {
+                        plain.resize(n);
+                    }
+
                     encode_bfv(plain, message);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = 0;
+                    plain.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -88,10 +102,24 @@ namespace heongpu
                              const std::vector<uint64_t>& message,
                              HEStream& stream, double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != n)
+                    {
+                        plain.resize(n, stream);
+                    }
+
                     encode_bfv(plain, message, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = 0;
+                    plain.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -120,10 +148,24 @@ namespace heongpu
                              const std::vector<int64_t>& message,
                              double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != n)
+                    {
+                        plain.resize(n);
+                    }
+
                     encode_bfv(plain, message);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = 0;
+                    plain.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -155,10 +197,24 @@ namespace heongpu
                              const std::vector<int64_t>& message,
                              HEStream& stream, double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != n)
+                    {
+                        plain.resize(n, stream);
+                    }
+
                     encode_bfv(plain, message, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = 0;
+                    plain.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -187,10 +243,24 @@ namespace heongpu
                              const HostVector<uint64_t>& message,
                              double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != n)
+                    {
+                        plain.resize(n);
+                    }
+
                     encode_bfv(plain, message);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = 0;
+                    plain.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -221,10 +291,24 @@ namespace heongpu
                              const HostVector<uint64_t>& message,
                              HEStream& stream, double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != n)
+                    {
+                        plain.resize(n, stream);
+                    }
+
                     encode_bfv(plain, message, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = 0;
+                    plain.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -253,10 +337,24 @@ namespace heongpu
                              const HostVector<int64_t>& message,
                              double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != n)
+                    {
+                        plain.resize(n);
+                    }
+
                     encode_bfv(plain, message);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = 0;
+                    plain.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -288,10 +386,24 @@ namespace heongpu
                              const HostVector<int64_t>& message,
                              HEStream& stream, double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != n)
+                    {
+                        plain.resize(n, stream);
+                    }
+
                     encode_bfv(plain, message, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = 0;
+                    plain.in_ntt_domain_ = false;
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -321,14 +433,28 @@ namespace heongpu
                              const std::vector<double>& message,
                              double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_));
+                    }
+
                     encode_ckks(plain, message, scale);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -356,14 +482,28 @@ namespace heongpu
                              const std::vector<double>& message,
                              HEStream& stream, double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_), stream);
+                    }
+
                     encode_ckks(plain, message, scale, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -389,14 +529,28 @@ namespace heongpu
                              const HostVector<double>& message,
                              double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_));
+                    }
+
                     encode_ckks(plain, message, scale);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -424,14 +578,28 @@ namespace heongpu
                              const HostVector<double>& message,
                              HEStream& stream, double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_), stream);
+                    }
+
                     encode_ckks(plain, message, scale, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -457,14 +625,28 @@ namespace heongpu
                              const std::vector<COMPLEX_C>& message,
                              double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_));
+                    }
+
                     encode_ckks(plain, message, scale);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -492,14 +674,28 @@ namespace heongpu
                              const std::vector<COMPLEX_C>& message,
                              HEStream& stream, double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_), stream);
+                    }
+
                     encode_ckks(plain, message, scale, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -526,14 +722,28 @@ namespace heongpu
                              const HostVector<COMPLEX_C>& message,
                              double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_));
+                    }
+
                     encode_ckks(plain, message, scale);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -561,14 +771,28 @@ namespace heongpu
                              const HostVector<COMPLEX_C>& message,
                              HEStream& stream, double scale = 0)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if (message.size() > slot_count_)
+                        throw std::invalid_argument(
+                            "Vector size can not be higher than slot count!");
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_), stream);
+                    }
+
                     encode_ckks(plain, message, scale, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
                     break;
                 case 3: // BGV
 
@@ -588,7 +812,7 @@ namespace heongpu
          */
         __host__ void decode(std::vector<uint64_t>& message, Plaintext& plain)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     decode_bfv(message, plain);
@@ -618,7 +842,7 @@ namespace heongpu
         __host__ void decode(std::vector<uint64_t>& message, Plaintext& plain,
                              HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     decode_bfv(message, plain, stream);
@@ -644,7 +868,7 @@ namespace heongpu
          */
         __host__ void decode(std::vector<int64_t>& message, Plaintext& plain)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     decode_bfv(message, plain);
@@ -674,7 +898,7 @@ namespace heongpu
         __host__ void decode(std::vector<int64_t>& message, Plaintext& plain,
                              HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     decode_bfv(message, plain, stream);
@@ -702,7 +926,7 @@ namespace heongpu
          */
         __host__ void decode(HostVector<uint64_t>& message, Plaintext& plain)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     decode_bfv(message, plain);
@@ -732,7 +956,7 @@ namespace heongpu
         __host__ void decode(HostVector<uint64_t>& message, Plaintext& plain,
                              HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     decode_bfv(message, plain, stream);
@@ -759,7 +983,7 @@ namespace heongpu
          */
         __host__ void decode(HostVector<int64_t>& message, Plaintext& plain)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     decode_bfv(message, plain);
@@ -789,7 +1013,7 @@ namespace heongpu
         __host__ void decode(HostVector<int64_t>& message, Plaintext& plain,
                              HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     decode_bfv(message, plain, stream);
@@ -816,7 +1040,7 @@ namespace heongpu
          */
         __host__ void decode(std::vector<double>& message, Plaintext& plain)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
@@ -846,7 +1070,7 @@ namespace heongpu
         __host__ void decode(std::vector<double>& message, Plaintext& plain,
                              HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
@@ -873,7 +1097,7 @@ namespace heongpu
          */
         __host__ void decode(HostVector<double>& message, Plaintext& plain)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
@@ -903,7 +1127,7 @@ namespace heongpu
         __host__ void decode(HostVector<double>& message, Plaintext& plain,
                              HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
@@ -930,7 +1154,7 @@ namespace heongpu
          */
         __host__ void decode(std::vector<COMPLEX_C>& message, Plaintext& plain)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
@@ -960,7 +1184,7 @@ namespace heongpu
         __host__ void decode(std::vector<COMPLEX_C>& message, Plaintext& plain,
                              HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
@@ -987,7 +1211,7 @@ namespace heongpu
          */
         __host__ void decode(HostVector<COMPLEX_C>& message, Plaintext& plain)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
@@ -1017,7 +1241,7 @@ namespace heongpu
         __host__ void decode(HostVector<COMPLEX_C>& message, Plaintext& plain,
                              HEStream& stream)
         {
-            switch (static_cast<int>(scheme))
+            switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
                     throw std::invalid_argument(
@@ -1170,7 +1394,7 @@ namespace heongpu
                                   Plaintext& plain, HEStream& stream);
 
       private:
-        scheme_type scheme;
+        scheme_type scheme_;
 
         int n;
 
