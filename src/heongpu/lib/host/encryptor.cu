@@ -110,8 +110,7 @@ namespace heongpu
                                            HEStream& stream)
     {
         enc_error_kernel<<<dim3((n >> 8), 3, 1), 256, 0, stream.stream>>>(
-            stream.temp1_enc, modulus_->data(), n_power, Q_prime_size_,
-            seed_);
+            stream.temp1_enc, modulus_->data(), n_power, Q_prime_size_, seed_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -207,8 +206,7 @@ namespace heongpu
                                             HEStream& stream)
     {
         enc_error_kernel<<<dim3((n >> 8), 3, 1), 256, 0, stream.stream>>>(
-            stream.temp1_enc, modulus_->data(), n_power, Q_prime_size_,
-            seed_);
+            stream.temp1_enc, modulus_->data(), n_power, Q_prime_size_, seed_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,

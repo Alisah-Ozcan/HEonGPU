@@ -76,8 +76,7 @@ namespace heongpu
     __host__ void HEKeyGenerator::generate_secret_key(Secretkey& sk)
     {
         sk_kernel<<<dim3((n >> 8), 1, 1), 256>>>(sk.data(), modulus_->data(),
-                                                 n_power, Q_prime_size_,
-                                                 seed_);
+                                                 n_power, Q_prime_size_, seed_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -96,9 +95,8 @@ namespace heongpu
                                                       Secretkey& sk)
     {
         DeviceVector<Data> errors_a(2 * Q_prime_size_ * n);
-        error_kernel<<<dim3((n >> 8), 2, 1), 256>>>(errors_a.data(),
-                                                    modulus_->data(), n_power,
-                                                    Q_prime_size_, seed_);
+        error_kernel<<<dim3((n >> 8), 2, 1), 256>>>(
+            errors_a.data(), modulus_->data(), n_power, Q_prime_size_, seed_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -1088,9 +1086,8 @@ namespace heongpu
     {
         DeviceVector<Data> error_a(2 * Q_prime_size_ * n);
 
-        error_kernel<<<dim3((n >> 8), 2, 1), 256>>>(error_a.data(),
-                                                    modulus_->data(), n_power,
-                                                    Q_prime_size_, seed_);
+        error_kernel<<<dim3((n >> 8), 2, 1), 256>>>(
+            error_a.data(), modulus_->data(), n_power, Q_prime_size_, seed_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,

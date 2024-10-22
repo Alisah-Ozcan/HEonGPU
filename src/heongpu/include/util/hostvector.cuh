@@ -7,14 +7,26 @@
 #define HOST_VECTOR_H
 
 #include "memorypool.cuh"
+#include "devicevector.cuh"
 
 namespace heongpu
 {
+    template <typename T> class DeviceVector;
+
     template <typename T>
     class HostVector : public std::vector<T, rmm_pinned_allocator<T>>
     {
       public:
-        using std::vector<T, rmm_pinned_allocator<T>>::vector;
+        using Hvec = std::vector<T, rmm_pinned_allocator<T>>;
+        using Hvec::vector;
+
+        explicit HostVector(const DeviceVector<T>& ref,
+                            cudaStream_t stream = cudaStreamLegacy)
+        {
+            Hvec::resize(ref.size());
+            cudaMemcpyAsync(Hvec::data(), ref.data(), ref.size() * sizeof(T),
+                            cudaMemcpyDeviceToHost, stream);
+        }
     };
 
 } // namespace heongpu

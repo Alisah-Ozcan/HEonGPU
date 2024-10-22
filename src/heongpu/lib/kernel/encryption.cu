@@ -15,7 +15,8 @@ namespace heongpu
         int block_y = blockIdx.y; // u, e1, e2
 
         curandStatePhilox4_32_10_t state; // not secure
-        curand_init(seed, idx + (block_y << n_power), idx + (block_y << n_power), &state);
+        curand_init(seed, idx + (block_y << n_power),
+                    idx + (block_y << n_power), &state);
 
         if (block_y == 0)
         { // u

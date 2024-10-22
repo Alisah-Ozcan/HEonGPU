@@ -21,10 +21,10 @@ namespace heongpu
         curand_init(seed, idx, idx, &state);
         // TODO: make it efficient
         Data random_number = curand(&state) & 3; // 0,1,2,3
-            if (random_number == 3)
-            {
-                random_number -= 3; // 0,1,2
-            }
+        if (random_number == 3)
+        {
+            random_number -= 3; // 0,1,2
+        }
 
 #pragma unroll
         for (int i = 0; i < rns_mod_count; i++)

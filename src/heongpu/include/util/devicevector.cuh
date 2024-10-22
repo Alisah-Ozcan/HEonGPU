@@ -12,7 +12,8 @@
 
 namespace heongpu
 {
-    //
+    template <typename T> class HostVector;
+
     template <typename T> class DeviceVector : public rmm::device_uvector<T>
     {
         using Dvec = rmm::device_uvector<T>;
@@ -148,8 +149,14 @@ namespace heongpu
                     Source memory_resource =
                         MemoryPool::instance().get_device_resource())
         {
-            // Dvec::resize(size, stream, memory_resource);
             Dvec::resize(size, stream);
+        }
+
+        void reserve(size_t size, cudaStream_t stream = cudaStreamLegacy,
+                     Source memory_resource =
+                         MemoryPool::instance().get_device_resource())
+        {
+            Dvec::reserve(size, stream);
         }
 
         void append(const DeviceVector& out,
