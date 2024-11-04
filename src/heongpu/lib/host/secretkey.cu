@@ -12,11 +12,30 @@ namespace heongpu
         coeff_modulus_count_ = context.Q_prime_size;
         ring_size_ = context.n; // n
 
-        location = DeviceVector<Data>(coeff_modulus_count_ * ring_size_);
+        hamming_weight_ = ring_size_ >> 1; // default
+
+        secretkey_ = DeviceVector<int>(ring_size_);
+        location_ = DeviceVector<Data>(coeff_modulus_count_ * ring_size_);
+    }
+
+    __host__ Secretkey::Secretkey(Parameters& context, int hamming_weight)
+    {
+        coeff_modulus_count_ = context.Q_prime_size;
+        ring_size_ = context.n; // n
+
+        hamming_weight_ = hamming_weight;
+        if ((hamming_weight_ <= 0) || (hamming_weight_ > ring_size_))
+        {
+            throw std::invalid_argument(
+                "hamming weight has to be in range 0 to ring size.");
+        }
+
+        secretkey_ = DeviceVector<int>(ring_size_);
+        location_ = DeviceVector<Data>(coeff_modulus_count_ * ring_size_);
     }
 
     Data* Secretkey::data()
     {
-        return location.data();
+        return location_.data();
     }
 } // namespace heongpu

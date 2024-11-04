@@ -16,7 +16,9 @@ namespace heongpu
 
     // Secret Key Generation
 
-    __global__ void sk_kernel(Data* secret_key, Modulus* modulus, int n_power,
+    __global__ void sk_gen_kernel(int* secret_key, int hamming_weight,  int n_power, int seed);
+
+    __global__ void sk_rns_kernel(int* input, Data* output, Modulus* modulus, int n_power,
                               int rns_mod_count, int seed);
 
     // Public Key Generation

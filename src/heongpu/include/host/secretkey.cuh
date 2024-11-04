@@ -20,7 +20,9 @@ namespace heongpu
      * like public keys, relinearization keys, and Galois keys.
      */
     class Secretkey
-    {
+    {  
+        friend class HEKeyGenerator;
+        
       public:
         /**
          * @brief Constructs a new Secretkey object with specified parameters.
@@ -29,6 +31,16 @@ namespace heongpu
          * encryption parameters.
          */
         __host__ Secretkey(Parameters& context);
+
+        /**
+         * @brief Constructs a new Secretkey object with specified parameters.
+         *
+         * @param context Reference to the Parameters object that sets the
+         * encryption parameters.
+         * @param hamming_weight Parameter defining hamming weight of secret key,
+         * try to use it as (ring size / 2) for maximum security.
+         */
+        __host__ Secretkey(Parameters& context, int hamming_weight);
 
         /**
          * @brief Returns a pointer to the underlying secret key data.
@@ -62,9 +74,9 @@ namespace heongpu
             : ring_size_(copy.ring_size_),
               coeff_modulus_count_(copy.coeff_modulus_count_)
         {
-            location.resize(copy.location.size(), cudaStreamLegacy);
-            cudaMemcpyAsync(location.data(), copy.location.data(),
-                            copy.location.size() * sizeof(Data),
+            location_.resize(copy.location_.size(), cudaStreamLegacy);
+            cudaMemcpyAsync(location_.data(), copy.location_.data(),
+                            copy.location_.size() * sizeof(Data),
                             cudaMemcpyDeviceToDevice,
                             cudaStreamLegacy); // TODO: use cudaStreamPerThread
         }
@@ -72,9 +84,9 @@ namespace heongpu
         Secretkey(Secretkey&& assign) noexcept
             : ring_size_(std::move(assign.ring_size_)),
               coeff_modulus_count_(std::move(assign.coeff_modulus_count_)),
-              location(std::move(assign.location))
+              location_(std::move(assign.location_))
         {
-            // location = std::move(assign.location);
+            // location_ = std::move(assign.location_);
         }
 
         Secretkey& operator=(const Secretkey& copy)
@@ -84,10 +96,10 @@ namespace heongpu
                 ring_size_ = copy.ring_size_;
                 coeff_modulus_count_ = copy.coeff_modulus_count_;
 
-                location.resize(copy.location.size(), cudaStreamLegacy);
+                location_.resize(copy.location_.size(), cudaStreamLegacy);
                 cudaMemcpyAsync(
-                    location.data(), copy.location.data(),
-                    copy.location.size() * sizeof(Data),
+                    location_.data(), copy.location_.data(),
+                    copy.location_.size() * sizeof(Data),
                     cudaMemcpyDeviceToDevice,
                     cudaStreamLegacy); // TODO: use cudaStreamPerThread
             }
@@ -101,7 +113,7 @@ namespace heongpu
                 ring_size_ = std::move(assign.ring_size_);
                 coeff_modulus_count_ = std::move(assign.coeff_modulus_count_);
 
-                location = std::move(assign.location);
+                location_ = std::move(assign.location_);
             }
             return *this;
         }
@@ -109,8 +121,10 @@ namespace heongpu
       private:
         int ring_size_;
         int coeff_modulus_count_;
+        int hamming_weight_;
 
-        DeviceVector<Data> location;
+        DeviceVector<int> secretkey_; // coefficients are in {-1, 0, 1}
+        DeviceVector<Data> location_; // coefficients are RNS domain
     };
 } // namespace heongpu
 #endif // SECRETKEY_H
