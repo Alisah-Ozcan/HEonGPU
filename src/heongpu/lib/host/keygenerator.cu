@@ -75,12 +75,13 @@ namespace heongpu
 
     __host__ void HEKeyGenerator::generate_secret_key(Secretkey& sk)
     {
-        sk_gen_kernel<<<dim3((n >> 8), 1, 1), 256>>>(sk.secretkey_.data(), sk.hamming_weight_,
-                                                 n_power, seed_);
+        sk_gen_kernel<<<dim3((n >> 8), 1, 1), 256>>>(
+            sk.secretkey_.data(), sk.hamming_weight_, n_power, seed_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        sk_rns_kernel<<<dim3((n >> 8), 1, 1), 256>>>(sk.secretkey_.data(), sk.data(), modulus_->data(),
-                                                 n_power, Q_prime_size_, seed_);
+        sk_rns_kernel<<<dim3((n >> 8), 1, 1), 256>>>(
+            sk.secretkey_.data(), sk.data(), modulus_->data(), n_power,
+            Q_prime_size_, seed_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,

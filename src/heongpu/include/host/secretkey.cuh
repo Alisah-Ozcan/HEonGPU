@@ -20,9 +20,9 @@ namespace heongpu
      * like public keys, relinearization keys, and Galois keys.
      */
     class Secretkey
-    {  
+    {
         friend class HEKeyGenerator;
-        
+
       public:
         /**
          * @brief Constructs a new Secretkey object with specified parameters.
@@ -37,8 +37,8 @@ namespace heongpu
          *
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
-         * @param hamming_weight Parameter defining hamming weight of secret key,
-         * try to use it as (ring size / 2) for maximum security.
+         * @param hamming_weight Parameter defining hamming weight of secret
+         * key, try to use it as (ring size / 2) for maximum security.
          */
         __host__ Secretkey(Parameters& context, int hamming_weight);
 

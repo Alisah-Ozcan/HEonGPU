@@ -12,25 +12,27 @@ namespace heongpu
     // Secret Key Generation
 
     // Not cryptographically secure, will be fixed later.
-    __global__ void sk_gen_kernel(int* secret_key, int hamming_weight, int n_power, int seed)
+    __global__ void sk_gen_kernel(int* secret_key, int hamming_weight,
+                                  int n_power, int seed)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
 
         secret_key[idx] = 0;
-        
+
         curandState_t state;
         curand_init(seed, idx, 0, &state);
 
-        if (idx < hamming_weight) {
+        if (idx < hamming_weight)
+        {
             int mask = (1 << n_power) - 1;
             int location = curand(&state) & mask;
-            int value = (curand(&state) & 2) * 2 - 1; // -1 or 1 
+            int value = (curand(&state) & 2) * 2 - 1; // -1 or 1
             atomicExch(&secret_key[location], value);
         }
     }
- 
-    __global__ void sk_rns_kernel(int* input, Data* output, Modulus* modulus, int n_power,
-                              int rns_mod_count, int seed)
+
+    __global__ void sk_rns_kernel(int* input, Data* output, Modulus* modulus,
+                                  int n_power, int rns_mod_count, int seed)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
 
@@ -42,10 +44,12 @@ namespace heongpu
             int location = i << n_power;
 
             Data result;
-            if (sk_ < 0){
+            if (sk_ < 0)
+            {
                 result = modulus[i].value - 1;
             }
-            else{
+            else
+            {
                 result = static_cast<Data>(sk_);
             }
 
