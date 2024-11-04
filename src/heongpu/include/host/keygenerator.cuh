@@ -47,6 +47,18 @@ namespace heongpu
         __host__ void generate_secret_key(Secretkey& sk);
 
         /**
+         * @brief Generates conjugation of given secret key.
+         *
+         * @param conj_sk Reference to the Secretkey object where the conjugated
+         * secret key will be stored. This object will be modified to contain
+         * the conjugate of the original secret key.
+         * @param sk Reference to the original Secretkey object that is used as
+         * the source for the conjugation. This object remains unchanged.
+         */
+        __host__ void generate_conjugate_secret_key(Secretkey& conj_sk,
+                                                    Secretkey& orginal_sk);
+
+        /**
          * @brief Generates a public key using a secret key.
          *
          * @param pk Reference to the Publickey object where the generated

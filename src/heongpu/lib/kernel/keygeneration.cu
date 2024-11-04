@@ -11,6 +11,28 @@ namespace heongpu
     /////////////////////////////////////////////////////////////////////////////////////
     // Secret Key Generation
 
+    __device__ int conjugate(int* data, int& idx, int& n_power)
+    {
+        int n = 1 << n_power;
+
+        if (idx == 0)
+        {
+            return data[0];
+        }
+
+        int mask = n - 1;
+        int new_location = (n - idx) & mask;
+        return (-data[new_location]);
+    }
+
+    __global__ void conjugate_kernel(int* conj_secret_key,
+                                     int* orginal_secret_key, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
+
+        conj_secret_key[idx] = conjugate(orginal_secret_key, idx, n_power);
+    }
+
     // Not cryptographically secure, will be fixed later.
     __global__ void sk_gen_kernel(int* secret_key, int hamming_weight,
                                   int n_power, int seed)

@@ -96,6 +96,31 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
+    __host__ void
+    HEKeyGenerator::generate_conjugate_secret_key(Secretkey& conj_sk,
+                                                  Secretkey& orginal_sk)
+    {
+        conjugate_kernel<<<dim3((n >> 8), 1, 1), 256>>>(
+            conj_sk.secretkey_.data(), orginal_sk.secretkey_.data(), n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        sk_rns_kernel<<<dim3((n >> 8), 1, 1), 256>>>(
+            conj_sk.secretkey_.data(), conj_sk.data(), modulus_->data(),
+            n_power, Q_prime_size_, seed_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+                                         .ntt_type = FORWARD,
+                                         .reduction_poly =
+                                             ReductionPolynomial::X_N_plus,
+                                         .zero_padding = false,
+                                         .stream = 0};
+
+        GPU_NTT_Inplace(conj_sk.data(), ntt_table_->data(), modulus_->data(),
+                        cfg_ntt, Q_prime_size_, Q_prime_size_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
     __host__ void HEKeyGenerator::generate_public_key(Publickey& pk,
                                                       Secretkey& sk)
     {

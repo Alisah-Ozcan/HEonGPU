@@ -13,6 +13,11 @@
 
 namespace heongpu
 {
+    // Conjugate memory access
+    __device__ int conjugate(int* data, int& idx, int& n_power);
+
+    __global__ void conjugate_kernel(int* conj_secret_key,
+                                     int* orginal_secret_key, int n_power);
 
     // Secret Key Generation
 
