@@ -39,7 +39,8 @@ int main(int argc, char* argv[])
         heongpu::Relinkey relin_key(context);
         keygen.generate_relin_key(relin_key, secret_key);
 
-        heongpu::Galoiskey galois_key(context);
+        std::vector<int> custom_key_index = {1};
+        heongpu::Galoiskey galois_key(context, custom_key_index);
         keygen.generate_galois_key(galois_key, secret_key);
 
         heongpu::HEEncoder encoder(context);

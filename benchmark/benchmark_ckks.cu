@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     std::vector<double> scales = {pow(2.0, 30), pow(2.0, 35), pow(2.0, 40),
                                   pow(2.0, 45)};
 
-    // Require 40GB GPU memory
+    // Require High Amount GPU memory
     // std::vector<size_t> poly_modulus_degrees = {65536};
     // std::vector<std::vector<int>> log_Q_bit_sizes =
     // {{60,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50}};
@@ -52,7 +52,8 @@ int main(int argc, char* argv[])
         heongpu::Relinkey relin_key(context);
         keygen.generate_relin_key(relin_key, secret_key);
 
-        heongpu::Galoiskey galois_key(context);
+        std::vector<int> custom_key_index = {1};
+        heongpu::Galoiskey galois_key(context, custom_key_index);
         keygen.generate_galois_key(galois_key, secret_key);
 
         heongpu::HEEncoder encoder(context);
