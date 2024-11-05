@@ -14,7 +14,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
         int plain_modulus = 1032193;
         heongpu::Parameters context(
             heongpu::scheme_type::bfv,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({36, 36}, {37});
@@ -109,7 +109,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
         int plain_modulus = 1032193;
         heongpu::Parameters context(
             heongpu::scheme_type::bfv,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({54, 54, 54}, {55});
@@ -204,7 +204,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
         int plain_modulus = 786433;
         heongpu::Parameters context(
             heongpu::scheme_type::bfv,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({54, 54, 54, 54, 55, 55, 55}, {55});
@@ -299,7 +299,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
         int plain_modulus = 786433;
         heongpu::Parameters context(
             heongpu::scheme_type::bfv,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus(
@@ -395,7 +395,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
         int plain_modulus = 786433;
         heongpu::Parameters context(
             heongpu::scheme_type::bfv,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({58, 58, 58, 58, 58, 58, 58, 58, 58, 59,

@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     {
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degrees[i]);
         context.set_coeff_modulus(log_Q_bit_sizes[i], log_P_bit_sizes[i]);

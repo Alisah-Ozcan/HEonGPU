@@ -971,7 +971,7 @@ namespace heongpu
 
             switch (static_cast<int>(relin_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -992,7 +992,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
 
                     if (scheme_ == scheme_type::bfv)
                     {
@@ -1017,7 +1017,7 @@ namespace heongpu
                     }
 
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     if (scheme_ == scheme_type::bfv)
                     {
@@ -1078,7 +1078,7 @@ namespace heongpu
 
             switch (static_cast<int>(relin_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1101,7 +1101,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
 
                     if (scheme_ == scheme_type::bfv)
                     {
@@ -1126,7 +1126,7 @@ namespace heongpu
                     }
 
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     if (scheme_ == scheme_type::bfv)
                     {
@@ -1190,7 +1190,7 @@ namespace heongpu
 
             switch (static_cast<int>(galois_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1211,7 +1211,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1233,10 +1233,10 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for rotation operation!");
 
                     break;
@@ -1290,7 +1290,7 @@ namespace heongpu
 
             switch (static_cast<int>(galois_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1313,7 +1313,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1336,10 +1336,10 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for rotation operation!");
 
                     break;
@@ -1420,7 +1420,7 @@ namespace heongpu
 
             switch (static_cast<int>(galois_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1441,7 +1441,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
                     if (scheme_ == scheme_type::bfv)
                     {
                         rotate_columns_method_II(input1, output, galois_key);
@@ -1456,10 +1456,10 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for rotation operation!");
 
                     break;
@@ -1511,7 +1511,7 @@ namespace heongpu
 
             switch (static_cast<int>(galois_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1533,7 +1533,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
                     if (scheme_ == scheme_type::bfv)
                     {
                         rotate_columns_method_II(input1, output, galois_key,
@@ -1549,10 +1549,10 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for rotation operation!");
 
                     break;
@@ -1605,7 +1605,7 @@ namespace heongpu
 
             switch (static_cast<int>(galois_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1628,7 +1628,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1651,10 +1651,10 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for rotation operation!");
 
                     break;
@@ -1710,7 +1710,7 @@ namespace heongpu
 
             switch (static_cast<int>(galois_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1733,7 +1733,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1756,10 +1756,10 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for rotation operation!");
 
                     break;
@@ -1844,7 +1844,7 @@ namespace heongpu
 
             switch (static_cast<int>(switch_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1865,7 +1865,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1886,10 +1886,10 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for keyswitch operation!");
 
                     break;
@@ -1942,7 +1942,7 @@ namespace heongpu
 
             switch (static_cast<int>(switch_key.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1964,7 +1964,7 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
                     if (scheme_ == scheme_type::bfv)
                     {
                         if (input1.in_ntt_domain_ != false)
@@ -1986,10 +1986,10 @@ namespace heongpu
                             "Invalid Key Switching Type");
                     }
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for keyswitch operation!");
 
                     break;

@@ -80,10 +80,10 @@ namespace heongpu
         {
             switch (static_cast<int>(rk.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     generate_relin_key_method_I(rk, sk);
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
 
                     if (rk.scheme_ == scheme_type::bfv)
                     { // no leveled
@@ -100,7 +100,7 @@ namespace heongpu
                     }
 
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     if (rk.scheme_ == scheme_type::bfv)
                     { // no leveled
@@ -135,10 +135,10 @@ namespace heongpu
         {
             switch (static_cast<int>(gk.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     generate_galois_key_method_I(gk, sk);
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
 
                     if (gk.scheme_ == scheme_type::bfv)
                     {
@@ -155,10 +155,10 @@ namespace heongpu
                     }
 
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for galois key generation!");
 
                     break;
@@ -182,10 +182,10 @@ namespace heongpu
         {
             switch (static_cast<int>(swk.key_type))
             {
-                case 1: // KEYSWITHING_METHOD_I
+                case 1: // KEYSWITCHING_METHOD_I
                     generate_switch_key_method_I(swk, new_sk, old_sk);
                     break;
-                case 2: // KEYSWITHING_METHOD_II
+                case 2: // KEYSWITCHING_METHOD_II
 
                     if (swk.scheme_ == scheme_type::bfv)
                     {
@@ -202,10 +202,10 @@ namespace heongpu
                     }
 
                     break;
-                case 3: // KEYSWITHING_METHOD_III
+                case 3: // KEYSWITCHING_METHOD_III
 
                     throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "KEYSWITCHING_METHOD_III are not supported because of "
                         "high memory consumption for galois key generation!");
 
                     break;

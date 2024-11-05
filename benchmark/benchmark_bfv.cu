@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     {
         heongpu::Parameters context(
             heongpu::scheme_type::bfv,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I);
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
         context.set_poly_modulus_degree(poly_modulus_degrees[i]);
         context.set_default_coeff_modulus(1);
         context.set_plain_modulus(plain_modulus[i]);

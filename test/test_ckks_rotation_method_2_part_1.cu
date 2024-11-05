@@ -40,7 +40,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         size_t poly_modulus_degree = 4096;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_II,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({40, 30, 30}, {40, 40});
@@ -104,7 +104,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         size_t poly_modulus_degree = 8192;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_II,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({40, 30, 30, 30, 30}, {40, 40});
@@ -168,7 +168,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         size_t poly_modulus_degree = 16384;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_II,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus(

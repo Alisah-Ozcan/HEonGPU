@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     // Initialize encryption parameters for the CKKS scheme.
     heongpu::Parameters context(
         heongpu::scheme_type::bfv,
-        heongpu::keyswitching_type::KEYSWITHING_METHOD_I);
+        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     size_t poly_modulus_degree = 8192;
     int plain_modulus = 786433;

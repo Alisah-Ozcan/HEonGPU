@@ -13,8 +13,8 @@ int main(int argc, char* argv[])
 
     heongpu::Parameters context(
         heongpu::scheme_type::bfv,
-        heongpu::keyswitching_type::KEYSWITHING_METHOD_I);
-    // heongpu::keyswitching_type::KEYSWITHING_METHOD_III not supports rotation
+        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+    // heongpu::keyswitching_type::KEYSWITCHING_METHOD_III not supports rotation
     // because of key size, only supports relinearization!
 
     size_t poly_modulus_degree = 16384;

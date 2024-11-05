@@ -90,9 +90,9 @@ namespace heongpu
     enum class keyswitching_type : std::uint8_t
     {
         NONE = 0x0,
-        KEYSWITHING_METHOD_I = 0x1, // SEALMETHOD = 0x1,
-        KEYSWITHING_METHOD_II = 0x2, // EXTERNALPRODUCT = 0x2,
-        KEYSWITHING_METHOD_III = 0x3, // EXTERNALPRODUCT_2 = 0x3
+        KEYSWITCHING_METHOD_I = 0x1, // SEALMETHOD = 0x1,
+        KEYSWITCHING_METHOD_II = 0x2, // EXTERNALPRODUCT = 0x2,
+        KEYSWITCHING_METHOD_III = 0x3, // EXTERNALPRODUCT_2 = 0x3
     };
 
     enum class storage_type : std::uint8_t

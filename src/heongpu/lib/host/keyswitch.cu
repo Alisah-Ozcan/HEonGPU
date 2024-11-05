@@ -24,13 +24,13 @@ namespace heongpu
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
-            case 1: // KEYSWITHING_METHOD_I
+            case 1: // KEYSWITCHING_METHOD_I
             {
                 // It can use for both leveled and no leveled.
                 relinkey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
                 break;
             }
-            case 2: // KEYSWITHING_METHOD_II
+            case 2: // KEYSWITCHING_METHOD_II
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -49,7 +49,7 @@ namespace heongpu
                 }
 
                 break;
-            case 3: // KEYSWITHING_METHOD_III
+            case 3: // KEYSWITCHING_METHOD_III
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -102,7 +102,7 @@ namespace heongpu
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
-            case 1: // KEYSWITHING_METHOD_I
+            case 1: // KEYSWITCHING_METHOD_I
             {
                 // It can use for both leveled and no leveled.
                 relinkey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
@@ -113,7 +113,7 @@ namespace heongpu
                 device_location_ = DeviceVector<Data>(key);
                 break;
             }
-            case 2: // KEYSWITHING_METHOD_II
+            case 2: // KEYSWITCHING_METHOD_II
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -142,7 +142,7 @@ namespace heongpu
                 }
 
                 break;
-            case 3: // KEYSWITHING_METHOD_III
+            case 3: // KEYSWITCHING_METHOD_III
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -190,14 +190,14 @@ namespace heongpu
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
-            case 1: // KEYSWITHING_METHOD_I
+            case 1: // KEYSWITCHING_METHOD_I
             {
                 throw std::invalid_argument("Invalid Key Size");
             }
-            case 2: // KEYSWITHING_METHOD_II
+            case 2: // KEYSWITCHING_METHOD_II
                 throw std::invalid_argument("Invalid Key Size");
                 break;
-            case 3: // KEYSWITHING_METHOD_III
+            case 3: // KEYSWITCHING_METHOD_III
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -249,7 +249,7 @@ namespace heongpu
         }
         else
         {
-            if ((key_type == keyswitching_type::KEYSWITHING_METHOD_III) &&
+            if ((key_type == keyswitching_type::KEYSWITCHING_METHOD_III) &&
                 scheme_ == scheme_type::ckks)
             {
                 int max_depth = Q_size_ - 1;
@@ -278,7 +278,7 @@ namespace heongpu
     {
         if (store_in_gpu_)
         {
-            if ((key_type == keyswitching_type::KEYSWITHING_METHOD_III) &&
+            if ((key_type == keyswitching_type::KEYSWITCHING_METHOD_III) &&
                 scheme_ == scheme_type::ckks)
             {
                 int max_depth = Q_size_ - 1;
@@ -360,7 +360,7 @@ namespace heongpu
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
-            case 1: // KEYSWITHING_METHOD_I
+            case 1: // KEYSWITCHING_METHOD_I
             {
                 galoiskey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
 
@@ -376,7 +376,7 @@ namespace heongpu
 
                 break;
             }
-            case 2: // KEYSWITHING_METHOD_II
+            case 2: // KEYSWITCHING_METHOD_II
             {
                 for (int i = 0; i < MAX_SHIFT; i++)
                 {
@@ -407,9 +407,9 @@ namespace heongpu
 
                 break;
             }
-            case 3: // KEYSWITHING_METHOD_III Galoiskey
+            case 3: // KEYSWITCHING_METHOD_III Galoiskey
                 throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITHING_METHOD_III");
+                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
                 break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
@@ -437,7 +437,7 @@ namespace heongpu
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
-            case 1: // KEYSWITHING_METHOD_I
+            case 1: // KEYSWITCHING_METHOD_I
             {
                 galoiskey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
 
@@ -450,7 +450,7 @@ namespace heongpu
 
                 break;
             }
-            case 2: // KEYSWITHING_METHOD_II
+            case 2: // KEYSWITCHING_METHOD_II
             {
                 for (int shift : shift_vec)
                 {
@@ -478,9 +478,9 @@ namespace heongpu
 
                 break;
             }
-            case 3: // KEYSWITHING_METHOD_III Galoiskey
+            case 3: // KEYSWITCHING_METHOD_III Galoiskey
                 throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITHING_METHOD_III");
+                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
                 break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
@@ -507,7 +507,7 @@ namespace heongpu
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
-            case 1: // KEYSWITHING_METHOD_I
+            case 1: // KEYSWITCHING_METHOD_I
             {
                 galois_elt_zero = steps_to_galois_elt(0, ring_size);
                 galoiskey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
@@ -515,7 +515,7 @@ namespace heongpu
 
                 break;
             }
-            case 2: // KEYSWITHING_METHOD_II
+            case 2: // KEYSWITCHING_METHOD_II
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -538,9 +538,9 @@ namespace heongpu
                 }
 
                 break;
-            case 3: // KEYSWITHING_METHOD_III Galoiskey
+            case 3: // KEYSWITCHING_METHOD_III Galoiskey
                 throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITHING_METHOD_III");
+                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
                 break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
@@ -645,12 +645,12 @@ namespace heongpu
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
-            case 1: // KEYSWITHING_METHOD_I
+            case 1: // KEYSWITCHING_METHOD_I
 
                 // It can use for both leveled and no leveled.
                 switchkey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
                 break;
-            case 2: // KEYSWITHING_METHOD_II
+            case 2: // KEYSWITCHING_METHOD_II
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -670,9 +670,9 @@ namespace heongpu
                 }
 
                 break;
-            case 3: // KEYSWITHING_METHOD_III Galoiskey
+            case 3: // KEYSWITCHING_METHOD_III Galoiskey
                 throw std::invalid_argument(
-                    "Switchkey does not support KEYSWITHING_METHOD_III");
+                    "Switchkey does not support KEYSWITCHING_METHOD_III");
                 break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");

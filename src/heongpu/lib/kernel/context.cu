@@ -745,10 +745,11 @@ namespace heongpu
         if (!context_generated)
         {
             if ((log_P_bases_bit_sizes.size() > 1) &&
-                (keyswitching_type_ == keyswitching_type::KEYSWITHING_METHOD_I))
+                (keyswitching_type_ ==
+                 keyswitching_type::KEYSWITCHING_METHOD_I))
             {
                 throw std::logic_error("log_P_bases_bit_sizes cannot be higher "
-                                       "than 1 for KEYSWITHING_METHOD_I!");
+                                       "than 1 for KEYSWITCHING_METHOD_I!");
             }
 
             if (!check_coeffs(log_Q_bases_bit_sizes, log_P_bases_bit_sizes))
@@ -839,10 +840,11 @@ namespace heongpu
         if (!context_generated)
         {
             if ((P_modulus_size > 1) &&
-                (keyswitching_type_ == keyswitching_type::KEYSWITHING_METHOD_I))
+                (keyswitching_type_ ==
+                 keyswitching_type::KEYSWITCHING_METHOD_I))
             {
                 throw std::logic_error("log_P_bases_bit_sizes cannot be higher "
-                                       "than 1 for KEYSWITHING_METHOD_I!");
+                                       "than 1 for KEYSWITCHING_METHOD_I!");
             }
 
             total_coeff_bit_count = 0;
@@ -1332,10 +1334,10 @@ namespace heongpu
 
         switch (static_cast<int>(keyswitching_type_))
         {
-            case 1: // KEYSWITHING_METHOD_I
+            case 1: // KEYSWITCHING_METHOD_I
                 // Deafult
                 break;
-            case 2: // KEYSWITHING_METHOD_II
+            case 2: // KEYSWITCHING_METHOD_II
 
                 if (scheme_ == scheme_type::bfv)
                 {
@@ -1459,7 +1461,7 @@ namespace heongpu
                     throw std::invalid_argument("Invalid Key Switching Type");
                 }
                 break;
-            case 3: // KEYSWITHING_METHOD_III
+            case 3: // KEYSWITCHING_METHOD_III
 
                 if (scheme_ == scheme_type::bfv)
                 {
@@ -1710,7 +1712,7 @@ namespace heongpu
             temp2_mul = temp1_mul + (4 * n * (bsk_modulus_count_ + Q_size_));
 
             if (context.keyswitching_type_ ==
-                keyswitching_type::KEYSWITHING_METHOD_I)
+                keyswitching_type::KEYSWITCHING_METHOD_I)
             {
                 temp_relin = DeviceVector<Data>((n * Q_size_ * Q_prime_size_) +
                                                 (2 * n * Q_prime_size_));
@@ -1725,7 +1727,7 @@ namespace heongpu
                 temp2_rotation = temp1_rotation + (n * Q_size_ * Q_prime_size_);
             }
             else if (context.keyswitching_type_ ==
-                     keyswitching_type::KEYSWITHING_METHOD_II)
+                     keyswitching_type::KEYSWITCHING_METHOD_II)
             {
                 temp_relin = DeviceVector<Data>((n * Q_size_ * Q_prime_size_) +
                                                 (2 * n * Q_prime_size_));
@@ -1742,7 +1744,7 @@ namespace heongpu
                 temp3_rotation = temp2_rotation + (2 * n * Q_prime_size_ * d);
             }
             else if (context.keyswitching_type_ ==
-                     keyswitching_type::KEYSWITHING_METHOD_III)
+                     keyswitching_type::KEYSWITCHING_METHOD_III)
             {
                 temp_relin_new = DeviceVector<Data>(
                     (n * d * r_prime) + (2 * n * d_tilda * r_prime) +
@@ -1766,7 +1768,7 @@ namespace heongpu
         else if (scheme == scheme_type::ckks)
         {
             if (context.keyswitching_type_ ==
-                keyswitching_type::KEYSWITHING_METHOD_I)
+                keyswitching_type::KEYSWITCHING_METHOD_I)
             {
                 temp_relin = DeviceVector<Data>((n * Q_size_ * Q_prime_size_) +
                                                 (2 * n * Q_prime_size_));
@@ -1783,7 +1785,7 @@ namespace heongpu
                 temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
             }
             else if (context.keyswitching_type_ ==
-                     keyswitching_type::KEYSWITHING_METHOD_II)
+                     keyswitching_type::KEYSWITCHING_METHOD_II)
             {
                 temp_relin = DeviceVector<Data>((n * Q_size_ * Q_prime_size_) +
                                                 (2 * n * Q_prime_size_));
@@ -1804,7 +1806,7 @@ namespace heongpu
                     (2 * n * d_leveled_->operator[](0) * Q_prime_size_);
             }
             else if (context.keyswitching_type_ ==
-                     keyswitching_type::KEYSWITHING_METHOD_III)
+                     keyswitching_type::KEYSWITCHING_METHOD_III)
             {
                 temp_relin_new = DeviceVector<Data>(
                     (n * d_leveled_->operator[](0) * r_prime_leveled_) +
