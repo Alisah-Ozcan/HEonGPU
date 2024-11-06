@@ -68,6 +68,17 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
         cudaDeviceSynchronize();
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
+
+        heongpu::Plaintext P2(context);
+        double number = static_cast<double>(dis(gen));
+        encoder.encode(P2, number, scale);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P2);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
 
     {
@@ -102,6 +113,17 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
         cudaDeviceSynchronize();
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
+
+        heongpu::Plaintext P2(context);
+        double number = static_cast<double>(dis(gen));
+        encoder.encode(P2, number, scale);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P2);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
 
     {
@@ -137,6 +159,17 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
         cudaDeviceSynchronize();
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
+
+        heongpu::Plaintext P2(context);
+        double number = static_cast<double>(dis(gen));
+        encoder.encode(P2, number, scale);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P2);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
 
     {
@@ -173,6 +206,17 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
         cudaDeviceSynchronize();
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
+
+        heongpu::Plaintext P2(context);
+        double number = static_cast<double>(dis(gen));
+        encoder.encode(P2, number, scale);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P2);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
 
     {
@@ -211,6 +255,17 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
         cudaDeviceSynchronize();
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
+
+        heongpu::Plaintext P2(context);
+        double number = static_cast<double>(dis(gen));
+        encoder.encode(P2, number, scale);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P2);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
 }
 
