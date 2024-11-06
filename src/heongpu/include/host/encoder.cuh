@@ -440,6 +440,12 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
                     if (message.size() > slot_count_)
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
@@ -489,6 +495,12 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
                     if (message.size() > slot_count_)
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
@@ -536,6 +548,12 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
                     if (message.size() > slot_count_)
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
@@ -585,6 +603,12 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
                     if (message.size() > slot_count_)
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
@@ -632,6 +656,12 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
                     if (message.size() > slot_count_)
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
@@ -681,6 +711,12 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
                     if (message.size() > slot_count_)
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
@@ -729,6 +765,12 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
                     if (message.size() > slot_count_)
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
@@ -778,6 +820,12 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
                     if (message.size() > slot_count_)
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
@@ -804,6 +852,228 @@ namespace heongpu
         }
 
         //
+
+        /**
+         * @brief Encodes a message of single double numbers into a plaintext.
+         *
+         * @param plain Plaintext object where the result of the encoding will
+         * be stored.
+         * @param message Double representing the message to be
+         * encoded.
+         * @param scale parameter defining encoding precision(for CKKS), default
+         * is 0.
+         */
+        __host__ void encode(Plaintext& plain, const double& message,
+                             double scale = 0)
+        {
+            switch (static_cast<int>(scheme_))
+            {
+                case 1: // BFV
+                    throw std::invalid_argument(
+                        "BFV does not support this feature");
+                    break;
+                case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
+                    if ((static_cast<int>(log2(fabs(message))) + 2) >=
+                        total_coeff_bit_count_)
+                    {
+                        throw std::invalid_argument(
+                            "Encoded value is too large");
+                    }
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_));
+                    }
+
+                    encode_ckks(plain, message, scale);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
+                    break;
+                case 3: // BGV
+
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Scheme Type");
+                    break;
+            }
+        }
+
+        /**
+         * @brief Encodes a message of single double numbers into a plaintext
+         * asynchronously.
+         *
+         * @param plain Plaintext object where the result of the encoding will
+         * be stored.
+         * @param message Double representing the message to be
+         * encoded.
+         * @param stream Reference to the HEStream object representing the CUDA
+         * stream to be used for asynchronous operation.
+         * @param scale parameter defining encoding precision(for CKKS), default
+         * is 0.
+         */
+        __host__ void encode(Plaintext& plain, const double& message,
+                             HEStream& stream, double scale = 0)
+        {
+            switch (static_cast<int>(scheme_))
+            {
+                case 1: // BFV
+                    throw std::invalid_argument(
+                        "BFV does not support this feature");
+                    break;
+                case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
+                    if ((static_cast<int>(log2(fabs(message))) + 2) >=
+                        total_coeff_bit_count_)
+                    {
+                        throw std::invalid_argument(
+                            "Encoded value is too large");
+                    }
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_), stream);
+                    }
+
+                    encode_ckks(plain, message, scale, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
+                    break;
+                case 3: // BGV
+
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Scheme Type");
+                    break;
+            }
+        }
+
+        //
+
+        /**
+         * @brief Encodes a message of single int64_t numbers into a plaintext.
+         *
+         * @param plain Plaintext object where the result of the encoding will
+         * be stored.
+         * @param message int64_t representing the message to be
+         * encoded.
+         */
+        __host__ void encode(Plaintext& plain, const std::int64_t& message,
+                             double scale = 0)
+        {
+            switch (static_cast<int>(scheme_))
+            {
+                case 1: // BFV
+                    throw std::invalid_argument(
+                        "BFV does not support this feature");
+                    break;
+                case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
+                    if ((static_cast<int>(log2(fabs(message))) + 2) >=
+                        total_coeff_bit_count_)
+                    {
+                        throw std::invalid_argument(
+                            "Encoded value is too large");
+                    }
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_));
+                    }
+                    encode_ckks(plain, message, scale);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
+                    break;
+                case 3: // BGV
+
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Scheme Type");
+                    break;
+            }
+        }
+
+        /**
+         * @brief Encodes a message of single int64_t numbers into a plaintext
+         * asynchronously.
+         *
+         * @param plain Plaintext object where the result of the encoding will
+         * be stored.
+         * @param message int64_t representing the message to be
+         * encoded.
+         * @param stream Reference to the HEStream object representing the CUDA
+         * stream to be used for asynchronous operation.
+         */
+        __host__ void encode(Plaintext& plain, const std::int64_t& message,
+                             HEStream& stream, double scale = 0)
+        {
+            switch (static_cast<int>(scheme_))
+            {
+                case 1: // BFV
+                    throw std::invalid_argument(
+                        "BFV does not support this feature");
+                    break;
+                case 2: // CKKS
+                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                         total_coeff_bit_count_))
+                    {
+                        throw std::invalid_argument("Scale out of bounds");
+                    }
+
+                    if ((static_cast<int>(log2(fabs(message))) + 2) >=
+                        total_coeff_bit_count_)
+                    {
+                        throw std::invalid_argument(
+                            "Encoded value is too large");
+                    }
+
+                    if (plain.size() != (n * Q_size_))
+                    {
+                        plain.resize((n * Q_size_), stream);
+                    }
+
+                    encode_ckks(plain, message, scale, stream);
+
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
+                    break;
+                case 3: // BGV
+
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Scheme Type");
+                    break;
+            }
+        }
+
+        //
+
         /**
          * @brief Decodes a plaintext into a vector of unsigned 64-bit integers.
          *
@@ -1367,6 +1637,20 @@ namespace heongpu
 
         //
 
+        __host__ void encode_ckks(Plaintext& plain, const double& message,
+                                  const double scale);
+
+        __host__ void encode_ckks(Plaintext& plain, const double& message,
+                                  const double scale, HEStream& stream);
+
+        __host__ void encode_ckks(Plaintext& plain, const std::int64_t& message,
+                                  const double scale);
+
+        __host__ void encode_ckks(Plaintext& plain, const std::int64_t& message,
+                                  const double scale, HEStream& stream);
+
+        //
+
         __host__ void decode_ckks(std::vector<double>& message,
                                   Plaintext& plain);
 
@@ -1419,6 +1703,7 @@ namespace heongpu
         DeviceVector<COMPLEX> temp_complex;
 
         int Q_size_;
+        int total_coeff_bit_count_;
         std::shared_ptr<DeviceVector<Modulus>> modulus_;
         std::shared_ptr<DeviceVector<Root>> ntt_table_;
         std::shared_ptr<DeviceVector<Root>> intt_table_;

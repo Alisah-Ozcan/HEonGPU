@@ -112,6 +112,69 @@ namespace heongpu
         }
     }
 
+    __global__ void encode_kernel_double_ckks_conversion(
+        Data* plaintext, double message, Modulus* modulus,
+        int coeff_modulus_count, double two_pow_64, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+
+        double message_r = message;
+
+        double coeff_double = round(message_r);
+        bool is_negative = signbit(coeff_double);
+        coeff_double = fabs(coeff_double);
+
+        // Change Type
+        Data coeff[2] = {
+            static_cast<std::uint64_t>(fmod(coeff_double, two_pow_64)),
+            static_cast<std::uint64_t>(coeff_double / two_pow_64)};
+
+        if (is_negative)
+        {
+            for (int i = 0; i < coeff_modulus_count; i++)
+            {
+                Data temp = VALUE_GPU::reduce(coeff, modulus[i]);
+                plaintext[idx + (i << n_power)] =
+                    VALUE_GPU::sub(modulus[i].value, temp, modulus[i]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < coeff_modulus_count; i++)
+            {
+                plaintext[idx + (i << n_power)] =
+                    VALUE_GPU::reduce(coeff, modulus[i]);
+            }
+        }
+    }
+
+    __global__ void encode_kernel_int_ckks_conversion(Data* plaintext,
+                                                      std::int64_t message,
+                                                      Modulus* modulus,
+                                                      int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        int block_y = blockIdx.y;
+        int location = idx + (block_y << n_power);
+
+        Modulus mod = modulus[block_y];
+        std::int64_t message_r = message;
+
+        if (message < 0)
+        {
+            message_r = message_r + mod.value;
+            Data message_d = static_cast<Data>(message_r);
+            message_d = VALUE_GPU::reduce_forced(message_d, mod);
+            plaintext[location] = message_d;
+        }
+        else
+        {
+            Data message_d = static_cast<Data>(message_r);
+            message_d = VALUE_GPU::reduce_forced(message_d, mod);
+            plaintext[location] = message_d;
+        }
+    }
+
     __global__ void encode_kernel_compose(COMPLEX* complex_message,
                                           Data* plaintext, Modulus* modulus,
                                           Data* Mi_inv, Data* Mi,

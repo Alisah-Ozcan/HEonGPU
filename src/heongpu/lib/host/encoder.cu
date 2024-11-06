@@ -35,6 +35,8 @@ namespace heongpu
 
             Q_size_ = context.Q_size;
 
+            total_coeff_bit_count_ = context.total_coeff_bit_count;
+
             // modulus_ = context.modulus_.data();
             modulus_ = context.modulus_;
 
@@ -933,6 +935,60 @@ namespace heongpu
 
         GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_, Q_size_);
+    }
+
+    //
+
+    __host__ void HEEncoder::encode_ckks(Plaintext& plain,
+                                         const double& message,
+                                         const double scale)
+    {
+        double value = message * scale;
+
+        encode_kernel_double_ckks_conversion<<<dim3((n >> 8), 1, 1), 256>>>(
+            plain.data(), value, modulus_->data(), Q_size_, two_pow_64,
+            n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    __host__ void HEEncoder::encode_ckks(Plaintext& plain,
+                                         const double& message,
+                                         const double scale, HEStream& stream)
+    {
+        double value = message * scale;
+
+        encode_kernel_double_ckks_conversion<<<dim3((n >> 8), 1, 1), 256, 0,
+                                               stream.stream>>>(
+            plain.data(), value, modulus_->data(), Q_size_, two_pow_64,
+            n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    //
+
+    __host__ void HEEncoder::encode_ckks(Plaintext& plain,
+                                         const std::int64_t& message,
+                                         const double scale)
+    {
+        double value = static_cast<double>(message) * scale;
+
+        encode_kernel_double_ckks_conversion<<<dim3((n >> 8), 1, 1), 256>>>(
+            plain.data(), value, modulus_->data(), Q_size_, two_pow_64,
+            n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    __host__ void HEEncoder::encode_ckks(Plaintext& plain,
+                                         const std::int64_t& message,
+                                         const double scale, HEStream& stream)
+    {
+        double value = static_cast<double>(message) * scale;
+
+        encode_kernel_double_ckks_conversion<<<dim3((n >> 8), 1, 1), 256, 0,
+                                               stream.stream>>>(
+            plain.data(), value, modulus_->data(), Q_size_, two_pow_64,
+            n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
     //
