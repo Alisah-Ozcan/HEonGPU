@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     // Initialize encryption parameters for the BFV scheme.
     heongpu::Parameters context(
         heongpu::scheme_type::bfv,
-        heongpu::keyswitching_type::KEYSWITHING_METHOD_I);
+        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     // Set the polynomial modulus degree. This controls the complexity
     // of the computations and the size of the ciphertexts. Larger values
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     // sec256, none
     // heongpu::Parameters context(
     //    heongpu::scheme_type::bfv,
-    //    heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+    //    heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
     //    heongpu::sec_level_type::sec128);
 
     // Set the coefficient modulus, which determines the size of the noise

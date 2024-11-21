@@ -40,7 +40,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
         size_t poly_modulus_degree = 4096;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({40, 30, 30}, {40});
@@ -111,7 +111,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
         size_t poly_modulus_degree = 8192;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({40, 30, 30, 30, 30}, {40});
@@ -182,7 +182,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
         size_t poly_modulus_degree = 16384;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus(
@@ -254,7 +254,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
         size_t poly_modulus_degree = 32768;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({59, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
@@ -327,7 +327,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
         size_t poly_modulus_degree = 65536;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({59, 45, 45, 45, 45, 45, 45, 45, 45, 45,
@@ -406,7 +406,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
         size_t poly_modulus_degree = 4096;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({40, 30, 30}, {40});
@@ -471,7 +471,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
         size_t poly_modulus_degree = 8192;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({40, 30, 30, 30, 30}, {40});
@@ -536,7 +536,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
         size_t poly_modulus_degree = 16384;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus(
@@ -602,7 +602,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
         size_t poly_modulus_degree = 32768;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({59, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
@@ -669,7 +669,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
         size_t poly_modulus_degree = 65536;
         heongpu::Parameters context(
             heongpu::scheme_type::ckks,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I,
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus({59, 45, 45, 45, 45, 45, 45, 45, 45, 45,

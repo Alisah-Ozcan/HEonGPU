@@ -85,7 +85,7 @@ $ Example: ./build/bin/examples/1_basic_bfv
 
 int main() {
     heongpu::Parameters context(heongpu::scheme_type::bfv,
-            heongpu::keyswitching_type::KEYSWITHING_METHOD_I);
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     size_t poly_modulus_degree = 8192;
     context.set_poly_modulus_degree(poly_modulus_degree);
