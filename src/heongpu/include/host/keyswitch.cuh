@@ -231,6 +231,7 @@ namespace heongpu
         int r_prime_;
 
         bool customized;
+        int group_order_;
 
         bool store_in_gpu_;
         size_t galoiskey_size_;

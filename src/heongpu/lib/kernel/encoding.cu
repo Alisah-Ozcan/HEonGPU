@@ -40,78 +40,6 @@ namespace heongpu
         message[idx] = message_encoded[location];
     }
 
-    __global__ void encode_kernel_ckks(COMPLEX* message_encoded,
-                                       double* message, Data* location_info,
-                                       int slot_count)
-    {
-        int idx = blockIdx.x * blockDim.x +
-                  threadIdx.x; // slot_count = (ringsize / 2)
-
-        int location1 = location_info[idx];
-        int location2 =
-            location_info[slot_count + idx]; // TODO: find efficient way.
-
-        double message_reg = message[idx];
-        COMPLEX c_message(message_reg, 0.0);
-
-        message_encoded[location1] = c_message;
-        message_encoded[location2] = c_message; // conj
-    }
-
-    __global__ void encode_kernel_ckks(COMPLEX* message_encoded,
-                                       COMPLEX* message, Data* location_info,
-                                       int slot_count)
-    {
-        int idx = blockIdx.x * blockDim.x +
-                  threadIdx.x; // slot_count = (ringsize / 2)
-
-        int location1 = location_info[idx];
-        int location2 =
-            location_info[slot_count + idx]; // TODO: find efficient way.
-
-        COMPLEX c_message = message[idx];
-
-        message_encoded[location1] = c_message;
-        message_encoded[location2] = c_message.conjugate(); // conj
-    }
-
-    __global__ void
-    encode_kernel_ckks_conversion(Data* plaintext, COMPLEX* complex_message,
-                                  Modulus* modulus, int coeff_modulus_count,
-                                  double two_pow_64, int n_power)
-    {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
-
-        COMPLEX partial_message = complex_message[idx];
-
-        double coeff_double = round(partial_message.real());
-        bool is_negative = signbit(coeff_double);
-        coeff_double = fabs(coeff_double);
-
-        // Change Type
-        Data coeff[2] = {
-            static_cast<std::uint64_t>(fmod(coeff_double, two_pow_64)),
-            static_cast<std::uint64_t>(coeff_double / two_pow_64)};
-
-        if (is_negative)
-        {
-            for (int i = 0; i < coeff_modulus_count; i++)
-            {
-                Data temp = VALUE_GPU::reduce(coeff, modulus[i]);
-                plaintext[idx + (i << n_power)] =
-                    VALUE_GPU::sub(modulus[i].value, temp, modulus[i]);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < coeff_modulus_count; i++)
-            {
-                plaintext[idx + (i << n_power)] =
-                    VALUE_GPU::reduce(coeff, modulus[i]);
-            }
-        }
-    }
-
     __global__ void encode_kernel_double_ckks_conversion(
         Data* plaintext, double message, Modulus* modulus,
         int coeff_modulus_count, double two_pow_64, int n_power)
@@ -175,15 +103,115 @@ namespace heongpu
         }
     }
 
+    //////////////////////////////
+    //////////////////////////////
+    //////////////////////////////
+
+    __global__ void double_to_complex_kernel(double* input,
+                                       COMPLEX* output)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        double in = input[idx];
+
+        COMPLEX c_in(in, 0.0);
+        output[idx] = c_in;
+    }
+
+    __global__ void complex_to_double_kernel(COMPLEX* input,
+                                       double* output)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        COMPLEX in = input[idx];
+
+        double d_in = in.real();
+        output[idx] = d_in;
+    }
+
+    //
+
+    __global__ void
+    encode_kernel_ckks_conversion(Data* plaintext, COMPLEX* complex_message,
+                                  Modulus* modulus, int coeff_modulus_count,
+                                  double two_pow_64, int* reverse_order, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // slot_count
+
+        int order = reverse_order[idx];
+        COMPLEX partial_message = complex_message[order];
+
+        double coeff_double = round(partial_message.real());
+        bool is_negative = signbit(coeff_double);
+        coeff_double = fabs(coeff_double);
+
+        // Change Type
+        Data coeff[2] = {
+            static_cast<std::uint64_t>(fmod(coeff_double, two_pow_64)),
+            static_cast<std::uint64_t>(coeff_double / two_pow_64)};
+
+        if (is_negative)
+        {
+            for (int i = 0; i < coeff_modulus_count; i++)
+            {
+                Data temp = VALUE_GPU::reduce(coeff, modulus[i]);
+                plaintext[idx + (i << n_power)] =
+                    VALUE_GPU::sub(modulus[i].value, temp, modulus[i]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < coeff_modulus_count; i++)
+            {
+                plaintext[idx + (i << n_power)] =
+                    VALUE_GPU::reduce(coeff, modulus[i]);
+            }
+        }
+
+        // TODO: make it efficient
+        int offset = 1 << (n_power - 1);
+
+        double coeff_double2 = round(partial_message.imag());
+        bool is_negative2 = signbit(coeff_double2);
+        coeff_double2 = fabs(coeff_double2);
+
+        // Change Type
+        Data coeff2[2] = {
+            static_cast<std::uint64_t>(fmod(coeff_double2, two_pow_64)),
+            static_cast<std::uint64_t>(coeff_double2 / two_pow_64)};
+
+        if (is_negative2)
+        {
+            for (int i = 0; i < coeff_modulus_count; i++)
+            {
+                Data temp = VALUE_GPU::reduce(coeff2, modulus[i]);
+                plaintext[idx + offset + (i << n_power)] =
+                    VALUE_GPU::sub(modulus[i].value, temp, modulus[i]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < coeff_modulus_count; i++)
+            {
+                plaintext[idx + offset + (i << n_power)] =
+                    VALUE_GPU::reduce(coeff2, modulus[i]);
+            }
+        }
+
+    }
+
     __global__ void encode_kernel_compose(COMPLEX* complex_message,
                                           Data* plaintext, Modulus* modulus,
                                           Data* Mi_inv, Data* Mi,
                                           Data* upper_half_threshold,
                                           Data* decryption_modulus,
                                           int coeff_modulus_count, double scale,
-                                          double two_pow_64, int n_power)
+                                          double two_pow_64, int* reverse_order, int n_power)
     {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // slot_count
+        double inv_scale = double(1.0) / scale;
+        double two_pow_64_reg = two_pow_64;
+        int offset = 1 << (n_power - 1);
 
         Data compose_result[50]; // TODO: Define size as global variable
         Data big_integer_result[50]; // TODO: Define size as global variable
@@ -213,16 +241,12 @@ namespace heongpu
             }
         }
 
-        double inv_scale = double(1.0) / scale;
+        double result_real = double(0.0);
 
-        double result_d = double(0.0);
-
-        double two_pow_64_reg = two_pow_64;
-
-        bool check = biginteger::is_greater_or_equal(
+        bool check1 = biginteger::is_greater_or_equal(
             compose_result, upper_half_threshold, coeff_modulus_count);
 
-        if (check)
+        if (check1)
         {
             double scaled_two_pow_64 = inv_scale;
             for (std::size_t j = 0; j < coeff_modulus_count;
@@ -231,14 +255,14 @@ namespace heongpu
                 if (compose_result[j] > decryption_modulus[j])
                 {
                     auto diff = compose_result[j] - decryption_modulus[j];
-                    result_d +=
+                    result_real +=
                         diff ? static_cast<double>(diff) * scaled_two_pow_64
                              : 0.0;
                 }
                 else
                 {
                     auto diff = decryption_modulus[j] - compose_result[j];
-                    result_d -=
+                    result_real -=
                         diff ? static_cast<double>(diff) * scaled_two_pow_64
                              : 0.0;
                 }
@@ -251,39 +275,86 @@ namespace heongpu
                  j++, scaled_two_pow_64 *= two_pow_64_reg)
             {
                 auto curr_coeff = compose_result[j];
-                result_d += curr_coeff ? static_cast<double>(curr_coeff) *
+                result_real += curr_coeff ? static_cast<double>(curr_coeff) *
                                              scaled_two_pow_64
                                        : 0.0;
             }
         }
 
-        COMPLEX result_c(result_d, 0.0);
-        complex_message[idx] = result_c;
-    }
 
-    __global__ void decode_kernel_ckks(double* message,
-                                       COMPLEX* message_encoded,
-                                       Data* location_info, int slot_count)
-    {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        //////////////////////////
+        //////////////////////////
+        // TODO: make it efficient
+        biginteger::set_zero(compose_result, coeff_modulus_count);
 
-        int location = location_info[idx];
+#pragma unroll
+        for (int i = 0; i < coeff_modulus_count; i++)
+        {
+            Data base = plaintext[idx + offset + (i << n_power)];
+            Data temp = VALUE_GPU::mult(base, Mi_inv[i], modulus[i]);
 
-        COMPLEX c_message = message_encoded[location];
-        double message_real_part = c_message.real();
-        message[idx] = message_real_part;
-    }
+            biginteger::multiply(Mi + (i * coeff_modulus_count),
+                                 coeff_modulus_count, temp, big_integer_result,
+                                 coeff_modulus_count);
 
-    __global__ void decode_kernel_ckks(COMPLEX* message,
-                                       COMPLEX* message_encoded,
-                                       Data* location_info, int slot_count)
-    {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+            int carry = biginteger::add_inplace(
+                compose_result, big_integer_result, coeff_modulus_count);
 
-        int location = location_info[idx];
+            bool check = biginteger::is_greater_or_equal(
+                compose_result, decryption_modulus, coeff_modulus_count);
 
-        COMPLEX c_message = message_encoded[location];
-        message[idx] = c_message;
+            if (check)
+            {
+                biginteger::sub2(compose_result, decryption_modulus,
+                                 coeff_modulus_count, compose_result);
+            }
+        }
+
+        double result_imag = double(0.0);
+
+        bool check2 = biginteger::is_greater_or_equal(
+            compose_result, upper_half_threshold, coeff_modulus_count);
+
+        if (check2)
+        {
+            double scaled_two_pow_64 = inv_scale;
+            for (std::size_t j = 0; j < coeff_modulus_count;
+                 j++, scaled_two_pow_64 *= two_pow_64_reg)
+            {
+                if (compose_result[j] > decryption_modulus[j])
+                {
+                    auto diff = compose_result[j] - decryption_modulus[j];
+                    result_imag +=
+                        diff ? static_cast<double>(diff) * scaled_two_pow_64
+                             : 0.0;
+                }
+                else
+                {
+                    auto diff = decryption_modulus[j] - compose_result[j];
+                    result_imag -=
+                        diff ? static_cast<double>(diff) * scaled_two_pow_64
+                             : 0.0;
+                }
+            }
+        }
+        else
+        {
+            double scaled_two_pow_64 = inv_scale;
+            for (std::size_t j = 0; j < coeff_modulus_count;
+                 j++, scaled_two_pow_64 *= two_pow_64_reg)
+            {
+                auto curr_coeff = compose_result[j];
+                result_imag += curr_coeff ? static_cast<double>(curr_coeff) *
+                                             scaled_two_pow_64
+                                       : 0.0;
+            }
+        }
+
+        COMPLEX result_c(result_real, result_imag);
+
+        int order = reverse_order[idx];
+        complex_message[order] = result_c;
+        
     }
 
 } // namespace heongpu

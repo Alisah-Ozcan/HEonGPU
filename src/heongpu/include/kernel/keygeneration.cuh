@@ -72,7 +72,7 @@ namespace heongpu
 
     // Galois Key Generation
 
-    int steps_to_galois_elt(int steps, int coeff_count);
+    int steps_to_galois_elt(int steps, int coeff_count, int group_order);
 
     __device__ int bitreverse_gpu(int index, int n_power);
 

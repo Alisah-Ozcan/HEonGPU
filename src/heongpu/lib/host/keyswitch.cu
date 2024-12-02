@@ -358,6 +358,8 @@ namespace heongpu
 
         customized = false;
 
+        group_order_ = (scheme_ == scheme_type::bfv) ? 3 : 5;
+
         switch (static_cast<int>(context.keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
@@ -367,12 +369,12 @@ namespace heongpu
                 for (int i = 0; i < MAX_SHIFT; i++)
                 {
                     int power = pow(2, i);
-                    galois_elt[power] = steps_to_galois_elt(power, ring_size);
+                    galois_elt[power] = steps_to_galois_elt(power, ring_size, group_order_);
                     galois_elt[(-power)] =
-                        steps_to_galois_elt((-power), ring_size);
+                        steps_to_galois_elt((-power), ring_size, group_order_);
                 }
 
-                galois_elt_zero = steps_to_galois_elt(0, ring_size);
+                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
 
                 break;
             }
@@ -381,12 +383,12 @@ namespace heongpu
                 for (int i = 0; i < MAX_SHIFT; i++)
                 {
                     int power = pow(2, i);
-                    galois_elt[power] = steps_to_galois_elt(power, ring_size);
+                    galois_elt[power] = steps_to_galois_elt(power, ring_size, group_order_);
                     galois_elt[(-power)] =
-                        steps_to_galois_elt((-power), ring_size);
+                        steps_to_galois_elt((-power), ring_size, group_order_);
                 }
 
-                galois_elt_zero = steps_to_galois_elt(0, ring_size);
+                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -435,6 +437,8 @@ namespace heongpu
 
         customized = false;
 
+        group_order_ = (scheme_ == scheme_type::bfv) ? 3 : 5;
+
         switch (static_cast<int>(context.keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
@@ -443,10 +447,10 @@ namespace heongpu
 
                 for (int shift : shift_vec)
                 {
-                    galois_elt[shift] = steps_to_galois_elt(shift, ring_size);
+                    galois_elt[shift] = steps_to_galois_elt(shift, ring_size, group_order_);
                 }
 
-                galois_elt_zero = steps_to_galois_elt(0, ring_size);
+                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
 
                 break;
             }
@@ -454,10 +458,10 @@ namespace heongpu
             {
                 for (int shift : shift_vec)
                 {
-                    galois_elt[shift] = steps_to_galois_elt(shift, ring_size);
+                    galois_elt[shift] = steps_to_galois_elt(shift, ring_size, group_order_);
                 }
 
-                galois_elt_zero = steps_to_galois_elt(0, ring_size);
+                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -505,11 +509,13 @@ namespace heongpu
         r_prime_ = context.r_prime;
         customized = true;
 
+        group_order_ = (scheme_ == scheme_type::bfv) ? 3 : 5;
+
         switch (static_cast<int>(context.keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
-                galois_elt_zero = steps_to_galois_elt(0, ring_size);
+                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
                 galoiskey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
                 custom_galois_elt = galois_elts;
 
@@ -521,14 +527,14 @@ namespace heongpu
                 { // no leveled
 
                     d_ = context.d;
-                    galois_elt_zero = steps_to_galois_elt(0, ring_size);
+                    galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
                     galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
                     custom_galois_elt = galois_elts;
                 }
                 else if (scheme_ == scheme_type::ckks)
                 { // leveled
                     d_ = context.d_leveled->operator[](0);
-                    galois_elt_zero = steps_to_galois_elt(0, ring_size);
+                    galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
                     galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
                     custom_galois_elt = galois_elts;
                 }

@@ -2900,7 +2900,7 @@ namespace heongpu
                                               Ciphertext& output,
                                               Galoiskey& galois_key, int shift)
     {
-        int galoiselt = steps_to_galois_elt(shift, n);
+        int galoiselt = steps_to_galois_elt(shift, n, galois_key.group_order_);
         bool key_exist = galois_key.store_in_gpu_
                              ? (galois_key.device_location_.find(galoiselt) !=
                                 galois_key.device_location_.end())
@@ -2948,7 +2948,7 @@ namespace heongpu
                                               Galoiskey& galois_key, int shift,
                                               HEStream& stream)
     {
-        int galoiselt = steps_to_galois_elt(shift, n);
+        int galoiselt = steps_to_galois_elt(shift, n, galois_key.group_order_);
         bool key_exist = galois_key.store_in_gpu_
                              ? (galois_key.device_location_.find(galoiselt) !=
                                 galois_key.device_location_.end())
@@ -3001,7 +3001,7 @@ namespace heongpu
                                                Ciphertext& output,
                                                Galoiskey& galois_key, int shift)
     {
-        int galoiselt = steps_to_galois_elt(shift, n);
+        int galoiselt = steps_to_galois_elt(shift, n, galois_key.group_order_);
         bool key_exist = galois_key.store_in_gpu_
                              ? (galois_key.device_location_.find(galoiselt) !=
                                 galois_key.device_location_.end())
@@ -3049,7 +3049,7 @@ namespace heongpu
                                                Galoiskey& galois_key, int shift,
                                                HEStream& stream)
     {
-        int galoiselt = steps_to_galois_elt(shift, n);
+        int galoiselt = steps_to_galois_elt(shift, n, galois_key.group_order_);
         bool key_exist = galois_key.store_in_gpu_
                              ? (galois_key.device_location_.find(galoiselt) !=
                                 galois_key.device_location_.end())
@@ -3099,7 +3099,7 @@ namespace heongpu
                                                    Galoiskey& galois_key,
                                                    int shift)
     {
-        int galoiselt = steps_to_galois_elt(shift, n);
+        int galoiselt = steps_to_galois_elt(shift, n, galois_key.group_order_);
         bool key_exist = galois_key.store_in_gpu_
                              ? (galois_key.device_location_.find(galoiselt) !=
                                 galois_key.device_location_.end())
@@ -3148,7 +3148,7 @@ namespace heongpu
                                                    Galoiskey& galois_key,
                                                    int shift, HEStream& stream)
     {
-        int galoiselt = steps_to_galois_elt(shift, n);
+        int galoiselt = steps_to_galois_elt(shift, n, galois_key.group_order_);
         bool key_exist = galois_key.store_in_gpu_
                              ? (galois_key.device_location_.find(galoiselt) !=
                                 galois_key.device_location_.end())
@@ -3198,7 +3198,7 @@ namespace heongpu
                                                     Galoiskey& galois_key,
                                                     int shift)
     {
-        int galoiselt = steps_to_galois_elt(shift, n);
+        int galoiselt = steps_to_galois_elt(shift, n, galois_key.group_order_);
         bool key_exist = galois_key.store_in_gpu_
                              ? (galois_key.device_location_.find(galoiselt) !=
                                 galois_key.device_location_.end())
@@ -3247,7 +3247,7 @@ namespace heongpu
                                                     Galoiskey& galois_key,
                                                     int shift, HEStream& stream)
     {
-        int galoiselt = steps_to_galois_elt(shift, n);
+        int galoiselt = steps_to_galois_elt(shift, n, galois_key.group_order_);
         bool key_exist = galois_key.store_in_gpu_
                              ? (galois_key.device_location_.find(galoiselt) !=
                                 galois_key.device_location_.end())

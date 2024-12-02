@@ -467,7 +467,7 @@ namespace heongpu
     /////////////////////////////////////////////////////////////////////////////////////
     // Galois Key Generation
 
-    int steps_to_galois_elt(int steps, int coeff_count)
+    int steps_to_galois_elt(int steps, int coeff_count, int group_order)
     {
         int n = coeff_count;
         int m32 = n * 2;
@@ -499,7 +499,7 @@ namespace heongpu
                 steps = pos_steps;
             }
 
-            int gen = 3;
+            int gen = group_order; //5; //3;
             int galois_elt = 1;
             while (steps > 0)
             {
