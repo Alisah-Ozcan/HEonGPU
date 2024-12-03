@@ -30,6 +30,7 @@ namespace heongpu
     class HEEncoder
     {
         friend class HEOperator;
+
       public:
         /**
          * @brief Constructs a new HEEncoder object with specified parameters.
@@ -1604,7 +1605,7 @@ namespace heongpu
         __host__ void encode_ckks(Plaintext& plain,
                                   const std::vector<double>& message,
                                   const double scale);
-        
+
         __host__ void encode_ckks(Plaintext& plain,
                                   const std::vector<double>& message,
                                   const double scale, HEStream& stream);
@@ -1612,7 +1613,7 @@ namespace heongpu
         __host__ void encode_ckks(Plaintext& plain,
                                   const HostVector<double>& message,
                                   const double scale);
-        
+
         __host__ void encode_ckks(Plaintext& plain,
                                   const HostVector<double>& message,
                                   const double scale, HEStream& stream);
@@ -1660,8 +1661,8 @@ namespace heongpu
         __host__ void decode_ckks(HostVector<double>& message,
                                   Plaintext& plain);
 
-        __host__ void decode_ckks(HostVector<double>& message,
-                                  Plaintext& plain, HEStream& stream);
+        __host__ void decode_ckks(HostVector<double>& message, Plaintext& plain,
+                                  HEStream& stream);
 
         //
 
@@ -1676,7 +1677,7 @@ namespace heongpu
 
         __host__ void decode_ckks(HostVector<COMPLEX_C>& message,
                                   Plaintext& plain, HEStream& stream);
-        
+
         //////////////////////////////
         //////////////////////////////
 
@@ -1686,7 +1687,7 @@ namespace heongpu
         int n;
         int n_power;
         int slot_count_;
-        
+
         // BFV
         std::shared_ptr<DeviceVector<Modulus>> plain_modulus_;
         std::shared_ptr<DeviceVector<Ninverse>> n_plain_inverse_;
@@ -1715,8 +1716,7 @@ namespace heongpu
         std::shared_ptr<DeviceVector<Data>> Mi_;
         std::shared_ptr<DeviceVector<Data>> Mi_inv_;
         std::shared_ptr<DeviceVector<Data>> upper_half_threshold_;
-        std::shared_ptr<DeviceVector<Data>> decryption_modulus_;      
-
+        std::shared_ptr<DeviceVector<Data>> decryption_modulus_;
     };
 
 } // namespace heongpu

@@ -499,7 +499,7 @@ namespace heongpu
                 steps = pos_steps;
             }
 
-            int gen = group_order; //5; //3;
+            int gen = group_order; // 5; //3;
             int galois_elt = 1;
             while (steps > 0)
             {

@@ -107,8 +107,7 @@ namespace heongpu
     //////////////////////////////
     //////////////////////////////
 
-    __global__ void double_to_complex_kernel(double* input,
-                                       COMPLEX* output)
+    __global__ void double_to_complex_kernel(double* input, COMPLEX* output)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -118,8 +117,7 @@ namespace heongpu
         output[idx] = c_in;
     }
 
-    __global__ void complex_to_double_kernel(COMPLEX* input,
-                                       double* output)
+    __global__ void complex_to_double_kernel(COMPLEX* input, double* output)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -134,7 +132,8 @@ namespace heongpu
     __global__ void
     encode_kernel_ckks_conversion(Data* plaintext, COMPLEX* complex_message,
                                   Modulus* modulus, int coeff_modulus_count,
-                                  double two_pow_64, int* reverse_order, int n_power)
+                                  double two_pow_64, int* reverse_order,
+                                  int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // slot_count
 
@@ -197,16 +196,14 @@ namespace heongpu
                     VALUE_GPU::reduce(coeff2, modulus[i]);
             }
         }
-
     }
 
-    __global__ void encode_kernel_compose(COMPLEX* complex_message,
-                                          Data* plaintext, Modulus* modulus,
-                                          Data* Mi_inv, Data* Mi,
-                                          Data* upper_half_threshold,
-                                          Data* decryption_modulus,
-                                          int coeff_modulus_count, double scale,
-                                          double two_pow_64, int* reverse_order, int n_power)
+    __global__ void
+    encode_kernel_compose(COMPLEX* complex_message, Data* plaintext,
+                          Modulus* modulus, Data* Mi_inv, Data* Mi,
+                          Data* upper_half_threshold, Data* decryption_modulus,
+                          int coeff_modulus_count, double scale,
+                          double two_pow_64, int* reverse_order, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // slot_count
         double inv_scale = double(1.0) / scale;
@@ -276,11 +273,10 @@ namespace heongpu
             {
                 auto curr_coeff = compose_result[j];
                 result_real += curr_coeff ? static_cast<double>(curr_coeff) *
-                                             scaled_two_pow_64
-                                       : 0.0;
+                                                scaled_two_pow_64
+                                          : 0.0;
             }
         }
-
 
         //////////////////////////
         //////////////////////////
@@ -345,8 +341,8 @@ namespace heongpu
             {
                 auto curr_coeff = compose_result[j];
                 result_imag += curr_coeff ? static_cast<double>(curr_coeff) *
-                                             scaled_two_pow_64
-                                       : 0.0;
+                                                scaled_two_pow_64
+                                          : 0.0;
             }
         }
 
@@ -354,7 +350,6 @@ namespace heongpu
 
         int order = reverse_order[idx];
         complex_message[order] = result_c;
-        
     }
 
 } // namespace heongpu

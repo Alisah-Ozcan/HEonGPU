@@ -38,17 +38,18 @@ namespace heongpu
         int location = (current_rns_mod_count * block_y) << n_power;
 
         Data input_ = input[idx + (block_y << n_power)];
+        int level = first_rns_mod_count - current_rns_mod_count;
 #pragma unroll
         for (int i = 0; i < current_rns_mod_count; i++)
         {
             int mod_index;
-            if (i == (current_rns_mod_count - 1))
+            if (i < gridDim.y)
             {
-                mod_index = first_rns_mod_count - 1;
+                mod_index = i;
             }
             else
             {
-                mod_index = i;
+                mod_index = i + level;
             }
 
             Data result = VALUE_GPU::reduce_forced(input_, modulus[mod_index]);
@@ -582,17 +583,17 @@ namespace heongpu
         else
         {
             int location = (current_rns_mod_count * block_y) << n_power;
-
+            int level = first_rns_mod_count - current_rns_mod_count;
             for (int i = 0; i < current_rns_mod_count; i++)
             {
                 int mod_index;
-                if (i == (current_rns_mod_count - 1))
+                if (i < current_decomp_mod_count)
                 {
-                    mod_index = first_rns_mod_count - 1;
+                    mod_index = i;
                 }
                 else
                 {
-                    mod_index = i;
+                    mod_index = i + level;
                 }
 
                 Data reduced_result =
@@ -1330,17 +1331,17 @@ namespace heongpu
         else
         {
             int location = (current_rns_mod_count * block_y) << n_power;
-
+            int level = first_rns_mod_count - current_rns_mod_count;
             for (int i = 0; i < current_rns_mod_count; i++)
             {
                 int mod_index;
-                if (i == (current_rns_mod_count - 1))
+                if (i < current_decomp_mod_count)
                 {
-                    mod_index = first_rns_mod_count - 1;
+                    mod_index = i;
                 }
                 else
                 {
-                    mod_index = i;
+                    mod_index = i + level;
                 }
 
                 Data reduced_result =

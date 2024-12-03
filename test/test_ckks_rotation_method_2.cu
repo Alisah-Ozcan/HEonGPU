@@ -6,20 +6,44 @@
 #include "heongpu.cuh"
 #include <gtest/gtest.h>
 
-TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
+template <typename T>
+bool fix_point_equal(T input1, T input2, T epsilon = static_cast<T>(1e-4))
+{
+    return std::fabs(input1 - input2) < epsilon;
+}
+
+template <typename T>
+bool fix_point_array_check(const std::vector<T>& array1,
+                           const std::vector<T>& array2,
+                           T epsilon = static_cast<T>(1e-4))
+{
+    if (array1.size() != array2.size())
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < array1.size(); ++i)
+    {
+        if (!fix_point_equal(array1[i], array2[i], epsilon))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
 {
     cudaSetDevice(0);
-
     {
         size_t poly_modulus_degree = 4096;
-        int plain_modulus = 1032193;
         heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+            heongpu::scheme_type::ckks,
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({40, 40}, {40, 40});
-        context.set_plain_modulus(plain_modulus);
+        context.set_coeff_modulus({40, 30, 30}, {40, 40});
         context.generate();
 
         heongpu::HEKeyGenerator keygen(context);
@@ -29,7 +53,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
+        std::vector<int> shift_key = {12};
         heongpu::Galoiskey galois_key(context, shift_key);
         keygen.generate_galois_key(galois_key, secret_key);
 
@@ -40,26 +64,24 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
 
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+        const int row_size = poly_modulus_degree / 2;
+        std::vector<double> message1(row_size, 0);
+        for (int i = 0; i < row_size; i++)
         {
             message1[i] = dis(gen);
         }
 
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
+        int shift_count = 12;
+        std::vector<double> message_rotation_result(row_size, 0);
         for (int i = 0; i < row_size; i++)
         {
             message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
         }
 
+        double scale = pow(2.0, 30);
         heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
+        encoder.encode(P1, message1, scale);
 
         heongpu::Ciphertext C1(context);
         encryptor.encrypt(C1, P1);
@@ -69,27 +91,38 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Plaintext P3(context);
         decryptor.decrypt(P3, C1);
 
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
+        std::vector<double> gpu_result;
+        encoder.decode(gpu_result, P3);
 
         cudaDeviceSynchronize();
 
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                        static_cast<double>(1e-1)),
+                  true);
+
+        // Leveled Test
+        operators.mod_drop_inplace(C1);
+        heongpu::Plaintext P4(context);
+        decryptor.decrypt(P4, C1);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P4);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
+                                        static_cast<double>(1e-1)),
                   true);
     }
 
     {
         size_t poly_modulus_degree = 8192;
-        int plain_modulus = 1032193;
         heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+            heongpu::scheme_type::ckks,
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({54, 54, 54}, {55, 55});
-        context.set_plain_modulus(plain_modulus);
+        context.set_coeff_modulus({40, 30, 30, 30, 30}, {40, 40});
         context.generate();
 
         heongpu::HEKeyGenerator keygen(context);
@@ -99,7 +132,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
+        std::vector<int> shift_key = {12};
         heongpu::Galoiskey galois_key(context, shift_key);
         keygen.generate_galois_key(galois_key, secret_key);
 
@@ -110,26 +143,24 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
 
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+        const int row_size = poly_modulus_degree / 2;
+        std::vector<double> message1(row_size, 0);
+        for (int i = 0; i < row_size; i++)
         {
             message1[i] = dis(gen);
         }
 
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
+        int shift_count = 12;
+        std::vector<double> message_rotation_result(row_size, 0);
         for (int i = 0; i < row_size; i++)
         {
             message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
         }
 
+        double scale = pow(2.0, 30);
         heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
+        encoder.encode(P1, message1, scale);
 
         heongpu::Ciphertext C1(context);
         encryptor.encrypt(C1, P1);
@@ -139,27 +170,39 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Plaintext P3(context);
         decryptor.decrypt(P3, C1);
 
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
+        std::vector<double> gpu_result;
+        encoder.decode(gpu_result, P3);
 
         cudaDeviceSynchronize();
 
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                        static_cast<double>(1e-1)),
+                  true);
+
+        // Leveled Test
+        operators.mod_drop_inplace(C1);
+        heongpu::Plaintext P4(context);
+        decryptor.decrypt(P4, C1);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P4);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
+                                        static_cast<double>(1e-1)),
                   true);
     }
 
     {
         size_t poly_modulus_degree = 16384;
-        int plain_modulus = 786433;
         heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+            heongpu::scheme_type::ckks,
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({54, 54, 54, 54, 55, 55, 55}, {55, 55});
-        context.set_plain_modulus(plain_modulus);
+        context.set_coeff_modulus(
+            {45, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35}, {45, 45});
         context.generate();
 
         heongpu::HEKeyGenerator keygen(context);
@@ -169,7 +212,10 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
+        heongpu::Relinkey relin_key(context);
+        keygen.generate_relin_key(relin_key, secret_key);
+
+        std::vector<int> shift_key = {12};
         heongpu::Galoiskey galois_key(context, shift_key);
         keygen.generate_galois_key(galois_key, secret_key);
 
@@ -180,26 +226,24 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
 
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+        const int row_size = poly_modulus_degree / 2;
+        std::vector<double> message1(row_size, 0);
+        for (int i = 0; i < row_size; i++)
         {
             message1[i] = dis(gen);
         }
 
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
+        int shift_count = 12;
+        std::vector<double> message_rotation_result(row_size, 0);
         for (int i = 0; i < row_size; i++)
         {
             message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
         }
 
+        double scale = pow(2.0, 35);
         heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
+        encoder.encode(P1, message1, scale);
 
         heongpu::Ciphertext C1(context);
         encryptor.encrypt(C1, P1);
@@ -209,28 +253,40 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Plaintext P3(context);
         decryptor.decrypt(P3, C1);
 
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
+        std::vector<double> gpu_result;
+        encoder.decode(gpu_result, P3);
 
         cudaDeviceSynchronize();
 
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                        static_cast<double>(1e-1)),
+                  true);
+
+        // Leveled Test
+        operators.mod_drop_inplace(C1);
+        heongpu::Plaintext P4(context);
+        decryptor.decrypt(P4, C1);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P4);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
+                                        static_cast<double>(1e-1)),
                   true);
     }
 
     {
         size_t poly_modulus_degree = 32768;
-        int plain_modulus = 786433;
         heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+            heongpu::scheme_type::ckks,
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus(
-            {58, 58, 58, 58, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59}, {59, 59});
-        context.set_plain_modulus(plain_modulus);
+        context.set_coeff_modulus({59, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
+                                   40, 40, 40, 40, 40, 40, 40, 40},
+                                  {59, 59});
         context.generate();
 
         heongpu::HEKeyGenerator keygen(context);
@@ -240,7 +296,10 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
+        heongpu::Relinkey relin_key(context);
+        keygen.generate_relin_key(relin_key, secret_key);
+
+        std::vector<int> shift_key = {12};
         heongpu::Galoiskey galois_key(context, shift_key);
         keygen.generate_galois_key(galois_key, secret_key);
 
@@ -251,26 +310,24 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
 
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+        const int row_size = poly_modulus_degree / 2;
+        std::vector<double> message1(row_size, 0);
+        for (int i = 0; i < row_size; i++)
         {
             message1[i] = dis(gen);
         }
 
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
+        int shift_count = 12;
+        std::vector<double> message_rotation_result(row_size, 0);
         for (int i = 0; i < row_size; i++)
         {
             message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
         }
 
+        double scale = pow(2.0, 40);
         heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
+        encoder.encode(P1, message1, scale);
 
         heongpu::Ciphertext C1(context);
         encryptor.encrypt(C1, P1);
@@ -280,40 +337,52 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Plaintext P3(context);
         decryptor.decrypt(P3, C1);
 
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
+        std::vector<double> gpu_result;
+        encoder.decode(gpu_result, P3);
 
         cudaDeviceSynchronize();
 
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                        static_cast<double>(1e-1)),
+                  true);
+
+        // Leveled Test
+        operators.mod_drop_inplace(C1);
+        heongpu::Plaintext P4(context);
+        decryptor.decrypt(P4, C1);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P4);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
+                                        static_cast<double>(1e-1)),
                   true);
     }
 
     {
         size_t poly_modulus_degree = 65536;
-        int plain_modulus = 786433;
         // TODO: find optimal way to store huge galois key, maybe store it in
         // CPU RAM.
-        // heongpu::Parameters context(heongpu::scheme_type::bfv,
-        // heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+        // heongpu::Parameters context(heongpu::scheme_type::ckks,
+        // heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
         // heongpu::sec_level_type::none);
         // context.set_poly_modulus_degree(poly_modulus_degree);
-        // context.set_coeff_modulus({58, 58, 58, 58, 58, 58, 58, 58, 58, 59,
-        // 59, 59, 59, 59, 59,
-        //     59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59},
+        // context.set_coeff_modulus({59, 45, 45, 45, 45, 45, 45, 45, 45, 45,
+        // 45, 45, 45,
+        //     45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
+        //     45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45},
         //    {59});
-        // context.set_plain_modulus(plain_modulus);
         // context.generate();
         heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+            heongpu::scheme_type::ckks,
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
         context.set_coeff_modulus(
-            {58, 58, 58, 58, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59}, {59, 59});
-        context.set_plain_modulus(plain_modulus);
+            {59, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40},
+            {59, 59});
         context.generate();
 
         heongpu::HEKeyGenerator keygen(context);
@@ -323,7 +392,10 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
+        heongpu::Relinkey relin_key(context);
+        keygen.generate_relin_key(relin_key, secret_key);
+
+        std::vector<int> shift_key = {12};
         heongpu::Galoiskey galois_key(context, shift_key);
         keygen.generate_galois_key(galois_key, secret_key);
 
@@ -334,26 +406,24 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
 
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+        const int row_size = poly_modulus_degree / 2;
+        std::vector<double> message1(row_size, 0);
+        for (int i = 0; i < row_size; i++)
         {
             message1[i] = dis(gen);
         }
 
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
+        int shift_count = 12;
+        std::vector<double> message_rotation_result(row_size, 0);
         for (int i = 0; i < row_size; i++)
         {
             message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
         }
 
+        double scale = pow(2.0, 45);
         heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
+        encoder.encode(P1, message1, scale);
 
         heongpu::Ciphertext C1(context);
         encryptor.encrypt(C1, P1);
@@ -363,14 +433,27 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_II)
         heongpu::Plaintext P3(context);
         decryptor.decrypt(P3, C1);
 
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
+        std::vector<double> gpu_result;
+        encoder.decode(gpu_result, P3);
 
         cudaDeviceSynchronize();
 
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                        static_cast<double>(1e-1)),
+                  true);
+
+        // Leveled Test
+        operators.mod_drop_inplace(C1);
+        heongpu::Plaintext P4(context);
+        decryptor.decrypt(P4, C1);
+
+        std::vector<double> gpu_result2;
+        encoder.decode(gpu_result2, P4);
+
+        cudaDeviceSynchronize();
+
+        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
+                                        static_cast<double>(1e-1)),
                   true);
     }
 }

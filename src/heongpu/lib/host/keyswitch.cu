@@ -369,12 +369,14 @@ namespace heongpu
                 for (int i = 0; i < MAX_SHIFT; i++)
                 {
                     int power = pow(2, i);
-                    galois_elt[power] = steps_to_galois_elt(power, ring_size, group_order_);
+                    galois_elt[power] =
+                        steps_to_galois_elt(power, ring_size, group_order_);
                     galois_elt[(-power)] =
                         steps_to_galois_elt((-power), ring_size, group_order_);
                 }
 
-                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
+                galois_elt_zero =
+                    steps_to_galois_elt(0, ring_size, group_order_);
 
                 break;
             }
@@ -383,12 +385,14 @@ namespace heongpu
                 for (int i = 0; i < MAX_SHIFT; i++)
                 {
                     int power = pow(2, i);
-                    galois_elt[power] = steps_to_galois_elt(power, ring_size, group_order_);
+                    galois_elt[power] =
+                        steps_to_galois_elt(power, ring_size, group_order_);
                     galois_elt[(-power)] =
                         steps_to_galois_elt((-power), ring_size, group_order_);
                 }
 
-                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
+                galois_elt_zero =
+                    steps_to_galois_elt(0, ring_size, group_order_);
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -447,10 +451,12 @@ namespace heongpu
 
                 for (int shift : shift_vec)
                 {
-                    galois_elt[shift] = steps_to_galois_elt(shift, ring_size, group_order_);
+                    galois_elt[shift] =
+                        steps_to_galois_elt(shift, ring_size, group_order_);
                 }
 
-                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
+                galois_elt_zero =
+                    steps_to_galois_elt(0, ring_size, group_order_);
 
                 break;
             }
@@ -458,10 +464,12 @@ namespace heongpu
             {
                 for (int shift : shift_vec)
                 {
-                    galois_elt[shift] = steps_to_galois_elt(shift, ring_size, group_order_);
+                    galois_elt[shift] =
+                        steps_to_galois_elt(shift, ring_size, group_order_);
                 }
 
-                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
+                galois_elt_zero =
+                    steps_to_galois_elt(0, ring_size, group_order_);
 
                 if (scheme_ == scheme_type::bfv)
                 { // no leveled
@@ -515,7 +523,8 @@ namespace heongpu
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
-                galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
+                galois_elt_zero =
+                    steps_to_galois_elt(0, ring_size, group_order_);
                 galoiskey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
                 custom_galois_elt = galois_elts;
 
@@ -527,14 +536,16 @@ namespace heongpu
                 { // no leveled
 
                     d_ = context.d;
-                    galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
+                    galois_elt_zero =
+                        steps_to_galois_elt(0, ring_size, group_order_);
                     galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
                     custom_galois_elt = galois_elts;
                 }
                 else if (scheme_ == scheme_type::ckks)
                 { // leveled
                     d_ = context.d_leveled->operator[](0);
-                    galois_elt_zero = steps_to_galois_elt(0, ring_size, group_order_);
+                    galois_elt_zero =
+                        steps_to_galois_elt(0, ring_size, group_order_);
                     galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
                     custom_galois_elt = galois_elts;
                 }

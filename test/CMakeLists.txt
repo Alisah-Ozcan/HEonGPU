@@ -30,12 +30,8 @@ set(EXECUTABLES
     ckks_encryption_testcases test_ckks_encryption.cu
     ckks_multiplication_testcases test_ckks_multiplication.cu
     ckks_relinearization_testcases test_ckks_relinearization.cu
-    ckks_rotation_method_1_part_1_testcases test_ckks_rotation_method_1_part_1.cu
-    ckks_rotation_method_1_part_2_testcases test_ckks_rotation_method_1_part_2.cu
-    ckks_rotation_method_1_part_3_testcases test_ckks_rotation_method_1_part_3.cu
-    ckks_rotation_method_2_part_1_testcases test_ckks_rotation_method_2_part_1.cu
-    ckks_rotation_method_2_part_2_testcases test_ckks_rotation_method_2_part_2.cu
-    ckks_rotation_method_2_part_3_testcases test_ckks_rotation_method_2_part_3.cu
+    ckks_rotation_method_1_testcases test_ckks_rotation_method_1.cu
+    ckks_rotation_method_2_testcases test_ckks_rotation_method_2.cu
 )
 
 function(add_test exe source)

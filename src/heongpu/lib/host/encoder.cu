@@ -51,7 +51,8 @@ namespace heongpu
                 pos &= (m - 1);
             }
 
-            encoding_location_ = std::make_shared<DeviceVector<Data>>(encode_index);
+            encoding_location_ =
+                std::make_shared<DeviceVector<Data>>(encode_index);
         }
         else
         { // for CKKS
@@ -74,8 +75,9 @@ namespace heongpu
             n_inverse_ = context.n_inverse_;
 
             temp_complex = DeviceVector<COMPLEX>(n);
-            special_root = static_cast<COMPLEX_C>(2.0) * static_cast<COMPLEX_C>(M_PI) /
-               static_cast<COMPLEX_C>(fft_length); 
+            special_root = static_cast<COMPLEX_C>(2.0) *
+                           static_cast<COMPLEX_C>(M_PI) /
+                           static_cast<COMPLEX_C>(fft_length);
             COMPLEX_C j(0.0, 1.0); // Define the complex unit (imaginary part)
             COMPLEX_C one(1.0); // Define the complex unit (imaginary part)
 
@@ -95,7 +97,7 @@ namespace heongpu
                 COMPLEX_C element = one / special_root_tables[i];
                 special_inverse_root_tables.push_back(element);
             }
-            
+
             std::vector<int> rot_group;
             rot_group.push_back(1);
             for (int i = 1; i < slot_count_; i++)
@@ -103,35 +105,43 @@ namespace heongpu
                 rot_group.push_back((5 * rot_group[i - 1]) % fft_length);
             }
 
-            std::vector<COMPLEX_C> new_ordered_root_tables(slot_count_, COMPLEX_C(0));
-            for (int logm = 1; logm <= log_slot_count_; ++logm) {
+            std::vector<COMPLEX_C> new_ordered_root_tables(slot_count_,
+                                                           COMPLEX_C(0));
+            for (int logm = 1; logm <= log_slot_count_; ++logm)
+            {
                 int idx_mod = 1 << (logm + 2);
                 int gap = fft_length / idx_mod;
 
                 int offset = 1 << (logm - 1);
-                for (int i = 0; i < (1 << (logm - 1)); ++i) {
+                for (int i = 0; i < (1 << (logm - 1)); ++i)
+                {
                     int rou_idx = (rot_group[i] % idx_mod) * gap;
-                    new_ordered_root_tables[offset + i] = special_root_tables[rou_idx];
+                    new_ordered_root_tables[offset + i] =
+                        special_root_tables[rou_idx];
                 }
             }
 
-            std::vector<COMPLEX_C> new_ordered_inverse_root_tables(slot_count_, COMPLEX_C(0));
-            for (int logm = log_slot_count_; logm > 0; logm--) {
+            std::vector<COMPLEX_C> new_ordered_inverse_root_tables(
+                slot_count_, COMPLEX_C(0));
+            for (int logm = log_slot_count_; logm > 0; logm--)
+            {
                 int idx_mod = 1 << (logm + 2);
                 int gap = fft_length / idx_mod;
 
                 int offset = 1 << (logm - 1);
-                for (int i = 0; i < (1 << (logm - 1)); ++i) {
+                for (int i = 0; i < (1 << (logm - 1)); ++i)
+                {
                     int rou_idx = (rot_group[i] % idx_mod) * gap;
-                    new_ordered_inverse_root_tables[offset + i] = special_inverse_root_tables[rou_idx];
+                    new_ordered_inverse_root_tables[offset + i] =
+                        special_inverse_root_tables[rou_idx];
                 }
             }
 
-            special_fft_roots_table_ =
-                std::make_shared<DeviceVector<COMPLEX>>(new_ordered_root_tables, sizeof(COMPLEX));
+            special_fft_roots_table_ = std::make_shared<DeviceVector<COMPLEX>>(
+                new_ordered_root_tables, sizeof(COMPLEX));
 
-            special_ifft_roots_table_ =
-                std::make_shared<DeviceVector<COMPLEX>>(new_ordered_inverse_root_tables, sizeof(COMPLEX));
+            special_ifft_roots_table_ = std::make_shared<DeviceVector<COMPLEX>>(
+                new_ordered_inverse_root_tables, sizeof(COMPLEX));
 
             std::vector<int> bit_reverse_vec(slot_count_);
             for (int i = 0; i < slot_count_; i++)
@@ -139,14 +149,14 @@ namespace heongpu
                 bit_reverse_vec[i] = bitreverse(i, log_slot_count_);
             }
 
-            reverse_order = std::make_shared<DeviceVector<int>>(bit_reverse_vec);
+            reverse_order =
+                std::make_shared<DeviceVector<int>>(bit_reverse_vec);
 
             Mi_ = context.Mi_;
             Mi_inv_ = context.Mi_inv_;
             upper_half_threshold_ = context.upper_half_threshold_;
             decryption_modulus_ = context.decryption_modulus_;
         }
-
     }
 
     ///////////////////////////////////////////////////
@@ -599,27 +609,29 @@ namespace heongpu
     ///////////////////////////////////////////////////
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
-                                  const std::vector<double>& message,
-                                  const double scale)
+                                         const std::vector<double>& message,
+                                         const double scale)
     {
         DeviceVector<double> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(double), cudaMemcpyHostToDevice);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        double_to_complex_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(message_gpu.data(),temp_complex.data());
+        double_to_complex_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(
+            message_gpu.data(), temp_complex.data());
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::INVERSE,
-            .mod_inverse = COMPLEX(fix, 0.0),
-            .stream = 0};
+        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
+                                           .ntt_type = fft::type::INVERSE,
+                                           .mod_inverse = COMPLEX(fix, 0.0),
+                                           .stream = 0};
 
-        fft::GPU_Special_FFT(temp_complex.data(), special_ifft_roots_table_->data(), cfg_ifft, 1);
+        fft::GPU_Special_FFT(temp_complex.data(),
+                             special_ifft_roots_table_->data(), cfg_ifft, 1);
 
-        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(
+        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1),
+                                        256>>>(
             plain.data(), temp_complex.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -638,27 +650,31 @@ namespace heongpu
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
-                                  const std::vector<double>& message,
-                                  const double scale, HEStream& stream)
+                                         const std::vector<double>& message,
+                                         const double scale, HEStream& stream)
     {
         DeviceVector<double> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
-                   message.size() * sizeof(double), cudaMemcpyHostToDevice, stream.stream);
+                        message.size() * sizeof(double), cudaMemcpyHostToDevice,
+                        stream.stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        double_to_complex_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0, stream.stream>>>(message_gpu.data(),stream.temp_complex.data());
+        double_to_complex_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0,
+                                   stream.stream>>>(message_gpu.data(),
+                                                    stream.temp_complex.data());
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::INVERSE,
-            .mod_inverse = COMPLEX(fix, 0.0),
-            .stream = stream.stream};
+        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
+                                           .ntt_type = fft::type::INVERSE,
+                                           .mod_inverse = COMPLEX(fix, 0.0),
+                                           .stream = stream.stream};
 
-        fft::GPU_Special_FFT(stream.temp_complex.data(), special_ifft_roots_table_->data(), cfg_ifft, 1);
+        fft::GPU_Special_FFT(stream.temp_complex.data(),
+                             special_ifft_roots_table_->data(), cfg_ifft, 1);
 
-        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0, stream.stream>>>(
+        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256,
+                                        0, stream.stream>>>(
             plain.data(), stream.temp_complex.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -679,27 +695,29 @@ namespace heongpu
     //
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
-                                const HostVector<double>& message,
-                                const double scale)
+                                         const HostVector<double>& message,
+                                         const double scale)
     {
         DeviceVector<double> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
                    message.size() * sizeof(double), cudaMemcpyHostToDevice);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        double_to_complex_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(message_gpu.data(),temp_complex.data());
+        double_to_complex_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(
+            message_gpu.data(), temp_complex.data());
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::INVERSE,
-            .mod_inverse = COMPLEX(fix, 0.0),
-            .stream = 0};
+        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
+                                           .ntt_type = fft::type::INVERSE,
+                                           .mod_inverse = COMPLEX(fix, 0.0),
+                                           .stream = 0};
 
-        fft::GPU_Special_FFT(temp_complex.data(), special_ifft_roots_table_->data(), cfg_ifft, 1);
+        fft::GPU_Special_FFT(temp_complex.data(),
+                             special_ifft_roots_table_->data(), cfg_ifft, 1);
 
-        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(
+        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1),
+                                        256>>>(
             plain.data(), temp_complex.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -716,29 +734,33 @@ namespace heongpu
 
         plain.scale_ = scale;
     }
-    
+
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
-                                const HostVector<double>& message,
-                                const double scale, HEStream& stream)
+                                         const HostVector<double>& message,
+                                         const double scale, HEStream& stream)
     {
         DeviceVector<double> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
-                   message.size() * sizeof(double), cudaMemcpyHostToDevice, stream.stream);
+                        message.size() * sizeof(double), cudaMemcpyHostToDevice,
+                        stream.stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        double_to_complex_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0, stream.stream>>>(message_gpu.data(),stream.temp_complex.data());
+        double_to_complex_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0,
+                                   stream.stream>>>(message_gpu.data(),
+                                                    stream.temp_complex.data());
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::INVERSE,
-            .mod_inverse = COMPLEX(fix, 0.0),
-            .stream = stream.stream};
+        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
+                                           .ntt_type = fft::type::INVERSE,
+                                           .mod_inverse = COMPLEX(fix, 0.0),
+                                           .stream = stream.stream};
 
-        fft::GPU_Special_FFT(stream.temp_complex.data(), special_ifft_roots_table_->data(), cfg_ifft, 1);
+        fft::GPU_Special_FFT(stream.temp_complex.data(),
+                             special_ifft_roots_table_->data(), cfg_ifft, 1);
 
-        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0, stream.stream>>>(
+        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256,
+                                        0, stream.stream>>>(
             plain.data(), stream.temp_complex.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -759,8 +781,8 @@ namespace heongpu
     //
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
-                                const std::vector<COMPLEX_C>& message,
-                                const double scale)
+                                         const std::vector<COMPLEX_C>& message,
+                                         const double scale)
     {
         DeviceVector<COMPLEX> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
@@ -769,15 +791,16 @@ namespace heongpu
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::INVERSE,
-            .mod_inverse = COMPLEX(fix, 0.0),
-            .stream = 0};
+        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
+                                           .ntt_type = fft::type::INVERSE,
+                                           .mod_inverse = COMPLEX(fix, 0.0),
+                                           .stream = 0};
 
-        fft::GPU_Special_FFT(message_gpu.data(), special_ifft_roots_table_->data(), cfg_ifft, 1);
+        fft::GPU_Special_FFT(message_gpu.data(),
+                             special_ifft_roots_table_->data(), cfg_ifft, 1);
 
-        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(
+        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1),
+                                        256>>>(
             plain.data(), message_gpu.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -793,29 +816,30 @@ namespace heongpu
                         cfg_ntt, Q_size_, Q_size_);
 
         plain.scale_ = scale;
-
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
-                                  const std::vector<COMPLEX_C>& message,
-                                  const double scale, HEStream& stream)
+                                         const std::vector<COMPLEX_C>& message,
+                                         const double scale, HEStream& stream)
     {
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
-                   message.size() * sizeof(COMPLEX), cudaMemcpyHostToDevice, stream.stream);
+                        message.size() * sizeof(COMPLEX),
+                        cudaMemcpyHostToDevice, stream.stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::INVERSE,
-            .mod_inverse = COMPLEX(fix, 0.0),
-            .stream = stream.stream};
+        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
+                                           .ntt_type = fft::type::INVERSE,
+                                           .mod_inverse = COMPLEX(fix, 0.0),
+                                           .stream = stream.stream};
 
-        fft::GPU_Special_FFT(message_gpu.data(), special_ifft_roots_table_->data(), cfg_ifft, 1);
+        fft::GPU_Special_FFT(message_gpu.data(),
+                             special_ifft_roots_table_->data(), cfg_ifft, 1);
 
-        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0, stream.stream>>>(
+        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256,
+                                        0, stream.stream>>>(
             plain.data(), message_gpu.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -834,8 +858,8 @@ namespace heongpu
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
-                                const HostVector<COMPLEX_C>& message,
-                                const double scale)
+                                         const HostVector<COMPLEX_C>& message,
+                                         const double scale)
     {
         DeviceVector<COMPLEX> message_gpu(slot_count_);
         cudaMemcpy(message_gpu.data(), message.data(),
@@ -844,15 +868,16 @@ namespace heongpu
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::INVERSE,
-            .mod_inverse = COMPLEX(fix, 0.0),
-            .stream = 0};
+        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
+                                           .ntt_type = fft::type::INVERSE,
+                                           .mod_inverse = COMPLEX(fix, 0.0),
+                                           .stream = 0};
 
-        fft::GPU_Special_FFT(message_gpu.data(), special_ifft_roots_table_->data(), cfg_ifft, 1);
+        fft::GPU_Special_FFT(message_gpu.data(),
+                             special_ifft_roots_table_->data(), cfg_ifft, 1);
 
-        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(
+        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1),
+                                        256>>>(
             plain.data(), message_gpu.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -871,25 +896,27 @@ namespace heongpu
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
-                                const HostVector<COMPLEX_C>& message,
-                                const double scale, HEStream& stream)
+                                         const HostVector<COMPLEX_C>& message,
+                                         const double scale, HEStream& stream)
     {
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream.stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
-                   message.size() * sizeof(COMPLEX), cudaMemcpyHostToDevice, stream.stream);
+                        message.size() * sizeof(COMPLEX),
+                        cudaMemcpyHostToDevice, stream.stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::INVERSE,
-            .mod_inverse = COMPLEX(fix, 0.0),
-            .stream = stream.stream};
+        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
+                                           .ntt_type = fft::type::INVERSE,
+                                           .mod_inverse = COMPLEX(fix, 0.0),
+                                           .stream = stream.stream};
 
-        fft::GPU_Special_FFT(message_gpu.data(), special_ifft_roots_table_->data(), cfg_ifft, 1);
+        fft::GPU_Special_FFT(message_gpu.data(),
+                             special_ifft_roots_table_->data(), cfg_ifft, 1);
 
-        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0, stream.stream>>>(
+        encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256,
+                                        0, stream.stream>>>(
             plain.data(), message_gpu.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -962,7 +989,7 @@ namespace heongpu
     //////////////////////
 
     __host__ void HEEncoder::decode_ckks(std::vector<double>& message,
-                                Plaintext& plain)
+                                         Plaintext& plain)
     {
         int current_modulus_count = Q_size_ - plain.depth_;
 
@@ -997,14 +1024,15 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        fft::fft_configuration cfg_fft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::FORWARD,
-            .stream = 0};
+        fft::fft_configuration cfg_fft = {.n_power = log_slot_count_,
+                                          .ntt_type = fft::type::FORWARD,
+                                          .stream = 0};
 
-        fft::GPU_Special_FFT(temp_complex.data(), special_fft_roots_table_->data(), cfg_fft, 1);
+        fft::GPU_Special_FFT(temp_complex.data(),
+                             special_fft_roots_table_->data(), cfg_fft, 1);
 
-        complex_to_double_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(temp_complex.data(),message_gpu.data());
+        complex_to_double_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(
+            temp_complex.data(), message_gpu.data());
 
         message.resize(slot_count_);
 
@@ -1014,7 +1042,7 @@ namespace heongpu
     }
 
     __host__ void HEEncoder::decode_ckks(std::vector<double>& message,
-                                  Plaintext& plain, HEStream& stream)
+                                         Plaintext& plain, HEStream& stream)
     {
         int current_modulus_count = Q_size_ - plain.depth_;
 
@@ -1041,7 +1069,8 @@ namespace heongpu
             counter--;
         }
 
-        encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0, stream.stream>>>(
+        encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
+                                stream.stream>>>(
             stream.temp_complex.data(), plain.data(), modulus_->data(),
             Mi_inv_->data() + location1, Mi_->data() + location2,
             upper_half_threshold_->data() + location1,
@@ -1049,24 +1078,27 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        fft::fft_configuration cfg_fft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::FORWARD,
-            .stream = stream.stream};
+        fft::fft_configuration cfg_fft = {.n_power = log_slot_count_,
+                                          .ntt_type = fft::type::FORWARD,
+                                          .stream = stream.stream};
 
-        fft::GPU_Special_FFT(stream.temp_complex.data(), special_fft_roots_table_->data(), cfg_fft, 1);
+        fft::GPU_Special_FFT(stream.temp_complex.data(),
+                             special_fft_roots_table_->data(), cfg_fft, 1);
 
-        complex_to_double_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0, stream.stream>>>(stream.temp_complex.data(),message_gpu.data());
+        complex_to_double_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0,
+                                   stream.stream>>>(stream.temp_complex.data(),
+                                                    message_gpu.data());
 
         message.resize(slot_count_);
 
         cudaMemcpyAsync(message.data(), message_gpu.data(),
-                   slot_count_ * sizeof(double), cudaMemcpyDeviceToHost, stream.stream);
+                        slot_count_ * sizeof(double), cudaMemcpyDeviceToHost,
+                        stream.stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
     __host__ void HEEncoder::decode_ckks(HostVector<double>& message,
-                                Plaintext& plain)
+                                         Plaintext& plain)
     {
         int current_modulus_count = Q_size_ - plain.depth_;
 
@@ -1101,14 +1133,15 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        fft::fft_configuration cfg_fft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::FORWARD,
-            .stream = 0};
+        fft::fft_configuration cfg_fft = {.n_power = log_slot_count_,
+                                          .ntt_type = fft::type::FORWARD,
+                                          .stream = 0};
 
-        fft::GPU_Special_FFT(temp_complex.data(), special_fft_roots_table_->data(), cfg_fft, 1);
+        fft::GPU_Special_FFT(temp_complex.data(),
+                             special_fft_roots_table_->data(), cfg_fft, 1);
 
-        complex_to_double_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(temp_complex.data(),message_gpu.data());
+        complex_to_double_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256>>>(
+            temp_complex.data(), message_gpu.data());
 
         message.resize(slot_count_);
 
@@ -1118,7 +1151,7 @@ namespace heongpu
     }
 
     __host__ void HEEncoder::decode_ckks(HostVector<double>& message,
-                                Plaintext& plain, HEStream& stream)
+                                         Plaintext& plain, HEStream& stream)
     {
         int current_modulus_count = Q_size_ - plain.depth_;
 
@@ -1145,7 +1178,8 @@ namespace heongpu
             counter--;
         }
 
-        encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0, stream.stream>>>(
+        encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
+                                stream.stream>>>(
             stream.temp_complex.data(), plain.data(), modulus_->data(),
             Mi_inv_->data() + location1, Mi_->data() + location2,
             upper_half_threshold_->data() + location1,
@@ -1153,26 +1187,29 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        fft::fft_configuration cfg_fft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::FORWARD,
-            .stream = stream.stream};
+        fft::fft_configuration cfg_fft = {.n_power = log_slot_count_,
+                                          .ntt_type = fft::type::FORWARD,
+                                          .stream = stream.stream};
 
-        fft::GPU_Special_FFT(stream.temp_complex.data(), special_fft_roots_table_->data(), cfg_fft, 1);
+        fft::GPU_Special_FFT(stream.temp_complex.data(),
+                             special_fft_roots_table_->data(), cfg_fft, 1);
 
-        complex_to_double_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0, stream.stream>>>(stream.temp_complex.data(),message_gpu.data());
+        complex_to_double_kernel<<<dim3(((slot_count_) >> 8), 1, 1), 256, 0,
+                                   stream.stream>>>(stream.temp_complex.data(),
+                                                    message_gpu.data());
 
         message.resize(slot_count_);
 
         cudaMemcpyAsync(message.data(), message_gpu.data(),
-                   slot_count_ * sizeof(double), cudaMemcpyDeviceToHost, stream.stream);
+                        slot_count_ * sizeof(double), cudaMemcpyDeviceToHost,
+                        stream.stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
     //
 
     __host__ void HEEncoder::decode_ckks(std::vector<COMPLEX_C>& message,
-                                Plaintext& plain)
+                                         Plaintext& plain)
     {
         int current_modulus_count = Q_size_ - plain.depth_;
 
@@ -1207,12 +1244,12 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        fft::fft_configuration cfg_fft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::FORWARD,
-            .stream = 0};
+        fft::fft_configuration cfg_fft = {.n_power = log_slot_count_,
+                                          .ntt_type = fft::type::FORWARD,
+                                          .stream = 0};
 
-        fft::GPU_Special_FFT(message_gpu.data(), special_fft_roots_table_->data(), cfg_fft, 1);
+        fft::GPU_Special_FFT(message_gpu.data(),
+                             special_fft_roots_table_->data(), cfg_fft, 1);
 
         message.resize(slot_count_);
 
@@ -1222,7 +1259,7 @@ namespace heongpu
     }
 
     __host__ void HEEncoder::decode_ckks(std::vector<COMPLEX_C>& message,
-                                  Plaintext& plain, HEStream& stream)
+                                         Plaintext& plain, HEStream& stream)
     {
         int current_modulus_count = Q_size_ - plain.depth_;
 
@@ -1249,7 +1286,8 @@ namespace heongpu
             counter--;
         }
 
-        encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0, stream.stream>>>(
+        encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
+                                stream.stream>>>(
             message_gpu.data(), plain.data(), modulus_->data(),
             Mi_inv_->data() + location1, Mi_->data() + location2,
             upper_half_threshold_->data() + location1,
@@ -1257,22 +1295,23 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        fft::fft_configuration cfg_fft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::FORWARD,
-            .stream = stream.stream};
+        fft::fft_configuration cfg_fft = {.n_power = log_slot_count_,
+                                          .ntt_type = fft::type::FORWARD,
+                                          .stream = stream.stream};
 
-        fft::GPU_Special_FFT(message_gpu.data(), special_fft_roots_table_->data(), cfg_fft, 1);
+        fft::GPU_Special_FFT(message_gpu.data(),
+                             special_fft_roots_table_->data(), cfg_fft, 1);
 
         message.resize(slot_count_);
 
         cudaMemcpyAsync(message.data(), message_gpu.data(),
-                   slot_count_ * sizeof(COMPLEX), cudaMemcpyDeviceToHost, stream.stream);
+                        slot_count_ * sizeof(COMPLEX), cudaMemcpyDeviceToHost,
+                        stream.stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
     __host__ void HEEncoder::decode_ckks(HostVector<COMPLEX_C>& message,
-                                Plaintext& plain)
+                                         Plaintext& plain)
     {
         int current_modulus_count = Q_size_ - plain.depth_;
 
@@ -1307,12 +1346,12 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        fft::fft_configuration cfg_fft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::FORWARD,
-            .stream = 0};
+        fft::fft_configuration cfg_fft = {.n_power = log_slot_count_,
+                                          .ntt_type = fft::type::FORWARD,
+                                          .stream = 0};
 
-        fft::GPU_Special_FFT(message_gpu.data(), special_fft_roots_table_->data(), cfg_fft, 1);
+        fft::GPU_Special_FFT(message_gpu.data(),
+                             special_fft_roots_table_->data(), cfg_fft, 1);
 
         message.resize(slot_count_);
 
@@ -1322,7 +1361,7 @@ namespace heongpu
     }
 
     __host__ void HEEncoder::decode_ckks(HostVector<COMPLEX_C>& message,
-                                Plaintext& plain, HEStream& stream)
+                                         Plaintext& plain, HEStream& stream)
     {
         int current_modulus_count = Q_size_ - plain.depth_;
 
@@ -1349,7 +1388,8 @@ namespace heongpu
             counter--;
         }
 
-        encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0, stream.stream>>>(
+        encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
+                                stream.stream>>>(
             message_gpu.data(), plain.data(), modulus_->data(),
             Mi_inv_->data() + location1, Mi_->data() + location2,
             upper_half_threshold_->data() + location1,
@@ -1357,17 +1397,18 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        fft::fft_configuration cfg_fft = {
-            .n_power = log_slot_count_,
-            .ntt_type = fft::type::FORWARD,
-            .stream = stream.stream};
+        fft::fft_configuration cfg_fft = {.n_power = log_slot_count_,
+                                          .ntt_type = fft::type::FORWARD,
+                                          .stream = stream.stream};
 
-        fft::GPU_Special_FFT(message_gpu.data(), special_fft_roots_table_->data(), cfg_fft, 1);
+        fft::GPU_Special_FFT(message_gpu.data(),
+                             special_fft_roots_table_->data(), cfg_fft, 1);
 
         message.resize(slot_count_);
 
         cudaMemcpyAsync(message.data(), message_gpu.data(),
-                   slot_count_ * sizeof(COMPLEX), cudaMemcpyDeviceToHost, stream.stream);
+                        slot_count_ * sizeof(COMPLEX), cudaMemcpyDeviceToHost,
+                        stream.stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
