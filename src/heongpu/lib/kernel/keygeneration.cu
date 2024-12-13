@@ -552,14 +552,17 @@ namespace heongpu
         int location1 = block_y << n_power;
         int coeff_count = 1 << n_power;
 
-        Data sk = secret_key[idx + (block_y << n_power)];
+        int permutation_location =
+            permutation(idx, galois_elt, coeff_count, n_power);
+        Data sk_permutation =
+            secret_key[(block_y << n_power) + permutation_location];
         Data e = e_a[idx + (block_y << n_power)];
         Data a = e_a[idx + (block_y << n_power) + (rns_mod_count << n_power)];
 
 #pragma unroll
         for (int i = 0; i < rns_mod_count - 1; i++)
         {
-            Data gk_0 = VALUE_GPU::mult(sk, a, modulus[block_y]);
+            Data gk_0 = VALUE_GPU::mult(sk_permutation, a, modulus[block_y]);
             gk_0 = VALUE_GPU::add(gk_0, e, modulus[block_y]);
             Data zero = 0;
 
@@ -567,15 +570,11 @@ namespace heongpu
 
             if (i == block_y)
             {
-                int permutation_location =
-                    permutation(idx, galois_elt, coeff_count, n_power);
-                Data sk_permutation =
-                    secret_key[(block_y << n_power) + permutation_location];
+                Data sk = secret_key[idx + (block_y << n_power)];
 
-                sk_permutation = VALUE_GPU::mult(
-                    sk_permutation, factor[block_y], modulus[block_y]);
+                sk = VALUE_GPU::mult(sk, factor[block_y], modulus[block_y]);
 
-                gk_0 = VALUE_GPU::add(gk_0, sk_permutation, modulus[block_y]);
+                gk_0 = VALUE_GPU::add(gk_0, sk, modulus[block_y]);
             }
 
             galois_key[idx + location1 +
@@ -600,14 +599,17 @@ namespace heongpu
         int Sk_index = Sk_pair[block_y];
         int coeff_count = 1 << n_power;
 
-        Data sk = secret_key[idx + (block_y << n_power)];
+        int permutation_location =
+            permutation(idx, galois_elt, coeff_count, n_power);
+        Data sk_permutation =
+            secret_key[(block_y << n_power) + permutation_location];
         Data e = e_a[idx + (block_y << n_power)];
         Data a = e_a[idx + (block_y << n_power) + (l_tilda << n_power)];
 
 #pragma unroll
         for (int i = 0; i < d; i++)
         {
-            Data rk_0 = VALUE_GPU::mult(sk, a, modulus[block_y]);
+            Data rk_0 = VALUE_GPU::mult(sk_permutation, a, modulus[block_y]);
             rk_0 = VALUE_GPU::add(rk_0, e, modulus[block_y]);
             Data zero = 0;
 
@@ -615,20 +617,15 @@ namespace heongpu
 
             if (i == Sk_index)
             {
-                // Data temp = VALUE_GPU::mult(sk, sk, modulus[block_y]);
-
-                int permutation_location =
-                    permutation(idx, galois_elt, coeff_count, n_power);
-                Data temp =
-                    secret_key[(block_y << n_power) + permutation_location];
+                Data sk = secret_key[idx + (block_y << n_power)];
 
                 for (int j = 0; j < P_size; j++)
                 {
-                    temp = VALUE_GPU::mult(temp, factor[(j * Q_size) + block_y],
-                                           modulus[block_y]);
+                    sk = VALUE_GPU::mult(sk, factor[(j * Q_size) + block_y],
+                                         modulus[block_y]);
                 }
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[block_y]);
+                rk_0 = VALUE_GPU::add(rk_0, sk, modulus[block_y]);
             }
 
             galois_key_temp[idx + location1 +

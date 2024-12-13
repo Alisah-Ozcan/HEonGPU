@@ -517,6 +517,8 @@ namespace heongpu
                                 modulus_->data(), cfg_ntt, 2 * Q_prime_size_,
                                 Q_prime_size_);
 
+                int inv_galois = modInverse(galois.second, 2 * n);
+
                 if (gk.store_in_gpu_)
                 {
                     gk.device_location_[galois.second] =
@@ -524,8 +526,8 @@ namespace heongpu
                     galoiskey_method_I_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         gk.data(galois.second), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois.second,
-                        n_power, Q_prime_size_);
+                        modulus_->data(), factor_->data(), inv_galois, n_power,
+                        Q_prime_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
                 else
@@ -534,8 +536,8 @@ namespace heongpu
                     galoiskey_method_I_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         temp_location.data(), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois.second,
-                        n_power, Q_prime_size_);
+                        modulus_->data(), factor_->data(), inv_galois, n_power,
+                        Q_prime_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                     gk.host_location_[galois.second] =
@@ -613,6 +615,8 @@ namespace heongpu
                                 modulus_->data(), cfg_ntt, 2 * Q_prime_size_,
                                 Q_prime_size_);
 
+                int inv_galois = modInverse(galois_, 2 * n);
+
                 if (gk.store_in_gpu_)
                 {
                     gk.device_location_[galois_] =
@@ -621,7 +625,7 @@ namespace heongpu
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         gk.device_location_[galois_].data(), sk.data(),
                         error_a.data(), modulus_->data(), factor_->data(),
-                        galois_, n_power, Q_prime_size_);
+                        inv_galois, n_power, Q_prime_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
                 else
@@ -630,7 +634,7 @@ namespace heongpu
                     galoiskey_method_I_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         temp_location.data(), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois_, n_power,
+                        modulus_->data(), factor_->data(), inv_galois, n_power,
                         Q_prime_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -717,6 +721,8 @@ namespace heongpu
                                 modulus_->data(), cfg_ntt, 2 * Q_prime_size_,
                                 Q_prime_size_);
 
+                int inv_galois = modInverse(galois.second, 2 * n);
+
                 if (gk.store_in_gpu_)
                 {
                     gk.device_location_[galois.second] =
@@ -724,7 +730,7 @@ namespace heongpu
                     galoiskey_method_II_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         gk.data(galois.second), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois.second,
+                        modulus_->data(), factor_->data(), inv_galois,
                         Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_,
                         P_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -735,7 +741,7 @@ namespace heongpu
                     galoiskey_method_II_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         temp_location.data(), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois.second,
+                        modulus_->data(), factor_->data(), inv_galois,
                         Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_,
                         P_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -816,6 +822,8 @@ namespace heongpu
                                 modulus_->data(), cfg_ntt, 2 * Q_prime_size_,
                                 Q_prime_size_);
 
+                int inv_galois = modInverse(galois_, 2 * n);
+
                 if (gk.store_in_gpu_)
                 {
                     gk.device_location_[galois_] =
@@ -824,8 +832,8 @@ namespace heongpu
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         gk.device_location_[galois_].data(), sk.data(),
                         error_a.data(), modulus_->data(), factor_->data(),
-                        galois_, Sk_pair_->data(), n_power, Q_prime_size_, d_,
-                        Q_size_, P_size_);
+                        inv_galois, Sk_pair_->data(), n_power, Q_prime_size_,
+                        d_, Q_size_, P_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
                 else
@@ -834,7 +842,7 @@ namespace heongpu
                     galoiskey_method_II_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         temp_location.data(), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois_,
+                        modulus_->data(), factor_->data(), inv_galois,
                         Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_,
                         P_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -924,6 +932,8 @@ namespace heongpu
                                 modulus_->data(), cfg_ntt, 2 * Q_prime_size_,
                                 Q_prime_size_);
 
+                int inv_galois = modInverse(galois.second, 2 * n);
+
                 if (gk.store_in_gpu_)
                 {
                     gk.device_location_[galois.second] =
@@ -931,7 +941,7 @@ namespace heongpu
                     galoiskey_method_II_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         gk.data(galois.second), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois.second,
+                        modulus_->data(), factor_->data(), inv_galois,
                         Sk_pair_leveled_->operator[](0).data(), n_power,
                         Q_prime_size_, d_leveled_->operator[](0), Q_size_,
                         P_size_);
@@ -943,7 +953,7 @@ namespace heongpu
                     galoiskey_method_II_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         temp_location.data(), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois.second,
+                        modulus_->data(), factor_->data(), inv_galois,
                         Sk_pair_leveled_->operator[](0).data(), n_power,
                         Q_prime_size_, d_leveled_->operator[](0), Q_size_,
                         P_size_);
@@ -1025,6 +1035,8 @@ namespace heongpu
                                 modulus_->data(), cfg_ntt, 2 * Q_prime_size_,
                                 Q_prime_size_);
 
+                int inv_galois = modInverse(galois_, 2 * n);
+
                 if (gk.store_in_gpu_)
                 {
                     gk.device_location_[galois_] =
@@ -1033,7 +1045,7 @@ namespace heongpu
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         gk.device_location_[galois_].data(), sk.data(),
                         error_a.data(), modulus_->data(), factor_->data(),
-                        galois_, Sk_pair_leveled_->operator[](0).data(),
+                        inv_galois, Sk_pair_leveled_->operator[](0).data(),
                         n_power, Q_prime_size_, d_leveled_->operator[](0),
                         Q_size_, P_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1044,7 +1056,7 @@ namespace heongpu
                     galoiskey_method_II_kernel<<<
                         dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                         temp_location.data(), sk.data(), error_a.data(),
-                        modulus_->data(), factor_->data(), galois_,
+                        modulus_->data(), factor_->data(), inv_galois,
                         Sk_pair_leveled_->operator[](0).data(), n_power,
                         Q_prime_size_, d_leveled_->operator[](0), Q_size_,
                         P_size_);

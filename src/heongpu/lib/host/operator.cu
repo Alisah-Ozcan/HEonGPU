@@ -1529,7 +1529,7 @@ namespace heongpu
     HEOperator::relinearize_seal_method_inplace(Ciphertext& input1,
                                                 Relinkey& relin_key)
     {
-        CipherBroadcast2<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+        cipher_broadcast_kernel<<<dim3((n >> 8), Q_size_, 1), 256>>>(
             input1.data() + (Q_size_ << (n_power + 1)), temp1_relin,
             modulus_->data(), n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1547,15 +1547,17 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
-                temp1_relin, relin_key.data(), temp2_relin, modulus_->data(),
-                n_power, Q_size_);
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                         256>>>(temp1_relin, relin_key.data(),
+                                                temp2_relin, modulus_->data(),
+                                                n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data> key_location(relin_key.host_location_);
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                         256>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
                 n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1572,7 +1574,7 @@ namespace heongpu
         GPU_NTT_Inplace(temp2_relin, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        DivideRoundLastq_<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        divide_round_lastq_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             temp2_relin, input1.data(), input1.data(), modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
             Q_size_);
@@ -1582,7 +1584,8 @@ namespace heongpu
     __host__ void HEOperator::relinearize_seal_method_inplace(
         Ciphertext& input1, Relinkey& relin_key, HEStream& stream)
     {
-        CipherBroadcast2<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream.stream>>>(
+        cipher_broadcast_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0,
+                                  stream.stream>>>(
             input1.data() + (Q_size_ << (n_power + 1)), stream.temp1_relin,
             modulus_->data(), n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1601,18 +1604,18 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                          stream.stream>>>(stream.temp1_relin, relin_key.data(),
-                                           stream.temp2_relin, modulus_->data(),
-                                           n_power, Q_size_);
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                         0, stream.stream>>>(
+                stream.temp1_relin, relin_key.data(), stream.temp2_relin,
+                modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data> key_location(relin_key.host_location_,
                                             stream.stream);
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                          stream.stream>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                         0, stream.stream>>>(
                 stream.temp1_relin, key_location.data(), stream.temp2_relin,
                 modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1630,8 +1633,8 @@ namespace heongpu
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_,
                         Q_prime_size_);
 
-        DivideRoundLastq_<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                            stream.stream>>>(
+        divide_round_lastq_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                    stream.stream>>>(
             stream.temp2_relin, input1.data(), input1.data(), modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
             Q_size_);
@@ -1642,7 +1645,7 @@ namespace heongpu
     HEOperator::relinearize_external_product_method_inplace(Ciphertext& input1,
                                                             Relinkey& relin_key)
     {
-        relin_DtoB_kernel<<<dim3((n >> 8), d, 1), 256>>>(
+        base_conversion_DtoB_relin_kernel<<<dim3((n >> 8), d, 1), 256>>>(
             input1.data() + (Q_size_ << (n_power + 1)), temp1_relin_new,
             modulus_->data(), B_prime_->data(),
             base_change_matrix_D_to_B_->data(), Mi_inv_D_to_B_->data(),
@@ -1663,7 +1666,8 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc_new<<<dim3((n >> 8), r_prime, d_tilda), 256>>>(
+            multiply_accumulate_extended_kernel<<<
+                dim3((n >> 8), r_prime, d_tilda), 256>>>(
                 temp1_relin_new, relin_key.data(), temp2_relin_new,
                 B_prime_->data(), n_power, d_tilda, d, r_prime);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1671,7 +1675,8 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(relin_key.host_location_);
-            MultiplyAcc_new<<<dim3((n >> 8), r_prime, d_tilda), 256>>>(
+            multiply_accumulate_extended_kernel<<<
+                dim3((n >> 8), r_prime, d_tilda), 256>>>(
                 temp1_relin_new, key_location.data(), temp2_relin_new,
                 B_prime_->data(), n_power, d_tilda, d, r_prime);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1689,14 +1694,14 @@ namespace heongpu
                         B_prime_->data(), cfg_intt, 2 * r_prime * d_tilda,
                         r_prime);
 
-        relin_BtoD_kernelNewP<<<dim3((n >> 8), d_tilda, 2), 256>>>(
+        base_conversion_BtoD_relin_kernel<<<dim3((n >> 8), d_tilda, 2), 256>>>(
             temp2_relin_new, temp3_relin_new, modulus_->data(),
             B_prime_->data(), base_change_matrix_B_to_D_->data(),
             Mi_inv_B_to_D_->data(), prod_B_to_D_->data(), I_j_->data(),
             I_location_->data(), n_power, Q_prime_size_, d_tilda, d, r_prime);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        divide_round_lastq_extended_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             temp3_relin_new, input1.data(), input1.data(), modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
             Q_prime_size_, Q_size_, P_size_);
@@ -1706,7 +1711,8 @@ namespace heongpu
     __host__ void HEOperator::relinearize_external_product_method_inplace(
         Ciphertext& input1, Relinkey& relin_key, HEStream& stream)
     {
-        relin_DtoB_kernel<<<dim3((n >> 8), d, 1), 256, 0, stream.stream>>>(
+        base_conversion_DtoB_relin_kernel<<<dim3((n >> 8), d, 1), 256, 0,
+                                            stream.stream>>>(
             input1.data() + (Q_size_ << (n_power + 1)), stream.temp1_relin_new,
             modulus_->data(), B_prime_->data(),
             base_change_matrix_D_to_B_->data(), Mi_inv_D_to_B_->data(),
@@ -1727,8 +1733,8 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc_new<<<dim3((n >> 8), r_prime, d_tilda), 256, 0,
-                              stream.stream>>>(
+            multiply_accumulate_extended_kernel<<<
+                dim3((n >> 8), r_prime, d_tilda), 256, 0, stream.stream>>>(
                 stream.temp1_relin_new, relin_key.data(),
                 stream.temp2_relin_new, B_prime_->data(), n_power, d_tilda, d,
                 r_prime);
@@ -1738,8 +1744,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(relin_key.host_location_,
                                             stream.stream);
-            MultiplyAcc_new<<<dim3((n >> 8), r_prime, d_tilda), 256, 0,
-                              stream.stream>>>(
+            multiply_accumulate_extended_kernel<<<
+                dim3((n >> 8), r_prime, d_tilda), 256, 0, stream.stream>>>(
                 stream.temp1_relin_new, key_location.data(),
                 stream.temp2_relin_new, B_prime_->data(), n_power, d_tilda, d,
                 r_prime);
@@ -1758,16 +1764,16 @@ namespace heongpu
                         B_prime_->data(), cfg_intt, 2 * r_prime * d_tilda,
                         r_prime);
 
-        relin_BtoD_kernelNewP<<<dim3((n >> 8), d_tilda, 2), 256, 0,
-                                stream.stream>>>(
+        base_conversion_BtoD_relin_kernel<<<dim3((n >> 8), d_tilda, 2), 256, 0,
+                                            stream.stream>>>(
             stream.temp2_relin_new, stream.temp3_relin_new, modulus_->data(),
             B_prime_->data(), base_change_matrix_B_to_D_->data(),
             Mi_inv_B_to_D_->data(), prod_B_to_D_->data(), I_j_->data(),
             I_location_->data(), n_power, Q_prime_size_, d_tilda, d, r_prime);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                               stream.stream>>>(
+        divide_round_lastq_extended_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                             stream.stream>>>(
             stream.temp3_relin_new, input1.data(), input1.data(),
             modulus_->data(), half_p_->data(), half_mod_->data(),
             last_q_modinv_->data(), n_power, Q_prime_size_, Q_size_, P_size_);
@@ -1777,7 +1783,7 @@ namespace heongpu
     __host__ void HEOperator::relinearize_external_product_method2_inplace(
         Ciphertext& input1, Relinkey& relin_key)
     {
-        relin_DtoQtilde_kernel<<<dim3((n >> 8), d, 1), 256>>>(
+        base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256>>>(
             input1.data() + (Q_size_ << (n_power + 1)), temp1_relin,
             modulus_->data(), base_change_matrix_D_to_Q_tilda_->data(),
             Mi_inv_D_to_Q_tilda_->data(), prod_D_to_Q_tilda_->data(),
@@ -1798,7 +1804,8 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                 temp1_relin, relin_key.data(), temp2_relin, modulus_->data(),
                 n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1806,7 +1813,8 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(relin_key.host_location_);
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
                 n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1823,7 +1831,7 @@ namespace heongpu
         GPU_NTT_Inplace(temp2_relin, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        divide_round_lastq_extended_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             temp2_relin, input1.data(), input1.data(), modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
             Q_prime_size_, Q_size_, P_size_);
@@ -1833,7 +1841,8 @@ namespace heongpu
     __host__ void HEOperator::relinearize_external_product_method2_inplace(
         Ciphertext& input1, Relinkey& relin_key, HEStream& stream)
     {
-        relin_DtoQtilde_kernel<<<dim3((n >> 8), d, 1), 256, 0, stream.stream>>>(
+        base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256, 0,
+                                                 stream.stream>>>(
             input1.data() + (Q_size_ << (n_power + 1)), stream.temp1_relin,
             modulus_->data(), base_change_matrix_D_to_Q_tilda_->data(),
             Mi_inv_D_to_Q_tilda_->data(), prod_D_to_Q_tilda_->data(),
@@ -1852,8 +1861,8 @@ namespace heongpu
                         modulus_->data(), cfg_ntt, d * Q_prime_size_,
                         Q_prime_size_);
 
-        MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                              stream.stream>>>(
+        multiply_accumulate_method_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                               256, 0, stream.stream>>>(
             stream.temp1_relin, relin_key.data(), stream.temp2_relin,
             modulus_->data(), n_power, Q_prime_size_, d);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1861,8 +1870,8 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                                  stream.stream>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream.stream>>>(
                 stream.temp1_relin, relin_key.data(), stream.temp2_relin,
                 modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1871,8 +1880,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(relin_key.host_location_,
                                             stream.stream);
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                                  stream.stream>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream.stream>>>(
                 stream.temp1_relin, key_location.data(), stream.temp2_relin,
                 modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1890,8 +1899,8 @@ namespace heongpu
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_,
                         Q_prime_size_);
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                               stream.stream>>>(
+        divide_round_lastq_extended_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                             stream.stream>>>(
             stream.temp2_relin, input1.data(), input1.data(), modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
             Q_prime_size_, Q_size_, P_size_);
@@ -1920,8 +1929,8 @@ namespace heongpu
                         intt_table_->data(), modulus_->data(), cfg_intt,
                         current_decomp_count, current_decomp_count);
 
-        CipherBroadcast2_leveled<<<dim3((n >> 8), current_decomp_count, 1),
-                                   256>>>(
+        cipher_broadcast_leveled_kernel<<<
+            dim3((n >> 8), current_decomp_count, 1), 256>>>(
             input1.data() + (current_decomp_count << (n_power + 1)),
             temp1_relin, modulus_->data(), first_rns_mod_count,
             current_rns_mod_count, n_power);
@@ -1950,8 +1959,8 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256>>>(
+            multiply_accumulate_leveled_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp1_relin, relin_key.data(), temp2_relin, modulus_->data(),
                 first_rns_mod_count, current_decomp_count, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1959,8 +1968,8 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(relin_key.host_location_);
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256>>>(
+            multiply_accumulate_leveled_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
                 first_rns_mod_count, current_decomp_count, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1979,7 +1988,8 @@ namespace heongpu
             modulus_->data() + first_decomp_count, cfg_intt2, 2, 1,
             new_input_locations + (input1.depth_ * 2));
 
-        DivideRoundLastq_ckks1_leveled<<<dim3((n >> 8), 2, 1), 256>>>(
+        divide_round_lastq_leveled_stage_one_kernel<<<dim3((n >> 8), 2, 1),
+                                                      256>>>(
             temp2_relin, temp1_relin, modulus_->data(), half_p_->data(),
             half_mod_->data(), n_power, first_decomp_count,
             current_decomp_count);
@@ -1990,7 +2000,7 @@ namespace heongpu
                         cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
 
-        DivideRoundLastq_ckks2_leveled<<<
+        divide_round_lastq_leveled_stage_two_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp1_relin, temp2_relin, input1.data(), input1.data(),
             modulus_->data(), last_q_modinv_->data(), n_power,
@@ -2020,8 +2030,8 @@ namespace heongpu
                         intt_table_->data(), modulus_->data(), cfg_intt,
                         current_decomp_count, current_decomp_count);
 
-        CipherBroadcast2_leveled<<<dim3((n >> 8), current_decomp_count, 1), 256,
-                                   0, stream.stream>>>(
+        cipher_broadcast_leveled_kernel<<<
+            dim3((n >> 8), current_decomp_count, 1), 256, 0, stream.stream>>>(
             input1.data() + (current_decomp_count << (n_power + 1)),
             stream.temp1_relin, modulus_->data(), first_rns_mod_count,
             current_rns_mod_count, n_power);
@@ -2050,8 +2060,9 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_kernel<<<dim3((n >> 8),
+                                                      current_rns_mod_count, 1),
+                                                 256, 0, stream.stream>>>(
                 stream.temp1_relin, relin_key.data(), stream.temp2_relin,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
                 n_power);
@@ -2061,8 +2072,9 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(relin_key.host_location_,
                                             stream.stream);
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_kernel<<<dim3((n >> 8),
+                                                      current_rns_mod_count, 1),
+                                                 256, 0, stream.stream>>>(
                 stream.temp1_relin, key_location.data(), stream.temp2_relin,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
                 n_power);
@@ -2083,8 +2095,8 @@ namespace heongpu
             modulus_->data() + first_decomp_count, cfg_intt2, 2, 1,
             new_input_locations + (input1.depth_ * 2));
 
-        DivideRoundLastq_ckks1_leveled<<<dim3((n >> 8), 2, 1), 256, 0,
-                                         stream.stream>>>(
+        divide_round_lastq_leveled_stage_one_kernel<<<dim3((n >> 8), 2, 1), 256,
+                                                      0, stream.stream>>>(
             stream.temp2_relin, stream.temp1_relin, modulus_->data(),
             half_p_->data(), half_mod_->data(), n_power, first_decomp_count,
             current_decomp_count);
@@ -2095,7 +2107,7 @@ namespace heongpu
                         modulus_->data(), cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
 
-        DivideRoundLastq_ckks2_leveled<<<
+        divide_round_lastq_leveled_stage_two_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
             stream.temp1_relin, stream.temp2_relin, input1.data(),
             input1.data(), modulus_->data(), last_q_modinv_->data(), n_power,
@@ -2137,7 +2149,7 @@ namespace heongpu
             current_decomp_count, current_decomp_count,
             prime_location_leveled_->data() + location);
 
-        relin_DtoB_kernel_leveled2<<<
+        base_conversion_DtoB_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256>>>(
             input1.data() + (current_decomp_count << (n_power + 1)),
             temp1_relin_new, modulus_->data(), B_prime_leveled_->data(),
@@ -2172,26 +2184,26 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc_new<<<dim3((n >> 8), r_prime_leveled_,
-                                   d_tilda_leveled_->operator[](input1.depth_)),
-                              256>>>(
-                temp1_relin_new, relin_key.data(input1.depth_), temp2_relin_new,
-                B_prime_leveled_->data(), n_power,
-                d_tilda_leveled_->operator[](input1.depth_),
-                d_leveled_->operator[](input1.depth_), r_prime_leveled_);
+            multiply_accumulate_extended_kernel<<<
+                dim3((n >> 8), r_prime_leveled_,
+                     d_tilda_leveled_->operator[](input1.depth_)),
+                256>>>(temp1_relin_new, relin_key.data(input1.depth_),
+                       temp2_relin_new, B_prime_leveled_->data(), n_power,
+                       d_tilda_leveled_->operator[](input1.depth_),
+                       d_leveled_->operator[](input1.depth_), r_prime_leveled_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data> key_location(
                 relin_key.host_location_leveled_[input1.depth_]);
-            MultiplyAcc_new<<<dim3((n >> 8), r_prime_leveled_,
-                                   d_tilda_leveled_->operator[](input1.depth_)),
-                              256>>>(
-                temp1_relin_new, key_location.data(), temp2_relin_new,
-                B_prime_leveled_->data(), n_power,
-                d_tilda_leveled_->operator[](input1.depth_),
-                d_leveled_->operator[](input1.depth_), r_prime_leveled_);
+            multiply_accumulate_extended_kernel<<<
+                dim3((n >> 8), r_prime_leveled_,
+                     d_tilda_leveled_->operator[](input1.depth_)),
+                256>>>(temp1_relin_new, key_location.data(), temp2_relin_new,
+                       B_prime_leveled_->data(), n_power,
+                       d_tilda_leveled_->operator[](input1.depth_),
+                       d_leveled_->operator[](input1.depth_), r_prime_leveled_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -2211,7 +2223,7 @@ namespace heongpu
                             d_tilda_leveled_->operator[](input1.depth_),
                         r_prime_leveled_);
 
-        relin_BtoD_kernelNewP_leveled2<<<
+        base_conversion_BtoD_relin_leveled_kernel<<<
             dim3((n >> 8), d_tilda_leveled_->operator[](input1.depth_), 2),
             256>>>(temp2_relin_new, temp3_relin_new, modulus_->data(),
                    B_prime_leveled_->data(),
@@ -2229,7 +2241,7 @@ namespace heongpu
 
         ////////////////////////////////////////////////////////////////////
 
-        DivideRoundLastqNewP_external_ckks<<<
+        divide_round_lastq_extended_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp3_relin_new, temp2_relin_new, modulus_->data(), half_p_->data(),
             half_mod_->data(), last_q_modinv_->data(), n_power,
@@ -2241,7 +2253,7 @@ namespace heongpu
                         cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
 
-        cipher_temp_add<<<dim3((n >> 8), current_decomp_count, 2), 256>>>(
+        addition<<<dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp2_relin_new, input1.data(), input1.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2280,7 +2292,7 @@ namespace heongpu
             current_decomp_count, current_decomp_count,
             prime_location_leveled_->data() + location);
 
-        relin_DtoB_kernel_leveled2<<<
+        base_conversion_DtoB_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256, 0,
             stream.stream>>>(
             input1.data() + (current_decomp_count << (n_power + 1)),
@@ -2316,9 +2328,10 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc_new<<<dim3((n >> 8), r_prime_leveled_,
-                                   d_tilda_leveled_->operator[](input1.depth_)),
-                              256, 0, stream.stream>>>(
+            multiply_accumulate_extended_kernel<<<
+                dim3((n >> 8), r_prime_leveled_,
+                     d_tilda_leveled_->operator[](input1.depth_)),
+                256, 0, stream.stream>>>(
                 stream.temp1_relin_new, relin_key.data(input1.depth_),
                 stream.temp2_relin_new, B_prime_leveled_->data(), n_power,
                 d_tilda_leveled_->operator[](input1.depth_),
@@ -2329,9 +2342,10 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 relin_key.host_location_leveled_[input1.depth_], stream.stream);
-            MultiplyAcc_new<<<dim3((n >> 8), r_prime_leveled_,
-                                   d_tilda_leveled_->operator[](input1.depth_)),
-                              256, 0, stream.stream>>>(
+            multiply_accumulate_extended_kernel<<<
+                dim3((n >> 8), r_prime_leveled_,
+                     d_tilda_leveled_->operator[](input1.depth_)),
+                256, 0, stream.stream>>>(
                 stream.temp1_relin_new, key_location.data(),
                 stream.temp2_relin_new, B_prime_leveled_->data(), n_power,
                 d_tilda_leveled_->operator[](input1.depth_),
@@ -2355,7 +2369,7 @@ namespace heongpu
             2 * r_prime_leveled_ * d_tilda_leveled_->operator[](input1.depth_),
             r_prime_leveled_);
 
-        relin_BtoD_kernelNewP_leveled2<<<
+        base_conversion_BtoD_relin_leveled_kernel<<<
             dim3((n >> 8), d_tilda_leveled_->operator[](input1.depth_), 2), 256,
             0, stream.stream>>>(
             stream.temp2_relin_new, stream.temp3_relin_new, modulus_->data(),
@@ -2373,7 +2387,7 @@ namespace heongpu
 
         ////////////////////////////////////////////////////////////////////
 
-        DivideRoundLastqNewP_external_ckks<<<
+        divide_round_lastq_extended_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
             stream.temp3_relin_new, stream.temp2_relin_new, modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
@@ -2385,10 +2399,9 @@ namespace heongpu
                         modulus_->data(), cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
 
-        cipher_temp_add<<<dim3((n >> 8), current_decomp_count, 2), 256, 0,
-                          stream.stream>>>(stream.temp2_relin_new,
-                                           input1.data(), input1.data(),
-                                           modulus_->data(), n_power);
+        addition<<<dim3((n >> 8), current_decomp_count, 2), 256, 0,
+                   stream.stream>>>(stream.temp2_relin_new, input1.data(),
+                                    input1.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -2421,7 +2434,7 @@ namespace heongpu
                         intt_table_->data(), modulus_->data(), cfg_intt,
                         current_decomp_count, current_decomp_count);
 
-        relin_DtoQtilda_kernel_leveled2<<<
+        base_conversion_DtoQtilde_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256>>>(
             input1.data() + (current_decomp_count << (n_power + 1)),
             temp1_relin, modulus_->data(),
@@ -2453,7 +2466,7 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled_method2<<<
+            multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp1_relin, relin_key.data(), temp2_relin, modulus_->data(),
                 first_rns_mod_count, current_decomp_count,
@@ -2464,7 +2477,7 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(relin_key.host_location_);
-            MultiplyAcc2_leveled_method2<<<
+            multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
                 first_rns_mod_count, current_decomp_count,
@@ -2480,7 +2493,7 @@ namespace heongpu
             2 * current_rns_mod_count, current_rns_mod_count,
             new_prime_locations + location);
 
-        DivideRoundLastqNewP_external_ckks<<<
+        divide_round_lastq_extended_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp2_relin, temp1_relin, modulus_->data(), half_p_->data(),
             half_mod_->data(), last_q_modinv_->data(), n_power,
@@ -2492,7 +2505,7 @@ namespace heongpu
                         cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
 
-        cipher_temp_add<<<dim3((n >> 8), current_decomp_count, 2), 256>>>(
+        addition<<<dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp1_relin, input1.data(), input1.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2527,7 +2540,7 @@ namespace heongpu
                         intt_table_->data(), modulus_->data(), cfg_intt,
                         current_decomp_count, current_decomp_count);
 
-        relin_DtoQtilda_kernel_leveled2<<<
+        base_conversion_DtoQtilde_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256, 0,
             stream.stream>>>(
             input1.data() + (current_decomp_count << (n_power + 1)),
@@ -2560,9 +2573,9 @@ namespace heongpu
         // TODO: make it efficient
         if (relin_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled_method2<<<dim3((n >> 8), current_rns_mod_count,
-                                                1),
-                                           256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_method_II_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                stream.stream>>>(
                 stream.temp1_relin, relin_key.data(), stream.temp2_relin,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
                 current_rns_mod_count, d_leveled_->operator[](input1.depth_),
@@ -2573,9 +2586,9 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(relin_key.host_location_,
                                             stream.stream);
-            MultiplyAcc2_leveled_method2<<<dim3((n >> 8), current_rns_mod_count,
-                                                1),
-                                           256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_method_II_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                stream.stream>>>(
                 stream.temp1_relin, key_location.data(), stream.temp2_relin,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
                 current_rns_mod_count, d_leveled_->operator[](input1.depth_),
@@ -2590,7 +2603,7 @@ namespace heongpu
             2 * current_rns_mod_count, current_rns_mod_count,
             new_prime_locations + location);
 
-        DivideRoundLastqNewP_external_ckks<<<
+        divide_round_lastq_extended_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
             stream.temp2_relin, stream.temp1_relin, modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
@@ -2602,10 +2615,9 @@ namespace heongpu
                         modulus_->data(), cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
 
-        cipher_temp_add<<<dim3((n >> 8), current_decomp_count, 2), 256, 0,
-                          stream.stream>>>(stream.temp1_relin, input1.data(),
-                                           input1.data(), modulus_->data(),
-                                           n_power);
+        addition<<<dim3((n >> 8), current_decomp_count, 2), 256, 0,
+                   stream.stream>>>(stream.temp1_relin, input1.data(),
+                                    input1.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -2644,7 +2656,8 @@ namespace heongpu
             modulus_->data() + (current_decomp_count - 1), cfg_intt, 2, 1,
             new_input_locations + ((input1.depth_ + P_size_) * 2));
 
-        DivideRoundLastq_ckks1_leveled<<<dim3((n >> 8), 2, 1), 256>>>(
+        divide_round_lastq_leveled_stage_one_kernel<<<dim3((n >> 8), 2, 1),
+                                                      256>>>(
             input1.data(), temp1_rescale, modulus_->data(),
             rescaled_half_->data() + input1.depth_,
             rescaled_half_mod_->data() + location, n_power,
@@ -2656,11 +2669,11 @@ namespace heongpu
                         cfg_ntt, 2 * (current_decomp_count - 1),
                         (current_decomp_count - 1));
 
-        move_cipher_ckks_leveled<<<dim3((n >> 8), current_decomp_count - 1, 2),
-                                   256>>>(input1.data(), temp2_rescale, n_power,
-                                          current_decomp_count - 1);
+        move_cipher_leveled_kernel<<<
+            dim3((n >> 8), current_decomp_count - 1, 2), 256>>>(
+            input1.data(), temp2_rescale, n_power, current_decomp_count - 1);
 
-        DivideRoundLastq_rescale_ckks2_leveled<<<
+        divide_round_lastq_rescale_kernel<<<
             dim3((n >> 8), current_decomp_count - 1, 2), 256>>>(
             temp1_rescale, temp2_rescale, input1.data(), modulus_->data(),
             rescaled_last_q_modinv_->data() + location, n_power,
@@ -2714,8 +2727,8 @@ namespace heongpu
             modulus_->data() + (current_decomp_count - 1), cfg_intt, 2, 1,
             new_input_locations + ((input1.depth_ + P_size_) * 2));
 
-        DivideRoundLastq_ckks1_leveled<<<dim3((n >> 8), 2, 1), 256, 0,
-                                         stream.stream>>>(
+        divide_round_lastq_leveled_stage_one_kernel<<<dim3((n >> 8), 2, 1), 256,
+                                                      0, stream.stream>>>(
             input1.data(), stream.temp1_rescale, modulus_->data(),
             rescaled_half_->data() + input1.depth_,
             rescaled_half_mod_->data() + location, n_power,
@@ -2727,19 +2740,20 @@ namespace heongpu
             stream.temp1_rescale, ntt_table_->data(), modulus_->data(), cfg_ntt,
             2 * (current_decomp_count - 1), (current_decomp_count - 1));
 
-        move_cipher_ckks_leveled<<<dim3((n >> 8), current_decomp_count - 1, 2),
-                                   256, 0, stream.stream>>>(
+        move_cipher_leveled_kernel<<<dim3((n >> 8), current_decomp_count - 1,
+                                          2),
+                                     256, 0, stream.stream>>>(
             input1.data(), stream.temp2_rescale, n_power,
             current_decomp_count - 1);
 
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        DivideRoundLastq_rescale_ckks2_leveled<<<
-            dim3((n >> 8), current_decomp_count - 1, 2), 256, 0,
-            stream.stream>>>(stream.temp1_rescale, stream.temp2_rescale,
-                             input1.data(), modulus_->data(),
-                             rescaled_last_q_modinv_->data() + location,
-                             n_power, current_decomp_count - 1);
+        divide_round_lastq_rescale_kernel<<<dim3((n >> 8),
+                                                 current_decomp_count - 1, 2),
+                                            256, 0, stream.stream>>>(
+            stream.temp1_rescale, stream.temp2_rescale, input1.data(),
+            modulus_->data(), rescaled_last_q_modinv_->data() + location,
+            n_power, current_decomp_count - 1);
 
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -2766,14 +2780,14 @@ namespace heongpu
         int offset2 = (current_decomp_count - 1) << n_power;
 
         // TODO: do with efficient way!
-        global_memory_replace<<<dim3((n >> 8), current_decomp_count - 1, 1),
-                                256>>>(input1.data() + offset1, temp_mod_drop,
-                                       n_power);
+        global_memory_replace_kernel<<<
+            dim3((n >> 8), current_decomp_count - 1, 1), 256>>>(
+            input1.data() + offset1, temp_mod_drop, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        global_memory_replace<<<dim3((n >> 8), current_decomp_count - 1, 1),
-                                256>>>(temp_mod_drop, input1.data() + offset2,
-                                       n_power);
+        global_memory_replace_kernel<<<
+            dim3((n >> 8), current_decomp_count - 1, 1), 256>>>(
+            temp_mod_drop, input1.data() + offset2, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         input1.depth_++;
@@ -2793,13 +2807,15 @@ namespace heongpu
         int offset2 = (current_decomp_count - 1) << n_power;
 
         // TODO: do with efficient way!
-        global_memory_replace<<<dim3((n >> 8), current_decomp_count - 1, 1),
-                                256, 0, stream.stream>>>(
+        global_memory_replace_kernel<<<dim3((n >> 8), current_decomp_count - 1,
+                                            1),
+                                       256, 0, stream.stream>>>(
             input1.data() + offset1, temp_mod_drop, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        global_memory_replace<<<dim3((n >> 8), current_decomp_count - 1, 1),
-                                256, 0, stream.stream>>>(
+        global_memory_replace_kernel<<<dim3((n >> 8), current_decomp_count - 1,
+                                            1),
+                                       256, 0, stream.stream>>>(
             temp_mod_drop, input1.data() + offset2, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -2816,9 +2832,9 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        global_memory_replace_2<<<dim3((n >> 8), current_decomp_count - 1, 2),
-                                  256>>>(input1.data(), input2.data(),
-                                         current_decomp_count, n_power);
+        global_memory_replace_offset_kernel<<<
+            dim3((n >> 8), current_decomp_count - 1, 2), 256>>>(
+            input1.data(), input2.data(), current_decomp_count, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -2833,8 +2849,9 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        global_memory_replace_2<<<dim3((n >> 8), current_decomp_count - 1, 2),
-                                  256, 0, stream.stream>>>(
+        global_memory_replace_offset_kernel<<<dim3((n >> 8),
+                                                   current_decomp_count - 1, 2),
+                                              256, 0, stream.stream>>>(
             input1.data(), input2.data(), current_decomp_count, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -2851,8 +2868,9 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        global_memory_replace<<<dim3((n >> 8), current_decomp_count - 1, 1),
-                                256>>>(input1.data(), input2.data(), n_power);
+        global_memory_replace_kernel<<<
+            dim3((n >> 8), current_decomp_count - 1, 1), 256>>>(
+            input1.data(), input2.data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         input2.depth_ = input1.depth_ + 1;
@@ -2869,8 +2887,9 @@ namespace heongpu
 
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        global_memory_replace<<<dim3((n >> 8), current_decomp_count - 1, 1),
-                                256, 0, stream.stream>>>(
+        global_memory_replace_kernel<<<dim3((n >> 8), current_decomp_count - 1,
+                                            1),
+                                       256, 0, stream.stream>>>(
             input1.data(), input2.data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
@@ -3297,9 +3316,9 @@ namespace heongpu
                                                     Galoiskey& galois_key,
                                                     int galois_elt)
     {
-        apply_galois_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        bfv_duplicate_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             input1.data(), temp0_rotation, temp1_rotation, modulus_->data(),
-            galois_elt, n_power, Q_size_);
+            n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -3312,10 +3331,12 @@ namespace heongpu
         GPU_NTT_Inplace(temp1_rotation, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                         256>>>(
                 temp1_rotation, galois_key.device_location_[galois_elt].data(),
                 temp2_rotation, modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -3324,7 +3345,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 galois_key.host_location_[galois_elt]);
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                         256>>>(
                 temp1_rotation, key_location.data(), temp2_rotation,
                 modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -3342,10 +3364,12 @@ namespace heongpu
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        DivideRoundLastq_<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        // ModDown + Permute
+        divide_round_lastq_permute_bfv_kernel<<<dim3((n >> 8), Q_size_, 2),
+                                                256>>>(
             temp2_rotation, temp0_rotation, output.data(), modulus_->data(),
-            half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
-            Q_size_);
+            half_p_->data(), half_mod_->data(), last_q_modinv_->data(),
+            galois_elt, n_power, Q_prime_size_, Q_size_, P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -3355,10 +3379,10 @@ namespace heongpu
                                                     int galois_elt,
                                                     HEStream& stream)
     {
-        apply_galois_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                              stream.stream>>>(
+        bfv_duplicate_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                               stream.stream>>>(
             input1.data(), stream.temp0_rotation, stream.temp1_rotation,
-            modulus_->data(), galois_elt, n_power, Q_size_);
+            modulus_->data(), n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -3372,11 +3396,12 @@ namespace heongpu
                         modulus_->data(), cfg_ntt, Q_size_ * Q_prime_size_,
                         Q_prime_size_);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                          stream.stream>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                         0, stream.stream>>>(
                 stream.temp1_rotation,
                 galois_key.device_location_[galois_elt].data(),
                 stream.temp2_rotation, modulus_->data(), n_power, Q_size_);
@@ -3386,8 +3411,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 galois_key.host_location_[galois_elt], stream.stream);
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                          stream.stream>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                         0, stream.stream>>>(
                 stream.temp1_rotation, key_location.data(),
                 stream.temp2_rotation, modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -3405,11 +3430,13 @@ namespace heongpu
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_,
                         Q_prime_size_);
 
-        DivideRoundLastq_<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                            stream.stream>>>(
+        // ModDown + Permute
+        divide_round_lastq_permute_bfv_kernel<<<dim3((n >> 8), Q_size_, 2), 256,
+                                                0, stream.stream>>>(
             stream.temp2_rotation, stream.temp0_rotation, output.data(),
             modulus_->data(), half_p_->data(), half_mod_->data(),
-            last_q_modinv_->data(), n_power, Q_size_);
+            last_q_modinv_->data(), galois_elt, n_power, Q_prime_size_, Q_size_,
+            P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -3418,14 +3445,14 @@ namespace heongpu
                                                      Galoiskey& galois_key,
                                                      int galois_elt)
     {
-        apply_galois_method_II_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
-            input1.data(), temp0_rotation, temp1_rotation, modulus_->data(),
-            galois_elt, n_power, Q_size_);
+        // TODO: make it efficient
+        global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+            input1.data(), temp0_rotation, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        relin_DtoQtilde_kernel<<<dim3((n >> 8), d, 1), 256>>>(
-            temp1_rotation, temp2_rotation, modulus_->data(),
-            base_change_matrix_D_to_Q_tilda_->data(),
+        base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256>>>(
+            input1.data() + (Q_size_ << n_power), temp2_rotation,
+            modulus_->data(), base_change_matrix_D_to_Q_tilda_->data(),
             Mi_inv_D_to_Q_tilda_->data(), prod_D_to_Q_tilda_->data(),
             I_j_->data(), I_location_->data(), n_power, Q_size_, Q_prime_size_,
             d);
@@ -3441,10 +3468,12 @@ namespace heongpu
         GPU_NTT_Inplace(temp2_rotation, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d * Q_prime_size_, Q_prime_size_);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                 temp2_rotation, galois_key.device_location_[galois_elt].data(),
                 temp3_rotation, modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -3453,7 +3482,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 galois_key.host_location_[galois_elt]);
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
                 modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -3470,10 +3500,12 @@ namespace heongpu
         GPU_NTT_Inplace(temp3_rotation, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        // ModDown + Permute
+        divide_round_lastq_permute_bfv_kernel<<<dim3((n >> 8), Q_size_, 2),
+                                                256>>>(
             temp3_rotation, temp0_rotation, output.data(), modulus_->data(),
-            half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
-            Q_prime_size_, Q_size_, P_size_);
+            half_p_->data(), half_mod_->data(), last_q_modinv_->data(),
+            galois_elt, n_power, Q_prime_size_, Q_size_, P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -3483,13 +3515,13 @@ namespace heongpu
                                                      int galois_elt,
                                                      HEStream& stream)
     {
-        apply_galois_method_II_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                                        stream.stream>>>(
-            input1.data(), stream.temp0_rotation, stream.temp1_rotation,
-            modulus_->data(), galois_elt, n_power, Q_size_);
+        global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0,
+                                       stream.stream>>>(
+            input1.data(), stream.temp0_rotation, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        relin_DtoQtilde_kernel<<<dim3((n >> 8), d, 1), 256, 0, stream.stream>>>(
+        base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256, 0,
+                                                 stream.stream>>>(
             stream.temp1_rotation, stream.temp2_rotation, modulus_->data(),
             base_change_matrix_D_to_Q_tilda_->data(),
             Mi_inv_D_to_Q_tilda_->data(), prod_D_to_Q_tilda_->data(),
@@ -3508,11 +3540,12 @@ namespace heongpu
                         modulus_->data(), cfg_ntt, d * Q_prime_size_,
                         Q_prime_size_);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                                  stream.stream>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream.stream>>>(
                 stream.temp2_rotation,
                 galois_key.device_location_[galois_elt].data(),
                 stream.temp3_rotation, modulus_->data(), n_power, Q_prime_size_,
@@ -3523,8 +3556,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 galois_key.host_location_[galois_elt], stream.stream);
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                                  stream.stream>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream.stream>>>(
                 stream.temp2_rotation, key_location.data(),
                 stream.temp3_rotation, modulus_->data(), n_power, Q_prime_size_,
                 d);
@@ -3543,11 +3576,13 @@ namespace heongpu
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_,
                         Q_prime_size_);
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                               stream.stream>>>(
+        // ModDown + Permute
+        divide_round_lastq_permute_bfv_kernel<<<dim3((n >> 8), Q_size_, 2), 256,
+                                                0, stream.stream>>>(
             stream.temp3_rotation, stream.temp0_rotation, output.data(),
             modulus_->data(), half_p_->data(), half_mod_->data(),
-            last_q_modinv_->data(), n_power, Q_prime_size_, Q_size_, P_size_);
+            last_q_modinv_->data(), galois_elt, n_power, Q_prime_size_, Q_size_,
+            P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -3574,11 +3609,10 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        apply_galois_ckks_kernel<<<dim3((n >> 8), current_decomp_count, 2),
-                                   256>>>(
-            temp0_rotation, temp1_rotation, temp2_rotation, modulus_->data(),
-            galois_elt, n_power, first_rns_mod_count, current_rns_mod_count,
-            current_decomp_count);
+        // TODO: make it efficient
+        ckks_duplicate_kernel<<<dim3((n >> 8), current_decomp_count, 1), 256>>>(
+            temp0_rotation, temp2_rotation, modulus_->data(), n_power,
+            first_rns_mod_count, current_rns_mod_count, current_decomp_count);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -3600,11 +3634,12 @@ namespace heongpu
             current_decomp_count * current_rns_mod_count, current_rns_mod_count,
             new_prime_locations + location);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256>>>(
+            multiply_accumulate_leveled_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp2_rotation, galois_key.device_location_[galois_elt].data(),
                 temp3_rotation, modulus_->data(), first_rns_mod_count,
                 current_decomp_count, n_power);
@@ -3614,50 +3649,31 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 galois_key.host_location_[galois_elt]);
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256>>>(temp2_rotation, key_location.data(),
-                                          temp3_rotation, modulus_->data(),
-                                          first_rns_mod_count,
-                                          current_decomp_count, n_power);
+            multiply_accumulate_leveled_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
+                temp2_rotation, key_location.data(), temp3_rotation,
+                modulus_->data(), first_rns_mod_count, current_decomp_count,
+                n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt2 = {
-            .n_power = n_power,
-            .ntt_type = INVERSE,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
-            .zero_padding = false,
-            .mod_inverse = n_inverse_->data() + first_decomp_count,
-            .stream = 0};
+        GPU_NTT_Modulus_Ordered_Inplace(
+            temp3_rotation, intt_table_->data(), modulus_->data(), cfg_intt,
+            2 * current_rns_mod_count, current_rns_mod_count,
+            new_prime_locations + location);
 
-        GPU_NTT_Poly_Ordered_Inplace(
-            temp3_rotation,
-            intt_table_->data() + (first_decomp_count << n_power),
-            modulus_->data() + first_decomp_count, cfg_intt2, 2, 1,
-            new_input_locations + (input1.depth_ * 2));
-
-        DivideRoundLastq_ckks1_leveled<<<dim3((n >> 8), 2, 1), 256>>>(
-            temp3_rotation, temp2_rotation, modulus_->data(), half_p_->data(),
-            half_mod_->data(), n_power, first_decomp_count,
-            current_decomp_count);
-
+        // ModDown + Permute
+        divide_round_lastq_permute_ckks_kernel<<<
+            dim3((n >> 8), current_decomp_count, 2), 256>>>(
+            temp3_rotation, temp0_rotation, output.data(), modulus_->data(),
+            half_p_->data(), half_mod_->data(), last_q_modinv_->data(),
+            galois_elt, n_power, current_rns_mod_count, current_decomp_count,
+            first_rns_mod_count, first_decomp_count, P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        GPU_NTT_Inplace(temp2_rotation, ntt_table_->data(), modulus_->data(),
+        GPU_NTT_Inplace(output.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
-
-        // TODO: Merge with previous one
-        GPU_NTT_Inplace(temp1_rotation, ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, current_decomp_count, current_decomp_count);
-
-        DivideRoundLastq_ckks2_leveled<<<
-            dim3((n >> 8), current_decomp_count, 2), 256>>>(
-            temp2_rotation, temp3_rotation, temp1_rotation, output.data(),
-            modulus_->data(), last_q_modinv_->data(), n_power,
-            current_decomp_count);
-
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
     __host__ void HEOperator::apply_galois_ckks_method_I(Ciphertext& input1,
@@ -3684,12 +3700,12 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        apply_galois_ckks_kernel<<<dim3((n >> 8), current_decomp_count, 2), 256,
-                                   0, stream.stream>>>(
-            stream.temp0_rotation, stream.temp1_rotation, stream.temp2_rotation,
-            modulus_->data(), galois_elt, n_power, first_rns_mod_count,
-            current_rns_mod_count, current_decomp_count);
-
+        // TODO: make it efficient
+        ckks_duplicate_kernel<<<dim3((n >> 8), current_decomp_count, 1), 256, 0,
+                                stream.stream>>>(
+            stream.temp0_rotation, stream.temp2_rotation, modulus_->data(),
+            n_power, first_rns_mod_count, current_rns_mod_count,
+            current_decomp_count);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -3711,11 +3727,13 @@ namespace heongpu
             cfg_ntt, current_decomp_count * current_rns_mod_count,
             current_rns_mod_count, new_prime_locations + location);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_kernel<<<dim3((n >> 8),
+                                                      current_rns_mod_count, 1),
+                                                 256, 0, stream.stream>>>(
                 stream.temp2_rotation,
                 galois_key.device_location_[galois_elt].data(),
                 stream.temp3_rotation, modulus_->data(), first_rns_mod_count,
@@ -3726,52 +3744,33 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 galois_key.host_location_[galois_elt], stream.stream);
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_kernel<<<dim3((n >> 8),
+                                                      current_rns_mod_count, 1),
+                                                 256, 0, stream.stream>>>(
                 stream.temp2_rotation, key_location.data(),
                 stream.temp3_rotation, modulus_->data(), first_rns_mod_count,
                 current_decomp_count, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt2 = {
-            .n_power = n_power,
-            .ntt_type = INVERSE,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
-            .zero_padding = false,
-            .mod_inverse = n_inverse_->data() + first_decomp_count,
-            .stream = stream.stream};
+        GPU_NTT_Modulus_Ordered_Inplace(
+            stream.temp3_rotation, intt_table_->data(), modulus_->data(),
+            cfg_intt, 2 * current_rns_mod_count, current_rns_mod_count,
+            new_prime_locations + location);
 
-        GPU_NTT_Poly_Ordered_Inplace(
-            stream.temp3_rotation,
-            intt_table_->data() + (first_decomp_count << n_power),
-            modulus_->data() + first_decomp_count, cfg_intt2, 2, 1,
-            new_input_locations + (input1.depth_ * 2));
-
-        DivideRoundLastq_ckks1_leveled<<<dim3((n >> 8), 2, 1), 256, 0,
-                                         stream.stream>>>(
-            stream.temp3_rotation, stream.temp2_rotation, modulus_->data(),
-            half_p_->data(), half_mod_->data(), n_power, first_decomp_count,
-            current_decomp_count);
-
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-        GPU_NTT_Inplace(stream.temp2_rotation, ntt_table_->data(),
-                        modulus_->data(), cfg_ntt, 2 * current_decomp_count,
-                        current_decomp_count);
-
-        // TODO: Merge with previous one
-        GPU_NTT_Inplace(stream.temp1_rotation, ntt_table_->data(),
-                        modulus_->data(), cfg_ntt, current_decomp_count,
-                        current_decomp_count);
-
-        DivideRoundLastq_ckks2_leveled<<<
+        // ModDown + Permute
+        divide_round_lastq_permute_ckks_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
-            stream.temp2_rotation, stream.temp3_rotation, stream.temp1_rotation,
-            output.data(), modulus_->data(), last_q_modinv_->data(), n_power,
-            current_decomp_count);
-
+            stream.temp3_rotation, stream.temp0_rotation, output.data(),
+            modulus_->data(), half_p_->data(), half_mod_->data(),
+            last_q_modinv_->data(), galois_elt, n_power, current_rns_mod_count,
+            current_decomp_count, first_rns_mod_count, first_decomp_count,
+            P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        GPU_NTT_Inplace(output.data(), ntt_table_->data(), modulus_->data(),
+                        cfg_ntt, 2 * current_decomp_count,
+                        current_decomp_count);
     }
 
     __host__ void HEOperator::apply_galois_ckks_method_II(Ciphertext& input1,
@@ -3797,12 +3796,6 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        apply_galois_method_II_kernel<<<dim3((n >> 8), current_decomp_count, 2),
-                                        256>>>(
-            temp0_rotation, temp1_rotation, temp2_rotation, modulus_->data(),
-            galois_elt, n_power, current_decomp_count);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
-
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
@@ -3818,9 +3811,10 @@ namespace heongpu
             counter--;
         }
 
-        relin_DtoQtilda_kernel_leveled2<<<
+        base_conversion_DtoQtilde_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256>>>(
-            temp2_rotation, temp3_rotation, modulus_->data(),
+            temp0_rotation + (current_decomp_count << n_power), temp3_rotation,
+            modulus_->data(),
             base_change_matrix_D_to_Qtilda_leveled_->operator[](input1.depth_)
                 .data(),
             Mi_inv_D_to_Qtilda_leveled_->operator[](input1.depth_).data(),
@@ -3839,10 +3833,11 @@ namespace heongpu
             d_leveled_->operator[](input1.depth_) * current_rns_mod_count,
             current_rns_mod_count, new_prime_locations + location);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled_method2<<<
+            multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp3_rotation, galois_key.device_location_[galois_elt].data(),
                 temp4_rotation, modulus_->data(), first_rns_mod_count,
@@ -3854,7 +3849,7 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 galois_key.host_location_[galois_elt]);
-            MultiplyAcc2_leveled_method2<<<
+            multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp3_rotation, key_location.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
@@ -3870,26 +3865,18 @@ namespace heongpu
             2 * current_rns_mod_count, current_rns_mod_count,
             new_prime_locations + location);
 
-        DivideRoundLastqNewP_external_ckks<<<
+        // ModDown + Permute
+        divide_round_lastq_permute_ckks_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256>>>(
-            temp4_rotation, temp3_rotation, modulus_->data(), half_p_->data(),
-            half_mod_->data(), last_q_modinv_->data(), n_power,
-            current_rns_mod_count, current_decomp_count, first_rns_mod_count,
-            first_decomp_count, P_size_);
+            temp4_rotation, temp0_rotation, output.data(), modulus_->data(),
+            half_p_->data(), half_mod_->data(), last_q_modinv_->data(),
+            galois_elt, n_power, current_rns_mod_count, current_decomp_count,
+            first_rns_mod_count, first_decomp_count, P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        GPU_NTT_Inplace(temp3_rotation, ntt_table_->data(), modulus_->data(),
+        GPU_NTT_Inplace(output.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
-
-        // TODO: Merge with previous one
-        GPU_NTT_Inplace(temp1_rotation, ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, current_decomp_count, current_decomp_count);
-
-        cipher_temp_add<<<dim3((n >> 8), current_decomp_count, 2), 256>>>(
-            temp3_rotation, temp1_rotation, output.data(), modulus_->data(),
-            n_power);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
     __host__ void HEOperator::apply_galois_ckks_method_II(Ciphertext& input1,
@@ -3916,12 +3903,6 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        apply_galois_method_II_kernel<<<dim3((n >> 8), current_decomp_count, 2),
-                                        256, 0, stream.stream>>>(
-            stream.temp0_rotation, stream.temp1_rotation, stream.temp2_rotation,
-            modulus_->data(), galois_elt, n_power, current_decomp_count);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
-
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
@@ -3937,10 +3918,11 @@ namespace heongpu
             counter--;
         }
 
-        relin_DtoQtilda_kernel_leveled2<<<
+        base_conversion_DtoQtilde_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256, 0,
             stream.stream>>>(
-            stream.temp2_rotation, stream.temp3_rotation, modulus_->data(),
+            temp0_rotation + (current_decomp_count << n_power),
+            stream.temp3_rotation, modulus_->data(),
             base_change_matrix_D_to_Qtilda_leveled_->operator[](input1.depth_)
                 .data(),
             Mi_inv_D_to_Qtilda_leveled_->operator[](input1.depth_).data(),
@@ -3963,9 +3945,9 @@ namespace heongpu
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled_method2<<<dim3((n >> 8), current_rns_mod_count,
-                                                1),
-                                           256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_method_II_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                stream.stream>>>(
                 stream.temp3_rotation,
                 galois_key.device_location_[galois_elt].data(),
                 stream.temp4_rotation, modulus_->data(), first_rns_mod_count,
@@ -3977,9 +3959,9 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(
                 galois_key.host_location_[galois_elt], stream.stream);
-            MultiplyAcc2_leveled_method2<<<dim3((n >> 8), current_rns_mod_count,
-                                                1),
-                                           256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_method_II_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                stream.stream>>>(
                 stream.temp3_rotation, key_location.data(),
                 stream.temp4_rotation, modulus_->data(), first_rns_mod_count,
                 current_decomp_count, current_rns_mod_count,
@@ -3994,28 +3976,19 @@ namespace heongpu
             cfg_intt, 2 * current_rns_mod_count, current_rns_mod_count,
             new_prime_locations + location);
 
-        DivideRoundLastqNewP_external_ckks<<<
+        // ModDown + Permute
+        divide_round_lastq_permute_ckks_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
-            stream.temp4_rotation, stream.temp3_rotation, modulus_->data(),
-            half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
-            current_rns_mod_count, current_decomp_count, first_rns_mod_count,
-            first_decomp_count, P_size_);
+            stream.temp4_rotation, stream.temp0_rotation, output.data(),
+            modulus_->data(), half_p_->data(), half_mod_->data(),
+            last_q_modinv_->data(), galois_elt, n_power, current_rns_mod_count,
+            current_decomp_count, first_rns_mod_count, first_decomp_count,
+            P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        GPU_NTT_Inplace(stream.temp3_rotation, ntt_table_->data(),
-                        modulus_->data(), cfg_ntt, 2 * current_decomp_count,
+        GPU_NTT_Inplace(output.data(), ntt_table_->data(), modulus_->data(),
+                        cfg_ntt, 2 * current_decomp_count,
                         current_decomp_count);
-
-        // TODO: Merge with previous one
-        GPU_NTT_Inplace(stream.temp1_rotation, ntt_table_->data(),
-                        modulus_->data(), cfg_ntt, current_decomp_count,
-                        current_decomp_count);
-
-        cipher_temp_add<<<dim3((n >> 8), current_decomp_count, 2), 256, 0,
-                          stream.stream>>>(stream.temp3_rotation,
-                                           stream.temp1_rotation, output.data(),
-                                           modulus_->data(), n_power);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
     __host__ void HEOperator::rotate_columns_method_I(Ciphertext& input1,
@@ -4024,9 +3997,9 @@ namespace heongpu
     {
         int galoiselt = galois_key.galois_elt_zero;
 
-        apply_galois_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        bfv_duplicate_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             input1.data(), temp0_rotation, temp1_rotation, modulus_->data(),
-            galoiselt, n_power, Q_size_);
+            n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -4039,10 +4012,12 @@ namespace heongpu
         GPU_NTT_Inplace(temp1_rotation, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                         256>>>(
                 temp1_rotation, galois_key.c_data(), temp2_rotation,
                 modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4050,7 +4025,8 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(galois_key.zero_host_location_);
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                         256>>>(
                 temp1_rotation, key_location.data(), temp2_rotation,
                 modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4067,10 +4043,12 @@ namespace heongpu
         GPU_NTT_Inplace(temp2_rotation, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        DivideRoundLastq_<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        // ModDown + Permute
+        divide_round_lastq_permute_bfv_kernel<<<dim3((n >> 8), Q_size_, 2),
+                                                256>>>(
             temp2_rotation, temp0_rotation, output.data(), modulus_->data(),
-            half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
-            Q_size_);
+            half_p_->data(), half_mod_->data(), last_q_modinv_->data(),
+            galoiselt, n_power, Q_prime_size_, Q_size_, P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -4081,10 +4059,10 @@ namespace heongpu
     {
         int galoiselt = galois_key.galois_elt_zero;
 
-        apply_galois_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                              stream.stream>>>(
+        bfv_duplicate_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                               stream.stream>>>(
             input1.data(), stream.temp0_rotation, stream.temp1_rotation,
-            modulus_->data(), galoiselt, n_power, Q_size_);
+            modulus_->data(), n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -4098,11 +4076,12 @@ namespace heongpu
                         modulus_->data(), cfg_ntt, Q_size_ * Q_prime_size_,
                         Q_prime_size_);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                          stream.stream>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                         0, stream.stream>>>(
                 stream.temp1_rotation, galois_key.c_data(),
                 stream.temp2_rotation, modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4111,8 +4090,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(galois_key.zero_host_location_,
                                             stream.stream);
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                          stream.stream>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                         0, stream.stream>>>(
                 stream.temp1_rotation, key_location.data(),
                 stream.temp2_rotation, modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4130,11 +4109,13 @@ namespace heongpu
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_,
                         Q_prime_size_);
 
-        DivideRoundLastq_<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                            stream.stream>>>(
+        // ModDown + Permute
+        divide_round_lastq_permute_bfv_kernel<<<dim3((n >> 8), Q_size_, 2), 256,
+                                                0, stream.stream>>>(
             stream.temp2_rotation, stream.temp0_rotation, output.data(),
             modulus_->data(), half_p_->data(), half_mod_->data(),
-            last_q_modinv_->data(), n_power, Q_size_);
+            last_q_modinv_->data(), galoiselt, n_power, Q_prime_size_, Q_size_,
+            P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -4144,14 +4125,14 @@ namespace heongpu
     {
         int galoiselt = galois_key.galois_elt_zero;
 
-        apply_galois_method_II_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
-            input1.data(), temp0_rotation, temp1_rotation, modulus_->data(),
-            galoiselt, n_power, Q_size_);
+        // TODO: make it efficient
+        global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+            input1.data(), temp0_rotation, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        relin_DtoQtilde_kernel<<<dim3((n >> 8), d, 1), 256>>>(
-            temp1_rotation, temp2_rotation, modulus_->data(),
-            base_change_matrix_D_to_Q_tilda_->data(),
+        base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256>>>(
+            input1.data() + (Q_size_ << n_power), temp2_rotation,
+            modulus_->data(), base_change_matrix_D_to_Q_tilda_->data(),
             Mi_inv_D_to_Q_tilda_->data(), prod_D_to_Q_tilda_->data(),
             I_j_->data(), I_location_->data(), n_power, Q_size_, Q_prime_size_,
             d);
@@ -4167,10 +4148,12 @@ namespace heongpu
         GPU_NTT_Inplace(temp2_rotation, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d * Q_prime_size_, Q_prime_size_);
 
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                 temp2_rotation, galois_key.c_data(), temp3_rotation,
                 modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4178,7 +4161,8 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(galois_key.zero_host_location_);
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
                 modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4195,10 +4179,12 @@ namespace heongpu
         GPU_NTT_Inplace(temp3_rotation, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        // ModDown + Permute
+        divide_round_lastq_permute_bfv_kernel<<<dim3((n >> 8), Q_size_, 2),
+                                                256>>>(
             temp3_rotation, temp0_rotation, output.data(), modulus_->data(),
-            half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
-            Q_prime_size_, Q_size_, P_size_);
+            half_p_->data(), half_mod_->data(), last_q_modinv_->data(),
+            galoiselt, n_power, Q_prime_size_, Q_size_, P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -4209,13 +4195,14 @@ namespace heongpu
     {
         int galoiselt = galois_key.galois_elt_zero;
 
-        apply_galois_method_II_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                                        stream.stream>>>(
-            input1.data(), stream.temp0_rotation, stream.temp1_rotation,
-            modulus_->data(), galoiselt, n_power, Q_size_);
+        // TODO: make it efficient
+        global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0,
+                                       stream.stream>>>(
+            input1.data(), stream.temp0_rotation, n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        relin_DtoQtilde_kernel<<<dim3((n >> 8), d, 1), 256, 0, stream.stream>>>(
+        base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256, 0,
+                                                 stream.stream>>>(
             stream.temp1_rotation, stream.temp2_rotation, modulus_->data(),
             base_change_matrix_D_to_Q_tilda_->data(),
             Mi_inv_D_to_Q_tilda_->data(), prod_D_to_Q_tilda_->data(),
@@ -4233,12 +4220,12 @@ namespace heongpu
         GPU_NTT_Inplace(stream.temp2_rotation, ntt_table_->data(),
                         modulus_->data(), cfg_ntt, d * Q_prime_size_,
                         Q_prime_size_);
-
+        // MultSum
         // TODO: make it efficient
         if (galois_key.store_in_gpu_)
         {
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                                  stream.stream>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream.stream>>>(
                 stream.temp2_rotation, galois_key.c_data(),
                 stream.temp3_rotation, modulus_->data(), n_power, Q_prime_size_,
                 d);
@@ -4248,8 +4235,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(galois_key.zero_host_location_,
                                             stream.stream);
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                                  stream.stream>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream.stream>>>(
                 stream.temp2_rotation, key_location.data(),
                 stream.temp3_rotation, modulus_->data(), n_power, Q_prime_size_,
                 d);
@@ -4268,11 +4255,13 @@ namespace heongpu
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_,
                         Q_prime_size_);
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                               stream.stream>>>(
+        // ModDown + Permute
+        divide_round_lastq_permute_bfv_kernel<<<dim3((n >> 8), Q_size_, 2), 256,
+                                                0, stream.stream>>>(
             stream.temp3_rotation, stream.temp0_rotation, output.data(),
             modulus_->data(), half_p_->data(), half_mod_->data(),
-            last_q_modinv_->data(), n_power, Q_prime_size_, Q_size_, P_size_);
+            last_q_modinv_->data(), galoiselt, n_power, Q_prime_size_, Q_size_,
+            P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -4280,8 +4269,7 @@ namespace heongpu
                                                  Ciphertext& output,
                                                  Switchkey& switch_key)
     {
-        CipherBroadcast_switchkey_bfv_method_I<<<dim3((n >> 8), Q_size_, 2),
-                                                 256>>>(
+        cipher_broadcast_switchkey_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             input1.data(), temp0_rotation, temp1_rotation, modulus_->data(),
             n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4299,7 +4287,8 @@ namespace heongpu
         // TODO: make it efficient
         if (switch_key.store_in_gpu_)
         {
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                         256>>>(
                 temp1_rotation, switch_key.data(), temp2_rotation,
                 modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4307,7 +4296,8 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(switch_key.host_location_);
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
+                                         256>>>(
                 temp1_rotation, key_location.data(), temp2_rotation,
                 modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4324,7 +4314,7 @@ namespace heongpu
         GPU_NTT_Inplace(temp2_rotation, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        DivideRoundLastq_<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        divide_round_lastq_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             temp2_rotation, temp0_rotation, output.data(), modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
             Q_size_);
@@ -4336,8 +4326,8 @@ namespace heongpu
                                                  Switchkey& switch_key,
                                                  HEStream& stream)
     {
-        CipherBroadcast_switchkey_bfv_method_I<<<dim3((n >> 8), Q_size_, 2),
-                                                 256, 0, stream.stream>>>(
+        cipher_broadcast_switchkey_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                            stream.stream>>>(
             input1.data(), stream.temp0_rotation, stream.temp1_rotation,
             modulus_->data(), n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4356,8 +4346,8 @@ namespace heongpu
         // TODO: make it efficient
         if (switch_key.store_in_gpu_)
         {
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                          stream.stream>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                         0, stream.stream>>>(
                 stream.temp1_rotation, switch_key.data(), stream.temp2_rotation,
                 modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4366,8 +4356,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(switch_key.host_location_,
                                             stream.stream);
-            MultiplyAcc<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                          stream.stream>>>(
+            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                         0, stream.stream>>>(
                 stream.temp1_rotation, key_location.data(),
                 stream.temp2_rotation, modulus_->data(), n_power, Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4385,8 +4375,8 @@ namespace heongpu
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_,
                         Q_prime_size_);
 
-        DivideRoundLastq_<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                            stream.stream>>>(
+        divide_round_lastq_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                    stream.stream>>>(
             stream.temp2_rotation, stream.temp0_rotation, output.data(),
             modulus_->data(), half_p_->data(), half_mod_->data(),
             last_q_modinv_->data(), n_power, Q_size_);
@@ -4397,13 +4387,13 @@ namespace heongpu
                                                   Ciphertext& output,
                                                   Switchkey& switch_key)
     {
-        CipherBroadcast_switchkey_bfv_method_II<<<dim3((n >> 8), Q_size_, 2),
-                                                  256>>>(
-            input1.data(), temp0_rotation, temp1_rotation, modulus_->data(),
-            n_power, Q_size_);
+        cipher_broadcast_switchkey_method_II_kernel<<<
+            dim3((n >> 8), Q_size_, 2), 256>>>(input1.data(), temp0_rotation,
+                                               temp1_rotation, modulus_->data(),
+                                               n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        relin_DtoQtilde_kernel<<<dim3((n >> 8), d, 1), 256>>>(
+        base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256>>>(
             temp1_rotation, temp2_rotation, modulus_->data(),
             base_change_matrix_D_to_Q_tilda_->data(),
             Mi_inv_D_to_Q_tilda_->data(), prod_D_to_Q_tilda_->data(),
@@ -4424,7 +4414,8 @@ namespace heongpu
         // TODO: make it efficient
         if (switch_key.store_in_gpu_)
         {
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                 temp2_rotation, switch_key.data(), temp3_rotation,
                 modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4432,7 +4423,8 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(switch_key.host_location_);
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
                 modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4449,7 +4441,7 @@ namespace heongpu
         GPU_NTT_Inplace(temp3_rotation, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        divide_round_lastq_extended_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             temp3_rotation, temp0_rotation, output.data(), modulus_->data(),
             half_p_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
             Q_prime_size_, Q_size_, P_size_);
@@ -4461,13 +4453,13 @@ namespace heongpu
                                                   Switchkey& switch_key,
                                                   HEStream& stream)
     {
-        CipherBroadcast_switchkey_bfv_method_II<<<dim3((n >> 8), Q_size_, 2),
-                                                  256, 0, stream.stream>>>(
+        cipher_broadcast_switchkey_method_II_kernel<<<
+            dim3((n >> 8), Q_size_, 2), 256, 0, stream.stream>>>(
             input1.data(), stream.temp0_rotation, stream.temp1_rotation,
             modulus_->data(), n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        relin_DtoQtilde_kernel<<<dim3((n >> 8), d, 1), 256>>>(
+        base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256>>>(
             stream.temp1_rotation, stream.temp2_rotation, modulus_->data(),
             base_change_matrix_D_to_Q_tilda_->data(),
             Mi_inv_D_to_Q_tilda_->data(), prod_D_to_Q_tilda_->data(),
@@ -4489,8 +4481,8 @@ namespace heongpu
         // TODO: make it efficient
         if (switch_key.store_in_gpu_)
         {
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                                  stream.stream>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream.stream>>>(
                 stream.temp2_rotation, switch_key.data(), stream.temp3_rotation,
                 modulus_->data(), n_power, Q_prime_size_, d);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4499,8 +4491,8 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(switch_key.host_location_,
                                             stream.stream);
-            MultiplyAcc_method2<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
-                                  stream.stream>>>(
+            multiply_accumulate_method_II_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream.stream>>>(
                 stream.temp2_rotation, key_location.data(),
                 stream.temp3_rotation, modulus_->data(), n_power, Q_prime_size_,
                 d);
@@ -4519,8 +4511,8 @@ namespace heongpu
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_,
                         Q_prime_size_);
 
-        DivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                               stream.stream>>>(
+        divide_round_lastq_extended_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                             stream.stream>>>(
             stream.temp3_rotation, stream.temp0_rotation, output.data(),
             modulus_->data(), half_p_->data(), half_mod_->data(),
             last_q_modinv_->data(), n_power, Q_prime_size_, Q_size_, P_size_);
@@ -4549,7 +4541,7 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        CipherBroadcast_switchkey_ckks_method_I<<<
+        cipher_broadcast_switchkey_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp0_rotation, temp1_rotation, temp2_rotation, modulus_->data(),
             n_power, first_rns_mod_count, current_rns_mod_count,
@@ -4578,21 +4570,21 @@ namespace heongpu
         // TODO: make it efficient
         if (switch_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256>>>(temp2_rotation, switch_key.data(),
-                                          temp3_rotation, modulus_->data(),
-                                          first_rns_mod_count,
-                                          current_decomp_count, n_power);
+            multiply_accumulate_leveled_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
+                temp2_rotation, switch_key.data(), temp3_rotation,
+                modulus_->data(), first_rns_mod_count, current_decomp_count,
+                n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data> key_location(switch_key.host_location_);
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256>>>(temp2_rotation, key_location.data(),
-                                          temp3_rotation, modulus_->data(),
-                                          first_rns_mod_count,
-                                          current_decomp_count, n_power);
+            multiply_accumulate_leveled_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
+                temp2_rotation, key_location.data(), temp3_rotation,
+                modulus_->data(), first_rns_mod_count, current_decomp_count,
+                n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -4610,7 +4602,8 @@ namespace heongpu
             modulus_->data() + first_decomp_count, cfg_intt2, 2, 1,
             new_input_locations + (input1.depth_ * 2));
 
-        DivideRoundLastq_ckks1_leveled<<<dim3((n >> 8), 2, 1), 256>>>(
+        divide_round_lastq_leveled_stage_one_kernel<<<dim3((n >> 8), 2, 1),
+                                                      256>>>(
             temp3_rotation, temp2_rotation, modulus_->data(), half_p_->data(),
             half_mod_->data(), n_power, first_decomp_count,
             current_decomp_count);
@@ -4625,7 +4618,7 @@ namespace heongpu
         GPU_NTT_Inplace(temp1_rotation, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, current_decomp_count, current_decomp_count);
 
-        DivideRoundLastq_ckks2_leveled<<<
+        divide_round_lastq_leveled_stage_two_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp2_rotation, temp3_rotation, temp1_rotation, output.data(),
             modulus_->data(), last_q_modinv_->data(), n_power,
@@ -4657,7 +4650,7 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        CipherBroadcast_switchkey_ckks_method_I<<<
+        cipher_broadcast_switchkey_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
             stream.temp0_rotation, stream.temp1_rotation, stream.temp2_rotation,
             modulus_->data(), n_power, first_rns_mod_count,
@@ -4686,8 +4679,9 @@ namespace heongpu
         // TODO: make it efficient
         if (switch_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_kernel<<<dim3((n >> 8),
+                                                      current_rns_mod_count, 1),
+                                                 256, 0, stream.stream>>>(
                 stream.temp2_rotation, switch_key.data(), stream.temp3_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
                 n_power);
@@ -4697,8 +4691,9 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(switch_key.host_location_,
                                             stream.stream);
-            MultiplyAcc2_leveled<<<dim3((n >> 8), current_rns_mod_count, 1),
-                                   256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_kernel<<<dim3((n >> 8),
+                                                      current_rns_mod_count, 1),
+                                                 256, 0, stream.stream>>>(
                 stream.temp2_rotation, key_location.data(),
                 stream.temp3_rotation, modulus_->data(), first_rns_mod_count,
                 current_decomp_count, n_power);
@@ -4719,8 +4714,8 @@ namespace heongpu
             modulus_->data() + first_decomp_count, cfg_intt2, 2, 1,
             new_input_locations + (input1.depth_ * 2));
 
-        DivideRoundLastq_ckks1_leveled<<<dim3((n >> 8), 2, 1), 256, 0,
-                                         stream.stream>>>(
+        divide_round_lastq_leveled_stage_one_kernel<<<dim3((n >> 8), 2, 1), 256,
+                                                      0, stream.stream>>>(
             stream.temp3_rotation, stream.temp2_rotation, modulus_->data(),
             half_p_->data(), half_mod_->data(), n_power, first_decomp_count,
             current_decomp_count);
@@ -4736,7 +4731,7 @@ namespace heongpu
                         modulus_->data(), cfg_ntt, current_decomp_count,
                         current_decomp_count);
 
-        DivideRoundLastq_ckks2_leveled<<<
+        divide_round_lastq_leveled_stage_two_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
             stream.temp2_rotation, stream.temp3_rotation, stream.temp1_rotation,
             output.data(), modulus_->data(), last_q_modinv_->data(), n_power,
@@ -4767,7 +4762,7 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        CipherBroadcast_switchkey_bfv_method_II<<<
+        cipher_broadcast_switchkey_method_II_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp0_rotation, temp1_rotation, temp2_rotation, modulus_->data(),
             n_power, current_decomp_count);
@@ -4788,7 +4783,7 @@ namespace heongpu
             counter--;
         }
 
-        relin_DtoQtilda_kernel_leveled2<<<
+        base_conversion_DtoQtilde_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256>>>(
             temp2_rotation, temp3_rotation, modulus_->data(),
             base_change_matrix_D_to_Qtilda_leveled_->operator[](input1.depth_)
@@ -4812,7 +4807,7 @@ namespace heongpu
         // TODO: make it efficient
         if (switch_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled_method2<<<
+            multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp3_rotation, switch_key.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
@@ -4823,7 +4818,7 @@ namespace heongpu
         else
         {
             DeviceVector<Data> key_location(switch_key.host_location_);
-            MultiplyAcc2_leveled_method2<<<
+            multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256>>>(
                 temp3_rotation, key_location.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
@@ -4839,7 +4834,7 @@ namespace heongpu
             2 * current_rns_mod_count, current_rns_mod_count,
             new_prime_locations + location);
 
-        DivideRoundLastqNewP_external_ckks<<<
+        divide_round_lastq_extended_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp4_rotation, temp3_rotation, modulus_->data(), half_p_->data(),
             half_mod_->data(), last_q_modinv_->data(), n_power,
@@ -4855,7 +4850,7 @@ namespace heongpu
         GPU_NTT_Inplace(temp1_rotation, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, current_decomp_count, current_decomp_count);
 
-        cipher_temp_add<<<dim3((n >> 8), current_decomp_count, 2), 256>>>(
+        addition<<<dim3((n >> 8), current_decomp_count, 2), 256>>>(
             temp3_rotation, temp1_rotation, output.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -4884,7 +4879,7 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        CipherBroadcast_switchkey_bfv_method_II<<<
+        cipher_broadcast_switchkey_method_II_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
             temp0_rotation, temp1_rotation, temp2_rotation, modulus_->data(),
             n_power, current_decomp_count);
@@ -4905,7 +4900,7 @@ namespace heongpu
             counter--;
         }
 
-        relin_DtoQtilda_kernel_leveled2<<<
+        base_conversion_DtoQtilde_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256, 0,
             stream.stream>>>(
             temp2_rotation, temp3_rotation, modulus_->data(),
@@ -4930,9 +4925,9 @@ namespace heongpu
         // TODO: make it efficient
         if (switch_key.store_in_gpu_)
         {
-            MultiplyAcc2_leveled_method2<<<dim3((n >> 8), current_rns_mod_count,
-                                                1),
-                                           256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_method_II_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                stream.stream>>>(
                 temp3_rotation, switch_key.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
                 current_rns_mod_count, d_leveled_->operator[](input1.depth_),
@@ -4943,9 +4938,9 @@ namespace heongpu
         {
             DeviceVector<Data> key_location(switch_key.host_location_,
                                             stream.stream);
-            MultiplyAcc2_leveled_method2<<<dim3((n >> 8), current_rns_mod_count,
-                                                1),
-                                           256, 0, stream.stream>>>(
+            multiply_accumulate_leveled_method_II_kernel<<<
+                dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                stream.stream>>>(
                 temp3_rotation, key_location.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
                 current_rns_mod_count, d_leveled_->operator[](input1.depth_),
@@ -4960,7 +4955,7 @@ namespace heongpu
             2 * current_rns_mod_count, current_rns_mod_count,
             new_prime_locations + location);
 
-        DivideRoundLastqNewP_external_ckks<<<
+        divide_round_lastq_extended_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 2), 256, 0, stream.stream>>>(
             temp4_rotation, temp3_rotation, modulus_->data(), half_p_->data(),
             half_mod_->data(), last_q_modinv_->data(), n_power,
@@ -4976,10 +4971,9 @@ namespace heongpu
         GPU_NTT_Inplace(temp1_rotation, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, current_decomp_count, current_decomp_count);
 
-        cipher_temp_add<<<dim3((n >> 8), current_decomp_count, 2), 256, 0,
-                          stream.stream>>>(temp3_rotation, temp1_rotation,
-                                           output.data(), modulus_->data(),
-                                           n_power);
+        addition<<<dim3((n >> 8), current_decomp_count, 2), 256, 0,
+                   stream.stream>>>(temp3_rotation, temp1_rotation,
+                                    output.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -4995,7 +4989,7 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         // TODO: do with efficient way!
-        global_memory_replace<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+        global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
             temp.data(), output.data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
@@ -5013,9 +5007,9 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         // TODO: do with efficient way!
-        global_memory_replace<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                                stream.stream>>>(temp.data(), output.data(),
-                                                 n_power);
+        global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                       stream.stream>>>(temp.data(),
+                                                        output.data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
