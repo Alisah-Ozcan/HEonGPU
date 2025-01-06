@@ -212,9 +212,6 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::Relinkey relin_key(context);
-        keygen.generate_relin_key(relin_key, secret_key);
-
         std::vector<int> shift_key = {12};
         heongpu::Galoiskey galois_key(context, shift_key);
         keygen.generate_galois_key(galois_key, secret_key);
@@ -295,9 +292,6 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
 
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
-
-        heongpu::Relinkey relin_key(context);
-        keygen.generate_relin_key(relin_key, secret_key);
 
         std::vector<int> shift_key = {12};
         heongpu::Galoiskey galois_key(context, shift_key);
@@ -391,9 +385,6 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
 
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
-
-        heongpu::Relinkey relin_key(context);
-        keygen.generate_relin_key(relin_key, secret_key);
 
         std::vector<int> shift_key = {12};
         heongpu::Galoiskey galois_key(context, shift_key);

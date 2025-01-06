@@ -12,6 +12,11 @@ namespace heongpu
     {
         scheme_ = context.scheme_;
 
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        seed_ = gen();
+        offset_ = gen();
+
         secret_key_ = secret_key.data();
 
         n = context.n;
@@ -232,6 +237,186 @@ namespace heongpu
                                         secret_key_, modulus_->data(), n_power,
                                         current_decomp_count);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    __host__ void
+    HEDecryptor::partial_decrypt_bfv(Ciphertext& ciphertext, Secretkey& sk,
+                                     Ciphertext& partial_ciphertext)
+    {
+        Data* ct0 = ciphertext.data();
+        Data* ct1 = ciphertext.data() + (Q_size_ << n_power);
+
+        Data* ct1_temp = temp_memory2_.data() + (Q_size_ << n_power);
+
+        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+                                         .ntt_type = FORWARD,
+                                         .reduction_poly =
+                                             ReductionPolynomial::X_N_plus,
+                                         .zero_padding = false,
+                                         .stream = 0};
+        if (!ciphertext.in_ntt_domain_)
+        {
+            GPU_NTT(ct1, ct1_temp, ntt_table_->data(), modulus_->data(),
+                    cfg_ntt, Q_size_, Q_size_);
+
+            sk_multiplication<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+                ct1_temp, sk.data(), ct1_temp, modulus_->data(), n_power,
+                Q_size_);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+        else
+        {
+            sk_multiplication<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+                ct1, sk.data(), ct1_temp, modulus_->data(), n_power, Q_size_);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+
+        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+                                          .ntt_type = INVERSE,
+                                          .reduction_poly =
+                                              ReductionPolynomial::X_N_plus,
+                                          .zero_padding = false,
+                                          .mod_inverse = n_inverse_->data(),
+                                          .stream = 0};
+
+        if ((partial_ciphertext.locations_.size() < (2 * Q_size_ * n)))
+        {
+            partial_ciphertext.locations_ = DeviceVector<Data>(2 * Q_size_ * n);
+        }
+
+        GPU_NTT(ct1_temp, partial_ciphertext.data() + (Q_size_ * n),
+                intt_table_->data(), modulus_->data(), cfg_intt, Q_size_,
+                Q_size_);
+
+        DeviceVector<Data> error_poly(Q_size_ * n);
+        modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
+                                                           256>>>(
+            error_poly.data(), modulus_->data(), n_power, Q_size_, seed_,
+            offset_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
+
+        // TODO: Optimize it!
+        addition<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+            partial_ciphertext.data() + (Q_size_ * n), error_poly.data(),
+            partial_ciphertext.data() + (Q_size_ * n), modulus_->data(),
+            n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+            ct0, partial_ciphertext.data(), n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    __host__ void
+    HEDecryptor::partial_decrypt_ckks(Ciphertext& ciphertext, Secretkey& sk,
+                                      Ciphertext& partial_ciphertext)
+    {
+        int current_decomp_count = Q_size_ - ciphertext.depth_;
+
+        Data* ct0 = ciphertext.data();
+        Data* ct1 = ciphertext.data() + (current_decomp_count << n_power);
+
+        if ((partial_ciphertext.locations_.size() < (2 * Q_size_ * n)))
+        {
+            partial_ciphertext.locations_ = DeviceVector<Data>(2 * Q_size_ * n);
+        }
+
+        sk_multiplication<<<dim3((n >> 8), current_decomp_count, 1), 256>>>(
+            ct1, sk.data(),
+            partial_ciphertext.data() + (current_decomp_count << n_power),
+            modulus_->data(), n_power, Q_size_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        DeviceVector<Data> error_poly(current_decomp_count * n);
+        modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
+                                                           256>>>(
+            error_poly.data(), modulus_->data(), n_power, current_decomp_count,
+            seed_, offset_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
+
+        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+                                         .ntt_type = FORWARD,
+                                         .reduction_poly =
+                                             ReductionPolynomial::X_N_plus,
+                                         .zero_padding = false,
+                                         .stream = 0};
+
+        GPU_NTT_Inplace(error_poly.data(), ntt_table_->data(), modulus_->data(),
+                        cfg_ntt, current_decomp_count, current_decomp_count);
+
+        // TODO: Optimize it!
+        addition<<<dim3((n >> 8), current_decomp_count, 1), 256>>>(
+            partial_ciphertext.data() + (current_decomp_count * n),
+            error_poly.data(),
+            partial_ciphertext.data() + (current_decomp_count * n),
+            modulus_->data(), n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        global_memory_replace_kernel<<<dim3((n >> 8), current_decomp_count, 1),
+                                       256>>>(ct0, partial_ciphertext.data(),
+                                              n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    __host__ void
+    HEDecryptor::decrypt_fusion_bfv(std::vector<Ciphertext>& ciphertexts,
+                                    Plaintext& plaintext)
+    {
+        int cipher_count = ciphertexts.size();
+
+        DeviceVector<Data> temp_sum(Q_size_ << n_power);
+
+        Data* ct0 = ciphertexts[0].data();
+        Data* ct1 = ciphertexts[0].data() + (Q_size_ << n_power);
+        addition<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+            ct0, ct1, temp_sum.data(), modulus_->data(), n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        for (int i = 1; i < cipher_count; i++)
+        {
+            Data* ct1_i = ciphertexts[i].data() + (Q_size_ << n_power);
+
+            addition<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+                ct1_i, temp_sum.data(), temp_sum.data(), modulus_->data(),
+                n_power);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+
+        decryption_fusion_bfv_kernel<<<dim3((n >> 8), 1, 1), 256>>>(
+            temp_sum.data(), plaintext.data(), modulus_->data(), plain_modulus_,
+            gamma_, Qi_t_->data(), Qi_gamma_->data(), Qi_inverse_->data(),
+            mulq_inv_t_, mulq_inv_gamma_, inv_gamma_, n_power, Q_size_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    __host__ void
+    HEDecryptor::decrypt_fusion_ckks(std::vector<Ciphertext>& ciphertexts,
+                                     Plaintext& plaintext)
+    {
+        int cipher_count = ciphertexts.size();
+        int current_detph = ciphertexts[0].depth_;
+        int current_decomp_count = Q_size_ - current_detph;
+
+        // DeviceVector<Data> temp_sum(current_decomp_count << n_power);
+
+        Data* ct0 = ciphertexts[0].data();
+        Data* ct1 = ciphertexts[0].data() + (current_decomp_count << n_power);
+        addition<<<dim3((n >> 8), current_decomp_count, 1), 256>>>(
+            ct0, ct1, plaintext.data(), modulus_->data(), n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        for (int i = 1; i < cipher_count; i++)
+        {
+            Data* ct1_i =
+                ciphertexts[i].data() + (current_decomp_count << n_power);
+
+            addition<<<dim3((n >> 8), current_decomp_count, 1), 256>>>(
+                ct1_i, plaintext.data(), plaintext.data(), modulus_->data(),
+                n_power);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
     }
 
 } // namespace heongpu

@@ -13,48 +13,70 @@
 
 namespace heongpu
 {
-    // Conjugate memory access
-    __device__ int conjugate(int* data, int& idx, int& n_power);
-
-    __global__ void conjugate_kernel(int* conj_secret_key,
-                                     int* orginal_secret_key, int n_power);
-
     // Secret Key Generation
 
-    __global__ void sk_gen_kernel(int* secret_key, int hamming_weight,
-                                  int n_power, int seed);
+    __global__ void secretkey_gen_kernel(int* secret_key, int hamming_weight,
+                                         int n_power, int seed);
 
-    __global__ void sk_rns_kernel(int* input, Data* output, Modulus* modulus,
-                                  int n_power, int rns_mod_count, int seed);
+    __global__ void secretkey_rns_kernel(int* input, Data* output,
+                                         Modulus* modulus, int n_power,
+                                         int rns_mod_count, int seed);
 
     // Public Key Generation
 
-    __global__ void error_kernel(Data* a_e, Modulus* modulus, int n_power,
-                                 int rns_mod_count, int seed);
+    __global__ void publickey_gen_kernel(Data* public_key, Data* secret_key,
+                                         Data* error_poly, Data* a_poly,
+                                         Modulus* modulus, int n_power,
+                                         int rns_mod_count);
 
-    __global__ void error_kernel_leveled(Data* a_e, Modulus* modulus,
-                                         int n_power, int mod_count,
-                                         int* mod_index, int seed);
-
-    __global__ void pk_kernel(Data* public_key, Data* secret_key, Data* e_a,
-                              Modulus* modulus, int n_power, int rns_mod_count);
+    __global__ void threshold_pk_addition(Data* pk1, Data* pk2, Data* pkout,
+                                          Modulus* modulus, int n_power,
+                                          bool first);
 
     // Relinearization Key Generation
 
-    __global__ void relinkey_kernel(Data* relin_key, Data* secret_key,
-                                    Data* e_a, Modulus* modulus, Data* factor,
-                                    int n_power, int rns_mod_count);
+    __global__ void relinkey_gen_kernel(Data* relin_key, Data* secret_key,
+                                        Data* error_poly, Data* a_poly,
+                                        Modulus* modulus, Data* factor,
+                                        int n_power, int rns_mod_count);
+
+    __global__ void multi_party_relinkey_piece_method_I_stage_I_kernel(
+        Data* rk, Data* sk, Data* a, Data* u, Data* e0, Data* e1,
+        Modulus* modulus, Data* factor, int n_power, int rns_mod_count);
+
+    __global__ void multi_party_relinkey_piece_method_I_II_stage_II_kernel(
+        Data* rk_1, Data* rk_2, Data* sk, Data* u, Data* e0, Data* e1,
+        Modulus* modulus, int n_power, int rns_mod_count, int decomp_mod_count);
+
+    __global__ void multi_party_relinkey_piece_method_II_stage_I_kernel(
+        Data* rk, Data* sk, Data* a, Data* u, Data* e0, Data* e1,
+        Modulus* modulus, Data* factor, int* Sk_pair, int n_power, int l_tilda,
+        int d, int Q_size, int P_size);
+
+    __global__ void multi_party_relinkey_method_I_stage_I_kernel(
+        Data* rk_in, Data* rk_out, Modulus* modulus, int n_power,
+        int Q_prime_size, int l, bool first);
+
+    __global__ void multi_party_relinkey_method_I_stage_II_kernel(
+        Data* rk1, Data* rk2, Data* rk_out, Modulus* modulus, int n_power,
+        int Q_prime_size, int l);
 
     __global__ void
-    relinkey_kernel_externel_product(Data* relin_key_temp, Data* secret_key,
-                                     Data* e_a, Modulus* modulus, Data* factor,
-                                     int* Sk_pair, int n_power, int l_tilda,
-                                     int d, int Q_size, int P_size);
+    multi_party_relinkey_method_I_stage_II_kernel(Data* rk_in, Data* rk_out,
+                                                  Modulus* modulus, int n_power,
+                                                  int Q_prime_size, int l);
 
-    __global__ void relinkey_kernel_externel_product_leveled(
-        Data* relin_key_temp, Data* secret_key, Data* e_a, Modulus* modulus,
-        Data* factor, int* Sk_pair, int n_power, int l_tilda, int d, int Q_size,
-        int P_size, int* mod_index);
+    __global__ void relinkey_gen_II_kernel(Data* relin_key_temp,
+                                           Data* secret_key, Data* error_poly,
+                                           Data* a_poly, Modulus* modulus,
+                                           Data* factor, int* Sk_pair,
+                                           int n_power, int l_tilda, int d,
+                                           int Q_size, int P_size);
+
+    __global__ void relinkey_gen_II_leveled_kernel(
+        Data* relin_key_temp, Data* secret_key, Data* error_poly, Data* a_poly,
+        Modulus* modulus, Data* factor, int* Sk_pair, int n_power, int l_tilda,
+        int d, int Q_size, int P_size, int* mod_index);
 
     __global__ void relinkey_DtoB_kernel(Data* relin_key_temp, Data* relin_key,
                                          Modulus* modulus, Modulus* B_base,
@@ -64,7 +86,7 @@ namespace heongpu
                                          int n_power, int l_tilda, int d_tilda,
                                          int d, int r_prime);
 
-    __global__ void relinkey_DtoB_kernel_leveled2(
+    __global__ void relinkey_DtoB_leveled_kernel(
         Data* relin_key_temp, Data* relin_key, Modulus* modulus,
         Modulus* B_base, Data* base_change_matrix_D_to_B, Data* Mi_inv_D_to_B,
         Data* prod_D_to_B, int* I_j_, int* I_location_, int n_power,
@@ -79,30 +101,38 @@ namespace heongpu
     __device__ int permutation(int index, int galois_elt, int coeff_count,
                                int n_power);
 
-    __global__ void galoiskey_method_I_kernel(Data* galois_key,
-                                              Data* secret_key, Data* e_a,
-                                              Modulus* modulus, Data* factor,
-                                              int galois_elt, int n_power,
-                                              int rns_mod_count);
+    __global__ void galoiskey_gen_kernel(Data* galois_key, Data* secret_key,
+                                         Data* error_poly, Data* a_poly,
+                                         Modulus* modulus, Data* factor,
+                                         int galois_elt, int n_power,
+                                         int rns_mod_count);
 
-    __global__ void galoiskey_method_II_kernel(Data* galois_key_temp,
-                                               Data* secret_key, Data* e_a,
-                                               Modulus* modulus, Data* factor,
-                                               int galois_elt, int* Sk_pair,
-                                               int n_power, int l_tilda, int d,
-                                               int Q_size, int P_size);
+    __global__ void galoiskey_gen_II_kernel(
+        Data* galois_key_temp, Data* secret_key, Data* error_poly, Data* a_poly,
+        Modulus* modulus, Data* factor, int galois_elt, int* Sk_pair,
+        int n_power, int l_tilda, int d, int Q_size, int P_size);
 
-    // witch Key Generation
+    __global__ void multi_party_galoiskey_gen_method_I_II_kernel(
+        Data* gk_1, Data* gk_2, Modulus* modulus, int n_power,
+        int rns_mod_count, int decomp_mod_count, bool first);
+
+    // Switch Key Generation
+
+    __global__ void switchkey_gen_kernel(Data* switch_key, Data* new_secret_key,
+                                         Data* old_secret_key, Data* error_poly,
+                                         Data* a_poly, Modulus* modulus,
+                                         Data* factor, int n_power,
+                                         int rns_mod_count);
+
+    __global__ void switchkey_gen_II_kernel(
+        Data* switch_key, Data* new_secret_key, Data* old_secret_key,
+        Data* error_poly, Data* a_poly, Modulus* modulus, Data* factor,
+        int* Sk_pair, int n_power, int l_tilda, int d, int Q_size, int P_size);
 
     __global__ void switchkey_kernel(Data* switch_key, Data* new_secret_key,
                                      Data* old_secret_key, Data* e_a,
                                      Modulus* modulus, Data* factor,
                                      int n_power, int rns_mod_count);
-
-    __global__ void switchkey_kernel_method_II(
-        Data* switch_key, Data* new_secret_key, Data* old_secret_key, Data* e_a,
-        Modulus* modulus, Data* factor, int* Sk_pair, int n_power, int l_tilda,
-        int d, int Q_size, int P_size);
 
 } // namespace heongpu
 #endif // KEYGENERATION_H

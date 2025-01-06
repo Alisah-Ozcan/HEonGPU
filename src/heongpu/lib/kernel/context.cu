@@ -1698,11 +1698,6 @@ namespace heongpu
 
         temp_complex = DeviceVector<COMPLEX>(n, stream);
 
-        temp_data = DeviceVector<Data>(
-            (3 * n * Q_prime_size_) + (2 * n * Q_prime_size_), stream);
-        temp1_enc = temp_data.data();
-        temp2_enc = temp1_enc + (3 * n * Q_prime_size_);
-
         if (scheme == scheme_type::bfv)
         {
             temp_mul =

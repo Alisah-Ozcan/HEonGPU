@@ -92,11 +92,289 @@ namespace heongpu
          */
         Data* data(size_t i);
 
+        /**
+         * @brief Default constructor is deleted to ensure proper initialization
+         * of relinearization keys.
+         */
         Relinkey() = delete;
-        Relinkey(const Relinkey& copy) = delete;
-        Relinkey(Relinkey&& source) = delete;
-        Relinkey& operator=(const Relinkey& assign) = delete;
-        Relinkey& operator=(Relinkey&& assign) = delete;
+
+        /**
+         * @brief Copy constructor for creating a new Relinkey object by copying
+         * an existing one.
+         *
+         * This constructor copies data either from GPU or CPU memory, depending
+         * on the source. GPU memory operations are performed using
+         * `cudaMemcpyAsync`.
+         *
+         * @param copy The source Relinkey object to copy from.
+         */
+        Relinkey(const Relinkey& copy)
+            : scheme_(copy.scheme_), key_type(copy.key_type),
+              ring_size(copy.ring_size), Q_prime_size_(copy.Q_prime_size_),
+              Q_size_(copy.Q_size_), d_(copy.d_), d_tilda_(copy.d_tilda_),
+              r_prime_(copy.r_prime_), store_in_gpu_(copy.store_in_gpu_),
+              relinkey_size_(copy.relinkey_size_),
+              relinkey_size_leveled_(copy.relinkey_size_leveled_)
+        {
+            if (copy.store_in_gpu_)
+            {
+                if (copy.relinkey_size_leveled_.size() == 0)
+                {
+                    device_location_.resize(copy.device_location_.size(),
+                                            cudaStreamLegacy);
+                    cudaMemcpyAsync(
+                        device_location_.data(), copy.device_location_.data(),
+                        copy.device_location_.size() * sizeof(Data),
+                        cudaMemcpyDeviceToDevice,
+                        cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                }
+                else
+                {
+                    device_location_leveled_.resize(
+                        copy.device_location_leveled_.size());
+                    for (int i = 0; i < copy.device_location_leveled_.size();
+                         i++)
+                    {
+                        device_location_leveled_[i].resize(
+                            copy.device_location_.size(), cudaStreamLegacy);
+                        cudaMemcpyAsync(
+                            device_location_leveled_[i].data(),
+                            copy.device_location_leveled_[i].data(),
+                            copy.device_location_leveled_[i].size() *
+                                sizeof(Data),
+                            cudaMemcpyDeviceToDevice,
+                            cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                    }
+                }
+            }
+            else
+            {
+                if (copy.relinkey_size_leveled_.size() == 0)
+                {
+                    host_location_ = copy.host_location_;
+                }
+                else
+                {
+                    host_location_leveled_.resize(
+                        copy.host_location_leveled_.size());
+                    for (int i = 0; i < copy.host_location_leveled_.size(); i++)
+                    {
+                        host_location_leveled_[i] =
+                            copy.host_location_leveled_[i];
+                    }
+                }
+            }
+        }
+
+        /**
+         * @brief Move constructor for transferring ownership of an existing
+         * Relinkey object.
+         *
+         * This constructor transfers resources from the source object to the
+         * newly constructed object. GPU and CPU memory resources are moved,
+         * leaving the source object in a valid but undefined state.
+         *
+         * @param assign The source Relinkey object to move from.
+         */
+        Relinkey(Relinkey&& assign) noexcept
+            : scheme_(std::move(assign.scheme_)),
+              key_type(std::move(assign.key_type)),
+              ring_size(std::move(assign.ring_size)),
+              Q_prime_size_(std::move(assign.Q_prime_size_)),
+              Q_size_(std::move(assign.Q_size_)), d_(std::move(assign.d_)),
+              d_tilda_(std::move(assign.d_tilda_)),
+              r_prime_(std::move(assign.r_prime_)),
+              store_in_gpu_(std::move(assign.store_in_gpu_)),
+              relinkey_size_(std::move(assign.relinkey_size_)),
+              relinkey_size_leveled_(std::move(assign.relinkey_size_leveled_))
+        {
+            if (assign.store_in_gpu_)
+            {
+                if (assign.relinkey_size_leveled_.size() == 0)
+                {
+                    device_location_ = std::move(assign.device_location_);
+                }
+                else
+                {
+                    device_location_leveled_.resize(
+                        assign.device_location_leveled_.size());
+                    for (int i = 0; i < assign.device_location_leveled_.size();
+                         i++)
+                    {
+                        device_location_leveled_[i] =
+                            std::move(assign.device_location_leveled_[i]);
+                    }
+                }
+            }
+            else
+            {
+                if (assign.relinkey_size_leveled_.size() == 0)
+                {
+                    host_location_ = std::move(assign.host_location_);
+                }
+                else
+                {
+                    host_location_leveled_.resize(
+                        assign.host_location_leveled_.size());
+                    for (int i = 0; i < assign.host_location_leveled_.size();
+                         i++)
+                    {
+                        host_location_leveled_[i] =
+                            std::move(assign.host_location_leveled_[i]);
+                    }
+                }
+            }
+        }
+
+        /**
+         * @brief Copy assignment operator for assigning one Relinkey object to
+         * another.
+         *
+         * This operator performs a deep copy of all resources, including GPU
+         * and CPU memory, ensuring the target object has its own independent
+         * copy of the data.
+         *
+         * @param copy The source Relinkey object to copy from.
+         * @return Reference to the assigned object.
+         */
+        Relinkey& operator=(const Relinkey& copy)
+        {
+            if (this != &copy)
+            {
+                scheme_ = copy.scheme_;
+                key_type = copy.key_type;
+                ring_size = copy.ring_size;
+                Q_prime_size_ = copy.Q_prime_size_;
+                Q_size_ = copy.Q_size_;
+                d_ = copy.d_;
+                d_tilda_ = copy.d_tilda_;
+                r_prime_ = copy.r_prime_;
+                store_in_gpu_ = copy.store_in_gpu_;
+                relinkey_size_ = copy.relinkey_size_;
+                relinkey_size_leveled_ = copy.relinkey_size_leveled_;
+
+                if (copy.store_in_gpu_)
+                {
+                    if (copy.relinkey_size_leveled_.size() == 0)
+                    {
+                        device_location_.resize(copy.device_location_.size(),
+                                                cudaStreamLegacy);
+                        cudaMemcpyAsync(
+                            device_location_.data(),
+                            copy.device_location_.data(),
+                            copy.device_location_.size() * sizeof(Data),
+                            cudaMemcpyDeviceToDevice,
+                            cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                    }
+                    else
+                    {
+                        device_location_leveled_.resize(
+                            copy.device_location_leveled_.size());
+                        for (int i = 0;
+                             i < copy.device_location_leveled_.size(); i++)
+                        {
+                            device_location_leveled_[i].resize(
+                                copy.device_location_.size(), cudaStreamLegacy);
+                            cudaMemcpyAsync(
+                                device_location_leveled_[i].data(),
+                                copy.device_location_leveled_[i].data(),
+                                copy.device_location_leveled_[i].size() *
+                                    sizeof(Data),
+                                cudaMemcpyDeviceToDevice,
+                                cudaStreamLegacy); // TODO: use
+                                                   // cudaStreamPerThread
+                        }
+                    }
+                }
+                else
+                {
+                    if (copy.relinkey_size_leveled_.size() == 0)
+                    {
+                        host_location_ = copy.host_location_;
+                    }
+                    else
+                    {
+                        host_location_leveled_.resize(
+                            copy.host_location_leveled_.size());
+                        for (int i = 0; i < copy.host_location_leveled_.size();
+                             i++)
+                        {
+                            host_location_leveled_[i] =
+                                copy.host_location_leveled_[i];
+                        }
+                    }
+                }
+            }
+            return *this;
+        }
+
+        /**
+         * @brief Move assignment operator for transferring ownership of
+         * resources.
+         *
+         * This operator moves all resources from the source object to the
+         * target object. GPU and CPU memory are efficiently transferred,
+         * leaving the source object in a valid but undefined state.
+         *
+         * @param assign The source Relinkey object to move from.
+         * @return Reference to the assigned object.
+         */
+        Relinkey& operator=(Relinkey&& assign) noexcept
+        {
+            if (this != &assign)
+            {
+                scheme_ = std::move(assign.scheme_);
+                key_type = std::move(assign.key_type);
+                ring_size = std::move(assign.ring_size);
+                Q_prime_size_ = std::move(assign.Q_prime_size_);
+                Q_size_ = std::move(assign.Q_size_);
+                d_ = std::move(assign.d_);
+                d_tilda_ = std::move(assign.d_tilda_);
+                r_prime_ = std::move(assign.r_prime_);
+                store_in_gpu_ = std::move(assign.store_in_gpu_);
+                relinkey_size_ = std::move(assign.relinkey_size_);
+                relinkey_size_leveled_ =
+                    std::move(assign.relinkey_size_leveled_);
+
+                if (assign.store_in_gpu_)
+                {
+                    if (assign.relinkey_size_leveled_.size() == 0)
+                    {
+                        device_location_ = std::move(assign.device_location_);
+                    }
+                    else
+                    {
+                        device_location_leveled_.resize(
+                            assign.device_location_leveled_.size());
+                        for (int i = 0;
+                             i < assign.device_location_leveled_.size(); i++)
+                        {
+                            device_location_leveled_[i] =
+                                std::move(assign.device_location_leveled_[i]);
+                        }
+                    }
+                }
+                else
+                {
+                    if (assign.relinkey_size_leveled_.size() == 0)
+                    {
+                        host_location_ = std::move(assign.host_location_);
+                    }
+                    else
+                    {
+                        host_location_leveled_.resize(
+                            assign.host_location_leveled_.size());
+                        for (int i = 0;
+                             i < assign.host_location_leveled_.size(); i++)
+                        {
+                            host_location_leveled_[i] =
+                                std::move(assign.host_location_leveled_[i]);
+                        }
+                    }
+                }
+            }
+            return *this;
+        }
 
       private:
         scheme_type scheme_;
@@ -123,6 +401,38 @@ namespace heongpu
         HostVector<Data> host_location_;
         std::vector<HostVector<Data>> host_location_leveled_;
     };
+
+    ///////////////////////////////////
+
+    /**
+     * @brief MultipartyRelinkey is a specialized class for managing
+     * relinearization keys in multiparty computation (MPC) settings.
+     *
+     * This class extends the `Relinkey` class to include additional
+     * functionality specific to MPC, such as seed management for reproducible
+     * key generation across participants. It integrates with `HEKeyGenerator`
+     * for collaborative key generation processes.
+     */
+    class MultipartyRelinkey : public Relinkey
+    {
+        friend class HEKeyGenerator;
+
+      public:
+        __host__ MultipartyRelinkey(Parameters& context, const int seed,
+                                    bool store_in_gpu = true);
+
+        /**
+         * @brief Retrieves the seed value used for key generation.
+         *
+         * @return int The seed value.
+         */
+        inline int seed() const noexcept { return seed_; }
+
+      private:
+        int seed_;
+    };
+
+    ///////////////////////////////////
 
     /**
      * @brief Galoiskey represents a Galois key used for performing homomorphic
@@ -211,11 +521,242 @@ namespace heongpu
          */
         Data* c_data();
 
+        /**
+         * @brief Default constructor for Galoiskey.
+         *
+         * Initializes an empty Galoiskey object. All members will have their
+         * default values.
+         */
         Galoiskey() = default;
-        Galoiskey(const Galoiskey& copy) = default;
-        Galoiskey(Galoiskey&& source) = default;
-        Galoiskey& operator=(const Galoiskey& assign) = default;
-        Galoiskey& operator=(Galoiskey&& assign) = default;
+
+        /**
+         * @brief Copy constructor for creating a new Galoiskey object by
+         * copying an existing one.
+         *
+         * This constructor copies data from an existing Galoiskey object,
+         * handling both GPU and CPU memory efficiently. GPU memory operations
+         * use `cudaMemcpyAsync` to ensure asynchronous data transfer.
+         *
+         * @param copy The source Galoiskey object to copy from.
+         */
+        Galoiskey(const Galoiskey& copy)
+            : scheme_(copy.scheme_), key_type(copy.key_type),
+              ring_size(copy.ring_size), Q_prime_size_(copy.Q_prime_size_),
+              Q_size_(copy.Q_size_), d_(copy.d_), d_tilda_(copy.d_tilda_),
+              r_prime_(copy.r_prime_), customized(copy.customized),
+              group_order_(copy.group_order_),
+              store_in_gpu_(copy.store_in_gpu_),
+              galoiskey_size_(copy.galoiskey_size_),
+              custom_galois_elt(copy.custom_galois_elt),
+              galois_elt(copy.galois_elt), galois_elt_zero(copy.galois_elt_zero)
+        {
+            if (copy.store_in_gpu_)
+            {
+                for (const auto& [key, value] : copy.device_location_)
+                {
+                    device_location_[key].resize(value.size(),
+                                                 cudaStreamLegacy);
+                    cudaMemcpyAsync(
+                        device_location_[key].data(), value.data(),
+                        value.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
+                        cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                }
+
+                zero_device_location_.resize(copy.zero_device_location_.size(),
+                                             cudaStreamLegacy);
+
+                cudaMemcpyAsync(
+                    zero_device_location_.data(),
+                    copy.zero_device_location_.data(),
+                    copy.zero_device_location_.size() * sizeof(Data),
+                    cudaMemcpyDeviceToDevice,
+                    cudaStreamLegacy); // TODO: use cudaStreamPerThread
+            }
+            else
+            {
+                for (const auto& [key, value] : copy.host_location_)
+                {
+                    host_location_[key] = value;
+                }
+
+                zero_host_location_ = copy.zero_host_location_;
+            }
+        }
+
+        /**
+         * @brief Move constructor for transferring ownership of an existing
+         * Galoiskey object.
+         *
+         * Transfers all resources, including GPU and CPU memory, from the
+         * source object to the newly created object. The source object is left
+         * in a valid but undefined state.
+         *
+         * @param assign The source Galoiskey object to move from.
+         */
+        Galoiskey(Galoiskey&& assign) noexcept
+            : scheme_(std::move(assign.scheme_)),
+              key_type(std::move(assign.key_type)),
+              ring_size(std::move(assign.ring_size)),
+              Q_prime_size_(std::move(assign.Q_prime_size_)),
+              Q_size_(std::move(assign.Q_size_)), d_(std::move(assign.d_)),
+              d_tilda_(std::move(assign.d_tilda_)),
+              r_prime_(std::move(assign.r_prime_)),
+              customized(std::move(assign.customized)),
+              group_order_(std::move(assign.group_order_)),
+              store_in_gpu_(std::move(assign.store_in_gpu_)),
+              galoiskey_size_(std::move(assign.galoiskey_size_)),
+              custom_galois_elt(std::move(assign.custom_galois_elt)),
+              galois_elt(std::move(assign.galois_elt)),
+              galois_elt_zero(std::move(assign.galois_elt_zero))
+        {
+            if (assign.store_in_gpu_)
+            {
+                for (const auto& [key, value] : assign.device_location_)
+                {
+                    device_location_[key] = std::move(value);
+                }
+
+                assign.device_location_.clear();
+
+                zero_device_location_ = std::move(assign.zero_device_location_);
+            }
+            else
+            {
+                for (const auto& [key, value] : assign.host_location_)
+                {
+                    host_location_[key] = std::move(value);
+                }
+
+                assign.host_location_.clear();
+
+                zero_host_location_ = std::move(assign.zero_host_location_);
+            }
+        }
+
+        /**
+         * @brief Copy assignment operator for assigning one Galoiskey object to
+         * another.
+         *
+         * Performs a deep copy of all resources, ensuring that the target
+         * object gets its own independent copy of the data, whether stored in
+         * GPU or CPU memory.
+         *
+         * @param copy The source Galoiskey object to copy from.
+         * @return Reference to the assigned object.
+         */
+        Galoiskey& operator=(const Galoiskey& copy)
+        {
+            if (this != &copy)
+            {
+                scheme_ = copy.scheme_;
+                key_type = copy.key_type;
+                ring_size = copy.ring_size;
+                Q_prime_size_ = copy.Q_prime_size_;
+                Q_size_ = copy.Q_size_;
+                d_ = copy.d_;
+                d_tilda_ = copy.d_tilda_;
+                r_prime_ = copy.r_prime_;
+                customized = copy.customized;
+                group_order_ = copy.group_order_;
+                store_in_gpu_ = copy.store_in_gpu_;
+                galoiskey_size_ = copy.galoiskey_size_;
+                custom_galois_elt = copy.custom_galois_elt;
+                galois_elt = copy.galois_elt;
+                galois_elt_zero = copy.galois_elt_zero;
+
+                if (copy.store_in_gpu_)
+                {
+                    for (const auto& [key, value] : copy.device_location_)
+                    {
+                        device_location_[key].resize(value.size(),
+                                                     cudaStreamLegacy);
+                        cudaMemcpyAsync(
+                            device_location_[key].data(), value.data(),
+                            value.size() * sizeof(Data),
+                            cudaMemcpyDeviceToDevice,
+                            cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                    }
+
+                    zero_device_location_.resize(
+                        copy.zero_device_location_.size(), cudaStreamLegacy);
+
+                    cudaMemcpyAsync(
+                        zero_device_location_.data(),
+                        copy.zero_device_location_.data(),
+                        copy.zero_device_location_.size() * sizeof(Data),
+                        cudaMemcpyDeviceToDevice,
+                        cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                }
+                else
+                {
+                    for (const auto& [key, value] : copy.host_location_)
+                    {
+                        host_location_[key] = value;
+                    }
+
+                    zero_host_location_ = copy.zero_host_location_;
+                }
+            }
+            return *this;
+        }
+
+        /**
+         * @brief Move assignment operator for transferring ownership of
+         * resources.
+         *
+         * Transfers all resources, including GPU and CPU memory, from the
+         * source object to the target object. The source object is left in a
+         * valid but undefined state.
+         *
+         * @param assign The source Galoiskey object to move from.
+         * @return Reference to the assigned object.
+         */
+        Galoiskey& operator=(Galoiskey&& assign) noexcept
+        {
+            if (this != &assign)
+            {
+                scheme_ = std::move(assign.scheme_);
+                key_type = std::move(assign.key_type);
+                ring_size = std::move(assign.ring_size);
+                Q_prime_size_ = std::move(assign.Q_prime_size_);
+                Q_size_ = std::move(assign.Q_size_);
+                d_ = std::move(assign.d_);
+                d_tilda_ = std::move(assign.d_tilda_);
+                r_prime_ = std::move(assign.r_prime_);
+                customized = std::move(assign.customized);
+                group_order_ = std::move(assign.group_order_);
+                store_in_gpu_ = std::move(assign.store_in_gpu_);
+                galoiskey_size_ = std::move(assign.galoiskey_size_);
+                custom_galois_elt = std::move(assign.custom_galois_elt);
+                galois_elt = std::move(assign.galois_elt);
+                galois_elt_zero = std::move(assign.galois_elt_zero);
+
+                if (assign.store_in_gpu_)
+                {
+                    for (const auto& [key, value] : assign.device_location_)
+                    {
+                        device_location_[key] = std::move(value);
+                    }
+
+                    assign.device_location_.clear();
+
+                    zero_device_location_ =
+                        std::move(assign.zero_device_location_);
+                }
+                else
+                {
+                    for (const auto& [key, value] : assign.host_location_)
+                    {
+                        host_location_[key] = std::move(value);
+                    }
+
+                    assign.host_location_.clear();
+
+                    zero_host_location_ = std::move(assign.zero_host_location_);
+                }
+            }
+            return *this;
+        }
 
       private:
         scheme_type scheme_;
@@ -246,6 +787,42 @@ namespace heongpu
         int galois_elt_zero;
         DeviceVector<Data> zero_device_location_;
         HostVector<Data> zero_host_location_;
+    };
+
+    /**
+     * @brief MultipartyGaloiskey is a specialized class for managing Galois
+     * keys in multiparty computation (MPC) settings.
+     *
+     * This class extends the `Galoiskey` class to include functionality
+     * specific to MPC scenarios, such as managing custom Galois elements and
+     * seeds for deterministic key generation. It integrates with
+     * `HEKeyGenerator` for collaborative key generation processes.
+     */
+    class MultipartyGaloiskey : public Galoiskey
+    {
+        friend class HEKeyGenerator;
+
+      public:
+        __host__ MultipartyGaloiskey(Parameters& context, const int seed,
+                                     bool store_in_gpu = true);
+
+        __host__ MultipartyGaloiskey(Parameters& context,
+                                     std::vector<int>& shift_vec,
+                                     const int seed, bool store_in_gpu = true);
+
+        __host__ MultipartyGaloiskey(Parameters& context,
+                                     std::vector<uint32_t>& galois_elts,
+                                     const int seed, bool store_in_gpu = true);
+
+        /**
+         * @brief Retrieves the seed value used for key generation.
+         *
+         * @return int The seed value.
+         */
+        inline int seed() const noexcept { return seed_; }
+
+      private:
+        int seed_;
     };
 
     /**

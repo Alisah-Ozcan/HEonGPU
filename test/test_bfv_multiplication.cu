@@ -640,9 +640,6 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::Relinkey relin_key(context);
-        keygen.generate_relin_key(relin_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
@@ -716,9 +713,6 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
 
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
-
-        heongpu::Relinkey relin_key(context);
-        keygen.generate_relin_key(relin_key, secret_key);
 
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);

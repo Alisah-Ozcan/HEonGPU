@@ -350,4 +350,74 @@ namespace heongpu
         plaintext[index] = ct_0;
     }
 
+    //////////////////
+    //////////////////
+
+    __global__ void decryption_fusion_bfv_kernel(
+        Data* ct, Data* plain, Modulus* modulus, Modulus plain_mod,
+        Modulus gamma, Data* Qi_t, Data* Qi_gamma, Data* Qi_inverse,
+        Data mulq_inv_t, Data mulq_inv_gamma, Data inv_gamma, int n_power,
+        int decomp_mod_count)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+
+        Data sum_t = 0;
+        Data sum_gamma = 0;
+
+#pragma unroll
+        for (int i = 0; i < decomp_mod_count; i++)
+        {
+            int location = idx + (i << n_power);
+
+            Data mt = ct[location];
+
+            Data gamma_ = VALUE_GPU::reduce_forced(gamma.value, modulus[i]);
+
+            mt = VALUE_GPU::mult(mt, plain_mod.value, modulus[i]);
+
+            mt = VALUE_GPU::mult(mt, gamma_, modulus[i]);
+
+            mt = VALUE_GPU::mult(mt, Qi_inverse[i], modulus[i]);
+
+            Data mt_in_t = VALUE_GPU::reduce_forced(mt, plain_mod);
+            Data mt_in_gamma = VALUE_GPU::reduce_forced(mt, gamma);
+
+            mt_in_t = VALUE_GPU::mult(mt_in_t, Qi_t[i], plain_mod);
+            mt_in_gamma = VALUE_GPU::mult(mt_in_gamma, Qi_gamma[i], gamma);
+
+            sum_t = VALUE_GPU::add(sum_t, mt_in_t, plain_mod);
+            sum_gamma = VALUE_GPU::add(sum_gamma, mt_in_gamma, gamma);
+        }
+
+        sum_t = VALUE_GPU::mult(sum_t, mulq_inv_t, plain_mod);
+        sum_gamma = VALUE_GPU::mult(sum_gamma, mulq_inv_gamma, gamma);
+
+        Data gamma_2 = gamma.value >> 1;
+
+        if (sum_gamma > gamma_2)
+        {
+            Data gamma_ = VALUE_GPU::reduce_forced(gamma.value, plain_mod);
+            Data sum_gamma_ = VALUE_GPU::reduce_forced(sum_gamma, plain_mod);
+
+            Data result = VALUE_GPU::sub(gamma_, sum_gamma_, plain_mod);
+            result = VALUE_GPU::add(sum_t, result, plain_mod);
+            result = VALUE_GPU::mult(result, inv_gamma, plain_mod);
+
+            plain[idx] = result;
+        }
+        else
+        {
+            Data sum_t_ = VALUE_GPU::reduce_forced(sum_t, plain_mod);
+            Data sum_gamma_ = VALUE_GPU::reduce_forced(sum_gamma, plain_mod);
+
+            Data result = VALUE_GPU::sub(sum_t_, sum_gamma_, plain_mod);
+            result = VALUE_GPU::mult(result, inv_gamma, plain_mod);
+
+            plain[idx] = result;
+        }
+    }
+
+    //////////////////
+    //////////////////
+
 } // namespace heongpu

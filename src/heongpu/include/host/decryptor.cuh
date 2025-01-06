@@ -11,6 +11,9 @@
 #include "decryption.cuh"
 #include "ntt.cuh"
 #include "context.cuh"
+#include "random.cuh"
+#include "addition.cuh"
+#include "switchkey.cuh"
 #include "secretkey.cuh"
 #include "ciphertext.cuh"
 #include "plaintext.cuh"
@@ -26,6 +29,11 @@ namespace heongpu
      * for BFV and CKKS schemes. The class also supports noise budget
      * calculation, which is essential for understanding the remaining "noise"
      * tolerance in a given ciphertext.
+     *
+     * Additionally, the class includes methods for multiparty computation (MPC)
+     * scenarios. These methods enable partial decryption by multiple
+     * participants and the fusion of these partial decryptions into a fully
+     * decrypted plaintext.
      */
     class HEDecryptor
     {
@@ -113,6 +121,182 @@ namespace heongpu
             throw std::invalid_argument("Invalid Scheme Type");
         }
 
+        /**
+         * @brief Performs a partial decryption of a ciphertext using a secret
+         * key.
+         *
+         * This method is used in multiparty decryption scenarios where each
+         * party partially decrypts the ciphertext with their own secret key.
+         * The resulting partially decrypted ciphertext is stored for later
+         * fusion.
+         *
+         * @param ciphertext The ciphertext to be partially decrypted.
+         * @param sk The secret key of the party performing the partial
+         * decryption.
+         * @param partial_ciphertext The output ciphertext containing the
+         * partially decrypted data.
+         */
+        __host__ void
+        multi_party_decrypt_partial(Ciphertext& ciphertext, Secretkey& sk,
+                                    Ciphertext& partial_ciphertext)
+        {
+            switch (static_cast<int>(scheme_))
+            {
+                case 1: // BFV
+
+                    partial_decrypt_bfv(ciphertext, sk, partial_ciphertext);
+
+                    partial_ciphertext.scheme_ = scheme_;
+                    partial_ciphertext.ring_size_ = n;
+                    partial_ciphertext.coeff_modulus_count_ = Q_size_;
+                    partial_ciphertext.cipher_size_ = 2;
+                    partial_ciphertext.depth_ = ciphertext.depth_;
+                    partial_ciphertext.in_ntt_domain_ =
+                        ciphertext.in_ntt_domain_;
+                    partial_ciphertext.scale_ = ciphertext.scale_;
+                    partial_ciphertext.rescale_required_ =
+                        ciphertext.rescale_required_;
+                    partial_ciphertext.relinearization_required_ =
+                        ciphertext.relinearization_required_;
+
+                    break;
+                case 2: // CKKS
+
+                    partial_decrypt_ckks(ciphertext, sk, partial_ciphertext);
+
+                    partial_ciphertext.scheme_ = scheme_;
+                    partial_ciphertext.ring_size_ = n;
+                    partial_ciphertext.coeff_modulus_count_ = Q_size_;
+                    partial_ciphertext.cipher_size_ = 2;
+                    partial_ciphertext.depth_ = ciphertext.depth_;
+                    partial_ciphertext.in_ntt_domain_ =
+                        ciphertext.in_ntt_domain_;
+                    partial_ciphertext.scale_ = ciphertext.scale_;
+                    partial_ciphertext.rescale_required_ =
+                        ciphertext.rescale_required_;
+                    partial_ciphertext.relinearization_required_ =
+                        ciphertext.relinearization_required_;
+
+                    break;
+                case 3: // BGV
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Scheme Type");
+                    break;
+            }
+        }
+
+        /**
+         * @brief Fuses partially decrypted ciphertexts into a fully decrypted
+         * plaintext.
+         *
+         * In multiparty decryption, each participant generates a partial
+         * decryption of the ciphertext. This method combines those partial
+         * decryptions to produce the final plaintext output.
+         *
+         * @param ciphertexts A vector containing partially decrypted
+         * ciphertexts from multiple parties.
+         * @param plaintext The output plaintext resulting from the fusion of
+         * all partial decryptions.
+         */
+        __host__ void
+        multi_party_decrypt_fusion(std::vector<Ciphertext>& ciphertexts,
+                                   Plaintext& plaintext)
+        {
+            int cipher_count = ciphertexts.size();
+
+            if (cipher_count == 0)
+            {
+                throw std::invalid_argument("No ciphertext to decrypt!");
+            }
+
+            scheme_type scheme_check = ciphertexts[0].scheme_;
+            int depth_check = ciphertexts[0].depth_;
+            double scale_check = ciphertexts[0].scale_;
+
+            for (int i = 1; i < cipher_count; i++)
+            {
+                if (scheme_check != ciphertexts[i].scheme_)
+                {
+                    throw std::invalid_argument(
+                        "Ciphertext schemes should be same!");
+                }
+
+                if (depth_check != ciphertexts[i].depth_)
+                {
+                    throw std::invalid_argument(
+                        "Ciphertext levels should be same!");
+                }
+
+                if (scale_check != ciphertexts[i].scale_)
+                {
+                    throw std::invalid_argument(
+                        "Ciphertext scales should be same!");
+                }
+            }
+
+            switch (static_cast<int>(scheme_))
+            {
+                case 1: // BFV
+                    if (plaintext.size() != n)
+                    {
+                        plaintext.resize(n);
+                    }
+
+                    decrypt_fusion_bfv(ciphertexts, plaintext);
+
+                    plaintext.scheme_ = scheme_;
+                    plaintext.depth_ = 0;
+                    plaintext.scale_ = 0;
+                    plaintext.in_ntt_domain_ = false;
+
+                    break;
+                case 2: // CKKS
+                    if (plaintext.size() != (n * (Q_size_ - depth_check)))
+                    {
+                        plaintext.resize((n * (Q_size_ - depth_check)));
+                    }
+
+                    decrypt_fusion_ckks(ciphertexts, plaintext);
+
+                    plaintext.scheme_ = scheme_;
+                    plaintext.depth_ = depth_check;
+                    plaintext.scale_ = scale_check;
+                    plaintext.in_ntt_domain_ = true;
+
+                    break;
+                case 3: // BGV
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Scheme Type");
+                    break;
+            }
+        }
+
+        /**
+         * @brief Returns the seed of the decryptor.
+         *
+         * @return int Seed of the decryptor.
+         */
+        inline int get_seed() const noexcept { return seed_; }
+
+        /**
+         * @brief Sets the seed of the decryptor with new seed.
+         */
+        inline void set_seed(int new_seed) { seed_ = new_seed; }
+
+        /**
+         * @brief Returns the offset of the decryptor(curand).
+         *
+         * @return int Offset of the decryptor.
+         */
+        inline int get_offset() const noexcept { return offset_; }
+
+        /**
+         * @brief Sets the offset of the decryptor with new offset(curand).
+         */
+        inline void set_offset(int new_offset) { offset_ = new_offset; }
+
         HEDecryptor() = default;
         HEDecryptor(const HEDecryptor& copy) = default;
         HEDecryptor(HEDecryptor&& source) = default;
@@ -130,8 +314,23 @@ namespace heongpu
 
         __host__ int noise_budget_calculation(Ciphertext& ciphertext);
 
+        __host__ void partial_decrypt_bfv(Ciphertext& ciphertext, Secretkey& sk,
+                                          Ciphertext& partial_ciphertext);
+
+        __host__ void partial_decrypt_ckks(Ciphertext& ciphertext,
+                                           Secretkey& sk,
+                                           Ciphertext& partial_ciphertext);
+
+        __host__ void decrypt_fusion_bfv(std::vector<Ciphertext>& ciphertexts,
+                                         Plaintext& plaintext);
+
+        __host__ void decrypt_fusion_ckks(std::vector<Ciphertext>& ciphertexts,
+                                          Plaintext& plaintext);
+
       private:
         scheme_type scheme_;
+        int seed_;
+        int offset_; // Absolute offset into sequence (curand)
 
         Data* secret_key_;
 

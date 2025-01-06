@@ -16,6 +16,7 @@ namespace heongpu
         std::random_device rd;
         std::mt19937 gen(rd());
         seed_ = gen();
+        offset_ = gen();
 
         public_key_ = public_key.data();
 
@@ -55,19 +56,28 @@ namespace heongpu
         else
         {
         }
-
-        temp_data = DeviceVector<Data>((3 * n * Q_prime_size_) +
-                                       (2 * n * Q_prime_size_));
-        temp1_enc = temp_data.data();
-        temp2_enc = temp1_enc + (3 * n * Q_prime_size_);
     }
 
     __host__ void HEEncryptor::encrypt_bfv(Ciphertext& ciphertext,
                                            Plaintext& plaintext)
     {
-        enc_error_kernel<<<dim3((n >> 8), 3, 1), 256>>>(
-            temp1_enc, modulus_->data(), n_power, Q_prime_size_, seed_);
+        DeviceVector<Data> gpu_space(4 * Q_prime_size_ * n);
+        Data* u_poly = gpu_space.data();
+        Data* error_poly = u_poly + (Q_prime_size_ * n);
+        Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
+
+        modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
+                                                          256>>>(
+            u_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
+
+        modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 2, 1),
+                                                           256>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
@@ -76,11 +86,11 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = 0};
 
-        GPU_NTT_Inplace(temp1_enc, ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, Q_prime_size_, Q_prime_size_);
+        GPU_NTT_Inplace(u_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
+                        Q_prime_size_, Q_prime_size_);
 
         pk_u_kernel<<<dim3((n >> 8), Q_prime_size_, 2), 256>>>(
-            public_key_, temp1_enc, temp2_enc, modulus_->data(), n_power,
+            public_key_, u_poly, pk_u_poly, modulus_->data(), n_power,
             Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -92,15 +102,15 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = 0};
 
-        GPU_NTT_Inplace(temp2_enc, intt_table_->data(), modulus_->data(),
+        GPU_NTT_Inplace(pk_u_poly, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        EncDivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256>>>(
-            temp2_enc, temp1_enc + (Q_prime_size_ << n_power), plaintext.data(),
-            ciphertext.data(), modulus_->data(), half_->data(),
-            half_mod_->data(), last_q_modinv_->data(), plain_modulus_, Q_mod_t_,
-            upper_threshold_, coeeff_div_plainmod_->data(), n_power,
-            Q_prime_size_, Q_size_, P_size_);
+        enc_div_lastq_bfv_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+            pk_u_poly, error_poly, plaintext.data(), ciphertext.data(),
+            modulus_->data(), half_->data(), half_mod_->data(),
+            last_q_modinv_->data(), plain_modulus_, Q_mod_t_, upper_threshold_,
+            coeeff_div_plainmod_->data(), n_power, Q_prime_size_, Q_size_,
+            P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -108,9 +118,23 @@ namespace heongpu
                                            Plaintext& plaintext,
                                            HEStream& stream)
     {
-        enc_error_kernel<<<dim3((n >> 8), 3, 1), 256, 0, stream.stream>>>(
-            stream.temp1_enc, modulus_->data(), n_power, Q_prime_size_, seed_);
+        DeviceVector<Data> gpu_space(4 * Q_prime_size_ * n, stream.stream);
+        Data* u_poly = gpu_space.data();
+        Data* error_poly = u_poly + (Q_prime_size_ * n);
+        Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
+
+        modular_ternary_random_number_generation_kernel<<<
+            dim3((n >> 8), 1, 1), 256, 0, stream.stream>>>(
+            u_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
+
+        modular_gaussian_random_number_generation_kernel<<<
+            dim3((n >> 8), 2, 1), 256, 0, stream.stream>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
@@ -119,13 +143,13 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream.stream};
 
-        GPU_NTT_Inplace(stream.temp1_enc, ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, Q_prime_size_, Q_prime_size_);
+        GPU_NTT_Inplace(u_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
+                        Q_prime_size_, Q_prime_size_);
 
         pk_u_kernel<<<dim3((n >> 8), Q_prime_size_, 2), 256, 0,
-                      stream.stream>>>(public_key_, stream.temp1_enc,
-                                       stream.temp2_enc, modulus_->data(),
-                                       n_power, Q_prime_size_);
+                      stream.stream>>>(public_key_, u_poly, pk_u_poly,
+                                       modulus_->data(), n_power,
+                                       Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_intt = {.n_power = n_power,
@@ -136,15 +160,14 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = stream.stream};
 
-        GPU_NTT_Inplace(stream.temp2_enc, intt_table_->data(), modulus_->data(),
+        GPU_NTT_Inplace(pk_u_poly, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        EncDivideRoundLastqNewP<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                                  stream.stream>>>(
-            stream.temp2_enc, stream.temp1_enc + (Q_prime_size_ << n_power),
-            plaintext.data(), ciphertext.data(), modulus_->data(),
-            half_->data(), half_mod_->data(), last_q_modinv_->data(),
-            plain_modulus_, Q_mod_t_, upper_threshold_,
+        enc_div_lastq_bfv_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                   stream.stream>>>(
+            pk_u_poly, error_poly, plaintext.data(), ciphertext.data(),
+            modulus_->data(), half_->data(), half_mod_->data(),
+            last_q_modinv_->data(), plain_modulus_, Q_mod_t_, upper_threshold_,
             coeeff_div_plainmod_->data(), n_power, Q_prime_size_, Q_size_,
             P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -153,9 +176,23 @@ namespace heongpu
     __host__ void HEEncryptor::encrypt_ckks(Ciphertext& ciphertext,
                                             Plaintext& plaintext)
     {
-        enc_error_kernel<<<dim3((n >> 8), 3, 1), 256>>>(
-            temp1_enc, modulus_->data(), n_power, Q_prime_size_, seed_);
+        DeviceVector<Data> gpu_space(4 * Q_prime_size_ * n);
+        Data* u_poly = gpu_space.data();
+        Data* error_poly = u_poly + (Q_prime_size_ * n);
+        Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
+
+        modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
+                                                          256>>>(
+            u_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
+
+        modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 2, 1),
+                                                           256>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
@@ -164,11 +201,11 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = 0};
 
-        GPU_NTT_Inplace(temp1_enc, ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, Q_prime_size_, Q_prime_size_);
+        GPU_NTT_Inplace(u_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
+                        Q_prime_size_, Q_prime_size_);
 
         pk_u_kernel<<<dim3((n >> 8), Q_prime_size_, 2), 256>>>(
-            public_key_, temp1_enc, temp2_enc, modulus_->data(), n_power,
+            public_key_, u_poly, pk_u_poly, modulus_->data(), n_power,
             Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -180,20 +217,19 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = 0};
 
-        GPU_NTT_Inplace(temp2_enc, intt_table_->data(), modulus_->data(),
+        GPU_NTT_Inplace(pk_u_poly, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        EncDivideRoundLastqNewP_ckks<<<dim3((n >> 8), Q_size_, 2), 256>>>(
-            temp2_enc, temp1_enc + (Q_prime_size_ << n_power),
-            ciphertext.data(), modulus_->data(), half_->data(),
-            half_mod_->data(), last_q_modinv_->data(), n_power, Q_prime_size_,
-            Q_size_, P_size_);
+        enc_div_lastq_ckks_kernel<<<dim3((n >> 8), Q_size_, 2), 256>>>(
+            pk_u_poly, error_poly, ciphertext.data(), modulus_->data(),
+            half_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
+            Q_prime_size_, Q_size_, P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         GPU_NTT_Inplace(ciphertext.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, 2 * Q_size_, Q_size_);
 
-        cipher_message_add<<<dim3((n >> 8), Q_size_, 1), 256>>>(
+        cipher_message_add_kernel<<<dim3((n >> 8), Q_size_, 1), 256>>>(
             ciphertext.data(), plaintext.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
@@ -202,9 +238,23 @@ namespace heongpu
                                             Plaintext& plaintext,
                                             HEStream& stream)
     {
-        enc_error_kernel<<<dim3((n >> 8), 3, 1), 256, 0, stream.stream>>>(
-            stream.temp1_enc, modulus_->data(), n_power, Q_prime_size_, seed_);
+        DeviceVector<Data> gpu_space(4 * Q_prime_size_ * n, stream.stream);
+        Data* u_poly = gpu_space.data();
+        Data* error_poly = u_poly + (Q_prime_size_ * n);
+        Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
+
+        modular_ternary_random_number_generation_kernel<<<
+            dim3((n >> 8), 1, 1), 256, 0, stream.stream>>>(
+            u_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
+
+        modular_gaussian_random_number_generation_kernel<<<
+            dim3((n >> 8), 2, 1), 256, 0, stream.stream>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        offset_++;
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
@@ -213,13 +263,13 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream.stream};
 
-        GPU_NTT_Inplace(stream.temp1_enc, ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, Q_prime_size_, Q_prime_size_);
+        GPU_NTT_Inplace(u_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
+                        Q_prime_size_, Q_prime_size_);
 
         pk_u_kernel<<<dim3((n >> 8), Q_prime_size_, 2), 256, 0,
-                      stream.stream>>>(public_key_, stream.temp1_enc,
-                                       stream.temp2_enc, modulus_->data(),
-                                       n_power, Q_prime_size_);
+                      stream.stream>>>(public_key_, u_poly, pk_u_poly,
+                                       modulus_->data(), n_power,
+                                       Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_intt = {.n_power = n_power,
@@ -230,22 +280,21 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = stream.stream};
 
-        GPU_NTT_Inplace(stream.temp2_enc, intt_table_->data(), modulus_->data(),
+        GPU_NTT_Inplace(pk_u_poly, intt_table_->data(), modulus_->data(),
                         cfg_intt, 2 * Q_prime_size_, Q_prime_size_);
 
-        EncDivideRoundLastqNewP_ckks<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                                       stream.stream>>>(
-            stream.temp2_enc, stream.temp1_enc + (Q_prime_size_ << n_power),
-            ciphertext.data(), modulus_->data(), half_->data(),
-            half_mod_->data(), last_q_modinv_->data(), n_power, Q_prime_size_,
-            Q_size_, P_size_);
+        enc_div_lastq_ckks_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                                    stream.stream>>>(
+            pk_u_poly, error_poly, ciphertext.data(), modulus_->data(),
+            half_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
+            Q_prime_size_, Q_size_, P_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         GPU_NTT_Inplace(ciphertext.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, 2 * Q_size_, Q_size_);
 
-        cipher_message_add<<<dim3((n >> 8), Q_size_, 1), 256, 0,
-                             stream.stream>>>(
+        cipher_message_add_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0,
+                                    stream.stream>>>(
             ciphertext.data(), plaintext.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }

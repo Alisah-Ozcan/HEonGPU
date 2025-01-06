@@ -13,6 +13,8 @@ set(EXECUTABLES
     5_default_stream_usage 5_default_stream_usage.cu
     6_multi_stream_usage_way1 6_multi_stream_usage_way1.cu
     7_multi_stream_usage_way2 7_multi_stream_usage_way2.cu
+    8_multiparty_computation_bfv 8_multiparty_computation_bfv.cu
+    9_multiparty_computation_ckks 9_multiparty_computation_ckks.cu
 )
 
 function(add_example exe source)

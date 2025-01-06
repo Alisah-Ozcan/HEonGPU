@@ -13,9 +13,7 @@ namespace heongpu
         ring_size_ = context.n; // n
 
         hamming_weight_ = ring_size_ >> 1; // default
-
-        secretkey_ = DeviceVector<int>(ring_size_);
-        location_ = DeviceVector<Data>(coeff_modulus_count_ * ring_size_);
+        in_ntt_domain_ = false;
     }
 
     __host__ Secretkey::Secretkey(Parameters& context, int hamming_weight)
@@ -30,8 +28,7 @@ namespace heongpu
                 "hamming weight has to be in range 0 to ring size.");
         }
 
-        secretkey_ = DeviceVector<int>(ring_size_);
-        location_ = DeviceVector<Data>(coeff_modulus_count_ * ring_size_);
+        in_ntt_domain_ = false;
     }
 
     Data* Secretkey::data()

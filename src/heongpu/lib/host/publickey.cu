@@ -11,12 +11,18 @@ namespace heongpu
     {
         coeff_modulus_count_ = context.Q_prime_size;
         ring_size_ = context.n; // n
-
-        locations_ = DeviceVector<Data>(2 * coeff_modulus_count_ * ring_size_);
+        in_ntt_domain_ = false;
     }
 
     Data* Publickey::data()
     {
         return locations_.data();
     }
+
+    __host__ MultipartyPublickey::MultipartyPublickey(Parameters& context,
+                                                      int seed)
+        : Publickey(context), seed_(seed)
+    {
+    }
+
 } // namespace heongpu

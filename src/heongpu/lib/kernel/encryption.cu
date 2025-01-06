@@ -7,75 +7,6 @@
 
 namespace heongpu
 {
-    // Not cryptographically secure, will be fixed later.
-    __global__ void enc_error_kernel(Data* u_e, Modulus* modulus, int n_power,
-                                     int rns_mod_count, int seed)
-    {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
-        int block_y = blockIdx.y; // u, e1, e2
-
-        curandStatePhilox4_32_10_t state; // not secure
-        curand_init(seed, idx + (block_y << n_power),
-                    idx + (block_y << n_power), &state);
-
-        if (block_y == 0)
-        { // u
-            // TODO: make it efficient
-            Data random_number = curand(&state) & 3; // 0,1,2,3
-            if (random_number == 3)
-            {
-                random_number -= 3; // 0,1,2
-            }
-
-            uint64_t flag = static_cast<uint64_t>(
-                -static_cast<int64_t>(random_number == 0));
-
-#pragma unroll
-            for (int i = 0; i < rns_mod_count; i++)
-            {
-                int location = i << n_power;
-                Data result = random_number;
-                result = result + (flag & modulus[i].value) - 1;
-                u_e[idx + location] = result;
-            }
-        }
-        else if (block_y == 1)
-        { // e1
-            float noise = curand_normal(&state);
-            noise = noise * error_std_dev; // SIGMA
-
-            uint64_t flag =
-                static_cast<uint64_t>(-static_cast<int64_t>(noise < 0));
-
-#pragma unroll
-            for (int i = 0; i < rns_mod_count; i++)
-            {
-                Data rn_ULL =
-                    static_cast<Data>(noise) + (flag & modulus[i].value);
-                int location = i << n_power;
-                u_e[idx + location + ((rns_mod_count) << n_power)] = rn_ULL;
-            }
-        }
-        else
-        { // e2
-            float noise = curand_normal(&state);
-            noise = noise * error_std_dev; // SIGMA
-
-            uint64_t flag =
-                static_cast<uint64_t>(-static_cast<int64_t>(noise < 0));
-
-#pragma unroll
-            for (int i = 0; i < rns_mod_count; i++)
-            {
-                Data rn_ULL =
-                    static_cast<Data>(noise) + (flag & modulus[i].value);
-                int location = i << n_power;
-                u_e[idx + location + ((rns_mod_count) << (n_power + 1))] =
-                    rn_ULL;
-            }
-        }
-    }
-
     __global__ void pk_u_kernel(Data* pk, Data* u, Data* pk_u, Modulus* modulus,
                                 int n_power, int rns_mod_count)
     {
@@ -93,13 +24,13 @@ namespace heongpu
              ((rns_mod_count << n_power) * block_z)] = pk_u_;
     }
 
-    __global__ void EncDivideRoundLastq(Data* pk, Data* e, Data* plain,
-                                        Data* ct, Modulus* modulus, Data half,
-                                        Data* half_mod, Data* last_q_modinv,
-                                        Modulus plain_mod, Data Q_mod_t,
-                                        Data upper_threshold,
-                                        Data* coeffdiv_plain, int n_power,
-                                        int decomp_mod_count)
+    __global__ void enc_div_lastq_kernel(Data* pk, Data* e, Data* plain,
+                                         Data* ct, Modulus* modulus, Data half,
+                                         Data* half_mod, Data* last_q_modinv,
+                                         Modulus plain_mod, Data Q_mod_t,
+                                         Data upper_threshold,
+                                         Data* coeffdiv_plain, int n_power,
+                                         int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count
@@ -156,7 +87,7 @@ namespace heongpu
         }
     }
 
-    __global__ void EncDivideRoundLastqNewP(
+    __global__ void enc_div_lastq_bfv_kernel(
         Data* pk, Data* e, Data* plain, Data* ct, Modulus* modulus, Data* half,
         Data* half_mod, Data* last_q_modinv, Modulus plain_mod, Data Q_mod_t,
         Data upper_threshold, Data* coeffdiv_plain, int n_power,
@@ -240,12 +171,12 @@ namespace heongpu
         }
     }
 
-    __global__ void EncDivideRoundLastqNewP_ckks(Data* pk, Data* e, Data* ct,
-                                                 Modulus* modulus, Data* half,
-                                                 Data* half_mod,
-                                                 Data* last_q_modinv,
-                                                 int n_power, int Q_prime_size,
-                                                 int Q_size, int P_size)
+    __global__ void enc_div_lastq_ckks_kernel(Data* pk, Data* e, Data* ct,
+                                              Modulus* modulus, Data* half,
+                                              Data* half_mod,
+                                              Data* last_q_modinv, int n_power,
+                                              int Q_prime_size, int Q_size,
+                                              int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
@@ -310,8 +241,8 @@ namespace heongpu
             input_;
     }
 
-    __global__ void cipher_message_add(Data* ciphertext, Data* plaintext,
-                                       Modulus* modulus, int n_power)
+    __global__ void cipher_message_add_kernel(Data* ciphertext, Data* plaintext,
+                                              Modulus* modulus, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)

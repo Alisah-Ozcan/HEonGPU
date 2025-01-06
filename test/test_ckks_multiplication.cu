@@ -36,6 +36,7 @@ bool fix_point_array_check(const std::vector<T>& array1,
 TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
 {
     cudaSetDevice(0);
+
     {
         size_t poly_modulus_degree = 4096;
         heongpu::Parameters context(
@@ -263,8 +264,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({59, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
-                                   40, 40, 40, 40, 40, 40, 40, 40},
+        context.set_coeff_modulus({59, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
+                                   50, 50, 50, 50, 50, 50, 50, 50},
                                   {59});
         context.generate();
 
@@ -272,11 +273,11 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
         heongpu::Secretkey secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
-        keygen.generate_public_key(public_key, secret_key);
-
         heongpu::Relinkey relin_key(context);
         keygen.generate_relin_key(relin_key, secret_key);
+
+        heongpu::Publickey public_key(context);
+        keygen.generate_public_key(public_key, secret_key);
 
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
@@ -301,7 +302,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
             message_multiplication_result[i] = message1[i] * message2[i];
         }
 
-        double scale = pow(2.0, 40);
+        double scale = pow(2.0, 50);
         heongpu::Plaintext P1(context);
         encoder.encode(P1, message1, scale);
 
@@ -349,11 +350,11 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
         heongpu::Secretkey secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
-        keygen.generate_public_key(public_key, secret_key);
-
         heongpu::Relinkey relin_key(context);
         keygen.generate_relin_key(relin_key, secret_key);
+
+        heongpu::Publickey public_key(context);
+        keygen.generate_public_key(public_key, secret_key);
 
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);

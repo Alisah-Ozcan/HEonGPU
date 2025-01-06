@@ -403,10 +403,6 @@ namespace heongpu
         // Temp(to avoid allocation time)
         DeviceVector<COMPLEX> temp_complex;
 
-        DeviceVector<Data> temp_data;
-        Data* temp1_enc;
-        Data* temp2_enc;
-
         DeviceVector<Data> temp_mul;
         Data* temp1_mul;
         Data* temp2_mul;

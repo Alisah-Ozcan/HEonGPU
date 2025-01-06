@@ -55,5 +55,11 @@ namespace heongpu
                                            Data* sk, Modulus* modulus,
                                            int n_power, int decomp_mod_count);
 
+    __global__ void decryption_fusion_bfv_kernel(
+        Data* ct, Data* plain, Modulus* modulus, Modulus plain_mod,
+        Modulus gamma, Data* Qi_t, Data* Qi_gamma, Data* Qi_inverse,
+        Data mulq_inv_t, Data mulq_inv_gamma, Data inv_gamma, int n_power,
+        int decomp_mod_count);
+
 } // namespace heongpu
 #endif // DECRYPTION_H

@@ -18,6 +18,7 @@
 #include "encryption.cuh"
 #include "ntt.cuh"
 #include "context.cuh"
+#include "random.cuh"
 
 #include "publickey.cuh"
 #include "ciphertext.cuh"
@@ -221,6 +222,18 @@ namespace heongpu
          */
         inline void set_seed(int new_seed) { seed_ = new_seed; }
 
+        /**
+         * @brief Returns the offset of the encryptor(curand).
+         *
+         * @return int Offset of the encryptor.
+         */
+        inline int get_offset() const noexcept { return offset_; }
+
+        /**
+         * @brief Sets the offset of the encryptor with new offset(curand).
+         */
+        inline void set_offset(int new_offset) { offset_ = new_offset; }
+
         HEEncryptor() = default;
         HEEncryptor(const HEEncryptor& copy) = default;
         HEEncryptor(HEEncryptor&& source) = default;
@@ -242,6 +255,7 @@ namespace heongpu
       private:
         scheme_type scheme_;
         int seed_;
+        int offset_; // Absolute offset into sequence (curand)
 
         Data* public_key_;
 
@@ -269,11 +283,6 @@ namespace heongpu
         Data upper_threshold_;
 
         std::shared_ptr<DeviceVector<Data>> coeeff_div_plainmod_;
-
-        // Temp !!! Check All Stream Need This
-        DeviceVector<Data> temp_data;
-        Data* temp1_enc;
-        Data* temp2_enc;
     };
 
 } // namespace heongpu
