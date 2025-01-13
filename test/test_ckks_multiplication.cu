@@ -273,11 +273,11 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
         heongpu::Secretkey secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Relinkey relin_key(context);
-        keygen.generate_relin_key(relin_key, secret_key);
-
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
+
+        heongpu::Relinkey relin_key(context);
+        keygen.generate_relin_key(relin_key, secret_key);
 
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
@@ -350,11 +350,11 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
         heongpu::Secretkey secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Relinkey relin_key(context);
-        keygen.generate_relin_key(relin_key, secret_key);
-
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
+
+        heongpu::Relinkey relin_key(context);
+        keygen.generate_relin_key(relin_key, secret_key);
 
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);

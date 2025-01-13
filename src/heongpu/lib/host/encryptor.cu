@@ -61,7 +61,7 @@ namespace heongpu
     __host__ void HEEncryptor::encrypt_bfv(Ciphertext& ciphertext,
                                            Plaintext& plaintext)
     {
-        DeviceVector<Data> gpu_space(4 * Q_prime_size_ * n);
+        DeviceVector<Data> gpu_space(5 * Q_prime_size_ * n);
         Data* u_poly = gpu_space.data();
         Data* error_poly = u_poly + (Q_prime_size_ * n);
         Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
@@ -118,7 +118,7 @@ namespace heongpu
                                            Plaintext& plaintext,
                                            HEStream& stream)
     {
-        DeviceVector<Data> gpu_space(4 * Q_prime_size_ * n, stream.stream);
+        DeviceVector<Data> gpu_space(5 * Q_prime_size_ * n, stream.stream);
         Data* u_poly = gpu_space.data();
         Data* error_poly = u_poly + (Q_prime_size_ * n);
         Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
@@ -176,7 +176,7 @@ namespace heongpu
     __host__ void HEEncryptor::encrypt_ckks(Ciphertext& ciphertext,
                                             Plaintext& plaintext)
     {
-        DeviceVector<Data> gpu_space(4 * Q_prime_size_ * n);
+        DeviceVector<Data> gpu_space(5 * Q_prime_size_ * n);
         Data* u_poly = gpu_space.data();
         Data* error_poly = u_poly + (Q_prime_size_ * n);
         Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
@@ -238,7 +238,7 @@ namespace heongpu
                                             Plaintext& plaintext,
                                             HEStream& stream)
     {
-        DeviceVector<Data> gpu_space(4 * Q_prime_size_ * n, stream.stream);
+        DeviceVector<Data> gpu_space(5 * Q_prime_size_ * n, stream.stream);
         Data* u_poly = gpu_space.data();
         Data* error_poly = u_poly + (Q_prime_size_ * n);
         Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
