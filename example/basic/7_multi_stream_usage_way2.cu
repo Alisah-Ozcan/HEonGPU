@@ -4,7 +4,7 @@
 // Developer: Alişah Özcan
 
 #include "heongpu.cuh"
-#include "example_util.h"
+#include "../example_util.h"
 #include <omp.h>
 
 void multi_stream_function_way2(

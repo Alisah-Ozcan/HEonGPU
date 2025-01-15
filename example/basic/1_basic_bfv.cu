@@ -4,7 +4,7 @@
 // Developer: Alişah Özcan
 
 #include "heongpu.cuh"
-#include "example_util.h"
+#include "../example_util.h"
 #include <omp.h>
 
 // These examples have been developed with reference to the Microsoft SEAL

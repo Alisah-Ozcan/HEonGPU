@@ -8,7 +8,7 @@ HEonGPU now supports Multiparty Computation (MPC) protocols through its implemen
 - Compatible with `KEYSWITCHING_METHOD_I` and `KEYSWITCHING_METHOD_II` key switching methods. Note that `KEYSWITCHING_METHOD_III` key switching is not supported for MPC implementation.
 
 <div align="center">
-  <img src="../multiparty_computation.svg" alt="MPC Flow Diagram" width="100%">
+  <img src="../../multiparty_computation.svg" alt="MPC Flow Diagram" width="100%">
 </div>
 
 ### How It Works
@@ -45,14 +45,14 @@ To enable MPC in your project, follow these steps:
 
 For a practical demonstration, refer to the [8_multiparty_computation_bfv.cu](8_multiparty_computation_bfv.cu)  and [9_multiparty_computation_ckks.cu](9_multiparty_computation_ckks.cu) files in the repository. This examples showcase a complete workflow for using HEonGPU's MPC capabilities, including key generation, encryption, computation, and decryption. 
 
-If you have further questions or require additional information, feel free to reach out at:
-- Email: alisah@sabanciuniv.edu
-- LinkedIn: [Profile](https://www.linkedin.com/in/ali%C5%9Fah-%C3%B6zcan-472382305/)
-
----
-
 ## Upcoming Feature:
 
 Future updates will bring enhanced capabilities for multiparty computations, including `t-out-of-N threshold encryption`. This advanced feature will allow subsets of participants to collaboratively decrypt and perform operations, offering greater flexibility and fault tolerance in distributed systems. By enabling partial decryption and cooperation among a limited number of parties.
 
 In addition, `serialization support` is planned to enable saving and loading of encryption objects such as keys and ciphertexts. This will facilitate efficient storage and transmission of encrypted data across sessions or systems, improving both interoperability and convenience.
+
+#
+
+If you have further questions or require additional information, feel free to reach out at:
+- Email: alisah@sabanciuniv.edu
+- LinkedIn: [Profile](https://www.linkedin.com/in/ali%C5%9Fah-%C3%B6zcan-472382305/)

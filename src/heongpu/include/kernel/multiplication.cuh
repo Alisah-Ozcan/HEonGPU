@@ -51,5 +51,9 @@ namespace heongpu
                                                       Modulus* modulus,
                                                       int n_power);
 
+    __global__ void cipherplain_multiply_accumulate_kernel(
+        Data* in1, Data* in2, Data* out, Modulus* modulus, int iteration_count,
+        int current_decomp_count, int first_decomp_count, int n_power);
+
 } // namespace heongpu
 #endif // HE_MULTIPLICATION_H

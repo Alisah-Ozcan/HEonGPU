@@ -1,6 +1,11 @@
 # 🚀 **HEonGPU** - A GPU Based Homomorphic Encryption Library
 
-### 🚨 **New Feature: [Multiparty Computation (MPC) Support](example/README.md)**
+### 🚨 **New Feature: [CKKS Bootstrapping](example/bootstrapping/README.md)**
+
+HEonGPU now includes support for `CKKS` Bootstrapping, enabling efficient evaluation of deep computational circuits with high precision and security. On an NVIDIA RTX 4090, it performs `CKKS` Bootstrapping for 
+N=65536 in under 170 ms.
+
+### 🚨 **New Feature: [Multiparty Computation (MPC) Support](example/mpc/README.md)**
 
 HEonGPU now includes support for **Multiparty Computation (MPC)** protocols, providing a secure and collaborative framework for encrypted computations. By incorporating *Multiparty Homomorphic Encryption (MHE)* capabilities, the library enables distributed computations with threshold encryption models such as `N-out-of-N`. The implementation is fully optimized for GPU environments, delivering minimal latency and maximum performance in collaborative settings.
 

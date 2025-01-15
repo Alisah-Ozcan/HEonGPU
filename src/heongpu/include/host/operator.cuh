@@ -10,6 +10,8 @@
 #include "multiplication.cuh"
 #include "switchkey.cuh"
 #include "keygeneration.cuh"
+#include "encoder.cuh"
+#include "bootstrapping.cuh"
 
 #include "keyswitch.cuh"
 #include "ciphertext.cuh"
@@ -1199,10 +1201,22 @@ namespace heongpu
                                 "Ciphertext should be in intt domain");
                         }
 
+                        if (shift == 0)
+                        {
+                            output = input1;
+                            return;
+                        }
+
                         rotate_method_I(input1, output, galois_key, shift);
                     }
                     else if (scheme_ == scheme_type::ckks)
                     {
+                        if (shift == 0)
+                        {
+                            output = input1;
+                            return;
+                        }
+
                         rotate_ckks_method_I(input1, output, galois_key, shift);
                     }
                     else
@@ -1220,10 +1234,22 @@ namespace heongpu
                                 "Ciphertext should be in intt domain");
                         }
 
+                        if (shift == 0)
+                        {
+                            output = input1;
+                            return;
+                        }
+
                         rotate_method_II(input1, output, galois_key, shift);
                     }
                     else if (scheme_ == scheme_type::ckks)
                     {
+                        if (shift == 0)
+                        {
+                            output = input1;
+                            return;
+                        }
+
                         rotate_ckks_method_II(input1, output, galois_key,
                                               shift);
                     }
@@ -1299,11 +1325,23 @@ namespace heongpu
                                 "Ciphertext should be in intt domain");
                         }
 
+                        if (shift == 0)
+                        {
+                            output = input1;
+                            return;
+                        }
+
                         rotate_method_I(input1, output, galois_key, shift,
                                         stream);
                     }
                     else if (scheme_ == scheme_type::ckks)
                     {
+                        if (shift == 0)
+                        {
+                            output = input1;
+                            return;
+                        }
+
                         rotate_ckks_method_I(input1, output, galois_key, shift,
                                              stream);
                     }
@@ -1322,11 +1360,23 @@ namespace heongpu
                                 "Ciphertext should be in intt domain");
                         }
 
+                        if (shift == 0)
+                        {
+                            output = input1;
+                            return;
+                        }
+
                         rotate_method_II(input1, output, galois_key, shift,
                                          stream);
                     }
                     else if (scheme_ == scheme_type::ckks)
                     {
+                        if (shift == 0)
+                        {
+                            output = input1;
+                            return;
+                        }
+
                         rotate_ckks_method_II(input1, output, galois_key, shift,
                                               stream);
                     }
@@ -1370,6 +1420,11 @@ namespace heongpu
         __host__ void rotate_rows_inplace(Ciphertext& input1,
                                           Galoiskey& galois_key, int shift)
         {
+            if (shift == 0)
+            {
+                return;
+            }
+
             rotate_rows(input1, input1, galois_key, shift);
         }
 
@@ -1387,6 +1442,11 @@ namespace heongpu
                                           Galoiskey& galois_key, int shift,
                                           HEStream& stream)
         {
+            if (shift == 0)
+            {
+                return;
+            }
+
             rotate_rows(input1, input1, galois_key, shift, stream);
         }
 
@@ -2008,6 +2068,184 @@ namespace heongpu
             output.rescale_required_ = input1.rescale_required_;
             output.relinearization_required_ = input1.relinearization_required_;
         }
+
+        ///////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////
+
+        /**
+         * @brief Performs conjugation on the ciphertext and stores the result
+         * in the output.
+         *
+         * @param input1 Input ciphertext to be conjugated.
+         * @param output Ciphertext where the result of the conjugation is
+         * stored.
+         * @param conjugate_key Switch key used for the conjugation operation.
+         */
+        __host__ void conjugate(Ciphertext& input1, Ciphertext& output,
+                                Galoiskey& conjugate_key)
+        {
+            if (input1.rescale_required_ || input1.relinearization_required_)
+            {
+                throw std::invalid_argument("Ciphertext can not be rotated!");
+            }
+
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count));
+            }
+
+            switch (static_cast<int>(conjugate_key.key_type))
+            {
+                case 1: // KEYSWITHING_METHOD_I
+                    if (scheme_ == scheme_type::bfv)
+                    {
+                        throw std::invalid_argument("BFV Does Not Support!");
+                    }
+                    else if (scheme_ == scheme_type::ckks)
+                    {
+                        conjugate_ckks_method_I(input1, output, conjugate_key);
+                    }
+                    else
+                    {
+                        throw std::invalid_argument(
+                            "Invalid Key Switching Type");
+                    }
+                    break;
+                case 2: // KEYSWITHING_METHOD_II
+                    if (scheme_ == scheme_type::bfv)
+                    {
+                        throw std::invalid_argument("BFV Does Not Support!");
+                    }
+                    else if (scheme_ == scheme_type::ckks)
+                    {
+                        conjugate_ckks_method_II(input1, output, conjugate_key);
+                    }
+                    else
+                    {
+                        throw std::invalid_argument(
+                            "Invalid Key Switching Type");
+                    }
+                    break;
+                case 3: // KEYSWITHING_METHOD_III
+
+                    throw std::invalid_argument(
+                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "high memory consumption for keyswitch operation!");
+
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Key Switching Type");
+                    break;
+            }
+
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
+            output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.rescale_required_ = input1.rescale_required_;
+            output.relinearization_required_ = input1.relinearization_required_;
+        }
+
+        /**
+         * @brief Performs conjugation on the ciphertext and stores the result
+         * in the output.
+         *
+         * @param input1 Input ciphertext to be conjugated.
+         * @param output Ciphertext where the result of the conjugation is
+         * stored.
+         * @param conjugate_key Switch key used for the conjugation operation.
+         * @param stream The HEStream object representing the CUDA stream to be
+         * used for asynchronous operation.
+         */
+        __host__ void conjugate(Ciphertext& input1, Ciphertext& output,
+                                Galoiskey& conjugate_key, HEStream& stream)
+        {
+            if (input1.rescale_required_ || input1.relinearization_required_)
+            {
+                throw std::invalid_argument("Ciphertext can not be rotated!");
+            }
+
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            if (output.locations_.size() < (2 * n * current_decomp_count))
+            {
+                output.resize((2 * n * current_decomp_count), stream);
+            }
+
+            switch (static_cast<int>(conjugate_key.key_type))
+            {
+                case 1: // KEYSWITHING_METHOD_I
+                    if (scheme_ == scheme_type::bfv)
+                    {
+                        throw std::invalid_argument("BFV Does Not Support!");
+                    }
+                    else if (scheme_ == scheme_type::ckks)
+                    {
+                        conjugate_ckks_method_I(input1, output, conjugate_key,
+                                                stream);
+                    }
+                    else
+                    {
+                        throw std::invalid_argument(
+                            "Invalid Key Switching Type");
+                    }
+                    break;
+                case 2: // KEYSWITHING_METHOD_II
+                    if (scheme_ == scheme_type::bfv)
+                    {
+                        throw std::invalid_argument("BFV Does Not Support!");
+                    }
+                    else if (scheme_ == scheme_type::ckks)
+                    {
+                        conjugate_ckks_method_II(input1, output, conjugate_key,
+                                                 stream);
+                    }
+                    else
+                    {
+                        throw std::invalid_argument(
+                            "Invalid Key Switching Type");
+                    }
+                    break;
+                case 3: // KEYSWITHING_METHOD_III
+
+                    throw std::invalid_argument(
+                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "high memory consumption for keyswitch operation!");
+
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Key Switching Type");
+                    break;
+            }
+
+            output.scheme_ = scheme_;
+            output.ring_size_ = n;
+            output.coeff_modulus_count_ = Q_size_;
+            output.cipher_size_ = 2;
+            output.depth_ = input1.depth_;
+            output.scale_ = input1.scale_;
+            output.in_ntt_domain_ = input1.in_ntt_domain_;
+            output.rescale_required_ = input1.rescale_required_;
+            output.relinearization_required_ = input1.relinearization_required_;
+        }
+
+        ///////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////
 
         /**
          * @brief Rescales a ciphertext in-place, modifying the input
@@ -3164,14 +3402,34 @@ namespace heongpu
                                                Switchkey& switch_key,
                                                HEStream& stream);
 
-        ///////////////////////////////
+        ///////////////////////////////////////////////////
+
+        __host__ void conjugate_ckks_method_I(Ciphertext& input1,
+                                              Ciphertext& output,
+                                              Galoiskey& conjugate_key);
+
+        __host__ void conjugate_ckks_method_I(Ciphertext& input1,
+                                              Ciphertext& output,
+                                              Galoiskey& conjugate_key,
+                                              HEStream& stream);
+
+        __host__ void conjugate_ckks_method_II(Ciphertext& input1,
+                                               Ciphertext& output,
+                                               Galoiskey& conjugate_key);
+
+        __host__ void conjugate_ckks_method_II(Ciphertext& input1,
+                                               Ciphertext& output,
+                                               Galoiskey& conjugate_key,
+                                               HEStream& stream);
+
+        ///////////////////////////////////////////////////
 
         __host__ void rescale_inplace_ckks_leveled(Ciphertext& input1);
 
         __host__ void rescale_inplace_ckks_leveled(Ciphertext& input1,
                                                    HEStream& stream);
 
-        ///////////////////////////////
+        ///////////////////////////////////////////////////
 
         __host__ void mod_drop_ckks_leveled(Ciphertext& input1,
                                             Ciphertext& input2);
@@ -3197,7 +3455,7 @@ namespace heongpu
         __host__ void mod_drop_ckks_leveled_inplace(Ciphertext& input1,
                                                     HEStream& stream);
 
-        ///////////////////////////////
+        ///////////////////////////////////////////////////
 
         __host__ void negacyclic_shift_poly_coeffmod(Ciphertext& input1,
                                                      Ciphertext& output,
@@ -3208,7 +3466,7 @@ namespace heongpu
                                                      int index,
                                                      HEStream& stream);
 
-        ///////////////////////////////
+        ///////////////////////////////////////////////////
 
         __host__ void transform_to_ntt_bfv_plain(Plaintext& input1,
                                                  Plaintext& output);
@@ -3397,6 +3655,281 @@ namespace heongpu
         DeviceVector<int> new_input_locations_;
         int* new_prime_locations;
         int* new_input_locations;
+
+      public:
+        __host__ void
+        generate_bootstrapping_parameters(HEEncoder& encoder,
+                                          const double scale,
+                                          const BootstrappingConfig& config);
+
+        __host__ Ciphertext bootstrapping(Ciphertext& cipher,
+                                          Galoiskey& galois_key,
+                                          Relinkey& relin_key);
+
+        __host__ std::vector<int> bootstrapping_key_indexs()
+        {
+            return key_indexs_;
+        }
+
+      private:
+        __host__ Plaintext operator_plaintext();
+
+        __host__ Ciphertext operator_ciphertext(double scale = 0);
+
+        class Vandermonde
+        {
+            friend class HEOperator;
+
+          public:
+            __host__ Vandermonde(const int poly_degree, const int CtoS_piece,
+                                 const int StoC_piece,
+                                 const bool less_key_mode);
+
+            __host__ void generate_E_diagonals_index();
+
+            __host__ void generate_E_inv_diagonals_index();
+
+            __host__ void split_E();
+
+            __host__ void split_E_inv();
+
+            __host__ void generate_E_diagonals();
+
+            __host__ void generate_E_inv_diagonals();
+
+            __host__ void generate_V_n_lists();
+
+            __host__ void generate_pre_comp_V();
+
+            __host__ void generate_pre_comp_V_inv();
+
+            __host__ void generate_key_indexs(const bool less_key_mode);
+
+            Vandermonde() = delete;
+
+          private:
+            int poly_degree_;
+            int num_slots_;
+            int log_num_slots_;
+
+            int CtoS_piece_;
+            int StoC_piece_;
+
+            std::vector<int> E_size_;
+            std::vector<int> E_inv_size_;
+
+            std::vector<int> E_index_;
+            std::vector<int> E_inv_index_;
+
+            std::vector<int> E_splitted_;
+            std::vector<int> E_inv_splitted_;
+
+            std::vector<std::vector<int>> E_splitted_index_;
+            std::vector<std::vector<int>> E_inv_splitted_index_;
+
+            std::vector<std::vector<int>> E_splitted_diag_index_gpu_;
+            std::vector<std::vector<int>> E_inv_splitted_diag_index_gpu_;
+
+            std::vector<std::vector<int>> E_splitted_input_index_gpu_;
+            std::vector<std::vector<int>> E_inv_splitted_input_index_gpu_;
+
+            std::vector<std::vector<int>> E_splitted_output_index_gpu_;
+            std::vector<std::vector<int>> E_inv_splitted_output_index_gpu_;
+
+            std::vector<std::vector<int>> E_splitted_iteration_gpu_;
+            std::vector<std::vector<int>> E_inv_splitted_iteration_gpu_;
+
+            std::vector<std::vector<int>> V_matrixs_index_;
+            std::vector<std::vector<int>> V_inv_matrixs_index_;
+
+            std::vector<heongpu::DeviceVector<COMPLEX>> V_matrixs_;
+            std::vector<heongpu::DeviceVector<COMPLEX>> V_inv_matrixs_;
+
+            std::vector<heongpu::DeviceVector<COMPLEX>> V_matrixs_rotated_;
+            std::vector<heongpu::DeviceVector<COMPLEX>> V_inv_matrixs_rotated_;
+
+            std::vector<std::vector<std::vector<int>>> diags_matrices_bsgs_;
+            std::vector<std::vector<std::vector<int>>> diags_matrices_inv_bsgs_;
+
+            std::vector<std::vector<std::vector<int>>> real_shift_n2_bsgs_;
+            std::vector<std::vector<std::vector<int>>> real_shift_n2_inv_bsgs_;
+
+            std::vector<int> key_indexs_;
+        };
+
+        double scale_boot_;
+        bool boot_context_generated_ = false;
+
+        int CtoS_piece_;
+        int StoC_piece_;
+        int taylor_number_;
+        bool less_key_mode_;
+
+        std::vector<int> key_indexs_;
+
+        std::vector<heongpu::DeviceVector<Data>> V_matrixs_rotated_encoded_;
+        std::vector<heongpu::DeviceVector<Data>> V_inv_matrixs_rotated_encoded_;
+
+        std::vector<std::vector<int>> V_matrixs_index_;
+        std::vector<std::vector<int>> V_inv_matrixs_index_;
+
+        std::vector<std::vector<std::vector<int>>> diags_matrices_bsgs_;
+        std::vector<std::vector<std::vector<int>>> diags_matrices_inv_bsgs_;
+
+        std::vector<std::vector<std::vector<int>>> real_shift_n2_bsgs_;
+        std::vector<std::vector<std::vector<int>>> real_shift_n2_inv_bsgs_;
+
+        ///////// Operator Class Encode Fuctions //////////
+
+        int slot_count_;
+        int log_slot_count_;
+        double two_pow_64_;
+
+        std::shared_ptr<DeviceVector<int>> reverse_order_;
+        std::shared_ptr<DeviceVector<COMPLEX>> special_ifft_roots_table_;
+
+        __host__ void
+        quick_ckks_encoder_vec_complex(COMPLEX* input, Data* output,
+                                       const double scale,
+                                       bool use_all_bases = false);
+
+        __host__ void
+        quick_ckks_encoder_constant_complex(COMPLEX_C input, Data* output,
+                                            const double scale,
+                                            bool use_all_bases = false);
+
+        __host__ void
+        quick_ckks_encoder_constant_double(double input, Data* output,
+                                           const double scale,
+                                           bool use_all_bases = false);
+
+        __host__ void
+        quick_ckks_encoder_constant_integer(std::int64_t input, Data* output,
+                                            const double scale,
+                                            bool use_all_bases = false);
+
+        __host__ std::vector<heongpu::DeviceVector<Data>>
+        encode_V_matrixs(Vandermonde& vandermonde, const double scale,
+                         bool use_all_bases = false);
+
+        __host__ std::vector<heongpu::DeviceVector<Data>>
+        encode_V_inv_matrixs(Vandermonde& vandermonde, const double scale,
+                             bool use_all_bases = false);
+
+        ///////////////////////////////////////////////////
+
+        __host__ Ciphertext multiply_matrix(
+            Ciphertext& cipher,
+            std::vector<heongpu::DeviceVector<Data>>& matrix,
+            std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
+            Galoiskey& galois_key);
+
+        __host__ Ciphertext multiply_matrix_less_memory(
+            Ciphertext& cipher,
+            std::vector<heongpu::DeviceVector<Data>>& matrix,
+            std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
+            std::vector<std::vector<std::vector<int>>>& real_shift,
+            Galoiskey& galois_key);
+
+        __host__ std::vector<Ciphertext> coeff_to_slot(Ciphertext& cipher,
+                                                       Galoiskey& galois_key);
+
+        __host__ Ciphertext slot_to_coeff(Ciphertext& cipher0,
+                                          Ciphertext& cipher1,
+                                          Galoiskey& galois_key);
+
+        __host__ Ciphertext exp_scaled(Ciphertext& cipher, Relinkey& relin_key);
+
+        __host__ Ciphertext exp_taylor_approximation(Ciphertext& cipher,
+                                                     Relinkey& relin_key);
+
+        // Double-hoisting BSGS matrix×vector algorithm
+        __host__ DeviceVector<Data>
+        fast_single_hoisting_rotation_ckks(Ciphertext& input1,
+                                           std::vector<int>& bsgs_shift, int n1,
+                                           Galoiskey& galois_key)
+        {
+            if (input1.rescale_required_ || input1.relinearization_required_)
+            {
+                throw std::invalid_argument("Ciphertext can not be rotated!");
+            }
+
+            int current_decomp_count = Q_size_ - input1.depth_;
+
+            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            {
+                throw std::invalid_argument("Invalid Ciphertexts size!");
+            }
+
+            switch (static_cast<int>(galois_key.key_type))
+            {
+                case 1: // KEYSWITHING_METHOD_I
+                    if (scheme_ == scheme_type::ckks)
+                    {
+                        DeviceVector<Data> result =
+                            fast_single_hoisting_rotation_ckks_method_I_op(
+                                input1, bsgs_shift, n1, galois_key);
+                        return result;
+                    }
+                    else
+                    {
+                        throw std::invalid_argument("Invalid Scheme Type");
+                    }
+                    break;
+                case 2: // KEYSWITHING_METHOD_II
+                    if (scheme_ == scheme_type::ckks)
+                    {
+                        DeviceVector<Data> result =
+                            fast_single_hoisting_rotation_ckks_method_II_op(
+                                input1, bsgs_shift, n1, galois_key);
+                        return result;
+                    }
+                    else
+                    {
+                        throw std::invalid_argument("Invalid Scheme Type");
+                    }
+                    break;
+                case 3: // KEYSWITHING_METHOD_III
+
+                    throw std::invalid_argument(
+                        "KEYSWITHING_METHOD_III are not supported because of "
+                        "high memory consumption for rotation operation!");
+
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid Key Switching Type");
+                    break;
+            }
+        }
+
+        __host__ DeviceVector<Data>
+        fast_single_hoisting_rotation_ckks_method_I_op(
+            Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
+            Galoiskey& galois_key);
+
+        __host__ DeviceVector<Data>
+        fast_single_hoisting_rotation_ckks_method_II_op(
+            Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
+            Galoiskey& galois_key);
+
+        // Pre-computed encoded parameters
+        // CtoS part
+        DeviceVector<Data> encoded_constant_1over2_;
+        DeviceVector<Data> encoded_complex_minus_iover2_;
+        // StoC part
+        DeviceVector<Data> encoded_complex_i_;
+        // Scale part
+        DeviceVector<Data> encoded_complex_minus_iscale_;
+        // Exponentiate part
+        DeviceVector<Data> encoded_complex_iscaleoverr_;
+        // Sinus taylor part
+        DeviceVector<Data> encoded_constant_1_;
+        // DeviceVector<Data> encoded_constant_1over2_; // we already have it.
+        DeviceVector<Data> encoded_constant_1over6_;
+        DeviceVector<Data> encoded_constant_1over24_;
+        DeviceVector<Data> encoded_constant_1over120_;
+        DeviceVector<Data> encoded_constant_1over720_;
+        DeviceVector<Data> encoded_constant_1over5040_;
     };
 
 } // namespace heongpu

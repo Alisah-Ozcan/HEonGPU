@@ -326,4 +326,32 @@ namespace heongpu
         out[location_ct] = ct;
     }
 
+    __global__ void cipherplain_multiply_accumulate_kernel(
+        Data* in1, Data* in2, Data* out, Modulus* modulus, int iteration_count,
+        int current_decomp_count, int first_decomp_count, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
+        int block_y = blockIdx.y; // rns base count
+        int block_z = blockIdx.z; // cipher count
+
+        int location_ct =
+            idx + (block_y << n_power) + ((gridDim.y * block_z) << n_power);
+
+        int location_pt = idx + (block_y << n_power);
+
+        int offset_ct = (current_decomp_count << (n_power + 1));
+        int offset_pt = (first_decomp_count << n_power);
+
+        Data sum_ctpt = 0ULL;
+        for (int i = 0; i < iteration_count; i++)
+        {
+            Data ct = in1[location_ct + (i * offset_ct)];
+            Data pt = in2[location_pt + (i * offset_pt)];
+            Data mul_ctpt = VALUE_GPU::mult(ct, pt, modulus[block_y]);
+            sum_ctpt = VALUE_GPU::add(sum_ctpt, mul_ctpt, modulus[block_y]);
+        }
+
+        out[location_ct] = sum_ctpt;
+    }
+
 } // namespace heongpu

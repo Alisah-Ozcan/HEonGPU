@@ -4,57 +4,43 @@
 // Developer: Alişah Özcan
 
 #include "heongpu.cuh"
-#include "example_util.h"
+#include "../example_util.h"
 #include <omp.h>
 
-void multi_stream_function_way1(
+void default_stream_function(
     heongpu::Parameters& context, heongpu::HEOperator& operators,
     heongpu::Relinkey& relinkeys, heongpu::Galoiskey& galoiskeys,
     std::vector<std::vector<Data>>& ciphertext1_in_cpu,
     std::vector<std::vector<Data>>& ciphertext2_in_cpu,
     std::vector<std::vector<Data>>& ciphertext3_in_cpu,
     std::vector<std::vector<Data>>& plaintext_in_cpu,
-    std::vector<heongpu::Ciphertext>& ciphertext_result_in_gpu, int count,
-    std::vector<heongpu::HEStream>& s)
+    std::vector<heongpu::Ciphertext>& ciphertext_result_in_gpu, int count)
 {
-    int num_threads = s.size();
+    heongpu::Ciphertext temp1(context);
+    heongpu::Ciphertext temp2(context);
 
-#pragma omp parallel for num_threads(num_threads)
     for (int i = 0; i < count; i++)
     {
-        int threadID = omp_get_thread_num();
+        heongpu::Ciphertext ciphertext1_in_gpu(ciphertext1_in_cpu[i], context);
+        heongpu::Plaintext plaintext_in_gpu(plaintext_in_cpu[i], context);
 
-        heongpu::Ciphertext ciphertext1_in_gpu(ciphertext1_in_cpu[i], context,
-                                               s[threadID]);
-        heongpu::Plaintext plaintext_in_gpu(plaintext_in_cpu[i], context,
-                                            s[threadID]);
+        operators.multiply_plain(ciphertext1_in_gpu, plaintext_in_gpu, temp1);
 
-        heongpu::Ciphertext temp1(context, s[threadID]);
-        operators.multiply_plain(ciphertext1_in_gpu, plaintext_in_gpu, temp1,
-                                 s[threadID]);
+        heongpu::Ciphertext ciphertext2_in_gpu(ciphertext2_in_cpu[i], context);
 
-        heongpu::Ciphertext ciphertext2_in_gpu(ciphertext2_in_cpu[i], context,
-                                               s[threadID]);
+        operators.sub(temp1, ciphertext2_in_gpu, temp2);
 
-        heongpu::Ciphertext temp2(context, s[threadID]);
-        operators.sub(temp1, ciphertext2_in_gpu, temp2, s[threadID]);
+        heongpu::Ciphertext ciphertext3_in_gpu(ciphertext3_in_cpu[i], context);
 
-        heongpu::Ciphertext ciphertext3_in_gpu(ciphertext3_in_cpu[i], context,
-                                               s[threadID]);
+        operators.multiply_inplace(temp2, ciphertext3_in_gpu);
 
-        operators.multiply_inplace(temp2, ciphertext3_in_gpu, s[threadID]);
+        operators.relinearize_inplace(temp2, relinkeys);
 
-        operators.relinearize_inplace(temp2, relinkeys, s[threadID]);
+        operators.add_inplace(temp1, temp2);
 
-        operators.add_inplace(temp1, temp2, s[threadID]);
+        heongpu::Ciphertext result(context);
+        operators.rotate_rows(temp1, result, galoiskeys, 5);
 
-        heongpu::Ciphertext result(
-            context, s[threadID]); // DO not forget result stream is
-                                   // s[threadID], not default or others!
-        operators.rotate_rows(temp1, result, galoiskeys, 5, s[threadID]);
-
-        // Ensure the ciphertext_result_in_gpu's streams, while using different
-        // place!
         ciphertext_result_in_gpu[i] = std::move(result);
     }
 }
@@ -119,21 +105,12 @@ int main(int argc, char* argv[])
     }
     std::cout << "Genereted." << std::endl;
 
-    int num_threads = 4; // it depends on your application and devices
-    std::cout << "HEStream generetes." << std::endl;
-    std::vector<heongpu::HEStream> s;
-    for (int i = 0; i < num_threads; i++)
-    {
-        heongpu::HEStream inner(context);
-        s.push_back(inner);
-    }
-
     std::cout << "Operations starts..." << std::endl;
     std::vector<heongpu::Ciphertext> results(total_size);
-    multi_stream_function_way1(context, operators, relin_key, galois_key,
-                               ciphertext1_in_cpu, ciphertext2_in_cpu,
-                               ciphertext3_in_cpu, plaintext_in_cpu, results,
-                               total_size, s);
+    default_stream_function(context, operators, relin_key, galois_key,
+                            ciphertext1_in_cpu, ciphertext2_in_cpu,
+                            ciphertext3_in_cpu, plaintext_in_cpu, results,
+                            total_size);
     std::cout << "Done." << std::endl;
 
     std::cout << "To see differece, check streams view with using NVIDIA "

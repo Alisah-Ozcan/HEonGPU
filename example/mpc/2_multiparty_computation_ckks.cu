@@ -4,7 +4,7 @@
 // Developer: Alişah Özcan
 
 #include "heongpu.cuh"
-#include "example_util.h"
+#include "../example_util.h"
 #include <omp.h>
 
 int main(int argc, char* argv[])
@@ -12,16 +12,17 @@ int main(int argc, char* argv[])
     cudaSetDevice(0);
 
     heongpu::Parameters context(
-        heongpu::scheme_type::bfv,
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+        heongpu::scheme_type::ckks,
+        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+        heongpu::sec_level_type::none);
 
     size_t poly_modulus_degree = 8192;
     context.set_poly_modulus_degree(poly_modulus_degree);
-    context.set_default_coeff_modulus(1);
-    int plain_modulus = 1032193;
-    context.set_plain_modulus(plain_modulus);
+    context.set_coeff_modulus({60, 50, 50, 50}, {60});
     context.generate();
     context.print_parameters();
+
+    double scale = pow(2.0, 50);
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -86,7 +87,6 @@ int main(int argc, char* argv[])
     heongpu::Secretkey secret_key_charlie(context);
     keygen_charlie.generate_secret_key(secret_key_charlie);
 
-    // Publickey
     heongpu::MultipartyPublickey public_key_charlie(context, common_seed);
     keygen_charlie.generate_multi_party_public_key_piece(public_key_charlie,
                                                          secret_key_charlie);
@@ -182,17 +182,16 @@ int main(int argc, char* argv[])
     heongpu::HEEncoder encoder_alice(context);
     heongpu::HEEncryptor encryptor_alice(context, common_public_key);
 
-    // Generate simple matrix in CPU.
-    const int row_size = poly_modulus_degree / 2;
-    std::vector<uint64_t> message_alice(poly_modulus_degree, 7ULL); // In CPU
-    message_alice[0] = 1ULL;
-    message_alice[1] = 10ULL;
-    message_alice[2] = 100ULL;
+    const int slot_count = poly_modulus_degree / 2;
+    std::vector<double> message_alice(slot_count, 3.0);
+    message_alice[0] = 1.0;
+    message_alice[1] = 10.0;
+    message_alice[2] = 100.0;
 
-    display_matrix(message_alice, row_size);
+    display_vector(message_alice);
 
     heongpu::Plaintext plaintext_alice(context);
-    encoder_alice.encode(plaintext_alice, message_alice);
+    encoder_alice.encode(plaintext_alice, message_alice, scale);
 
     heongpu::Ciphertext ciphertext_alice(context);
     encryptor_alice.encrypt(ciphertext_alice, plaintext_alice);
@@ -205,15 +204,15 @@ int main(int argc, char* argv[])
     heongpu::HEEncryptor encryptor_bob(context, common_public_key);
 
     // Generate simple matrix in CPU.
-    std::vector<uint64_t> message_bob(poly_modulus_degree, 8ULL); // In CPU
-    message_bob[0] = 2ULL;
-    message_bob[1] = 20ULL;
-    message_bob[2] = 200ULL;
+    std::vector<double> message_bob(slot_count, 4.0);
+    message_bob[0] = 1.0;
+    message_bob[1] = 10.0;
+    message_bob[2] = 100.0;
 
-    display_matrix(message_bob, row_size);
+    display_vector(message_bob);
 
     heongpu::Plaintext plaintext_bob(context);
-    encoder_bob.encode(plaintext_bob, message_bob);
+    encoder_bob.encode(plaintext_bob, message_bob, scale);
 
     heongpu::Ciphertext ciphertext_bob(context);
     encryptor_bob.encrypt(ciphertext_bob, plaintext_bob);
@@ -226,15 +225,15 @@ int main(int argc, char* argv[])
     heongpu::HEEncryptor encryptor_charlie(context, common_public_key);
 
     // Generate simple matrix in CPU.
-    std::vector<uint64_t> message_charlie(poly_modulus_degree, 9ULL); // In CPU
-    message_charlie[0] = 3ULL;
-    message_charlie[1] = 30ULL;
-    message_charlie[2] = 300ULL;
+    std::vector<double> message_charlie(slot_count, 5.0);
+    message_charlie[0] = 1.0;
+    message_charlie[1] = 10.0;
+    message_charlie[2] = 100.0;
 
-    display_matrix(message_charlie, row_size);
+    display_vector(message_charlie);
 
     heongpu::Plaintext plaintext_charlie(context);
-    encoder_charlie.encode(plaintext_charlie, message_charlie);
+    encoder_charlie.encode(plaintext_charlie, message_charlie, scale);
 
     heongpu::Ciphertext ciphertext_charlie(context);
     encryptor_charlie.encrypt(ciphertext_charlie, plaintext_charlie);
@@ -248,8 +247,10 @@ int main(int argc, char* argv[])
     heongpu::Ciphertext cipher_mult(context);
     operators.multiply(ciphertext_alice, ciphertext_bob, cipher_mult);
     operators.relinearize_inplace(cipher_mult, common_relin_key);
+    operators.rescale_inplace(cipher_mult);
 
     heongpu::Ciphertext cipher_mult_add(context);
+    operators.mod_drop_inplace(ciphertext_charlie);
     operators.add(cipher_mult, ciphertext_charlie, cipher_mult_add);
 
     heongpu::Ciphertext cipher_mult_add_rotate(context);
@@ -264,7 +265,7 @@ int main(int argc, char* argv[])
 
     heongpu::Ciphertext partial_ciphertext_alice(context);
     decryptor_alice.multi_party_decrypt_partial(
-        cipher_mult_add_rotate, secret_key_alice, partial_ciphertext_alice);
+        cipher_mult_add, secret_key_alice, partial_ciphertext_alice);
 
     ///////////////////////////////////////////////////////////
     /////////////////// Bob Setup (Stage 4) ///////////////////
@@ -273,8 +274,8 @@ int main(int argc, char* argv[])
     heongpu::HEDecryptor decryptor_bob(context, secret_key_alice);
 
     heongpu::Ciphertext partial_ciphertext_bob(context);
-    decryptor_bob.multi_party_decrypt_partial(
-        cipher_mult_add_rotate, secret_key_bob, partial_ciphertext_bob);
+    decryptor_bob.multi_party_decrypt_partial(cipher_mult_add, secret_key_bob,
+                                              partial_ciphertext_bob);
 
     ///////////////////////////////////////////////////////////
     ///////////////// Charlie Setup (Stage 4) /////////////////
@@ -284,7 +285,7 @@ int main(int argc, char* argv[])
 
     heongpu::Ciphertext partial_ciphertext_charlie(context);
     decryptor_charlie.multi_party_decrypt_partial(
-        cipher_mult_add_rotate, secret_key_charlie, partial_ciphertext_charlie);
+        cipher_mult_add, secret_key_charlie, partial_ciphertext_charlie);
 
     ///////////////////////////////////////////////////////////
 
@@ -297,10 +298,10 @@ int main(int argc, char* argv[])
     decryptor_alice.multi_party_decrypt_fusion(partial_ciphertexts,
                                                plaintext_result);
 
-    std::vector<uint64_t> check_result;
+    std::vector<double> check_result;
     encoder_alice.decode(check_result, plaintext_result);
 
-    display_matrix(check_result, row_size);
+    display_vector(check_result);
 
     return EXIT_SUCCESS;
 }

@@ -422,4 +422,108 @@ namespace heongpu
 
         output[idx] = static_cast<Data>(input_reg);
     }
+
+    int find_closest_divisor(int N)
+    {
+        double target = std::sqrt(N);
+        int closest_div = 1;
+        double min_diff = std::abs(closest_div - target);
+
+        for (int k = 1; k <= std::sqrt(N); ++k)
+        {
+            if (N % k == 0)
+            {
+                for (int divisor : {k, N / k})
+                {
+                    double diff = std::abs(divisor - target);
+                    if (diff < min_diff)
+                    {
+                        min_diff = diff;
+                        closest_div = divisor;
+                    }
+                }
+            }
+        }
+        return closest_div;
+    }
+
+    std::vector<std::vector<int>> split_array(const std::vector<int>& array,
+                                              int chunk_size)
+    {
+        std::vector<std::vector<int>> result;
+        int n = array.size();
+        for (int i = 0; i < n; i += chunk_size)
+        {
+            result.emplace_back(array.begin() + i,
+                                array.begin() + min(i + chunk_size, n));
+        }
+        return result;
+    }
+
+    std::vector<std::vector<int>> seperate_func(const std::vector<int>& A)
+    {
+        int initial_size = A.size();
+        int counter = 2;
+        int offset = A[1] - A[0];
+
+        for (size_t i = 1; i < A.size() - 1; ++i)
+        {
+            if (A[i + 1] - A[i] != offset)
+            {
+                break;
+            }
+            counter++;
+        }
+
+        int real_n1 = heongpu::find_closest_divisor(counter);
+
+        if (counter == initial_size)
+        {
+            return split_array(A, real_n1);
+        }
+        else
+        {
+            auto first_part = split_array(
+                std::vector<int>(A.begin(), A.begin() + counter), real_n1);
+            auto second_part = split_array(
+                std::vector<int>(A.begin() + counter, A.end()), real_n1);
+
+            first_part.insert(first_part.end(), second_part.begin(),
+                              second_part.end());
+            return first_part;
+        }
+    }
+
+    std::vector<int> unique_sort(const std::vector<int>& input)
+    {
+        std::set<int> result(input.begin(), input.end());
+
+        return std::vector<int>(result.begin(), result.end());
+    }
+
+    BootstrappingConfig::BootstrappingConfig(int CtoS, int StoC, int taylor,
+                                             bool less_key_mode)
+        : CtoS_piece_(CtoS), StoC_piece_(StoC), taylor_number_(taylor),
+          less_key_mode_(less_key_mode)
+    {
+        validate();
+    }
+
+    // Validation Function Implementation
+    void BootstrappingConfig::validate()
+    {
+        if (CtoS_piece_ < 2 || CtoS_piece_ > 5)
+        {
+            throw std::out_of_range("CtoS_piece must be in range [2, 5]");
+        }
+        if (StoC_piece_ < 2 || StoC_piece_ > 5)
+        {
+            throw std::out_of_range("StoC_piece must be in range [2, 5]");
+        }
+        if (taylor_number_ < 11 || taylor_number_ > 15)
+        {
+            throw std::out_of_range("taylor_number must be in range [11, 15]");
+        }
+    }
+
 } // namespace heongpu

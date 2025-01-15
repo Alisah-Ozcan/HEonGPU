@@ -4,7 +4,7 @@
 // Developer: Alişah Özcan
 
 #include "heongpu.cuh"
-#include "example_util.h"
+#include "../example_util.h"
 #include <omp.h>
 
 // These examples have been developed with reference to the Microsoft SEAL
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     double scale = pow(2.0, 30);
 
     // Generate keys: the public key for encryption, the secret key for
-    // decryption and evaluation key(relinkey) for relinearization..
+    // decryption and evaluation key(relinkey) for relinearization.
     heongpu::HEKeyGenerator keygen(context);
     heongpu::Secretkey secret_key(context);
     keygen.generate_secret_key(secret_key);

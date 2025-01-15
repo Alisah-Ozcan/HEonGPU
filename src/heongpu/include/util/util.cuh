@@ -16,6 +16,7 @@
 #include "defines.h"
 #include <unordered_map>
 #include <stdexcept>
+#include <set>
 
 class CudaException_ : public std::exception
 {
@@ -101,6 +102,20 @@ namespace heongpu
         DEVICE = 0x2
     };
 
+    struct BootstrappingConfig
+    {
+        int CtoS_piece_; // Default: 3
+        int StoC_piece_; // Default: 3
+        int taylor_number_; // Default: 11
+        bool less_key_mode_; // Default: false
+
+        BootstrappingConfig(int CtoS = 3, int StoC = 3, int taylor = 11,
+                            bool less_key_mode = false);
+
+      private:
+        void validate(); // Validates the configuration input values
+    };
+
     Data extendedGCD(Data a, Data b, Data& x, Data& y);
     Data modInverse(Data a, Data m);
     int countBits(Data number);
@@ -147,6 +162,15 @@ namespace heongpu
 
     __global__ void unsigned_signed_convert(Data* input, Data* output,
                                             Modulus* modulus);
+
+    int find_closest_divisor(int N);
+
+    std::vector<std::vector<int>> split_array(const std::vector<int>& array,
+                                              int chunk_size);
+
+    std::vector<std::vector<int>> seperate_func(const std::vector<int>& A);
+
+    std::vector<int> unique_sort(const std::vector<int>& input);
 
 } // namespace heongpu
 #endif // UTIL_H
