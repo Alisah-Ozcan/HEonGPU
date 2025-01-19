@@ -53,7 +53,9 @@ namespace heongpu
          * @param sk Reference to the Secretkey object where the generated
          * secret key will be stored.
          */
-        __host__ void generate_secret_key(Secretkey& sk);
+        __host__ void
+        generate_secret_key(Secretkey& sk,
+                            cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Generates a public key using a secret key.
@@ -63,7 +65,9 @@ namespace heongpu
          * @param sk Reference to the Secretkey object used to generate the
          * public key.
          */
-        __host__ void generate_public_key(Publickey& pk, Secretkey& sk);
+        __host__ void
+        generate_public_key(Publickey& pk, Secretkey& sk,
+                            cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Generates a partial public key for multiparty computation
@@ -78,9 +82,9 @@ namespace heongpu
          * @param sk The Secretkey of the participant generating the partial
          * public key.
          */
-        __host__ void
-        generate_multi_party_public_key_piece(MultipartyPublickey& pk,
-                                              Secretkey& sk);
+        __host__ void generate_multi_party_public_key_piece(
+            MultipartyPublickey& pk, Secretkey& sk,
+            cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Combines partial public keys from all participants into a
@@ -96,7 +100,8 @@ namespace heongpu
          * public key will be stored.
          */
         __host__ void generate_multi_party_public_key(
-            std::vector<MultipartyPublickey>& all_pk, Publickey& pk);
+            std::vector<MultipartyPublickey>& all_pk, Publickey& pk,
+            cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Generates a relinearization key using a secret key.
@@ -106,22 +111,24 @@ namespace heongpu
          * @param sk Reference to the Secretkey object used to generate the
          * relinearization key.
          */
-        __host__ void generate_relin_key(Relinkey& rk, Secretkey& sk)
+        __host__ void
+        generate_relin_key(Relinkey& rk, Secretkey& sk,
+                           cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(rk.key_type))
             {
                 case 1: // KEYSWITCHING_METHOD_I
-                    generate_relin_key_method_I(rk, sk);
+                    generate_relin_key_method_I(rk, sk, stream);
                     break;
                 case 2: // KEYSWITCHING_METHOD_II
 
                     if (rk.scheme_ == scheme_type::bfv)
                     { // no leveled
-                        generate_bfv_relin_key_method_II(rk, sk);
+                        generate_bfv_relin_key_method_II(rk, sk, stream);
                     }
                     else if (rk.scheme_ == scheme_type::ckks)
                     { // leveled
-                        generate_ckks_relin_key_method_II(rk, sk);
+                        generate_ckks_relin_key_method_II(rk, sk, stream);
                     }
                     else
                     {
@@ -134,11 +141,11 @@ namespace heongpu
 
                     if (rk.scheme_ == scheme_type::bfv)
                     { // no leveled
-                        generate_bfv_relin_key_method_III(rk, sk);
+                        generate_bfv_relin_key_method_III(rk, sk, stream);
                     }
                     else if (rk.scheme_ == scheme_type::ckks)
                     { // leveled
-                        generate_ckks_relin_key_method_III(rk, sk);
+                        generate_ckks_relin_key_method_III(rk, sk, stream);
                     }
                     else
                     {
@@ -166,26 +173,26 @@ namespace heongpu
          * @param sk The Secretkey of the participant generating the partial
          * relinearization key.
          */
-        __host__ void
-        generate_multi_party_relin_key_piece(MultipartyRelinkey& rk,
-                                             Secretkey& sk)
+        __host__ void generate_multi_party_relin_key_piece(
+            MultipartyRelinkey& rk, Secretkey& sk,
+            cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(rk.key_type))
             {
                 case 1: // KEYSWITCHING_METHOD_I
-                    generate_multi_party_relin_key_piece_method_I_stage_I(rk,
-                                                                          sk);
+                    generate_multi_party_relin_key_piece_method_I_stage_I(
+                        rk, sk, stream);
                     break;
                 case 2: // KEYSWITCHING_METHOD_II
                     if (rk.scheme_ == scheme_type::bfv)
                     {
                         generate_bfv_multi_party_relin_key_piece_method_II_stage_I(
-                            rk, sk);
+                            rk, sk, stream);
                     }
                     else if (rk.scheme_ == scheme_type::ckks)
                     {
                         generate_ckks_multi_party_relin_key_piece_method_II_stage_I(
-                            rk, sk);
+                            rk, sk, stream);
                     }
                     else
                     {
@@ -219,10 +226,9 @@ namespace heongpu
          * @param sk The Secretkey of the participant generating the updated
          * relinearization key piece.
          */
-        __host__ void
-        generate_multi_party_relin_key_piece(MultipartyRelinkey& rk_s1_common,
-                                             MultipartyRelinkey& rk_new,
-                                             Secretkey& sk)
+        __host__ void generate_multi_party_relin_key_piece(
+            MultipartyRelinkey& rk_s1_common, MultipartyRelinkey& rk_new,
+            Secretkey& sk, cudaStream_t stream = cudaStreamDefault)
         {
             if ((rk_s1_common.scheme_ != rk_new.scheme_) ||
                 (rk_s1_common.key_type != rk_new.key_type))
@@ -234,18 +240,18 @@ namespace heongpu
             {
                 case 1: // KEYSWITCHING_METHOD_I
                     generate_multi_party_relin_key_piece_method_I_stage_II(
-                        rk_s1_common, rk_new, sk);
+                        rk_s1_common, rk_new, sk, stream);
                     break;
                 case 2: // KEYSWITCHING_METHOD_II
                     if (rk_s1_common.scheme_ == scheme_type::bfv)
                     {
                         generate_bfv_multi_party_relin_key_piece_method_II_stage_II(
-                            rk_s1_common, rk_new, sk);
+                            rk_s1_common, rk_new, sk, stream);
                     }
                     else if (rk_s1_common.scheme_ == scheme_type::ckks)
                     {
                         generate_ckks_multi_party_relin_key_piece_method_II_stage_II(
-                            rk_s1_common, rk_new, sk);
+                            rk_s1_common, rk_new, sk, stream);
                     }
                     else
                     {
@@ -279,7 +285,8 @@ namespace heongpu
          */
         __host__ void
         generate_multi_party_relin_key(std::vector<MultipartyRelinkey>& all_rk,
-                                       MultipartyRelinkey& rk);
+                                       MultipartyRelinkey& rk,
+                                       cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Combines partial relinearization keys from all participants
@@ -299,7 +306,8 @@ namespace heongpu
         __host__ void
         generate_multi_party_relin_key(std::vector<MultipartyRelinkey>& all_rk,
                                        MultipartyRelinkey& rk_common_stage1,
-                                       Relinkey& rk);
+                                       Relinkey& rk,
+                                       cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Generates a Galois key using a secret key.
@@ -309,22 +317,24 @@ namespace heongpu
          * @param sk Reference to the Secretkey object used to generate the
          * Galois key.
          */
-        __host__ void generate_galois_key(Galoiskey& gk, Secretkey& sk)
+        __host__ void
+        generate_galois_key(Galoiskey& gk, Secretkey& sk,
+                            cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(gk.key_type))
             {
                 case 1: // KEYSWITCHING_METHOD_I
-                    generate_galois_key_method_I(gk, sk);
+                    generate_galois_key_method_I(gk, sk, stream);
                     break;
                 case 2: // KEYSWITCHING_METHOD_II
 
                     if (gk.scheme_ == scheme_type::bfv)
                     {
-                        generate_bfv_galois_key_method_II(gk, sk);
+                        generate_bfv_galois_key_method_II(gk, sk, stream);
                     }
                     else if (gk.scheme_ == scheme_type::ckks)
                     {
-                        generate_ckks_galois_key_method_II(gk, sk);
+                        generate_ckks_galois_key_method_II(gk, sk, stream);
                     }
                     else
                     {
@@ -361,25 +371,26 @@ namespace heongpu
          * @throws std::invalid_argument If an unsupported key switching type or
          * scheme is specified.
          */
-        __host__ void
-        generate_multi_party_galios_key_piece(MultipartyGaloiskey& gk,
-                                              Secretkey& sk)
+        __host__ void generate_multi_party_galios_key_piece(
+            MultipartyGaloiskey& gk, Secretkey& sk,
+            cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(gk.key_type))
             {
                 case 1: // KEYSWITCHING_METHOD_I
-                    generate_multi_party_galois_key_piece_method_I(gk, sk);
+                    generate_multi_party_galois_key_piece_method_I(gk, sk,
+                                                                   stream);
                     break;
                 case 2: // KEYSWITCHING_METHOD_II
                     if (gk.scheme_ == scheme_type::bfv)
                     {
-                        generate_bfv_multi_party_galois_key_piece_method_II(gk,
-                                                                            sk);
+                        generate_bfv_multi_party_galois_key_piece_method_II(
+                            gk, sk, stream);
                     }
                     else if (gk.scheme_ == scheme_type::ckks)
                     {
                         generate_ckks_multi_party_galois_key_piece_method_II(
-                            gk, sk);
+                            gk, sk, stream);
                     }
                     else
                     {
@@ -412,7 +423,8 @@ namespace heongpu
          * Galois key will be stored.
          */
         __host__ void generate_multi_party_galois_key(
-            std::vector<MultipartyGaloiskey>& all_gk, Galoiskey& gk);
+            std::vector<MultipartyGaloiskey>& all_gk, Galoiskey& gk,
+            cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Generates a switch key for key switching between two secret
@@ -423,23 +435,27 @@ namespace heongpu
          * @param new_sk Reference to the new Secretkey object to switch to.
          * @param old_sk Reference to the old Secretkey object to switch from.
          */
-        __host__ void generate_switch_key(Switchkey& swk, Secretkey& new_sk,
-                                          Secretkey& old_sk)
+        __host__ void
+        generate_switch_key(Switchkey& swk, Secretkey& new_sk,
+                            Secretkey& old_sk,
+                            cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(swk.key_type))
             {
                 case 1: // KEYSWITCHING_METHOD_I
-                    generate_switch_key_method_I(swk, new_sk, old_sk);
+                    generate_switch_key_method_I(swk, new_sk, old_sk, stream);
                     break;
                 case 2: // KEYSWITCHING_METHOD_II
 
                     if (swk.scheme_ == scheme_type::bfv)
                     {
-                        generate_bfv_switch_key_method_II(swk, new_sk, old_sk);
+                        generate_bfv_switch_key_method_II(swk, new_sk, old_sk,
+                                                          stream);
                     }
                     else if (swk.scheme_ == scheme_type::ckks)
                     {
-                        generate_ckks_switch_key_method_II(swk, new_sk, old_sk);
+                        generate_ckks_switch_key_method_II(swk, new_sk, old_sk,
+                                                           stream);
                     }
                     else
                     {
@@ -492,75 +508,84 @@ namespace heongpu
         HEKeyGenerator& operator=(HEKeyGenerator&& assign) = delete;
 
       private:
-        __host__ void generate_relin_key_method_I(Relinkey& rk, Secretkey& sk);
+        __host__ void generate_relin_key_method_I(Relinkey& rk, Secretkey& sk,
+                                                  const cudaStream_t stream);
 
-        __host__ void generate_bfv_relin_key_method_II(Relinkey& rk,
-                                                       Secretkey& sk);
+        __host__ void
+        generate_bfv_relin_key_method_II(Relinkey& rk, Secretkey& sk,
+                                         const cudaStream_t stream);
 
-        __host__ void generate_bfv_relin_key_method_III(Relinkey& rk,
-                                                        Secretkey& sk);
+        __host__ void
+        generate_bfv_relin_key_method_III(Relinkey& rk, Secretkey& sk,
+                                          const cudaStream_t stream);
 
-        __host__ void generate_ckks_relin_key_method_II(Relinkey& rk,
-                                                        Secretkey& sk);
+        __host__ void
+        generate_ckks_relin_key_method_II(Relinkey& rk, Secretkey& sk,
+                                          const cudaStream_t stream);
 
-        __host__ void generate_ckks_relin_key_method_III(Relinkey& rk,
-                                                         Secretkey& sk);
+        __host__ void
+        generate_ckks_relin_key_method_III(Relinkey& rk, Secretkey& sk,
+                                           const cudaStream_t stream);
 
-        __host__ void generate_galois_key_method_I(Galoiskey& gk,
-                                                   Secretkey& sk);
+        __host__ void generate_galois_key_method_I(Galoiskey& gk, Secretkey& sk,
+                                                   const cudaStream_t stream);
 
-        __host__ void generate_bfv_galois_key_method_II(Galoiskey& gk,
-                                                        Secretkey& sk);
+        __host__ void
+        generate_bfv_galois_key_method_II(Galoiskey& gk, Secretkey& sk,
+                                          const cudaStream_t stream);
 
-        __host__ void generate_ckks_galois_key_method_II(Galoiskey& gk,
-                                                         Secretkey& sk);
+        __host__ void
+        generate_ckks_galois_key_method_II(Galoiskey& gk, Secretkey& sk,
+                                           const cudaStream_t stream);
 
         __host__ void generate_switch_key_method_I(Switchkey& swk,
                                                    Secretkey& new_sk,
-                                                   Secretkey& old_sk);
+                                                   Secretkey& old_sk,
+                                                   const cudaStream_t stream);
 
-        __host__ void generate_bfv_switch_key_method_II(Switchkey& swk,
-                                                        Secretkey& new_sk,
-                                                        Secretkey& old_sk);
+        __host__ void
+        generate_bfv_switch_key_method_II(Switchkey& swk, Secretkey& new_sk,
+                                          Secretkey& old_sk,
+                                          const cudaStream_t stream);
 
-        __host__ void generate_ckks_switch_key_method_II(Switchkey& swk,
-                                                         Secretkey& new_sk,
-                                                         Secretkey& old_sk);
+        __host__ void
+        generate_ckks_switch_key_method_II(Switchkey& swk, Secretkey& new_sk,
+                                           Secretkey& old_sk,
+                                           const cudaStream_t stream);
 
         __host__ void generate_multi_party_relin_key_piece_method_I_stage_I(
-            MultipartyRelinkey& rk, Secretkey& sk);
+            MultipartyRelinkey& rk, Secretkey& sk, const cudaStream_t stream);
 
         __host__ void generate_multi_party_relin_key_piece_method_I_stage_II(
             MultipartyRelinkey& rk_stage_1, MultipartyRelinkey& rk_stage_2,
-            Secretkey& sk);
+            Secretkey& sk, const cudaStream_t stream);
 
         __host__ void
         generate_bfv_multi_party_relin_key_piece_method_II_stage_I(
-            MultipartyRelinkey& rk, Secretkey& sk);
+            MultipartyRelinkey& rk, Secretkey& sk, const cudaStream_t stream);
 
         __host__ void
         generate_bfv_multi_party_relin_key_piece_method_II_stage_II(
             MultipartyRelinkey& rk_stage_1, MultipartyRelinkey& rk_stage_2,
-            Secretkey& sk);
+            Secretkey& sk, const cudaStream_t stream);
 
         __host__ void
         generate_ckks_multi_party_relin_key_piece_method_II_stage_I(
-            MultipartyRelinkey& rk, Secretkey& sk);
+            MultipartyRelinkey& rk, Secretkey& sk, const cudaStream_t stream);
 
         __host__ void
         generate_ckks_multi_party_relin_key_piece_method_II_stage_II(
             MultipartyRelinkey& rk_stage_1, MultipartyRelinkey& rk_stage_2,
-            Secretkey& sk);
+            Secretkey& sk, const cudaStream_t stream);
 
-        __host__ void
-        generate_multi_party_galois_key_piece_method_I(MultipartyGaloiskey& gk,
-                                                       Secretkey& sk);
+        __host__ void generate_multi_party_galois_key_piece_method_I(
+            MultipartyGaloiskey& gk, Secretkey& sk, const cudaStream_t stream);
 
         __host__ void generate_bfv_multi_party_galois_key_piece_method_II(
-            MultipartyGaloiskey& gk, Secretkey& sk);
+            MultipartyGaloiskey& gk, Secretkey& sk, const cudaStream_t stream);
 
         __host__ void generate_ckks_multi_party_galois_key_piece_method_II(
-            MultipartyGaloiskey& gk, Secretkey& sk);
+            MultipartyGaloiskey& gk, Secretkey& sk, const cudaStream_t stream);
 
       private:
         scheme_type scheme;

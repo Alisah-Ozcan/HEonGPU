@@ -74,25 +74,26 @@ namespace heongpu
         prime_location_leveled_ = context.prime_location_leveled;
     }
 
-    __host__ void HEKeyGenerator::generate_secret_key(Secretkey& sk)
+    __host__ void HEKeyGenerator::generate_secret_key(Secretkey& sk,
+                                                      cudaStream_t stream)
     {
         if (sk.secretkey_.size() < n)
         {
-            sk.secretkey_ = DeviceVector<int>(n);
+            sk.secretkey_ = DeviceVector<int>(n, stream);
         }
 
-        secretkey_gen_kernel<<<dim3((n >> 8), 1, 1), 256>>>(
+        secretkey_gen_kernel<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             sk.secretkey_.data(), sk.hamming_weight_, n_power, seed_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        if (sk.secretkey_.size() < Q_prime_size_ * n)
+        if (sk.location_.size() < Q_prime_size_ * n)
         {
-            sk.location_ = DeviceVector<Data>(Q_prime_size_ * n);
+            sk.location_ = DeviceVector<Data>(Q_prime_size_ * n, stream);
         }
 
-        secretkey_rns_kernel<<<dim3((n >> 8), 1, 1), 256>>>(
+        secretkey_rns_kernel<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             sk.secretkey_.data(), sk.data(), modulus_->data(), n_power,
-            Q_prime_size_, seed_);
+            Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -100,7 +101,7 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(sk.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_prime_size_, Q_prime_size_);
@@ -110,7 +111,8 @@ namespace heongpu
     }
 
     __host__ void HEKeyGenerator::generate_public_key(Publickey& pk,
-                                                      Secretkey& sk)
+                                                      Secretkey& sk,
+                                                      cudaStream_t stream)
     {
         if (sk.location_.size() < (Q_prime_size_ * n))
         {
@@ -120,21 +122,21 @@ namespace heongpu
 
         if (pk.locations_.size() < (2 * Q_prime_size_ * n))
         {
-            pk.locations_ = DeviceVector<Data>(2 * Q_prime_size_ * n);
+            pk.locations_ = DeviceVector<Data>(2 * Q_prime_size_ * n, stream);
         }
 
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * n);
 
         modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                           256>>>(
+                                                           256, 0, stream>>>(
             error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
             offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -145,22 +147,23 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(errors_a.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        publickey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
-            pk.data(), sk.data(), error_poly, a_poly, modulus_->data(), n_power,
-            Q_prime_size_);
+        publickey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                               stream>>>(pk.data(), sk.data(), error_poly,
+                                         a_poly, modulus_->data(), n_power,
+                                         Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         pk.in_ntt_domain_ = true;
     }
 
     __host__ void HEKeyGenerator::generate_multi_party_public_key_piece(
-        MultipartyPublickey& pk, Secretkey& sk)
+        MultipartyPublickey& pk, Secretkey& sk, cudaStream_t stream)
     {
         if (sk.location_.size() < (Q_prime_size_ * n))
         {
@@ -170,23 +173,23 @@ namespace heongpu
 
         if (pk.locations_.size() < (2 * Q_prime_size_ * n))
         {
-            pk.locations_ = DeviceVector<Data>(2 * Q_prime_size_ * n);
+            pk.locations_ = DeviceVector<Data>(2 * Q_prime_size_ * n, stream);
         }
 
         int common_seed = pk.seed();
 
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * n);
 
         modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, common_seed,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                           256>>>(
+                                                           256, 0, stream>>>(
             error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
             offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -197,22 +200,24 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(errors_a.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        publickey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
-            pk.data(), sk.data(), error_poly, a_poly, modulus_->data(), n_power,
-            Q_prime_size_);
+        publickey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                               stream>>>(pk.data(), sk.data(), error_poly,
+                                         a_poly, modulus_->data(), n_power,
+                                         Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         pk.in_ntt_domain_ = true;
     }
 
     __host__ void HEKeyGenerator::generate_multi_party_public_key(
-        std::vector<MultipartyPublickey>& all_pk, Publickey& pk)
+        std::vector<MultipartyPublickey>& all_pk, Publickey& pk,
+        cudaStream_t stream)
     {
         int participant_count = all_pk.size();
 
@@ -234,39 +239,42 @@ namespace heongpu
 
         if ((pk.locations_.size() < (2 * Q_prime_size_ * n)))
         {
-            pk.locations_ = DeviceVector<Data>(2 * Q_prime_size_ * n);
+            pk.locations_ = DeviceVector<Data>(2 * Q_prime_size_ * n, stream);
         }
 
-        global_memory_replace_kernel<<<dim3((n >> 8), Q_prime_size_, 2), 256>>>(
-            all_pk[0].data(), pk.data(), n_power);
+        global_memory_replace_kernel<<<dim3((n >> 8), Q_prime_size_, 2), 256, 0,
+                                       stream>>>(all_pk[0].data(), pk.data(),
+                                                 n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         for (int i = 1; i < participant_count; i++)
         {
-            threshold_pk_addition<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
-                all_pk[i].data(), pk.data(), pk.data(), modulus_->data(),
-                n_power, false);
+            threshold_pk_addition<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                    stream>>>(all_pk[i].data(), pk.data(),
+                                              pk.data(), modulus_->data(),
+                                              n_power, false);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
     }
 
-    __host__ void HEKeyGenerator::generate_relin_key_method_I(Relinkey& rk,
-                                                              Secretkey& sk)
+    __host__ void
+    HEKeyGenerator::generate_relin_key_method_I(Relinkey& rk, Secretkey& sk,
+                                                const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * Q_size_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * Q_size_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * Q_size_ * n);
 
         modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), Q_size_, 1), 256>>>(
+            dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), Q_size_, 1), 256>>>(error_poly, modulus_->data(),
-                                               n_power, Q_prime_size_, seed_,
-                                               offset_);
+            dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
@@ -275,15 +283,15 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        // rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
-        rk.device_location_.resize(rk.relinkey_size_);
-        relinkey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+        rk.device_location_.resize(rk.relinkey_size_, stream);
+        relinkey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                              stream>>>(
             rk.device_location_.data(), sk.data(), error_poly, a_poly,
             modulus_->data(), factor_->data(), n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -295,18 +303,19 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
     __host__ void
     HEKeyGenerator::generate_multi_party_relin_key_piece_method_I_stage_I(
-        MultipartyRelinkey& rk, Secretkey& sk)
+        MultipartyRelinkey& rk, Secretkey& sk, const cudaStream_t stream)
     {
         if (sk.location_.size() < (Q_prime_size_ * n))
         {
@@ -316,27 +325,27 @@ namespace heongpu
 
         int common_seed = rk.seed();
 
-        DeviceVector<Data> random_values(Q_prime_size_ * ((3 * Q_size_) + 1) *
-                                         n);
+        DeviceVector<Data> random_values(
+            Q_prime_size_ * ((3 * Q_size_) + 1) * n, stream);
         Data* e0 = random_values.data();
         Data* e1 = e0 + (Q_prime_size_ * Q_size_ * n);
         Data* u = e1 + (Q_prime_size_ * Q_size_ * n);
         Data* common_a = u + (Q_prime_size_ * n);
 
         modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), Q_size_, 1), 256>>>(
+            dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
             common_a, modulus_->data(), n_power, Q_prime_size_, common_seed,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), 2 * Q_size_, 1), 256>>>(
+            dim3((n >> 8), 2 * Q_size_, 1), 256, 0, stream>>>(
             e0, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             u, modulus_->data(), n_power, Q_prime_size_, seed_,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -348,16 +357,16 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
                         Q_prime_size_ * ((2 * Q_size_) + 1), Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
+        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_, stream);
         multi_party_relinkey_piece_method_I_stage_I_kernel<<<
-            dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
             rk.device_location_.data(), sk.data(), common_a, u, e0, e1,
             modulus_->data(), factor_->data(), n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -369,19 +378,20 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
     __host__ void
     HEKeyGenerator::generate_multi_party_relin_key_piece_method_I_stage_II(
         MultipartyRelinkey& rk_stage_1, MultipartyRelinkey& rk_stage_2,
-        Secretkey& sk)
+        Secretkey& sk, const cudaStream_t stream)
     {
         if (rk_stage_1.relinkey_size_ != rk_stage_2.relinkey_size_)
         {
@@ -416,20 +426,20 @@ namespace heongpu
             rk_stage_1.store_key_in_device();
         }
 
-        DeviceVector<Data> random_values(Q_prime_size_ * ((2 * Q_size_) + 1) *
-                                         n);
+        DeviceVector<Data> random_values(
+            Q_prime_size_ * ((2 * Q_size_) + 1) * n, stream);
         Data* e0 = random_values.data();
         Data* e1 = e0 + (Q_prime_size_ * Q_size_ * n);
         Data* u = e1 + (Q_prime_size_ * Q_size_ * n);
 
         modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 2, 1),
-                                                           256>>>(
+                                                           256, 0, stream>>>(
             e0, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             u, modulus_->data(), n_power, Q_prime_size_, seed_,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -441,7 +451,7 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -449,12 +459,12 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         rk_stage_2.device_location_ =
-            DeviceVector<Data>(rk_stage_2.relinkey_size_);
+            DeviceVector<Data>(rk_stage_2.relinkey_size_, stream);
 
         if (rk_stage_1.store_in_gpu_)
         {
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 rk_stage_1.data(), rk_stage_2.device_location_.data(),
                 sk.data(), u, e0, e1, modulus_->data(), n_power, Q_prime_size_,
                 Q_size_);
@@ -462,9 +472,10 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> temp_location(rk_stage_1.device_location_);
+            DeviceVector<Data> temp_location(rk_stage_1.device_location_,
+                                             stream);
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp_location.data(), rk_stage_2.device_location_.data(),
                 sk.data(), u, e0, e1, modulus_->data(), n_power, Q_prime_size_,
                 Q_size_);
@@ -479,19 +490,19 @@ namespace heongpu
         {
             rk_stage_2.host_location_ =
                 HostVector<Data>(rk_stage_2.relinkey_size_);
-            cudaMemcpy(rk_stage_2.host_location_.data(),
-                       rk_stage_2.device_location_.data(),
-                       rk_stage_2.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk_stage_2.host_location_.data(),
+                            rk_stage_2.device_location_.data(),
+                            rk_stage_2.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk_stage_2.device_location_.resize(0);
+            rk_stage_2.device_location_.resize(0, stream);
         }
     }
 
     __host__ void
     HEKeyGenerator::generate_bfv_multi_party_relin_key_piece_method_II_stage_I(
-        MultipartyRelinkey& rk, Secretkey& sk)
+        MultipartyRelinkey& rk, Secretkey& sk, const cudaStream_t stream)
     {
         if (sk.location_.size() < (Q_prime_size_ * n))
         {
@@ -501,26 +512,27 @@ namespace heongpu
 
         int common_seed = rk.seed();
 
-        DeviceVector<Data> random_values(Q_prime_size_ * ((3 * d_) + 1) * n);
+        DeviceVector<Data> random_values(Q_prime_size_ * ((3 * d_) + 1) * n,
+                                         stream);
         Data* e0 = random_values.data();
         Data* e1 = e0 + (Q_prime_size_ * d_ * n);
         Data* u = e1 + (Q_prime_size_ * d_ * n);
         Data* common_a = u + (Q_prime_size_ * n);
 
         modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), d_, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             common_a, modulus_->data(), n_power, Q_prime_size_, common_seed,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), 2 * d_, 1), 256>>>(e0, modulus_->data(), n_power,
-                                              Q_prime_size_, seed_, offset_);
+            dim3((n >> 8), 2 * d_, 1), 256, 0, stream>>>(
+            e0, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             u, modulus_->data(), n_power, Q_prime_size_, seed_,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -532,16 +544,16 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
                         Q_prime_size_ * ((2 * d_) + 1), Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
+        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_, stream);
         multi_party_relinkey_piece_method_II_stage_I_kernel<<<
-            dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
             rk.device_location_.data(), sk.data(), common_a, u, e0, e1,
             modulus_->data(), factor_->data(), Sk_pair_->data(), n_power,
             Q_prime_size_, d_, Q_size_, P_size_);
@@ -554,19 +566,20 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
     __host__ void
     HEKeyGenerator::generate_bfv_multi_party_relin_key_piece_method_II_stage_II(
         MultipartyRelinkey& rk_stage_1, MultipartyRelinkey& rk_stage_2,
-        Secretkey& sk)
+        Secretkey& sk, const cudaStream_t stream)
     {
         if (rk_stage_1.relinkey_size_ != rk_stage_2.relinkey_size_)
         {
@@ -601,19 +614,20 @@ namespace heongpu
             rk_stage_1.store_key_in_device();
         }
 
-        DeviceVector<Data> random_values(Q_prime_size_ * ((2 * d_) + 1) * n);
+        DeviceVector<Data> random_values(Q_prime_size_ * ((2 * d_) + 1) * n,
+                                         stream);
         Data* e0 = random_values.data();
         Data* e1 = e0 + (Q_prime_size_ * d_ * n);
         Data* u = e1 + (Q_prime_size_ * d_ * n);
 
         modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 2, 1),
-                                                           256>>>(
+                                                           256, 0, stream>>>(
             e0, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             u, modulus_->data(), n_power, Q_prime_size_, seed_,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -625,7 +639,7 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -633,12 +647,12 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         rk_stage_2.device_location_ =
-            DeviceVector<Data>(rk_stage_2.relinkey_size_);
+            DeviceVector<Data>(rk_stage_2.relinkey_size_, stream);
 
         if (rk_stage_1.store_in_gpu_)
         {
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 rk_stage_1.data(), rk_stage_2.device_location_.data(),
                 sk.data(), u, e0, e1, modulus_->data(), n_power, Q_prime_size_,
                 d_);
@@ -646,9 +660,10 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> temp_location(rk_stage_1.device_location_);
+            DeviceVector<Data> temp_location(rk_stage_1.device_location_,
+                                             stream);
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp_location.data(), rk_stage_2.device_location_.data(),
                 sk.data(), u, e0, e1, modulus_->data(), n_power, Q_prime_size_,
                 d_);
@@ -663,19 +678,19 @@ namespace heongpu
         {
             rk_stage_2.host_location_ =
                 HostVector<Data>(rk_stage_2.relinkey_size_);
-            cudaMemcpy(rk_stage_2.host_location_.data(),
-                       rk_stage_2.device_location_.data(),
-                       rk_stage_2.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk_stage_2.host_location_.data(),
+                            rk_stage_2.device_location_.data(),
+                            rk_stage_2.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk_stage_2.device_location_.resize(0);
+            rk_stage_2.device_location_.resize(0, stream);
         }
     }
 
     __host__ void
     HEKeyGenerator::generate_ckks_multi_party_relin_key_piece_method_II_stage_I(
-        MultipartyRelinkey& rk, Secretkey& sk)
+        MultipartyRelinkey& rk, Secretkey& sk, const cudaStream_t stream)
     {
         if (sk.location_.size() < (Q_prime_size_ * n))
         {
@@ -686,26 +701,26 @@ namespace heongpu
         int common_seed = rk.seed();
 
         DeviceVector<Data> random_values(
-            Q_prime_size_ * ((3 * d_leveled_->operator[](0)) + 1) * n);
+            Q_prime_size_ * ((3 * d_leveled_->operator[](0)) + 1) * n, stream);
         Data* e0 = random_values.data();
         Data* e1 = e0 + (Q_prime_size_ * d_leveled_->operator[](0) * n);
         Data* u = e1 + (Q_prime_size_ * d_leveled_->operator[](0) * n);
         Data* common_a = u + (Q_prime_size_ * n);
 
         modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+            dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
             common_a, modulus_->data(), n_power, Q_prime_size_, common_seed,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), 2 * d_leveled_->operator[](0), 1), 256>>>(
+            dim3((n >> 8), 2 * d_leveled_->operator[](0), 1), 256, 0, stream>>>(
             e0, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             u, modulus_->data(), n_power, Q_prime_size_, seed_,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -717,7 +732,7 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -725,9 +740,9 @@ namespace heongpu
                         Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
+        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_, stream);
         multi_party_relinkey_piece_method_II_stage_I_kernel<<<
-            dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
             rk.device_location_.data(), sk.data(), common_a, u, e0, e1,
             modulus_->data(), factor_->data(),
             Sk_pair_leveled_->operator[](0).data(), n_power, Q_prime_size_,
@@ -741,19 +756,20 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
     __host__ void HEKeyGenerator::
         generate_ckks_multi_party_relin_key_piece_method_II_stage_II(
             MultipartyRelinkey& rk_stage_1, MultipartyRelinkey& rk_stage_2,
-            Secretkey& sk)
+            Secretkey& sk, const cudaStream_t stream)
     {
         if (rk_stage_1.relinkey_size_ != rk_stage_2.relinkey_size_)
         {
@@ -789,19 +805,19 @@ namespace heongpu
         }
 
         DeviceVector<Data> random_values(
-            Q_prime_size_ * ((2 * d_leveled_->operator[](0)) + 1) * n);
+            Q_prime_size_ * ((2 * d_leveled_->operator[](0)) + 1) * n, stream);
         Data* e0 = random_values.data();
         Data* e1 = e0 + (Q_prime_size_ * d_leveled_->operator[](0) * n);
         Data* u = e1 + (Q_prime_size_ * d_leveled_->operator[](0) * n);
 
         modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 2, 1),
-                                                           256>>>(
+                                                           256, 0, stream>>>(
             e0, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             u, modulus_->data(), n_power, Q_prime_size_, seed_,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -813,7 +829,7 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -822,12 +838,12 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         rk_stage_2.device_location_ =
-            DeviceVector<Data>(rk_stage_2.relinkey_size_);
+            DeviceVector<Data>(rk_stage_2.relinkey_size_, stream);
 
         if (rk_stage_1.store_in_gpu_)
         {
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 rk_stage_1.data(), rk_stage_2.device_location_.data(),
                 sk.data(), u, e0, e1, modulus_->data(), n_power, Q_prime_size_,
                 d_leveled_->operator[](0));
@@ -835,9 +851,10 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> temp_location(rk_stage_1.device_location_);
+            DeviceVector<Data> temp_location(rk_stage_1.device_location_,
+                                             stream);
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp_location.data(), rk_stage_2.device_location_.data(),
                 sk.data(), u, e0, e1, modulus_->data(), n_power, Q_prime_size_,
                 d_leveled_->operator[](0));
@@ -852,13 +869,13 @@ namespace heongpu
         {
             rk_stage_2.host_location_ =
                 HostVector<Data>(rk_stage_2.relinkey_size_);
-            cudaMemcpy(rk_stage_2.host_location_.data(),
-                       rk_stage_2.device_location_.data(),
-                       rk_stage_2.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk_stage_2.host_location_.data(),
+                            rk_stage_2.device_location_.data(),
+                            rk_stage_2.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk_stage_2.device_location_.resize(0);
+            rk_stage_2.device_location_.resize(0, stream);
         }
     }
 
@@ -866,7 +883,8 @@ namespace heongpu
     //////////////////////
 
     __host__ void HEKeyGenerator::generate_multi_party_relin_key(
-        std::vector<MultipartyRelinkey>& all_rk, MultipartyRelinkey& rk)
+        std::vector<MultipartyRelinkey>& all_rk, MultipartyRelinkey& rk,
+        cudaStream_t stream)
     {
         int participant_count = all_rk.size();
 
@@ -920,9 +938,9 @@ namespace heongpu
             }
         }
 
-        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
+        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_, stream);
         multi_party_relinkey_method_I_stage_I_kernel<<<
-            dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
             all_rk[0].data(), rk.data(), modulus_->data(), n_power,
             Q_prime_size_, dimension, true);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -930,7 +948,7 @@ namespace heongpu
         for (int i = 1; i < participant_count; i++)
         {
             multi_party_relinkey_method_I_stage_I_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 all_rk[i].data(), rk.device_location_.data(), modulus_->data(),
                 n_power, Q_prime_size_, dimension, false);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -943,18 +961,19 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
     __host__ void HEKeyGenerator::generate_multi_party_relin_key(
         std::vector<MultipartyRelinkey>& all_rk,
-        MultipartyRelinkey& rk_common_stage1, Relinkey& rk)
+        MultipartyRelinkey& rk_common_stage1, Relinkey& rk, cudaStream_t stream)
     {
         int participant_count = all_rk.size();
 
@@ -1008,7 +1027,7 @@ namespace heongpu
             }
         }
 
-        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
+        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_, stream);
 
         if (!rk_common_stage1.store_in_gpu_)
         {
@@ -1016,7 +1035,7 @@ namespace heongpu
         }
 
         multi_party_relinkey_method_I_stage_II_kernel<<<
-            dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
             all_rk[0].data(), rk_common_stage1.data(),
             rk.device_location_.data(), modulus_->data(), n_power,
             Q_prime_size_, dimension);
@@ -1025,7 +1044,7 @@ namespace heongpu
         for (int i = 1; i < participant_count; i++)
         {
             multi_party_relinkey_method_I_stage_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 all_rk[i].data(), rk.device_location_.data(), modulus_->data(),
                 n_power, Q_prime_size_, dimension);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1038,32 +1057,33 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
-    __host__ void
-    HEKeyGenerator::generate_bfv_relin_key_method_II(Relinkey& rk,
-                                                     Secretkey& sk)
+    __host__ void HEKeyGenerator::generate_bfv_relin_key_method_II(
+        Relinkey& rk, Secretkey& sk, const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
         modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), d_, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(), n_power,
-                                          Q_prime_size_, seed_, offset_);
+            dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
@@ -1072,14 +1092,15 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
-        relinkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_, stream);
+        relinkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                 stream>>>(
             rk.device_location_.data(), sk.data(), error_poly, a_poly,
             modulus_->data(), factor_->data(), Sk_pair_->data(), n_power,
             Q_prime_size_, d_, Q_size_, P_size_);
@@ -1092,32 +1113,33 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
-    __host__ void
-    HEKeyGenerator::generate_bfv_relin_key_method_III(Relinkey& rk,
-                                                      Secretkey& sk)
+    __host__ void HEKeyGenerator::generate_bfv_relin_key_method_III(
+        Relinkey& rk, Secretkey& sk, const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
         modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), d_, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(), n_power,
-                                          Q_prime_size_, seed_, offset_);
+            dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
@@ -1126,15 +1148,16 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        DeviceVector<Data> temp_calculation(2 * Q_prime_size_ * d_ * n);
+        DeviceVector<Data> temp_calculation(2 * Q_prime_size_ * d_ * n, stream);
 
-        relinkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+        relinkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                 stream>>>(
             temp_calculation.data(), sk.data(), error_poly, a_poly,
             modulus_->data(), factor_->data(), Sk_pair_->data(), n_power,
             Q_prime_size_, d_, Q_size_, P_size_);
@@ -1145,15 +1168,16 @@ namespace heongpu
                                               ReductionPolynomial::X_N_plus,
                                           .zero_padding = false,
                                           .mod_inverse = n_inverse_->data(),
-                                          .stream = 0};
+                                          .stream = stream};
 
         GPU_NTT_Inplace(temp_calculation.data(), intt_table_->data(),
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_ * d_,
                         Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
-        relinkey_DtoB_kernel<<<dim3((n >> 8), d_tilda_, (d_ << 1)), 256>>>(
+        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_, stream);
+        relinkey_DtoB_kernel<<<dim3((n >> 8), d_tilda_, (d_ << 1)), 256, 0,
+                               stream>>>(
             temp_calculation.data(), rk.device_location_.data(),
             modulus_->data(), B_prime_->data(),
             base_change_matrix_D_to_B_->data(), Mi_inv_D_to_B_->data(),
@@ -1173,33 +1197,33 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
-    __host__ void
-    HEKeyGenerator::generate_ckks_relin_key_method_II(Relinkey& rk,
-                                                      Secretkey& sk)
+    __host__ void HEKeyGenerator::generate_ckks_relin_key_method_II(
+        Relinkey& rk, Secretkey& sk, const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ *
-                                    d_leveled_->operator[](0) * n);
+        DeviceVector<Data> errors_a(
+            2 * Q_prime_size_ * d_leveled_->operator[](0) * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly =
             error_poly + (Q_prime_size_ * d_leveled_->operator[](0) * n);
 
         modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+            dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+            dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
             error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
             offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1210,15 +1234,16 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
                         Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_);
-        relinkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+        rk.device_location_ = DeviceVector<Data>(rk.relinkey_size_, stream);
+        relinkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                 stream>>>(
             rk.device_location_.data(), sk.data(), error_poly, a_poly,
             modulus_->data(), factor_->data(),
             Sk_pair_leveled_->operator[](0).data(), n_power, Q_prime_size_,
@@ -1232,24 +1257,24 @@ namespace heongpu
         else
         {
             rk.host_location_ = HostVector<Data>(rk.relinkey_size_);
-            cudaMemcpy(rk.host_location_.data(), rk.device_location_.data(),
-                       rk.relinkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(rk.host_location_.data(),
+                            rk.device_location_.data(),
+                            rk.relinkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            rk.device_location_.resize(0);
+            rk.device_location_.resize(0, stream);
         }
     }
 
-    __host__ void
-    HEKeyGenerator::generate_ckks_relin_key_method_III(Relinkey& rk,
-                                                       Secretkey& sk)
+    __host__ void HEKeyGenerator::generate_ckks_relin_key_method_III(
+        Relinkey& rk, Secretkey& sk, const cudaStream_t stream)
     {
         int max_depth = Q_size_ - 1;
-        DeviceVector<Data> temp_calculation(2 * Q_prime_size_ *
-                                            d_leveled_->operator[](0) * n);
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ *
-                                    d_leveled_->operator[](0) * n);
+        DeviceVector<Data> temp_calculation(
+            2 * Q_prime_size_ * d_leveled_->operator[](0) * n, stream);
+        DeviceVector<Data> errors_a(
+            2 * Q_prime_size_ * d_leveled_->operator[](0) * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly =
             error_poly + (Q_prime_size_ * d_leveled_->operator[](0) * n);
@@ -1271,14 +1296,14 @@ namespace heongpu
             int depth_mod_size = Q_prime_size_ - i;
 
             modular_uniform_random_number_generation_kernel<<<
-                dim3((n >> 8), d, 1), 256>>>(
+                dim3((n >> 8), d, 1), 256, 0, stream>>>(
                 a_poly, modulus_->data(), n_power, depth_mod_size, seed_,
                 offset_, prime_location_leveled_->data() + location);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d, 1), 256>>>(
+                dim3((n >> 8), d, 1), 256, 0, stream>>>(
                 error_poly, modulus_->data(), n_power, depth_mod_size, seed_,
                 offset_, prime_location_leveled_->data() + location);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1289,7 +1314,7 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Modulus_Ordered_Inplace(
                 error_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
@@ -1298,7 +1323,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             relinkey_gen_II_leveled_kernel<<<dim3((n >> 8), depth_mod_size, 1),
-                                             256>>>(
+                                             256, 0, stream>>>(
                 temp_calculation.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(),
                 Sk_pair_leveled_->operator[](i).data(), n_power, depth_mod_size,
@@ -1312,7 +1337,7 @@ namespace heongpu
                                                   ReductionPolynomial::X_N_plus,
                                               .zero_padding = false,
                                               .mod_inverse = n_inverse_->data(),
-                                              .stream = 0};
+                                              .stream = stream};
 
             GPU_NTT_Modulus_Ordered_Inplace(
                 temp_calculation.data(), intt_table_->data(), modulus_->data(),
@@ -1321,9 +1346,9 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             rk.device_location_leveled_.push_back(
-                DeviceVector<Data>(rk.relinkey_size_leveled_[i]));
+                DeviceVector<Data>(rk.relinkey_size_leveled_[i], stream));
             relinkey_DtoB_leveled_kernel<<<dim3((n >> 8), d_tilda, (d << 1)),
-                                           256>>>(
+                                           256, 0, stream>>>(
                 temp_calculation.data(), rk.device_location_leveled_[i].data(),
                 modulus_->data(), B_prime_leveled_->data(),
                 base_change_matrix_D_to_B_leveled_->operator[](i).data(),
@@ -1353,23 +1378,24 @@ namespace heongpu
                 rk.host_location_leveled_.push_back(
                     HostVector<Data>(rk.relinkey_size_leveled_[i]));
 
-                cudaMemcpy(rk.host_location_leveled_[i].data(),
-                           rk.device_location_leveled_[i].data(),
-                           rk.relinkey_size_leveled_[i] * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(rk.host_location_leveled_[i].data(),
+                                rk.device_location_leveled_[i].data(),
+                                rk.relinkey_size_leveled_[i] * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                rk.device_location_leveled_[i].resize(0);
+                rk.device_location_leveled_[i].resize(0, stream);
             }
             rk.device_location_leveled_.resize(0);
             rk.device_location_leveled_.shrink_to_fit();
         }
     }
 
-    __host__ void HEKeyGenerator::generate_galois_key_method_I(Galoiskey& gk,
-                                                               Secretkey& sk)
+    __host__ void
+    HEKeyGenerator::generate_galois_key_method_I(Galoiskey& gk, Secretkey& sk,
+                                                 const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * Q_size_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * Q_size_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * Q_size_ * n);
 
@@ -1379,14 +1405,14 @@ namespace heongpu
             for (auto& galois : gk.galois_elt)
             {
                 modular_uniform_random_number_generation_kernel<<<
-                    dim3((n >> 8), Q_size_, 1), 256>>>(a_poly, modulus_->data(),
-                                                       n_power, Q_prime_size_,
-                                                       seed_, offset_);
+                    dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                    offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), Q_size_, 1), 256>>>(
+                    dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
                     error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                     offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1397,7 +1423,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(error_poly, ntt_table_->data(),
                                 modulus_->data(), cfg_ntt,
@@ -1407,8 +1433,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois.second, 2 * n);
 
                 gk.device_location_[galois.second] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                       stream>>>(
                     gk.device_location_[galois.second].data(), sk.data(),
                     error_poly, a_poly, modulus_->data(), factor_->data(),
                     inv_galois, n_power, Q_prime_size_);
@@ -1417,16 +1444,16 @@ namespace heongpu
 
             // Columns Rotate
             modular_uniform_random_number_generation_kernel<<<
-                dim3((n >> 8), Q_size_, 1), 256>>>(a_poly, modulus_->data(),
-                                                   n_power, Q_prime_size_,
-                                                   seed_, offset_);
+                dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), Q_size_, 1), 256>>>(error_poly, modulus_->data(),
-                                                   n_power, Q_prime_size_,
-                                                   seed_, offset_);
+                dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+                error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
@@ -1435,14 +1462,16 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                   stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero, n_power,
                 Q_prime_size_);
@@ -1458,22 +1487,22 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
         else
@@ -1481,14 +1510,14 @@ namespace heongpu
             for (auto& galois_ : gk.custom_galois_elt)
             {
                 modular_uniform_random_number_generation_kernel<<<
-                    dim3((n >> 8), Q_size_, 1), 256>>>(a_poly, modulus_->data(),
-                                                       n_power, Q_prime_size_,
-                                                       seed_, offset_);
+                    dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                    offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), Q_size_, 1), 256>>>(
+                    dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
                     error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                     offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1499,7 +1528,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(error_poly, ntt_table_->data(),
                                 modulus_->data(), cfg_ntt,
@@ -1509,8 +1538,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois_, 2 * n);
 
                 gk.device_location_[galois_] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                       stream>>>(
                     gk.device_location_[galois_].data(), sk.data(), error_poly,
                     a_poly, modulus_->data(), factor_->data(), inv_galois,
                     n_power, Q_prime_size_);
@@ -1519,16 +1549,16 @@ namespace heongpu
 
             // Columns Rotate
             modular_uniform_random_number_generation_kernel<<<
-                dim3((n >> 8), Q_size_, 1), 256>>>(a_poly, modulus_->data(),
-                                                   n_power, Q_prime_size_,
-                                                   seed_, offset_);
+                dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), Q_size_, 1), 256>>>(error_poly, modulus_->data(),
-                                                   n_power, Q_prime_size_,
-                                                   seed_, offset_);
+                dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+                error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
@@ -1537,14 +1567,16 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                   stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero, n_power,
                 Q_prime_size_);
@@ -1560,31 +1592,30 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
     }
 
-    __host__ void
-    HEKeyGenerator::generate_bfv_galois_key_method_II(Galoiskey& gk,
-                                                      Secretkey& sk)
+    __host__ void HEKeyGenerator::generate_bfv_galois_key_method_II(
+        Galoiskey& gk, Secretkey& sk, const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
@@ -1594,16 +1625,16 @@ namespace heongpu
             for (auto& galois : gk.galois_elt)
             {
                 modular_uniform_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_, 1), 256>>>(a_poly, modulus_->data(),
-                                                  n_power, Q_prime_size_, seed_,
-                                                  offset_);
+                    dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                    offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(),
-                                                  n_power, Q_prime_size_, seed_,
-                                                  offset_);
+                    dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                    error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                    offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
@@ -1612,7 +1643,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(error_poly, ntt_table_->data(),
                                 modulus_->data(), cfg_ntt, d_ * Q_prime_size_,
@@ -1622,9 +1653,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois.second, 2 * n);
 
                 gk.device_location_[galois.second] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
-                                          256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                          0, stream>>>(
                     gk.device_location_[galois.second].data(), sk.data(),
                     error_poly, a_poly, modulus_->data(), factor_->data(),
                     inv_galois, Sk_pair_->data(), n_power, Q_prime_size_, d_,
@@ -1634,15 +1665,16 @@ namespace heongpu
 
             // Columns Rotate
             modular_uniform_random_number_generation_kernel<<<
-                dim3((n >> 8), d_, 1), 256>>>(a_poly, modulus_->data(), n_power,
-                                              Q_prime_size_, seed_, offset_);
+                dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(),
-                                              n_power, Q_prime_size_, seed_,
-                                              offset_);
+                dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
@@ -1651,14 +1683,16 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                      stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero,
                 Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_, P_size_);
@@ -1674,22 +1708,22 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
         else
@@ -1697,16 +1731,16 @@ namespace heongpu
             for (auto& galois_ : gk.custom_galois_elt)
             {
                 modular_uniform_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_, 1), 256>>>(a_poly, modulus_->data(),
-                                                  n_power, Q_prime_size_, seed_,
-                                                  offset_);
+                    dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                    offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(),
-                                                  n_power, Q_prime_size_, seed_,
-                                                  offset_);
+                    dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                    error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                    offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
@@ -1715,7 +1749,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(error_poly, ntt_table_->data(),
                                 modulus_->data(), cfg_ntt, d_ * Q_prime_size_,
@@ -1725,9 +1759,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois_, 2 * n);
 
                 gk.device_location_[galois_] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
-                                          256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                          0, stream>>>(
                     gk.device_location_[galois_].data(), sk.data(), error_poly,
                     a_poly, modulus_->data(), factor_->data(), inv_galois,
                     Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_,
@@ -1737,15 +1771,16 @@ namespace heongpu
 
             // Columns Rotate
             modular_uniform_random_number_generation_kernel<<<
-                dim3((n >> 8), d_, 1), 256>>>(a_poly, modulus_->data(), n_power,
-                                              Q_prime_size_, seed_, offset_);
+                dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(),
-                                              n_power, Q_prime_size_, seed_,
-                                              offset_);
+                dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
@@ -1754,14 +1789,16 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                      stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero,
                 Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_, P_size_);
@@ -1777,32 +1814,31 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
     }
 
-    __host__ void
-    HEKeyGenerator::generate_ckks_galois_key_method_II(Galoiskey& gk,
-                                                       Secretkey& sk)
+    __host__ void HEKeyGenerator::generate_ckks_galois_key_method_II(
+        Galoiskey& gk, Secretkey& sk, const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ *
-                                    d_leveled_->operator[](0) * n);
+        DeviceVector<Data> errors_a(
+            2 * Q_prime_size_ * d_leveled_->operator[](0) * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly =
             error_poly + (Q_prime_size_ * d_leveled_->operator[](0) * n);
@@ -1813,16 +1849,16 @@ namespace heongpu
             for (auto& galois : gk.galois_elt)
             {
                 modular_uniform_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
-                    a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
-                    offset_);
+                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0,
+                    stream>>>(a_poly, modulus_->data(), n_power, Q_prime_size_,
+                              seed_, offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
-                    error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
-                    offset_);
+                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0,
+                    stream>>>(error_poly, modulus_->data(), n_power,
+                              Q_prime_size_, seed_, offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
@@ -1831,7 +1867,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(
                     error_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
@@ -1841,9 +1877,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois.second, 2 * n);
 
                 gk.device_location_[galois.second] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
-                                          256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                          0, stream>>>(
                     gk.device_location_[galois.second].data(), sk.data(),
                     error_poly, a_poly, modulus_->data(), factor_->data(),
                     inv_galois, Sk_pair_leveled_->operator[](0).data(), n_power,
@@ -1853,14 +1889,14 @@ namespace heongpu
 
             // Columns Rotate
             modular_uniform_random_number_generation_kernel<<<
-                dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+                dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
                 a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                 offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+                dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
                 error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                 offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1871,15 +1907,17 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
                             Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                      stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero,
                 Sk_pair_leveled_->operator[](0).data(), n_power, Q_prime_size_,
@@ -1895,22 +1933,22 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
         else
@@ -1918,16 +1956,16 @@ namespace heongpu
             for (auto& galois_ : gk.custom_galois_elt)
             {
                 modular_uniform_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
-                    a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
-                    offset_);
+                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0,
+                    stream>>>(a_poly, modulus_->data(), n_power, Q_prime_size_,
+                              seed_, offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
-                    error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
-                    offset_);
+                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0,
+                    stream>>>(error_poly, modulus_->data(), n_power,
+                              Q_prime_size_, seed_, offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
@@ -1936,7 +1974,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(
                     error_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
@@ -1946,9 +1984,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois_, 2 * n);
 
                 gk.device_location_[galois_] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
-                                          256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                          0, stream>>>(
                     gk.device_location_[galois_].data(), sk.data(), error_poly,
                     a_poly, modulus_->data(), factor_->data(), inv_galois,
                     Sk_pair_leveled_->operator[](0).data(), n_power,
@@ -1958,14 +1996,14 @@ namespace heongpu
 
             // Columns Rotate
             modular_uniform_random_number_generation_kernel<<<
-                dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+                dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
                 a_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                 offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+                dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
                 error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                 offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -1976,15 +2014,17 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
                             Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                      stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero,
                 Sk_pair_leveled_->operator[](0).data(), n_power, Q_prime_size_,
@@ -2001,29 +2041,29 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
     }
 
     __host__ void
     HEKeyGenerator::generate_multi_party_galois_key_piece_method_I(
-        MultipartyGaloiskey& gk, Secretkey& sk)
+        MultipartyGaloiskey& gk, Secretkey& sk, const cudaStream_t stream)
     {
         if (sk.location_.size() < (Q_prime_size_ * n))
         {
@@ -2033,12 +2073,12 @@ namespace heongpu
 
         int common_seed = gk.seed();
 
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * Q_size_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * Q_size_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * Q_size_ * n);
 
         modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), Q_size_, 1), 256>>>(
+            dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, common_seed,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2049,7 +2089,7 @@ namespace heongpu
             for (auto& galois : gk.galois_elt)
             {
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), Q_size_, 1), 256>>>(
+                    dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
                     error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                     offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2060,7 +2100,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(error_poly, ntt_table_->data(),
                                 modulus_->data(), cfg_ntt,
@@ -2070,8 +2110,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois.second, 2 * n);
 
                 gk.device_location_[galois.second] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                       stream>>>(
                     gk.device_location_[galois.second].data(), sk.data(),
                     error_poly, a_poly, modulus_->data(), factor_->data(),
                     inv_galois, n_power, Q_prime_size_);
@@ -2080,9 +2121,9 @@ namespace heongpu
 
             // Columns Rotate
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), Q_size_, 1), 256>>>(error_poly, modulus_->data(),
-                                                   n_power, Q_prime_size_,
-                                                   seed_, offset_);
+                dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+                error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
@@ -2091,14 +2132,16 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                   stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero, n_power,
                 Q_prime_size_);
@@ -2114,22 +2157,22 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
         else
@@ -2137,7 +2180,7 @@ namespace heongpu
             for (auto& galois_ : gk.custom_galois_elt)
             {
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), Q_size_, 1), 256>>>(
+                    dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
                     error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                     offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2148,7 +2191,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(error_poly, ntt_table_->data(),
                                 modulus_->data(), cfg_ntt,
@@ -2158,8 +2201,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois_, 2 * n);
 
                 gk.device_location_[galois_] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                       stream>>>(
                     gk.device_location_[galois_].data(), sk.data(), error_poly,
                     a_poly, modulus_->data(), factor_->data(), inv_galois,
                     n_power, Q_prime_size_);
@@ -2168,9 +2212,9 @@ namespace heongpu
 
             // Columns Rotate
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), Q_size_, 1), 256>>>(error_poly, modulus_->data(),
-                                                   n_power, Q_prime_size_,
-                                                   seed_, offset_);
+                dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+                error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
@@ -2179,14 +2223,16 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                   stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero, n_power,
                 Q_prime_size_);
@@ -2202,29 +2248,29 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
     }
 
     __host__ void
     HEKeyGenerator::generate_bfv_multi_party_galois_key_piece_method_II(
-        MultipartyGaloiskey& gk, Secretkey& sk)
+        MultipartyGaloiskey& gk, Secretkey& sk, const cudaStream_t stream)
     {
         if (sk.location_.size() < (Q_prime_size_ * n))
         {
@@ -2234,12 +2280,12 @@ namespace heongpu
 
         int common_seed = gk.seed();
 
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
         modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), d_, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, common_seed,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2250,9 +2296,9 @@ namespace heongpu
             for (auto& galois : gk.galois_elt)
             {
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(),
-                                                  n_power, Q_prime_size_, seed_,
-                                                  offset_);
+                    dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                    error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                    offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
@@ -2261,7 +2307,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(error_poly, ntt_table_->data(),
                                 modulus_->data(), cfg_ntt, d_ * Q_prime_size_,
@@ -2271,9 +2317,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois.second, 2 * n);
 
                 gk.device_location_[galois.second] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
-                                          256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                          0, stream>>>(
                     gk.device_location_[galois.second].data(), sk.data(),
                     error_poly, a_poly, modulus_->data(), factor_->data(),
                     inv_galois, Sk_pair_->data(), n_power, Q_prime_size_, d_,
@@ -2283,9 +2329,9 @@ namespace heongpu
 
             // Columns Rotate
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(),
-                                              n_power, Q_prime_size_, seed_,
-                                              offset_);
+                dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
@@ -2294,14 +2340,16 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                      stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero,
                 Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_, P_size_);
@@ -2317,22 +2365,22 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
         else
@@ -2340,9 +2388,9 @@ namespace heongpu
             for (auto& galois_ : gk.custom_galois_elt)
             {
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(),
-                                                  n_power, Q_prime_size_, seed_,
-                                                  offset_);
+                    dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                    error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                    offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
@@ -2351,7 +2399,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(error_poly, ntt_table_->data(),
                                 modulus_->data(), cfg_ntt, d_ * Q_prime_size_,
@@ -2361,9 +2409,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois_, 2 * n);
 
                 gk.device_location_[galois_] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
-                                          256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                          0, stream>>>(
                     gk.device_location_[galois_].data(), sk.data(), error_poly,
                     a_poly, modulus_->data(), factor_->data(), inv_galois,
                     Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_,
@@ -2373,9 +2421,9 @@ namespace heongpu
 
             // Columns Rotate
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(),
-                                              n_power, Q_prime_size_, seed_,
-                                              offset_);
+                dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+                error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+                offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
@@ -2384,14 +2432,16 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                      stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero,
                 Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_, P_size_);
@@ -2407,29 +2457,29 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
     }
 
     __host__ void
     HEKeyGenerator::generate_ckks_multi_party_galois_key_piece_method_II(
-        MultipartyGaloiskey& gk, Secretkey& sk)
+        MultipartyGaloiskey& gk, Secretkey& sk, const cudaStream_t stream)
     {
         if (sk.location_.size() < (Q_prime_size_ * n))
         {
@@ -2439,14 +2489,14 @@ namespace heongpu
 
         int common_seed = gk.seed();
 
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ *
-                                    d_leveled_->operator[](0) * n);
+        DeviceVector<Data> errors_a(
+            2 * Q_prime_size_ * d_leveled_->operator[](0) * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly =
             error_poly + (Q_prime_size_ * d_leveled_->operator[](0) * n);
 
         modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+            dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, common_seed,
             0); // offset should be zero
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2457,9 +2507,9 @@ namespace heongpu
             for (auto& galois : gk.galois_elt)
             {
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
-                    error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
-                    offset_);
+                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0,
+                    stream>>>(error_poly, modulus_->data(), n_power,
+                              Q_prime_size_, seed_, offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
@@ -2468,7 +2518,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(
                     error_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
@@ -2478,9 +2528,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois.second, 2 * n);
 
                 gk.device_location_[galois.second] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
-                                          256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                          0, stream>>>(
                     gk.device_location_[galois.second].data(), sk.data(),
                     error_poly, a_poly, modulus_->data(), factor_->data(),
                     inv_galois, Sk_pair_leveled_->operator[](0).data(), n_power,
@@ -2490,7 +2540,7 @@ namespace heongpu
 
             // Columns Rotate
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+                dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
                 error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                 offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2501,15 +2551,17 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
                             Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                      stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero,
                 Sk_pair_leveled_->operator[](0).data(), n_power, Q_prime_size_,
@@ -2526,22 +2578,22 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
         else
@@ -2549,9 +2601,9 @@ namespace heongpu
             for (auto& galois_ : gk.custom_galois_elt)
             {
                 modular_gaussian_random_number_generation_kernel<<<
-                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
-                    error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
-                    offset_);
+                    dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0,
+                    stream>>>(error_poly, modulus_->data(), n_power,
+                              Q_prime_size_, seed_, offset_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 offset_++;
 
@@ -2560,7 +2612,7 @@ namespace heongpu
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
-                    .stream = 0};
+                    .stream = stream};
 
                 GPU_NTT_Inplace(
                     error_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
@@ -2570,9 +2622,9 @@ namespace heongpu
                 int inv_galois = modInverse(galois_, 2 * n);
 
                 gk.device_location_[galois_] =
-                    DeviceVector<Data>(gk.galoiskey_size_);
-                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1),
-                                          256>>>(
+                    DeviceVector<Data>(gk.galoiskey_size_, stream);
+                galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
+                                          0, stream>>>(
                     gk.device_location_[galois_].data(), sk.data(), error_poly,
                     a_poly, modulus_->data(), factor_->data(), inv_galois,
                     Sk_pair_leveled_->operator[](0).data(), n_power,
@@ -2582,7 +2634,7 @@ namespace heongpu
 
             // Columns Rotate
             modular_gaussian_random_number_generation_kernel<<<
-                dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+                dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
                 error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
                 offset_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2593,15 +2645,17 @@ namespace heongpu
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
-                                             .stream = 0};
+                                             .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
                             Q_prime_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
-            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            gk.zero_device_location_ =
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
+            galoiskey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                      stream>>>(
                 gk.zero_device_location_.data(), sk.data(), error_poly, a_poly,
                 modulus_->data(), factor_->data(), gk.galois_elt_zero,
                 Sk_pair_leveled_->operator[](0).data(), n_power, Q_prime_size_,
@@ -2618,28 +2672,29 @@ namespace heongpu
                 {
                     gk.host_location_[galois_.first] =
                         HostVector<Data>(gk.galoiskey_size_);
-                    cudaMemcpy(gk.host_location_[galois_.first].data(),
-                               galois_.second.data(),
-                               gk.galoiskey_size_ * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                    galois_.second.data(),
+                                    gk.galoiskey_size_ * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.zero_host_location_.data(),
-                           gk.zero_device_location_.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.zero_host_location_.data(),
+                                gk.zero_device_location_.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gk.device_location_.clear();
-                gk.zero_device_location_.resize(0);
+                gk.zero_device_location_.resize(0, stream);
             }
         }
     }
 
     __host__ void HEKeyGenerator::generate_multi_party_galois_key(
-        std::vector<MultipartyGaloiskey>& all_gk, Galoiskey& gk)
+        std::vector<MultipartyGaloiskey>& all_gk, Galoiskey& gk,
+        cudaStream_t stream)
     {
         int participant_count = all_gk.size();
 
@@ -2745,10 +2800,10 @@ namespace heongpu
         for (auto& galois : gk.galois_elt)
         {
             gk.device_location_[galois.second] =
-                DeviceVector<Data>(gk.galoiskey_size_);
+                DeviceVector<Data>(gk.galoiskey_size_, stream);
 
             multi_party_galoiskey_gen_method_I_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 gk.device_location_[galois.second].data(),
                 all_gk[0].device_location_[galois.second].data(),
                 modulus_->data(), n_power, Q_prime_size_, dimension, true);
@@ -2757,7 +2812,7 @@ namespace heongpu
             for (int i = 1; i < participant_count; i++)
             {
                 multi_party_galoiskey_gen_method_I_II_kernel<<<
-                    dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                    dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                     gk.device_location_[galois.second].data(),
                     all_gk[i].device_location_[galois.second].data(),
                     modulus_->data(), n_power, Q_prime_size_, dimension, false);
@@ -2767,10 +2822,11 @@ namespace heongpu
 
         ///////////
 
-        gk.zero_device_location_ = DeviceVector<Data>(gk.galoiskey_size_);
+        gk.zero_device_location_ =
+            DeviceVector<Data>(gk.galoiskey_size_, stream);
 
         multi_party_galoiskey_gen_method_I_II_kernel<<<
-            dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+            dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
             gk.zero_device_location_.data(),
             all_gk[0].zero_device_location_.data(), modulus_->data(), n_power,
             Q_prime_size_, dimension, true);
@@ -2779,7 +2835,7 @@ namespace heongpu
         for (int i = 1; i < participant_count; i++)
         {
             multi_party_galoiskey_gen_method_I_II_kernel<<<
-                dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 gk.zero_device_location_.data(),
                 all_gk[i].zero_device_location_.data(), modulus_->data(),
                 n_power, Q_prime_size_, dimension, false);
@@ -2796,41 +2852,43 @@ namespace heongpu
             {
                 gk.host_location_[galois_.first] =
                     HostVector<Data>(gk.galoiskey_size_);
-                cudaMemcpy(gk.host_location_[galois_.first].data(),
-                           galois_.second.data(),
-                           gk.galoiskey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(gk.host_location_[galois_.first].data(),
+                                galois_.second.data(),
+                                gk.galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
             }
 
             gk.zero_host_location_ = HostVector<Data>(gk.galoiskey_size_);
-            cudaMemcpy(
-                gk.zero_host_location_.data(), gk.zero_device_location_.data(),
-                gk.galoiskey_size_ * sizeof(Data), cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(gk.zero_host_location_.data(),
+                            gk.zero_device_location_.data(),
+                            gk.galoiskey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             gk.device_location_.clear();
-            gk.zero_device_location_.resize(0);
+            gk.zero_device_location_.resize(0, stream);
         }
     }
 
     __host__ void HEKeyGenerator::generate_switch_key_method_I(
-        Switchkey& swk, Secretkey& new_sk, Secretkey& old_sk)
+        Switchkey& swk, Secretkey& new_sk, Secretkey& old_sk,
+        const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * Q_size_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * Q_size_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * Q_size_ * n);
 
         modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), Q_size_, 1), 256>>>(
+            dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), Q_size_, 1), 256>>>(error_poly, modulus_->data(),
-                                               n_power, Q_prime_size_, seed_,
-                                               offset_);
+            dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
@@ -2839,14 +2897,15 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        swk.device_location_ = DeviceVector<Data>(swk.switchkey_size_);
-        switchkey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+        swk.device_location_ = DeviceVector<Data>(swk.switchkey_size_, stream);
+        switchkey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                               stream>>>(
             swk.device_location_.data(), new_sk.data(), old_sk.data(),
             error_poly, a_poly, modulus_->data(), factor_->data(), n_power,
             Q_prime_size_);
@@ -2859,31 +2918,34 @@ namespace heongpu
         else
         {
             swk.host_location_ = HostVector<Data>(swk.switchkey_size_);
-            cudaMemcpy(swk.host_location_.data(), swk.device_location_.data(),
-                       swk.switchkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(swk.host_location_.data(),
+                            swk.device_location_.data(),
+                            swk.switchkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            swk.device_location_.resize(0);
+            swk.device_location_.resize(0, stream);
         }
     }
 
     __host__ void HEKeyGenerator::generate_bfv_switch_key_method_II(
-        Switchkey& swk, Secretkey& new_sk, Secretkey& old_sk)
+        Switchkey& swk, Secretkey& new_sk, Secretkey& old_sk,
+        const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n);
+        DeviceVector<Data> errors_a(2 * Q_prime_size_ * d_ * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
         modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), d_, 1),
-                                                          256>>>(
+                                                          256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), d_, 1), 256>>>(error_poly, modulus_->data(), n_power,
-                                          Q_prime_size_, seed_, offset_);
+            dim3((n >> 8), d_, 1), 256, 0, stream>>>(
+            error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
+            offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
@@ -2892,14 +2954,15 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        swk.device_location_ = DeviceVector<Data>(swk.switchkey_size_);
-        switchkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+        swk.device_location_ = DeviceVector<Data>(swk.switchkey_size_, stream);
+        switchkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                  stream>>>(
             swk.device_location_.data(), new_sk.data(), old_sk.data(),
             error_poly, a_poly, modulus_->data(), factor_->data(),
             Sk_pair_->data(), n_power, Q_prime_size_, d_, Q_size_, P_size_);
@@ -2912,32 +2975,34 @@ namespace heongpu
         else
         {
             swk.host_location_ = HostVector<Data>(swk.switchkey_size_);
-            cudaMemcpy(swk.host_location_.data(), swk.device_location_.data(),
-                       swk.switchkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(swk.host_location_.data(),
+                            swk.device_location_.data(),
+                            swk.switchkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            swk.device_location_.resize(0);
+            swk.device_location_.resize(0, stream);
         }
     }
 
     __host__ void HEKeyGenerator::generate_ckks_switch_key_method_II(
-        Switchkey& swk, Secretkey& new_sk, Secretkey& old_sk)
+        Switchkey& swk, Secretkey& new_sk, Secretkey& old_sk,
+        const cudaStream_t stream)
     {
-        DeviceVector<Data> errors_a(2 * Q_prime_size_ *
-                                    d_leveled_->operator[](0) * n);
+        DeviceVector<Data> errors_a(
+            2 * Q_prime_size_ * d_leveled_->operator[](0) * n, stream);
         Data* error_poly = errors_a.data();
         Data* a_poly =
             error_poly + (Q_prime_size_ * d_leveled_->operator[](0) * n);
 
         modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+            dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
             a_poly, modulus_->data(), n_power, Q_prime_size_, seed_, offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
         modular_gaussian_random_number_generation_kernel<<<
-            dim3((n >> 8), d_leveled_->operator[](0), 1), 256>>>(
+            dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
             error_poly, modulus_->data(), n_power, Q_prime_size_, seed_,
             offset_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -2948,15 +3013,16 @@ namespace heongpu
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
-                                         .stream = 0};
+                                         .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
                         Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        swk.device_location_ = DeviceVector<Data>(swk.switchkey_size_);
-        switchkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256>>>(
+        swk.device_location_ = DeviceVector<Data>(swk.switchkey_size_, stream);
+        switchkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
+                                  stream>>>(
             swk.device_location_.data(), new_sk.data(), old_sk.data(),
             error_poly, a_poly, modulus_->data(), factor_->data(),
             Sk_pair_leveled_->operator[](0).data(), n_power, Q_prime_size_,
@@ -2970,12 +3036,13 @@ namespace heongpu
         else
         {
             swk.host_location_ = HostVector<Data>(swk.switchkey_size_);
-            cudaMemcpy(swk.host_location_.data(), swk.device_location_.data(),
-                       swk.switchkey_size_ * sizeof(Data),
-                       cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(swk.host_location_.data(),
+                            swk.device_location_.data(),
+                            swk.switchkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            swk.device_location_.resize(0);
+            swk.device_location_.resize(0, stream);
         }
     }
 

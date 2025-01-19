@@ -51,9 +51,9 @@ class MemoryPool
     void use_memory_pool(bool use);
 
     // for device
-    void* allocate(size_t size, cudaStream_t stream = cudaStreamLegacy);
+    void* allocate(size_t size, cudaStream_t stream = cudaStreamDefault);
     void deallocate(void* ptr, size_t size,
-                    cudaStream_t stream = cudaStreamLegacy);
+                    cudaStream_t stream = cudaStreamDefault);
 
     rmm::mr::device_memory_resource* get_device_resource() const;
     HostStatsAdaptor* get_host_resource() const;

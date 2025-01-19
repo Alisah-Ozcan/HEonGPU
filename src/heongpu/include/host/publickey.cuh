@@ -40,6 +40,70 @@ namespace heongpu
         Data* data();
 
         /**
+         * @brief Transfers the publickey data from the device (GPU) to the host
+         * (CPU) using the specified CUDA stream.
+         *
+         * @param public_key Vector where the device data will be copied to.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void device_to_host(std::vector<Data>& public_key,
+                            cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Transfers the publickey data from the host (CPU) to the device
+         * (GPU) using the specified CUDA stream.
+         *
+         * @param public_key Vector of data to be transferred to the device.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void host_to_device(std::vector<Data>& public_key,
+                            cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Transfers the publickey data from the device (GPU) to the host
+         * (CPU) using the specified CUDA stream.
+         *
+         * @param public_key HostVector where the device data will be copied to.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void device_to_host(HostVector<Data>& public_key,
+                            cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Transfers the publickey data from the host (CPU) to the device
+         * (GPU) using the specified CUDA stream.
+         *
+         * @param public_key HostVector of data to be transferred to the device.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void host_to_device(HostVector<Data>& public_key,
+                            cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Switches the publickey CUDA stream.
+         *
+         * @param stream The new CUDA stream to be used.
+         */
+        void switch_stream(cudaStream_t stream)
+        {
+            locations_.set_stream(stream);
+        }
+
+        /**
+         * @brief Retrieves the CUDA stream associated with the publickey.
+         *
+         * This function returns the CUDA stream that was used to create or last
+         * modify the publickey.
+         *
+         * @return The CUDA stream associated with the publickey.
+         */
+        cudaStream_t stream() const { return locations_.stream(); }
+
+        /**
          * @brief Returns the size of the polynomial ring used in the
          * homomorphic encryption scheme.
          *
@@ -81,11 +145,11 @@ namespace heongpu
             : ring_size_(copy.ring_size_),
               coeff_modulus_count_(copy.coeff_modulus_count_)
         {
-            locations_.resize(copy.locations_.size(), cudaStreamLegacy);
-            cudaMemcpyAsync(locations_.data(), copy.locations_.data(),
-                            copy.locations_.size() * sizeof(Data),
-                            cudaMemcpyDeviceToDevice,
-                            cudaStreamLegacy); // TODO: use cudaStreamPerThread
+            locations_.resize(copy.locations_.size(), copy.locations_.stream());
+            cudaMemcpyAsync(
+                locations_.data(), copy.locations_.data(),
+                copy.locations_.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
+                copy.locations_.stream()); // TODO: use cudaStreamPerThread
         }
 
         /**
@@ -103,7 +167,6 @@ namespace heongpu
               coeff_modulus_count_(std::move(assign.coeff_modulus_count_)),
               locations_(std::move(assign.locations_))
         {
-            // locations_ = std::move(assign.locations_);
         }
 
         /**
@@ -124,12 +187,13 @@ namespace heongpu
                 ring_size_ = copy.ring_size_;
                 coeff_modulus_count_ = copy.coeff_modulus_count_;
 
-                locations_.resize(copy.locations_.size(), cudaStreamLegacy);
+                locations_.resize(copy.locations_.size(),
+                                  copy.locations_.stream());
                 cudaMemcpyAsync(
                     locations_.data(), copy.locations_.data(),
                     copy.locations_.size() * sizeof(Data),
                     cudaMemcpyDeviceToDevice,
-                    cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                    copy.locations_.stream()); // TODO: use cudaStreamPerThread
             }
             return *this;
         }

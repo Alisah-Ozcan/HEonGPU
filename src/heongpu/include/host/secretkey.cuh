@@ -7,6 +7,7 @@
 #define SECRETKEY_H
 
 #include "context.cuh"
+#include "keygeneration.cuh"
 
 namespace heongpu
 {
@@ -50,6 +51,70 @@ namespace heongpu
         Data* data();
 
         /**
+         * @brief Transfers the secretkey data from the device (GPU) to the host
+         * (CPU) using the specified CUDA stream.
+         *
+         * @param secret_key Vector where the device data will be copied to.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void device_to_host(std::vector<int>& secret_key,
+                            cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Transfers the secretkey data from the host (CPU) to the device
+         * (GPU) using the specified CUDA stream.
+         *
+         * @param secret_key Vector of data to be transferred to the device.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void host_to_device(std::vector<int>& secret_key,
+                            cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Transfers the secretkey data from the device (GPU) to the host
+         * (CPU) using the specified CUDA stream.
+         *
+         * @param secret_key HostVector where the device data will be copied to.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void device_to_host(HostVector<int>& secret_key,
+                            cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Transfers the secretkey data from the host (CPU) to the device
+         * (GPU) using the specified CUDA stream.
+         *
+         * @param secret_key HostVector of data to be transferred to the device.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void host_to_device(HostVector<int>& public_key,
+                            cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Switches the secretkey CUDA stream.
+         *
+         * @param stream The new CUDA stream to be used.
+         */
+        void switch_stream(cudaStream_t stream)
+        {
+            location_.set_stream(stream);
+        }
+
+        /**
+         * @brief Retrieves the CUDA stream associated with the secretkey.
+         *
+         * This function returns the CUDA stream that was used to create or last
+         * modify the secretkey.
+         *
+         * @return The CUDA stream associated with the secretkey.
+         */
+        cudaStream_t stream() const { return location_.stream(); }
+
+        /**
          * @brief Returns the size of the polynomial ring used in the
          * homomorphic encryption scheme.
          *
@@ -68,13 +133,7 @@ namespace heongpu
             return coeff_modulus_count_;
         }
 
-        /**
-         * @brief Default constructor for Secretkey.
-         *
-         * Initializes an empty Secretkey object. All members will have their
-         * default values.
-         */
-        Secretkey() = default;
+        Secretkey() = delete;
 
         /**
          * @brief Copy constructor for creating a new Secretkey object by
@@ -91,11 +150,11 @@ namespace heongpu
             : ring_size_(copy.ring_size_),
               coeff_modulus_count_(copy.coeff_modulus_count_)
         {
-            location_.resize(copy.location_.size(), cudaStreamLegacy);
-            cudaMemcpyAsync(location_.data(), copy.location_.data(),
-                            copy.location_.size() * sizeof(Data),
-                            cudaMemcpyDeviceToDevice,
-                            cudaStreamLegacy); // TODO: use cudaStreamPerThread
+            location_.resize(copy.location_.size(), copy.location_.stream());
+            cudaMemcpyAsync(
+                location_.data(), copy.location_.data(),
+                copy.location_.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
+                copy.location_.stream()); // TODO: use cudaStreamPerThread
         }
 
         /**
@@ -113,7 +172,6 @@ namespace heongpu
               coeff_modulus_count_(std::move(assign.coeff_modulus_count_)),
               location_(std::move(assign.location_))
         {
-            // location_ = std::move(assign.location_);
         }
 
         /**
@@ -134,12 +192,13 @@ namespace heongpu
                 ring_size_ = copy.ring_size_;
                 coeff_modulus_count_ = copy.coeff_modulus_count_;
 
-                location_.resize(copy.location_.size(), cudaStreamLegacy);
+                location_.resize(copy.location_.size(),
+                                 copy.location_.stream());
                 cudaMemcpyAsync(
                     location_.data(), copy.location_.data(),
                     copy.location_.size() * sizeof(Data),
                     cudaMemcpyDeviceToDevice,
-                    cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                    copy.location_.stream()); // TODO: use cudaStreamPerThread
             }
             return *this;
         }
@@ -170,6 +229,11 @@ namespace heongpu
       private:
         int ring_size_;
         int coeff_modulus_count_;
+        int n_power_;
+
+        std::shared_ptr<DeviceVector<Modulus>> modulus_;
+        std::shared_ptr<DeviceVector<Root>> ntt_table_;
+
         int hamming_weight_;
         bool in_ntt_domain_;
 

@@ -21,7 +21,7 @@ namespace heongpu
 
       public:
         explicit DeviceVector(size_t size = 0,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(size, stream, memory_resource)
@@ -29,7 +29,7 @@ namespace heongpu
         }
 
         explicit DeviceVector(const DeviceVector& other,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(other, stream, memory_resource)
@@ -63,7 +63,7 @@ namespace heongpu
         }
 
         explicit DeviceVector(const HostVector<T>& ref,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(ref.size(), stream, memory_resource)
@@ -73,7 +73,7 @@ namespace heongpu
         }
 
         explicit DeviceVector(const std::vector<T>& ref,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(ref.size(), stream, memory_resource)
@@ -84,7 +84,7 @@ namespace heongpu
 
         // for complex forced // TODO: make it better way.
         explicit DeviceVector(const std::vector<COMPLEX_C>& ref, size_t d_size,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(ref.size(), stream, memory_resource)
@@ -94,7 +94,7 @@ namespace heongpu
         }
 
         explicit DeviceVector(const HostVector<COMPLEX_C>& ref, size_t d_size,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(ref.size(), stream, memory_resource)
@@ -105,7 +105,7 @@ namespace heongpu
 
         // for uint64_t forced // TODO: make it better way.
         explicit DeviceVector(const std::vector<uint64_t>& ref, size_t d_size,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(ref.size(), stream, memory_resource)
@@ -115,7 +115,7 @@ namespace heongpu
         }
 
         explicit DeviceVector(const HostVector<uint64_t>& ref, size_t d_size,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(ref.size(), stream, memory_resource)
@@ -126,7 +126,7 @@ namespace heongpu
 
         // for int64_t forced // TODO: make it better way.
         explicit DeviceVector(const std::vector<int64_t>& ref, size_t d_size,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(ref.size(), stream, memory_resource)
@@ -136,7 +136,7 @@ namespace heongpu
         }
 
         explicit DeviceVector(const HostVector<int64_t>& ref, size_t d_size,
-                              cudaStream_t stream = cudaStreamLegacy,
+                              cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
             : Dvec(ref.size(), stream, memory_resource)
@@ -145,14 +145,14 @@ namespace heongpu
                             cudaMemcpyHostToDevice, stream);
         }
 
-        void resize(size_t size, cudaStream_t stream = cudaStreamLegacy,
+        void resize(size_t size, cudaStream_t stream = cudaStreamDefault,
                     Source memory_resource =
                         MemoryPool::instance().get_device_resource())
         {
             Dvec::resize(size, stream);
         }
 
-        void reserve(size_t size, cudaStream_t stream = cudaStreamLegacy,
+        void reserve(size_t size, cudaStream_t stream = cudaStreamDefault,
                      Source memory_resource =
                          MemoryPool::instance().get_device_resource())
         {
@@ -160,7 +160,7 @@ namespace heongpu
         }
 
         void append(const DeviceVector& out,
-                    cudaStream_t stream = cudaStreamLegacy,
+                    cudaStream_t stream = cudaStreamDefault,
                     Source memory_resource =
                         MemoryPool::instance().get_device_resource())
         {

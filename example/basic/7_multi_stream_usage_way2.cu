@@ -15,7 +15,7 @@ void multi_stream_function_way2(
     std::vector<std::vector<Data>>& ciphertext3_in_cpu,
     std::vector<std::vector<Data>>& plaintext_in_cpu,
     std::vector<heongpu::Ciphertext>& ciphertext_result_in_gpu, int count,
-    std::vector<heongpu::HEStream>& s)
+    std::vector<cudaStream_t>& s)
 {
     int num_stream = s.size();
 
@@ -115,12 +115,13 @@ int main(int argc, char* argv[])
     std::cout << "Genereted." << std::endl;
 
     int num_threads = 4; // it depends on your application and devices
-    std::cout << "HEStream generetes." << std::endl;
-    std::vector<heongpu::HEStream> s;
+    std::cout << "Streams are genereted." << std::endl;
+    std::vector<cudaStream_t> streams;
     for (int i = 0; i < num_threads; i++)
     {
-        heongpu::HEStream inner(context);
-        s.push_back(inner);
+        cudaStream_t inner_stream;
+        cudaStreamCreate(&inner_stream);
+        streams.push_back(inner_stream);
     }
 
     std::cout << "Operations starts..." << std::endl;
@@ -128,7 +129,7 @@ int main(int argc, char* argv[])
     multi_stream_function_way2(context, operators, relin_key, galois_key,
                                ciphertext1_in_cpu, ciphertext2_in_cpu,
                                ciphertext3_in_cpu, plaintext_in_cpu, results,
-                               total_size, s);
+                               total_size, streams);
     std::cout << "Done." << std::endl;
 
     std::cout << "To see differece, check streams view with using NVIDIA "

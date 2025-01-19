@@ -48,11 +48,19 @@ namespace heongpu
                                               Data* last_q_modinv, int n_power,
                                               int decomp_mod_count);
 
+    __global__ void divide_round_lastq_switchkey_kernel(
+        Data* input, Data* ct, Data* output, Modulus* modulus, Data* half,
+        Data* half_mod, Data* last_q_modinv, int n_power, int decomp_mod_count);
+
     __global__ void divide_round_lastq_leveled_stage_one_kernel(
         Data* input, Data* output, Modulus* modulus, Data* half, Data* half_mod,
         int n_power, int first_decomp_count, int current_decomp_count);
 
     __global__ void divide_round_lastq_leveled_stage_two_kernel(
+        Data* input_last, Data* input, Data* ct, Data* output, Modulus* modulus,
+        Data* last_q_modinv, int n_power, int current_decomp_count);
+
+    __global__ void divide_round_lastq_leveled_stage_two_switchkey_kernel(
         Data* input_last, Data* input, Data* ct, Data* output, Modulus* modulus,
         Data* last_q_modinv, int n_power, int current_decomp_count);
 
@@ -109,6 +117,11 @@ namespace heongpu
         Data* half_mod, Data* last_q_modinv, int n_power, int Q_prime_size,
         int Q_size, int P_size);
 
+    __global__ void divide_round_lastq_extended_switchkey_kernel(
+        Data* input, Data* ct, Data* output, Modulus* modulus, Data* half,
+        Data* half_mod, Data* last_q_modinv, int n_power, int Q_prime_size,
+        int Q_size, int P_size);
+
     __global__ void divide_round_lastq_extended_leveled_kernel(
         Data* input, Data* output, Modulus* modulus, Data* half, Data* half_mod,
         Data* last_q_modinv, int n_power, int Q_prime_size, int Q_size,
@@ -132,6 +145,9 @@ namespace heongpu
     __global__ void cipher_broadcast_switchkey_method_II_kernel(
         Data* cipher, Data* out0, Data* out1, Modulus* modulus, int n_power,
         int decomp_mod_count);
+
+    __global__ void addition_switchkey(Data* in1, Data* in2, Data* out,
+                                       Modulus* modulus, int n_power);
 
     __global__ void cipher_broadcast_switchkey_leveled_kernel(
         Data* cipher, Data* out0, Data* out1, Modulus* modulus, int n_power,

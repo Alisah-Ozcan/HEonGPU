@@ -40,8 +40,6 @@ namespace heongpu
          */
         __host__ HEEncoder(Parameters& context);
 
-        // for bfv
-
         /**
          * @brief Encodes a message into a plaintext.
          *
@@ -54,7 +52,7 @@ namespace heongpu
          */
         __host__ void encode(Plaintext& plain,
                              const std::vector<uint64_t>& message,
-                             double scale = 0)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -66,54 +64,6 @@ namespace heongpu
                     if (plain.size() != n)
                     {
                         plain.resize(n);
-                    }
-
-                    encode_bfv(plain, message);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = 0;
-                    plain.in_ntt_domain_ = false;
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS message can not be uint64_t");
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message into a plaintext asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message Vector of unsigned 64-bit integers representing the
-         * message to be encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain,
-                             const std::vector<uint64_t>& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (message.size() > slot_count_)
-                        throw std::invalid_argument(
-                            "Vector size can not be higher than slot count!");
-
-                    if (plain.size() != n)
-                    {
-                        plain.resize(n, stream);
                     }
 
                     encode_bfv(plain, message, stream);
@@ -148,7 +98,7 @@ namespace heongpu
          */
         __host__ void encode(Plaintext& plain,
                              const std::vector<int64_t>& message,
-                             double scale = 0)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -160,55 +110,6 @@ namespace heongpu
                     if (plain.size() != n)
                     {
                         plain.resize(n);
-                    }
-
-                    encode_bfv(plain, message);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = 0;
-                    plain.in_ntt_domain_ = false;
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS message can not be int64_t");
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message of signed 64-bit integers into a plaintext
-         * asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message Vector of signed 64-bit integers representing the
-         * message to be encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain,
-                             const std::vector<int64_t>& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (message.size() > slot_count_)
-                        throw std::invalid_argument(
-                            "Vector size can not be higher than slot count!");
-
-                    if (plain.size() != n)
-                    {
-                        plain.resize(n, stream);
                     }
 
                     encode_bfv(plain, message, stream);
@@ -243,7 +144,7 @@ namespace heongpu
          */
         __host__ void encode(Plaintext& plain,
                              const HostVector<uint64_t>& message,
-                             double scale = 0)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -255,54 +156,6 @@ namespace heongpu
                     if (plain.size() != n)
                     {
                         plain.resize(n);
-                    }
-
-                    encode_bfv(plain, message);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = 0;
-                    plain.in_ntt_domain_ = false;
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS message can not be uint64_t");
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message into a plaintext asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message HostVector of unsigned 64-bit integers representing
-         * the message to be encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain,
-                             const HostVector<uint64_t>& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (message.size() > slot_count_)
-                        throw std::invalid_argument(
-                            "Vector size can not be higher than slot count!");
-
-                    if (plain.size() != n)
-                    {
-                        plain.resize(n, stream);
                     }
 
                     encode_bfv(plain, message, stream);
@@ -337,7 +190,7 @@ namespace heongpu
          */
         __host__ void encode(Plaintext& plain,
                              const HostVector<int64_t>& message,
-                             double scale = 0)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -349,55 +202,6 @@ namespace heongpu
                     if (plain.size() != n)
                     {
                         plain.resize(n);
-                    }
-
-                    encode_bfv(plain, message);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = 0;
-                    plain.in_ntt_domain_ = false;
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS message can not be int64_t");
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message of signed 64-bit integers into a plaintext
-         * asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message HostVector of signed 64-bit integers representing the
-         * message to be encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain,
-                             const HostVector<int64_t>& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (message.size() > slot_count_)
-                        throw std::invalid_argument(
-                            "Vector size can not be higher than slot count!");
-
-                    if (plain.size() != n)
-                    {
-                        plain.resize(n, stream);
                     }
 
                     encode_bfv(plain, message, stream);
@@ -421,6 +225,7 @@ namespace heongpu
         }
 
         //
+
         /**
          * @brief Encodes a message of double values into a plaintext.
          *
@@ -432,8 +237,8 @@ namespace heongpu
          * is 0.
          */
         __host__ void encode(Plaintext& plain,
-                             const std::vector<double>& message,
-                             double scale = 0)
+                             const std::vector<double>& message, double scale,
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -457,61 +262,6 @@ namespace heongpu
                         plain.resize((n * Q_size_));
                     }
 
-                    encode_ckks(plain, message, scale);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message of double values into a plaintext
-         * asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message Vector of double values representing the message to be
-         * encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain,
-                             const std::vector<double>& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV message can not be double");
-                    break;
-                case 2: // CKKS
-                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
-                                         total_coeff_bit_count_))
-                    {
-                        throw std::invalid_argument("Scale out of bounds");
-                    }
-
-                    if (message.size() > slot_count_)
-                        throw std::invalid_argument(
-                            "Vector size can not be higher than slot count!");
-
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_), stream);
-                    }
-
                     encode_ckks(plain, message, scale, stream);
 
                     plain.scheme_ = scheme_;
@@ -529,6 +279,7 @@ namespace heongpu
         }
 
         //
+
         /**
          * @brief Encodes a message of double values into a plaintext.
          *
@@ -540,8 +291,8 @@ namespace heongpu
          * is 0.
          */
         __host__ void encode(Plaintext& plain,
-                             const HostVector<double>& message,
-                             double scale = 0)
+                             const HostVector<double>& message, double scale,
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -565,61 +316,6 @@ namespace heongpu
                         plain.resize((n * Q_size_));
                     }
 
-                    encode_ckks(plain, message, scale);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message of double values into a plaintext
-         * asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message HostVector of double values representing the message
-         * to be encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain,
-                             const HostVector<double>& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV message can not be double");
-                    break;
-                case 2: // CKKS
-                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
-                                         total_coeff_bit_count_))
-                    {
-                        throw std::invalid_argument("Scale out of bounds");
-                    }
-
-                    if (message.size() > slot_count_)
-                        throw std::invalid_argument(
-                            "Vector size can not be higher than slot count!");
-
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_), stream);
-                    }
-
                     encode_ckks(plain, message, scale, stream);
 
                     plain.scheme_ = scheme_;
@@ -637,6 +333,7 @@ namespace heongpu
         }
 
         //
+
         /**
          * @brief Encodes a message of complex numbers into a plaintext.
          *
@@ -649,7 +346,8 @@ namespace heongpu
          */
         __host__ void encode(Plaintext& plain,
                              const std::vector<COMPLEX_C>& message,
-                             double scale = 0)
+                             double scale,
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -671,61 +369,6 @@ namespace heongpu
                     if (plain.size() != (n * Q_size_))
                     {
                         plain.resize((n * Q_size_));
-                    }
-
-                    encode_ckks(plain, message, scale);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message of complex numbers into a plaintext
-         * asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message Vector of COMPLEX_C representing the message to be
-         * encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain,
-                             const std::vector<COMPLEX_C>& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV message can not be double");
-                    break;
-                case 2: // CKKS
-                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
-                                         total_coeff_bit_count_))
-                    {
-                        throw std::invalid_argument("Scale out of bounds");
-                    }
-
-                    if (message.size() > slot_count_)
-                        throw std::invalid_argument(
-                            "Vector size can not be higher than slot count!");
-
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_), stream);
                     }
 
                     encode_ckks(plain, message, scale, stream);
@@ -757,8 +400,8 @@ namespace heongpu
          * is 0.
          */
         __host__ void encode(Plaintext& plain,
-                             const HostVector<COMPLEX_C>& message,
-                             double scale = 0)
+                             const HostVector<COMPLEX_C>& message, double scale,
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -780,61 +423,6 @@ namespace heongpu
                     if (plain.size() != (n * Q_size_))
                     {
                         plain.resize((n * Q_size_));
-                    }
-
-                    encode_ckks(plain, message, scale);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message of complex numbers into a plaintext
-         * asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message HostVector of COMPLEX_C representing the message to be
-         * encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain,
-                             const HostVector<COMPLEX_C>& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV message can not be double");
-                    break;
-                case 2: // CKKS
-                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
-                                         total_coeff_bit_count_))
-                    {
-                        throw std::invalid_argument("Scale out of bounds");
-                    }
-
-                    if (message.size() > slot_count_)
-                        throw std::invalid_argument(
-                            "Vector size can not be higher than slot count!");
-
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_), stream);
                     }
 
                     encode_ckks(plain, message, scale, stream);
@@ -866,7 +454,8 @@ namespace heongpu
          * is 0.
          */
         __host__ void encode(Plaintext& plain, const double& message,
-                             double scale = 0)
+                             double scale,
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -891,63 +480,6 @@ namespace heongpu
                     if (plain.size() != (n * Q_size_))
                     {
                         plain.resize((n * Q_size_));
-                    }
-
-                    encode_ckks(plain, message, scale);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message of single double numbers into a plaintext
-         * asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message Double representing the message to be
-         * encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         * @param scale parameter defining encoding precision(for CKKS), default
-         * is 0.
-         */
-        __host__ void encode(Plaintext& plain, const double& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV does not support this feature");
-                    break;
-                case 2: // CKKS
-                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
-                                         total_coeff_bit_count_))
-                    {
-                        throw std::invalid_argument("Scale out of bounds");
-                    }
-
-                    if ((static_cast<int>(log2(fabs(message))) + 2) >=
-                        total_coeff_bit_count_)
-                    {
-                        throw std::invalid_argument(
-                            "Encoded value is too large");
-                    }
-
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_), stream);
                     }
 
                     encode_ckks(plain, message, scale, stream);
@@ -977,7 +509,8 @@ namespace heongpu
          * encoded.
          */
         __host__ void encode(Plaintext& plain, const std::int64_t& message,
-                             double scale = 0)
+                             double scale,
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1003,61 +536,6 @@ namespace heongpu
                     {
                         plain.resize((n * Q_size_));
                     }
-                    encode_ckks(plain, message, scale);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encodes a message of single int64_t numbers into a plaintext
-         * asynchronously.
-         *
-         * @param plain Plaintext object where the result of the encoding will
-         * be stored.
-         * @param message int64_t representing the message to be
-         * encoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
-        __host__ void encode(Plaintext& plain, const std::int64_t& message,
-                             HEStream& stream, double scale = 0)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV does not support this feature");
-                    break;
-                case 2: // CKKS
-                    if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
-                                         total_coeff_bit_count_))
-                    {
-                        throw std::invalid_argument("Scale out of bounds");
-                    }
-
-                    if ((static_cast<int>(log2(fabs(message))) + 2) >=
-                        total_coeff_bit_count_)
-                    {
-                        throw std::invalid_argument(
-                            "Encoded value is too large");
-                    }
-
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_), stream);
-                    }
-
                     encode_ckks(plain, message, scale, stream);
 
                     plain.scheme_ = scheme_;
@@ -1082,37 +560,8 @@ namespace heongpu
          * @param message Vector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(std::vector<uint64_t>& message, Plaintext& plain)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    decode_bfv(message, plain);
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS message can not be uint64_t");
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Decodes a plaintext into a vector of unsigned 64-bit integers
-         * asynchronously.
-         *
-         * @param message Vector where the decoded message will be stored.
-         * @param plain Plaintext object to be decoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
         __host__ void decode(std::vector<uint64_t>& message, Plaintext& plain,
-                             HEStream& stream)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1138,37 +587,8 @@ namespace heongpu
          * @param message Vector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(std::vector<int64_t>& message, Plaintext& plain)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    decode_bfv(message, plain);
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS message can not be int64_t");
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Decodes a plaintext into a vector of signed 64-bit integers
-         * asynchronously.
-         *
-         * @param message Vector where the decoded message will be stored.
-         * @param plain Plaintext object to be decoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
         __host__ void decode(std::vector<int64_t>& message, Plaintext& plain,
-                             HEStream& stream)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1189,44 +609,16 @@ namespace heongpu
         }
 
         //
+
         /**
          * @brief Decodes a plaintext into a HostVector of unsigned 64-bit
          * integers.
          *
          * @param message HostVector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
-         */
-        __host__ void decode(HostVector<uint64_t>& message, Plaintext& plain)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    decode_bfv(message, plain);
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS message can not be uint64_t");
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Decodes a plaintext into a HostVector of unsigned 64-bit
-         * integers asynchronously.
-         *
-         * @param message HostVector where the decoded message will be stored.
-         * @param plain Plaintext object to be decoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
          */
         __host__ void decode(HostVector<uint64_t>& message, Plaintext& plain,
-                             HEStream& stream)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1253,37 +645,8 @@ namespace heongpu
          * @param message HostVector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(HostVector<int64_t>& message, Plaintext& plain)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    decode_bfv(message, plain);
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS message can not be int64_t");
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Decodes a plaintext into a HostVector of signed 64-bit
-         * integers asynchronously.
-         *
-         * @param message HostVector where the decoded message will be stored.
-         * @param plain Plaintext object to be decoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
         __host__ void decode(HostVector<int64_t>& message, Plaintext& plain,
-                             HEStream& stream)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1304,43 +667,15 @@ namespace heongpu
         }
 
         //
+
         /**
          * @brief Decodes a plaintext into a vector of double values.
          *
          * @param message Vector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(std::vector<double>& message, Plaintext& plain)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV message can not be double");
-                    break;
-                case 2: // CKKS
-                    decode_ckks(message, plain);
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Decodes a plaintext into a vector of double values
-         * asynchronously.
-         *
-         * @param message Vector where the decoded message will be stored.
-         * @param plain Plaintext object to be decoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
         __host__ void decode(std::vector<double>& message, Plaintext& plain,
-                             HEStream& stream)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1361,43 +696,15 @@ namespace heongpu
         }
 
         //
+
         /**
          * @brief Decodes a plaintext into a HostVector of double values.
          *
          * @param message HostVector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(HostVector<double>& message, Plaintext& plain)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV message can not be double");
-                    break;
-                case 2: // CKKS
-                    decode_ckks(message, plain);
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Decodes a plaintext into a HostVector of double values
-         * asynchronously.
-         *
-         * @param message HostVector where the decoded message will be stored.
-         * @param plain Plaintext object to be decoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
         __host__ void decode(HostVector<double>& message, Plaintext& plain,
-                             HEStream& stream)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1423,37 +730,8 @@ namespace heongpu
          * @param message Vector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(std::vector<COMPLEX_C>& message, Plaintext& plain)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV message can not be double");
-                    break;
-                case 2: // CKKS
-                    decode_ckks(message, plain);
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Decodes a plaintext into a vector of complex numbers
-         * asynchronously.
-         *
-         * @param message Vector where the decoded message will be stored.
-         * @param plain Plaintext object to be decoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
         __host__ void decode(std::vector<COMPLEX_C>& message, Plaintext& plain,
-                             HEStream& stream)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1474,43 +752,15 @@ namespace heongpu
         }
 
         //
+
         /**
          * @brief Decodes a plaintext into a HostVector of complex numbers.
          *
          * @param message HostVector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(HostVector<COMPLEX_C>& message, Plaintext& plain)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    throw std::invalid_argument(
-                        "BFV message can not be double");
-                    break;
-                case 2: // CKKS
-                    decode_ckks(message, plain);
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Decodes a plaintext into a HostVector of complex numbers
-         * asynchronously.
-         *
-         * @param message HostVector where the decoded message will be stored.
-         * @param plain Plaintext object to be decoded.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
         __host__ void decode(HostVector<COMPLEX_C>& message, Plaintext& plain,
-                             HEStream& stream)
+                             cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1544,139 +794,85 @@ namespace heongpu
         HEEncoder& operator=(HEEncoder&& assign) = default;
 
       private:
-        // for bfv
-
-        __host__ void encode_bfv(Plaintext& plain,
-                                 const std::vector<uint64_t>& message);
-
         __host__ void encode_bfv(Plaintext& plain,
                                  const std::vector<uint64_t>& message,
-                                 HEStream& stream);
-
-        __host__ void encode_bfv(Plaintext& plain,
-                                 const std::vector<int64_t>& message);
+                                 const cudaStream_t stream);
 
         __host__ void encode_bfv(Plaintext& plain,
                                  const std::vector<int64_t>& message,
-                                 HEStream& stream);
-
-        __host__ void encode_bfv(Plaintext& plain,
-                                 const HostVector<uint64_t>& message);
+                                 const cudaStream_t stream);
 
         __host__ void encode_bfv(Plaintext& plain,
                                  const HostVector<uint64_t>& message,
-                                 HEStream& stream);
-
-        __host__ void encode_bfv(Plaintext& plain,
-                                 const HostVector<int64_t>& message);
+                                 const cudaStream_t stream);
 
         __host__ void encode_bfv(Plaintext& plain,
                                  const HostVector<int64_t>& message,
-                                 HEStream& stream);
+                                 const cudaStream_t stream);
 
         //
 
         __host__ void decode_bfv(std::vector<uint64_t>& message,
-                                 Plaintext& plain);
-
-        __host__ void decode_bfv(std::vector<uint64_t>& message,
-                                 Plaintext& plain, HEStream& stream);
+                                 Plaintext& plain, const cudaStream_t stream);
 
         __host__ void decode_bfv(std::vector<int64_t>& message,
-                                 Plaintext& plain);
-
-        __host__ void decode_bfv(std::vector<int64_t>& message,
-                                 Plaintext& plain, HEStream& stream);
+                                 Plaintext& plain, const cudaStream_t stream);
 
         __host__ void decode_bfv(HostVector<uint64_t>& message,
-                                 Plaintext& plain);
-
-        __host__ void decode_bfv(HostVector<uint64_t>& message,
-                                 Plaintext& plain, HEStream& stream);
-
-        __host__ void decode_bfv(HostVector<int64_t>& message,
-                                 Plaintext& plain);
+                                 Plaintext& plain, const cudaStream_t stream);
 
         __host__ void decode_bfv(HostVector<int64_t>& message, Plaintext& plain,
-                                 HEStream& stream);
+                                 const cudaStream_t stream);
 
-        // for ckks
-
-        __host__ void encode_ckks(Plaintext& plain,
-                                  const std::vector<double>& message,
-                                  const double scale);
+        //
 
         __host__ void encode_ckks(Plaintext& plain,
                                   const std::vector<double>& message,
-                                  const double scale, HEStream& stream);
+                                  const double scale,
+                                  const cudaStream_t stream);
 
         __host__ void encode_ckks(Plaintext& plain,
                                   const HostVector<double>& message,
-                                  const double scale);
-
-        __host__ void encode_ckks(Plaintext& plain,
-                                  const HostVector<double>& message,
-                                  const double scale, HEStream& stream);
+                                  const double scale,
+                                  const cudaStream_t stream);
 
         //
 
         __host__ void encode_ckks(Plaintext& plain,
                                   const std::vector<COMPLEX_C>& message,
-                                  const double scale);
-
-        __host__ void encode_ckks(Plaintext& plain,
-                                  const std::vector<COMPLEX_C>& message,
-                                  const double scale, HEStream& stream);
+                                  const double scale,
+                                  const cudaStream_t stream);
 
         __host__ void encode_ckks(Plaintext& plain,
                                   const HostVector<COMPLEX_C>& message,
-                                  const double scale);
-
-        __host__ void encode_ckks(Plaintext& plain,
-                                  const HostVector<COMPLEX_C>& message,
-                                  const double scale, HEStream& stream);
+                                  const double scale,
+                                  const cudaStream_t stream);
 
         //
 
         __host__ void encode_ckks(Plaintext& plain, const double& message,
-                                  const double scale);
-
-        __host__ void encode_ckks(Plaintext& plain, const double& message,
-                                  const double scale, HEStream& stream);
+                                  const double scale,
+                                  const cudaStream_t stream);
 
         __host__ void encode_ckks(Plaintext& plain, const std::int64_t& message,
-                                  const double scale);
+                                  const double scale,
+                                  const cudaStream_t stream);
 
-        __host__ void encode_ckks(Plaintext& plain, const std::int64_t& message,
-                                  const double scale, HEStream& stream);
-
-        // -
+        //
 
         __host__ void decode_ckks(std::vector<double>& message,
-                                  Plaintext& plain);
-
-        __host__ void decode_ckks(std::vector<double>& message,
-                                  Plaintext& plain, HEStream& stream);
-
-        __host__ void decode_ckks(HostVector<double>& message,
-                                  Plaintext& plain);
+                                  Plaintext& plain, const cudaStream_t stream);
 
         __host__ void decode_ckks(HostVector<double>& message, Plaintext& plain,
-                                  HEStream& stream);
+                                  const cudaStream_t stream);
 
         //
 
         __host__ void decode_ckks(std::vector<COMPLEX_C>& message,
-                                  Plaintext& plain);
-
-        __host__ void decode_ckks(std::vector<COMPLEX_C>& message,
-                                  Plaintext& plain, HEStream& stream);
+                                  Plaintext& plain, const cudaStream_t stream);
 
         __host__ void decode_ckks(HostVector<COMPLEX_C>& message,
-                                  Plaintext& plain);
-
-        __host__ void decode_ckks(HostVector<COMPLEX_C>& message,
-                                  Plaintext& plain, HEStream& stream);
+                                  Plaintext& plain, const cudaStream_t stream);
 
         //////////////////////////////
         //////////////////////////////
@@ -1704,7 +900,6 @@ namespace heongpu
         std::shared_ptr<DeviceVector<COMPLEX>> special_fft_roots_table_;
         std::shared_ptr<DeviceVector<COMPLEX>> special_ifft_roots_table_;
         std::shared_ptr<DeviceVector<int>> reverse_order;
-        DeviceVector<COMPLEX> temp_complex;
 
         int Q_size_;
         int total_coeff_bit_count_;

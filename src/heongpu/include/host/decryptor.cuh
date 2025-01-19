@@ -57,7 +57,8 @@ namespace heongpu
          * will be stored.
          * @param ciphertext Ciphertext object to be decrypted.
          */
-        __host__ void decrypt(Plaintext& plaintext, Ciphertext& ciphertext)
+        __host__ void decrypt(Plaintext& plaintext, Ciphertext& ciphertext,
+                              cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -67,7 +68,7 @@ namespace heongpu
                         plaintext.resize(n);
                     }
 
-                    decrypt_bfv(plaintext, ciphertext);
+                    decrypt_bfv(plaintext, ciphertext, stream);
 
                     plaintext.scheme_ = scheme_;
                     plaintext.depth_ = 0;
@@ -80,7 +81,7 @@ namespace heongpu
                         plaintext.resize((n * (Q_size_ - ciphertext.depth_)));
                     }
 
-                    decrypt_ckks(plaintext, ciphertext);
+                    decrypt_ckks(plaintext, ciphertext, stream);
 
                     plaintext.scheme_ = scheme_;
                     plaintext.depth_ = ciphertext.depth_;
@@ -103,12 +104,14 @@ namespace heongpu
          * budget is calculated.
          * @return int The remainder of the noise budget in the ciphertext.
          */
-        __host__ int remainder_noise_budget(Ciphertext& ciphertext)
+        __host__ int
+        remainder_noise_budget(Ciphertext& ciphertext,
+                               cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
-                    return noise_budget_calculation(ciphertext);
+                    return noise_budget_calculation(ciphertext, stream);
                 case 2: // CKKS
                     throw std::invalid_argument(
                         "Can not be used for CKKS Scheme");
@@ -138,13 +141,15 @@ namespace heongpu
          */
         __host__ void
         multi_party_decrypt_partial(Ciphertext& ciphertext, Secretkey& sk,
-                                    Ciphertext& partial_ciphertext)
+                                    Ciphertext& partial_ciphertext,
+                                    cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
 
-                    partial_decrypt_bfv(ciphertext, sk, partial_ciphertext);
+                    partial_decrypt_bfv(ciphertext, sk, partial_ciphertext,
+                                        stream);
 
                     partial_ciphertext.scheme_ = scheme_;
                     partial_ciphertext.ring_size_ = n;
@@ -162,7 +167,8 @@ namespace heongpu
                     break;
                 case 2: // CKKS
 
-                    partial_decrypt_ckks(ciphertext, sk, partial_ciphertext);
+                    partial_decrypt_ckks(ciphertext, sk, partial_ciphertext,
+                                         stream);
 
                     partial_ciphertext.scheme_ = scheme_;
                     partial_ciphertext.ring_size_ = n;
@@ -201,7 +207,8 @@ namespace heongpu
          */
         __host__ void
         multi_party_decrypt_fusion(std::vector<Ciphertext>& ciphertexts,
-                                   Plaintext& plaintext)
+                                   Plaintext& plaintext,
+                                   cudaStream_t stream = cudaStreamDefault)
         {
             int cipher_count = ciphertexts.size();
 
@@ -243,7 +250,7 @@ namespace heongpu
                         plaintext.resize(n);
                     }
 
-                    decrypt_fusion_bfv(ciphertexts, plaintext);
+                    decrypt_fusion_bfv(ciphertexts, plaintext, stream);
 
                     plaintext.scheme_ = scheme_;
                     plaintext.depth_ = 0;
@@ -257,7 +264,7 @@ namespace heongpu
                         plaintext.resize((n * (Q_size_ - depth_check)));
                     }
 
-                    decrypt_fusion_ckks(ciphertexts, plaintext);
+                    decrypt_fusion_ckks(ciphertexts, plaintext, stream);
 
                     plaintext.scheme_ = scheme_;
                     plaintext.depth_ = depth_check;
@@ -304,28 +311,35 @@ namespace heongpu
         HEDecryptor& operator=(HEDecryptor&& assign) = default;
 
       private:
-        __host__ void decrypt_bfv(Plaintext& plaintext, Ciphertext& ciphertext);
+        __host__ void decrypt_bfv(Plaintext& plaintext, Ciphertext& ciphertext,
+                                  const cudaStream_t stream);
 
         __host__ void decryptx3_bfv(Plaintext& plaintext,
-                                    Ciphertext& ciphertext);
+                                    Ciphertext& ciphertext,
+                                    const cudaStream_t stream);
 
-        __host__ void decrypt_ckks(Plaintext& plaintext,
-                                   Ciphertext& ciphertext);
+        __host__ void decrypt_ckks(Plaintext& plaintext, Ciphertext& ciphertext,
+                                   const cudaStream_t stream);
 
-        __host__ int noise_budget_calculation(Ciphertext& ciphertext);
+        __host__ int noise_budget_calculation(Ciphertext& ciphertext,
+                                              const cudaStream_t stream);
 
         __host__ void partial_decrypt_bfv(Ciphertext& ciphertext, Secretkey& sk,
-                                          Ciphertext& partial_ciphertext);
+                                          Ciphertext& partial_ciphertext,
+                                          const cudaStream_t stream);
 
         __host__ void partial_decrypt_ckks(Ciphertext& ciphertext,
                                            Secretkey& sk,
-                                           Ciphertext& partial_ciphertext);
+                                           Ciphertext& partial_ciphertext,
+                                           const cudaStream_t stream);
 
         __host__ void decrypt_fusion_bfv(std::vector<Ciphertext>& ciphertexts,
-                                         Plaintext& plaintext);
+                                         Plaintext& plaintext,
+                                         const cudaStream_t stream);
 
         __host__ void decrypt_fusion_ckks(std::vector<Ciphertext>& ciphertexts,
-                                          Plaintext& plaintext);
+                                          Plaintext& plaintext,
+                                          const cudaStream_t stream);
 
       private:
         scheme_type scheme_;
@@ -371,11 +385,6 @@ namespace heongpu
         std::shared_ptr<DeviceVector<Data>> decryption_modulus_;
 
         int total_bit_count_;
-
-        DeviceVector<Data> temp_memory_; // for noise budget calculation
-        std::vector<Data> max_norm_memory_;
-
-        DeviceVector<Data> temp_memory2_; // Decryption
     };
 
 } // namespace heongpu

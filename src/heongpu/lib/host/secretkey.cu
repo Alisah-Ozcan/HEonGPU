@@ -11,6 +11,9 @@ namespace heongpu
     {
         coeff_modulus_count_ = context.Q_prime_size;
         ring_size_ = context.n; // n
+        n_power_ = context.n_power;
+        modulus_ = context.modulus_;
+        ntt_table_ = context.ntt_table_;
 
         hamming_weight_ = ring_size_ >> 1; // default
         in_ntt_domain_ = false;
@@ -35,4 +38,109 @@ namespace heongpu
     {
         return location_.data();
     }
+
+    void Secretkey::device_to_host(std::vector<int>& secret_key,
+                                   cudaStream_t stream)
+    {
+        if (secret_key.size() < ring_size_)
+        {
+            secret_key.resize(ring_size_);
+        }
+
+        cudaMemcpyAsync(secret_key.data(), secretkey_.data(),
+                        ring_size_ * sizeof(int), cudaMemcpyDeviceToHost,
+                        stream);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    void Secretkey::host_to_device(std::vector<int>& secret_key,
+                                   cudaStream_t stream)
+    {
+        if (!(secret_key.size() == ring_size_))
+        {
+            throw std::invalid_argument("Secretkey size should be valid!");
+        }
+
+        cudaMemcpyAsync(secretkey_.data(), secret_key.data(),
+                        ring_size_ * sizeof(int), cudaMemcpyHostToDevice,
+                        stream);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        if (location_.size() < coeff_modulus_count_ * ring_size_)
+        {
+            location_ =
+                DeviceVector<Data>(coeff_modulus_count_ * ring_size_, stream);
+        }
+
+        secretkey_rns_kernel<<<dim3((ring_size_ >> 8), 1, 1), 256, 0, stream>>>(
+            secretkey_.data(), location_.data(), modulus_->data(), n_power_,
+            coeff_modulus_count_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        ntt_rns_configuration cfg_ntt = {.n_power = n_power_,
+                                         .ntt_type = FORWARD,
+                                         .reduction_poly =
+                                             ReductionPolynomial::X_N_plus,
+                                         .zero_padding = false,
+                                         .stream = stream};
+
+        GPU_NTT_Inplace(location_.data(), ntt_table_->data(), modulus_->data(),
+                        cfg_ntt, coeff_modulus_count_, coeff_modulus_count_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        in_ntt_domain_ = true;
+    }
+
+    void Secretkey::device_to_host(HostVector<int>& secret_key,
+                                   cudaStream_t stream)
+    {
+        if (secret_key.size() < ring_size_)
+        {
+            secret_key.resize(ring_size_);
+        }
+
+        cudaMemcpyAsync(secret_key.data(), secretkey_.data(),
+                        ring_size_ * sizeof(int), cudaMemcpyDeviceToHost,
+                        stream);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    void Secretkey::host_to_device(HostVector<int>& secret_key,
+                                   cudaStream_t stream)
+    {
+        if (!(secret_key.size() == ring_size_))
+        {
+            throw std::invalid_argument("Secretkey size should be valid!");
+        }
+
+        cudaMemcpyAsync(secretkey_.data(), secret_key.data(),
+                        ring_size_ * sizeof(int), cudaMemcpyHostToDevice,
+                        stream);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        if (location_.size() < coeff_modulus_count_ * ring_size_)
+        {
+            location_ =
+                DeviceVector<Data>(coeff_modulus_count_ * ring_size_, stream);
+        }
+
+        secretkey_rns_kernel<<<dim3((ring_size_ >> 8), 1, 1), 256, 0, stream>>>(
+            secretkey_.data(), location_.data(), modulus_->data(), n_power_,
+            coeff_modulus_count_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        ntt_rns_configuration cfg_ntt = {.n_power = n_power_,
+                                         .ntt_type = FORWARD,
+                                         .reduction_poly =
+                                             ReductionPolynomial::X_N_plus,
+                                         .zero_padding = false,
+                                         .stream = stream};
+
+        GPU_NTT_Inplace(location_.data(), ntt_table_->data(), modulus_->data(),
+                        cfg_ntt, coeff_modulus_count_, coeff_modulus_count_);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        in_ntt_domain_ = true;
+    }
+
 } // namespace heongpu

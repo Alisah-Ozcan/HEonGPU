@@ -20,7 +20,7 @@ namespace heongpu
 
     __global__ void secretkey_rns_kernel(int* input, Data* output,
                                          Modulus* modulus, int n_power,
-                                         int rns_mod_count, int seed);
+                                         int rns_mod_count);
 
     // Public Key Generation
 

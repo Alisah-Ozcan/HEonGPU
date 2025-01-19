@@ -21,7 +21,7 @@ namespace heongpu
         using Hvec::vector;
 
         explicit HostVector(const DeviceVector<T>& ref,
-                            cudaStream_t stream = cudaStreamLegacy)
+                            cudaStream_t stream = cudaStreamDefault)
         {
             Hvec::resize(ref.size());
             cudaMemcpyAsync(Hvec::data(), ref.data(), ref.size() * sizeof(T),

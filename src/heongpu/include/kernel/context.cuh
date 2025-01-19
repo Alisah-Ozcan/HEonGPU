@@ -44,7 +44,6 @@ namespace heongpu
         friend class HEEncryptor;
         friend class HEDecryptor;
         friend class HEOperator;
-        friend class HEStream;
 
       public:
         Parameters(const scheme_type scheme, const keyswitching_type ks_type,
@@ -347,91 +346,6 @@ namespace heongpu
                                      Modulus& gamma, int size);
 
         Data generate_inv_gamma(Modulus& plain_mod, Modulus& gamma);
-    };
-
-    //////////////////////////////////////////////////////////////////////////////////
-
-    class HEStream
-    {
-        friend class Message;
-        friend class Plaintext;
-        friend class Ciphertext;
-
-        friend class Secretkey;
-        friend class Publickey;
-        friend class Relinkey;
-        friend class Galoiskey;
-
-        friend class HEKeyGenerator;
-        friend class HEEncoder;
-        friend class HEEncryptor;
-        friend class HEDecryptor;
-        friend class HEOperator;
-
-      public:
-        __host__ HEStream() = delete;
-        __host__ HEStream(Parameters context);
-
-        operator cudaStream_t() const { return stream; }
-
-        //~HEStream() { cudaStreamDestroy(stream); }
-
-      private:
-        cudaStream_t stream;
-
-        scheme_type scheme;
-        int n;
-
-        int Q_prime_size_;
-        int Q_size_;
-        int P_size_;
-
-        int bsk_modulus_count_;
-
-        ///////////////////////////////////
-
-        int d;
-        int d_tilda;
-        int r_prime;
-
-        std::shared_ptr<std::vector<int>> d_leveled_;
-        std::shared_ptr<std::vector<int>> d_tilda_leveled_;
-        int r_prime_leveled_;
-
-        ///////////////////////////////////
-
-        // Temp(to avoid allocation time)
-        DeviceVector<COMPLEX> temp_complex;
-
-        DeviceVector<Data> temp_mul;
-        Data* temp1_mul;
-        Data* temp2_mul;
-
-        DeviceVector<Data> temp_relin;
-        Data* temp1_relin;
-        Data* temp2_relin;
-
-        DeviceVector<Data> temp_relin_new;
-        Data* temp1_relin_new;
-        Data* temp2_relin_new;
-        Data* temp3_relin_new;
-
-        DeviceVector<Data> temp_rescale;
-        Data* temp1_rescale;
-        Data* temp2_rescale;
-
-        DeviceVector<Data> temp_rotation;
-        Data* temp0_rotation;
-        Data* temp1_rotation;
-        Data* temp2_rotation;
-        Data* temp3_rotation;
-        Data* temp4_rotation;
-
-        DeviceVector<Data> temp_plain_mul;
-        Data* temp1_plain_mul;
-
-        DeviceVector<Data> temp_mod_drop_;
-        Data* temp_mod_drop;
     };
 
 } // namespace heongpu

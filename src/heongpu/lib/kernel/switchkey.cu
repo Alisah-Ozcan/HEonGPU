@@ -242,6 +242,45 @@ namespace heongpu
                (((decomp_mod_count) << n_power) * block_z)] = ct_in;
     }
 
+    __global__ void divide_round_lastq_switchkey_kernel(
+        Data* input, Data* ct, Data* output, Modulus* modulus, Data* half,
+        Data* half_mod, Data* last_q_modinv, int n_power, int decomp_mod_count)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
+        int block_y = blockIdx.y; // Decomposition Modulus Count
+        int block_z = blockIdx.z; // Cipher Size (2)
+
+        Data last_ct = input[idx + (decomp_mod_count << n_power) +
+                             (((decomp_mod_count + 1) << n_power) * block_z)];
+
+        last_ct = VALUE_GPU::add(last_ct, half[0], modulus[decomp_mod_count]);
+
+        Data zero_ = 0;
+        last_ct = VALUE_GPU::add(last_ct, zero_, modulus[block_y]);
+
+        last_ct = VALUE_GPU::sub(last_ct, half_mod[block_y], modulus[block_y]);
+
+        Data input_ = input[idx + (block_y << n_power) +
+                            (((decomp_mod_count + 1) << n_power) * block_z)];
+
+        input_ = VALUE_GPU::sub(input_, last_ct, modulus[block_y]);
+
+        input_ =
+            VALUE_GPU::mult(input_, last_q_modinv[block_y], modulus[block_y]);
+
+        Data ct_in = 0ULL;
+        if (block_z == 0)
+        {
+            ct_in = ct[idx + (block_y << n_power) +
+                       (((decomp_mod_count) << n_power) * block_z)];
+        }
+
+        ct_in = VALUE_GPU::add(ct_in, input_, modulus[block_y]);
+
+        output[idx + (block_y << n_power) +
+               (((decomp_mod_count) << n_power) * block_z)] = ct_in;
+    }
+
     __global__ void divide_round_lastq_extended_kernel(
         Data* input, Data* ct, Data* output, Modulus* modulus, Data* half,
         Data* half_mod, Data* last_q_modinv, int n_power, int Q_prime_size,
@@ -298,6 +337,73 @@ namespace heongpu
 
         Data ct_in =
             ct[idx + (block_y << n_power) + (((Q_size) << n_power) * block_z)];
+
+        ct_in = VALUE_GPU::add(ct_in, input_, modulus[block_y]);
+
+        output[idx + (block_y << n_power) + (((Q_size) << n_power) * block_z)] =
+            ct_in;
+    }
+
+    __global__ void divide_round_lastq_extended_switchkey_kernel(
+        Data* input, Data* ct, Data* output, Modulus* modulus, Data* half,
+        Data* half_mod, Data* last_q_modinv, int n_power, int Q_prime_size,
+        int Q_size, int P_size)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
+        int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
+        int block_z = blockIdx.z; // Cipher Size (2)
+
+        // Max P size is 15.
+        Data last_ct[15];
+        for (int i = 0; i < P_size; i++)
+        {
+            last_ct[i] = input[idx + ((Q_size + i) << n_power) +
+                               ((Q_prime_size << n_power) * block_z)];
+        }
+
+        Data input_ = input[idx + (block_y << n_power) +
+                            ((Q_prime_size << n_power) * block_z)];
+
+        Data zero_ = 0;
+        int location_ = 0;
+        for (int i = 0; i < P_size; i++)
+        {
+            Data last_ct_add_half_ = last_ct[(P_size - 1 - i)];
+            last_ct_add_half_ = VALUE_GPU::add(last_ct_add_half_, half[i],
+                                               modulus[(Q_prime_size - 1 - i)]);
+            for (int j = 0; j < (P_size - 1 - i); j++)
+            {
+                Data temp1 = VALUE_GPU::add(last_ct_add_half_, zero_,
+                                            modulus[Q_size + j]);
+                temp1 = VALUE_GPU::sub(temp1, half_mod[location_ + Q_size + j],
+                                       modulus[Q_size + j]);
+
+                temp1 = VALUE_GPU::sub(last_ct[j], temp1, modulus[Q_size + j]);
+
+                last_ct[j] = VALUE_GPU::mult(
+                    temp1, last_q_modinv[location_ + Q_size + j],
+                    modulus[Q_size + j]);
+            }
+
+            Data temp1 =
+                VALUE_GPU::add(last_ct_add_half_, zero_, modulus[block_y]);
+            temp1 = VALUE_GPU::sub(temp1, half_mod[location_ + block_y],
+                                   modulus[block_y]);
+
+            temp1 = VALUE_GPU::sub(input_, temp1, modulus[block_y]);
+
+            input_ = VALUE_GPU::mult(temp1, last_q_modinv[location_ + block_y],
+                                     modulus[block_y]);
+
+            location_ = location_ + (Q_prime_size - 1 - i);
+        }
+
+        Data ct_in = 0ULL;
+        if (block_z == 0)
+        {
+            ct_in = ct[idx + (block_y << n_power) +
+                       (((Q_size) << n_power) * block_z)];
+        }
 
         ct_in = VALUE_GPU::add(ct_in, input_, modulus[block_y]);
 
@@ -419,6 +525,40 @@ namespace heongpu
 
         Data ct_in = ct[idx + (block_y << n_power) +
                         (((current_decomp_count) << n_power) * block_z)];
+
+        ct_in = VALUE_GPU::add(ct_in, input_, modulus[block_y]);
+
+        output[idx + (block_y << n_power) +
+               (((current_decomp_count) << n_power) * block_z)] = ct_in;
+    }
+
+    __global__ void divide_round_lastq_leveled_stage_two_switchkey_kernel(
+        Data* input_last, Data* input, Data* ct, Data* output, Modulus* modulus,
+        Data* last_q_modinv, int n_power, int current_decomp_count)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
+        int block_y = blockIdx.y; // Decomposition Modulus Count
+        int block_z = blockIdx.z; // Cipher Size (2)
+
+        Data last_ct =
+            input_last[idx + (block_y << n_power) +
+                       (((current_decomp_count) << n_power) * block_z)];
+
+        Data input_ =
+            input[idx + (block_y << n_power) +
+                  (((current_decomp_count + 1) << n_power) * block_z)];
+
+        input_ = VALUE_GPU::sub(input_, last_ct, modulus[block_y]);
+
+        input_ =
+            VALUE_GPU::mult(input_, last_q_modinv[block_y], modulus[block_y]);
+
+        Data ct_in = 0ULL;
+        if (block_z == 0)
+        {
+            ct_in = ct[idx + (block_y << n_power) +
+                       (((current_decomp_count) << n_power) * block_z)];
+        }
 
         ct_in = VALUE_GPU::add(ct_in, input_, modulus[block_y]);
 
@@ -1056,6 +1196,26 @@ namespace heongpu
 
                 out1[idx + (i << n_power) + location] = reduced_result;
             }
+        }
+    }
+
+    __global__ void addition_switchkey(Data* in1, Data* in2, Data* out,
+                                       Modulus* modulus, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
+        int idy = blockIdx.y; // rns count
+        int idz = blockIdx.z; // cipher count
+
+        int location = idx + (idy << n_power) + ((gridDim.y * idz) << n_power);
+
+        if (idz == 0)
+        {
+            out[location] =
+                VALUE_GPU::add(in1[location], in2[location], modulus[idy]);
+        }
+        else
+        {
+            out[location] = in1[location];
         }
     }
 

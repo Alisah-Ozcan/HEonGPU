@@ -49,20 +49,8 @@ namespace heongpu
          * @param output Ciphertext where the result of the addition is stored.
          */
         __host__ void add(Ciphertext& input1, Ciphertext& input2,
-                          Ciphertext& output);
-
-        /**
-         * @brief Adds two ciphertexts asynchronously with a given stream and
-         * stores the result in the output.
-         *
-         * @param input1 First input ciphertext to be added.
-         * @param input2 Second input ciphertext to be added.
-         * @param output Ciphertext where the result of the addition is stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void add(Ciphertext& input1, Ciphertext& input2,
-                          Ciphertext& output, HEStream& stream);
+                          Ciphertext& output,
+                          cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Adds the second ciphertext to the first ciphertext, modifying
@@ -72,23 +60,8 @@ namespace heongpu
          * added.
          * @param input2 The ciphertext to be added to input1.
          */
-        __host__ void add_inplace(Ciphertext& input1, Ciphertext& input2)
-        {
-            add(input1, input2, input1);
-        }
-
-        /**
-         * @brief Adds the second ciphertext to the first asynchronously,
-         * modifying the first ciphertext with the result.
-         *
-         * @param input1 The ciphertext to which the value of input2 will be
-         * added.
-         * @param input2 The ciphertext to be added to input1.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void add_inplace(Ciphertext& input1, Ciphertext& input2,
-                                  HEStream& stream)
+                                  cudaStream_t stream = cudaStreamDefault)
         {
             add(input1, input2, input1, stream);
         }
@@ -103,21 +76,8 @@ namespace heongpu
          * stored.
          */
         __host__ void sub(Ciphertext& input1, Ciphertext& input2,
-                          Ciphertext& output);
-
-        /**
-         * @brief Subtracts the second ciphertext from the first asynchronously
-         * and stores the result in the output.
-         *
-         * @param input1 First input ciphertext (minuend).
-         * @param input2 Second input ciphertext (subtrahend).
-         * @param output Ciphertext where the result of the subtraction is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void sub(Ciphertext& input1, Ciphertext& input2,
-                          Ciphertext& output, HEStream& stream);
+                          Ciphertext& output,
+                          cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Subtracts the second ciphertext from the first, modifying the
@@ -126,22 +86,8 @@ namespace heongpu
          * @param input1 The ciphertext from which input2 will be subtracted.
          * @param input2 The ciphertext to subtract from input1.
          */
-        __host__ void sub_inplace(Ciphertext& input1, Ciphertext& input2)
-        {
-            sub(input1, input2, input1);
-        }
-
-        /**
-         * @brief Subtracts the second ciphertext from the first asynchronously,
-         * modifying the first ciphertext with the result.
-         *
-         * @param input1 The ciphertext from which input2 will be subtracted.
-         * @param input2 The ciphertext to subtract from input1.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void sub_inplace(Ciphertext& input1, Ciphertext& input2,
-                                  HEStream& stream)
+                                  cudaStream_t stream = cudaStreamDefault)
         {
             sub(input1, input2, input1, stream);
         }
@@ -152,39 +98,16 @@ namespace heongpu
          * @param input1 Input ciphertext to be negated.
          * @param output Ciphertext where the result of the negation is stored.
          */
-        __host__ void negate(Ciphertext& input1, Ciphertext& output);
-
-        /**
-         * @brief Negates a ciphertext asynchronously and stores the result in
-         * the output.
-         *
-         * @param input1 Input ciphertext to be negated.
-         * @param output Ciphertext where the result of the negation is stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void negate(Ciphertext& input1, Ciphertext& output,
-                             HEStream& stream);
+                             cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Negates a ciphertext in-place, modifying the input ciphertext.
          *
          * @param input1 Ciphertext to be negated.
          */
-        __host__ void negate_inplace(Ciphertext& input1)
-        {
-            negate(input1, input1);
-        }
-
-        /**
-         * @brief Negates a ciphertext asynchronously in-place, modifying the
-         * input ciphertext.
-         *
-         * @param input1 Ciphertext to be negated.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void negate_inplace(Ciphertext& input1, HEStream& stream)
+        __host__ void negate_inplace(Ciphertext& input1,
+                                     cudaStream_t stream = cudaStreamDefault)
         {
             negate(input1, input1, stream);
         }
@@ -198,67 +121,8 @@ namespace heongpu
          * @param output Ciphertext where the result of the addition is stored.
          */
         __host__ void add_plain(Ciphertext& input1, Plaintext& input2,
-                                Ciphertext& output)
-        {
-            if (input1.depth_ != input2.depth_)
-            {
-                throw std::logic_error("Ciphertexts leveled are not equal");
-            }
-
-            if (input1.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertext and Plaintext can not be added because "
-                    "ciphertext has non-linear partl!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                {
-                    if (input1.in_ntt_domain_ || input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in NTT domain");
-                    }
-                    add_plain_bfv(input1, input2, output);
-                    break;
-                }
-                case 2: // CKKS
-                {
-                    add_plain_ckks(input1, input2, output);
-                    break;
-                }
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.depth_ = input1.depth_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.scale_ = input1.scale_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Adds a ciphertext and a plaintext asynchronously and stores
-         * the result in the output.
-         *
-         * @param input1 Input ciphertext to be added.
-         * @param input2 Input plaintext to be added.
-         * @param output Ciphertext where the result of the addition is stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void add_plain(Ciphertext& input1, Plaintext& input2,
-                                Ciphertext& output, HEStream& stream)
+                                Ciphertext& output,
+                                cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.depth_ != input2.depth_)
             {
@@ -314,55 +178,8 @@ namespace heongpu
          * @param input1 Ciphertext to which the plaintext will be added.
          * @param input2 Plaintext to be added to the ciphertext.
          */
-        __host__ void add_plain_inplace(Ciphertext& input1, Plaintext& input2)
-        {
-            if (input1.depth_ != input2.depth_)
-            {
-                throw std::logic_error("Ciphertexts leveled are not equal");
-            }
-
-            if (input1.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertext and Plaintext can not be added because "
-                    "ciphertext has non-linear partl!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                {
-                    if (input1.in_ntt_domain_ || input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in NTT domain");
-                    }
-                    add_plain_bfv_inplace(input1, input2);
-                    break;
-                }
-                case 2: // CKKS
-                    add_plain_ckks_inplace(input1, input2);
-                    break;
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Adds a plaintext to a ciphertext asynchronously in-place,
-         * modifying the input ciphertext.
-         *
-         * @param input1 Ciphertext to which the plaintext will be added.
-         * @param input2 Plaintext to be added to the ciphertext.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void add_plain_inplace(Ciphertext& input1, Plaintext& input2,
-                                        HEStream& stream)
+                                        cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.depth_ != input2.depth_)
             {
@@ -410,7 +227,8 @@ namespace heongpu
          * stored.
          */
         __host__ void sub_plain(Ciphertext& input1, Plaintext& input2,
-                                Ciphertext& output)
+                                Ciphertext& output,
+                                cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.depth_ != input2.depth_)
             {
@@ -422,73 +240,6 @@ namespace heongpu
                 throw std::invalid_argument(
                     "Ciphertext and Plaintext can not be added because "
                     "ciphertext has non-linear partl!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                {
-                    if (input1.in_ntt_domain_ || input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in NTT domain");
-                    }
-                    sub_plain_bfv(input1, input2, output);
-                    break;
-                }
-                case 2: // CKKS
-                {
-                    sub_plain_ckks(input1, input2, output);
-                    break;
-                }
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.depth_ = input1.depth_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.scale_ = input1.scale_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Subtracts a plaintext from a ciphertext asynchronously and
-         * stores the result in the output.
-         *
-         * @param input1 Input ciphertext (minuend).
-         * @param input2 Input plaintext (subtrahend).
-         * @param output Ciphertext where the result of the subtraction is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void sub_plain(Ciphertext& input1, Plaintext& input2,
-                                Ciphertext& output, HEStream& stream)
-        {
-            if (input1.depth_ != input2.depth_)
-            {
-                throw std::logic_error("Ciphertexts leveled are not equal");
-            }
-
-            if (input1.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertext and Plaintext can not be added because "
-                    "ciphertext has non-linear partl!");
-            }
-
-            if (input1.in_ntt_domain_ != input2.in_ntt_domain_)
-            {
-                throw std::logic_error(
-                    "Ciphertext and Plaintext should be in same domain");
             }
 
             switch (static_cast<int>(scheme_))
@@ -533,55 +284,8 @@ namespace heongpu
          * @param input1 Ciphertext from which the plaintext will be subtracted.
          * @param input2 Plaintext to be subtracted from the ciphertext.
          */
-        __host__ void sub_plain_inplace(Ciphertext& input1, Plaintext& input2)
-        {
-            if (input1.depth_ != input2.depth_)
-            {
-                throw std::logic_error("Ciphertexts leveled are not equal");
-            }
-
-            if (input1.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertext and Plaintext can not be added because "
-                    "ciphertext has non-linear partl!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                {
-                    if (input1.in_ntt_domain_ || input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in NTT domain");
-                    }
-                    sub_plain_bfv_inplace(input1, input2);
-                    break;
-                }
-                case 2: // CKKS
-                    sub_plain_ckks_inplace(input1, input2);
-                    break;
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Subtracts a plaintext from a ciphertext asynchronously
-         * in-place, modifying the input ciphertext.
-         *
-         * @param input1 Ciphertext from which the plaintext will be subtracted.
-         * @param input2 Plaintext to be subtracted from the ciphertext.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void sub_plain_inplace(Ciphertext& input1, Plaintext& input2,
-                                        HEStream& stream)
+                                        cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.depth_ != input2.depth_)
             {
@@ -629,64 +333,8 @@ namespace heongpu
          * stored.
          */
         __host__ void multiply(Ciphertext& input1, Ciphertext& input2,
-                               Ciphertext& output)
-        {
-            if (input1.relinearization_required_ ||
-                input2.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertexts can not be multiplied because of the "
-                    "non-linear part! Please use relinearization operation!");
-            }
-
-            if (input1.rescale_required_ || input2.rescale_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertexts can not be multiplied because of the noise! "
-                    "Please use rescale operation to get rid of additional "
-                    "noise!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    multiply_bfv(input1, input2, output);
-                    output.scale_ = 0;
-                    break;
-                case 2: // CKKS
-                    multiply_ckks(input1, input2, output);
-                    output.rescale_required_ = true;
-                    break;
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 3;
-            output.depth_ = input1.depth_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.relinearization_required_ = true;
-        }
-
-        /**
-         * @brief Multiplies two ciphertexts asynchronously and stores the
-         * result in the output.
-         *
-         * @param input1 First input ciphertext to be multiplied.
-         * @param input2 Second input ciphertext to be multiplied.
-         * @param output Ciphertext where the result of the multiplication is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void multiply(Ciphertext& input1, Ciphertext& input2,
-                               Ciphertext& output, HEStream& stream)
+                               Ciphertext& output,
+                               cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.relinearization_required_ ||
                 input2.relinearization_required_)
@@ -739,23 +387,8 @@ namespace heongpu
          * be stored.
          * @param input2 Second input ciphertext to be multiplied.
          */
-        __host__ void multiply_inplace(Ciphertext& input1, Ciphertext& input2)
-        {
-            multiply(input1, input2, input1);
-        }
-
-        /**
-         * @brief Multiplies two ciphertexts asynchronously in-place, modifying
-         * the first ciphertext.
-         *
-         * @param input1 Ciphertext to be multiplied, and where the result will
-         * be stored.
-         * @param input2 Second input ciphertext to be multiplied.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void multiply_inplace(Ciphertext& input1, Ciphertext& input2,
-                                       HEStream& stream)
+                                       cudaStream_t stream = cudaStreamDefault)
         {
             multiply(input1, input2, input1, stream);
         }
@@ -770,86 +403,8 @@ namespace heongpu
          * stored.
          */
         __host__ void multiply_plain(Ciphertext& input1, Plaintext& input2,
-                                     Ciphertext& output)
-        {
-            if (input1.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertext and Plaintext can not be multiplied because of "
-                    "the non-linear part! Please use relinearization "
-                    "operation!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            if (output.locations_.size() < (3 * n * current_decomp_count))
-            {
-                output.resize((3 * n * current_decomp_count));
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                {
-                    if (input1.in_ntt_domain_ != input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in same domain");
-                    }
-
-                    if (input2.size() < n)
-                    {
-                        throw std::invalid_argument("Invalid Plaintext size!");
-                    }
-
-                    multiply_plain_bfv(input1, input2, output);
-                    output.rescale_required_ = input1.rescale_required_;
-                    break;
-                }
-                case 2: // CKKS
-                    if (input2.size() < (n * current_decomp_count))
-                    {
-                        throw std::invalid_argument("Invalid Plaintext size!");
-                    }
-
-                    multiply_plain_ckks(input1, input2, output);
-                    output.rescale_required_ = true;
-                    break;
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Multiplies a ciphertext and a plaintext asynchronously and
-         * stores the result in the output.
-         *
-         * @param input1 Input ciphertext to be multiplied.
-         * @param input2 Input plaintext to be multiplied.
-         * @param output Ciphertext where the result of the multiplication is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void multiply_plain(Ciphertext& input1, Plaintext& input2,
-                                     Ciphertext& output, HEStream& stream)
+                                     Ciphertext& output,
+                                     cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.relinearization_required_)
             {
@@ -924,25 +479,9 @@ namespace heongpu
          * the result will be stored.
          * @param input2 Plaintext to be multiplied with the ciphertext.
          */
-        __host__ void multiply_plain_inplace(Ciphertext& input1,
-                                             Plaintext& input2)
-        {
-            multiply_plain(input1, input2, input1);
-        }
-
-        /**
-         * @brief Multiplies a plaintext with a ciphertext asynchronously
-         * in-place, modifying the input ciphertext.
-         *
-         * @param input1 Ciphertext to be multiplied by the plaintext, and where
-         * the result will be stored.
-         * @param input2 Plaintext to be multiplied with the ciphertext.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void multiply_plain_inplace(Ciphertext& input1,
-                                             Plaintext& input2,
-                                             HEStream& stream)
+        __host__ void
+        multiply_plain_inplace(Ciphertext& input1, Plaintext& input2,
+                               cudaStream_t stream = cudaStreamDefault)
         {
             multiply_plain(input1, input2, input1, stream);
         }
@@ -954,115 +493,9 @@ namespace heongpu
          * @param input1 Ciphertext to be relinearized.
          * @param relin_key The Relinkey object used for relinearization.
          */
-        __host__ void relinearize_inplace(Ciphertext& input1,
-                                          Relinkey& relin_key)
-        {
-            if ((!input1.relinearization_required_))
-            {
-                throw std::invalid_argument(
-                    "Ciphertexts can not use relinearization, since no "
-                    "non-linear part!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (3 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            switch (static_cast<int>(relin_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        relinearize_seal_method_inplace(input1, relin_key);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        relinearize_seal_method_inplace_ckks(input1, relin_key);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        relinearize_external_product_method2_inplace(input1,
-                                                                     relin_key);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        relinearize_external_product_method2_inplace_ckks(
-                            input1, relin_key);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        relinearize_external_product_method_inplace(input1,
-                                                                    relin_key);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        relinearize_external_product_method_inplace_ckks(
-                            input1, relin_key);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            input1.relinearization_required_ = false;
-        }
-
-        /**
-         * @brief Performs in-place relinearization of the given ciphertext
-         * asynchronously using the provided relin key.
-         *
-         * @param input1 Ciphertext to be relinearized.
-         * @param relin_key The Relinkey object used for relinearization.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void relinearize_inplace(Ciphertext& input1,
-                                          Relinkey& relin_key, HEStream& stream)
+        __host__ void
+        relinearize_inplace(Ciphertext& input1, Relinkey& relin_key,
+                            cudaStream_t stream = cudaStreamDefault)
         {
             if ((!input1.relinearization_required_))
             {
@@ -1171,131 +604,8 @@ namespace heongpu
          * @param shift Number of positions to shift the rows.
          */
         __host__ void rotate_rows(Ciphertext& input1, Ciphertext& output,
-                                  Galoiskey& galois_key, int shift)
-        {
-            if (input1.rescale_required_ || input1.relinearization_required_)
-            {
-                throw std::invalid_argument("Ciphertext can not be rotated!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count));
-            }
-
-            switch (static_cast<int>(galois_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        if (shift == 0)
-                        {
-                            output = input1;
-                            return;
-                        }
-
-                        rotate_method_I(input1, output, galois_key, shift);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        if (shift == 0)
-                        {
-                            output = input1;
-                            return;
-                        }
-
-                        rotate_ckks_method_I(input1, output, galois_key, shift);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        if (shift == 0)
-                        {
-                            output = input1;
-                            return;
-                        }
-
-                        rotate_method_II(input1, output, galois_key, shift);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        if (shift == 0)
-                        {
-                            output = input1;
-                            return;
-                        }
-
-                        rotate_ckks_method_II(input1, output, galois_key,
-                                              shift);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for rotation operation!");
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Rotates the rows of a ciphertext asynchronously by a given
-         * shift value and stores the result in the output.
-         *
-         * @param input1 Input ciphertext to be rotated.
-         * @param output Ciphertext where the result of the rotation is stored.
-         * @param galois_key Galois key used for the rotation operation.
-         * @param shift Number of positions to shift the rows.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void rotate_rows(Ciphertext& input1, Ciphertext& output,
                                   Galoiskey& galois_key, int shift,
-                                  HEStream& stream)
+                                  cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -1417,30 +727,9 @@ namespace heongpu
          * @param galois_key Galois key used for the rotation operation.
          * @param shift Number of positions to shift the rows.
          */
-        __host__ void rotate_rows_inplace(Ciphertext& input1,
-                                          Galoiskey& galois_key, int shift)
-        {
-            if (shift == 0)
-            {
-                return;
-            }
-
-            rotate_rows(input1, input1, galois_key, shift);
-        }
-
-        /**
-         * @brief Rotates the rows of a ciphertext asynchronously in-place by a
-         * given shift value, modifying the input ciphertext.
-         *
-         * @param input1 Ciphertext to be rotated.
-         * @param galois_key Galois key used for the rotation operation.
-         * @param shift Number of positions to shift the rows.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void rotate_rows_inplace(Ciphertext& input1,
-                                          Galoiskey& galois_key, int shift,
-                                          HEStream& stream)
+        __host__ void
+        rotate_rows_inplace(Ciphertext& input1, Galoiskey& galois_key,
+                            int shift, cudaStream_t stream = cudaStreamDefault)
         {
             if (shift == 0)
             {
@@ -1459,98 +748,8 @@ namespace heongpu
          * @param galois_key Galois key used for the rotation operation.
          */
         __host__ void rotate_columns(Ciphertext& input1, Ciphertext& output,
-                                     Galoiskey& galois_key)
-        {
-            if (input1.rescale_required_ || input1.relinearization_required_)
-            {
-                throw std::invalid_argument("Ciphertext can not be rotated!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count));
-            }
-
-            switch (static_cast<int>(galois_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        rotate_columns_method_I(input1, output, galois_key);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        throw std::invalid_argument("Unsupported scheme");
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        rotate_columns_method_II(input1, output, galois_key);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        throw std::invalid_argument("Unsupported scheme");
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for rotation operation!");
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Rotates the columns of a ciphertext asynchronously and stores
-         * the result in the output.
-         *
-         * @param input1 Input ciphertext to be rotated.
-         * @param output Ciphertext where the result of the rotation is stored.
-         * @param galois_key Galois key used for the rotation operation.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void rotate_columns(Ciphertext& input1, Ciphertext& output,
-                                     Galoiskey& galois_key, HEStream& stream)
+                                     Galoiskey& galois_key,
+                                     cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -1644,112 +843,8 @@ namespace heongpu
          * @param galois_elt The Galois element to apply.
          */
         __host__ void apply_galois(Ciphertext& input1, Ciphertext& output,
-                                   Galoiskey& galois_key, int galois_elt)
-        {
-            if (input1.rescale_required_ || input1.relinearization_required_)
-            {
-                throw std::invalid_argument("Ciphertext can not be rotated!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count));
-            }
-
-            switch (static_cast<int>(galois_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        apply_galois_method_I(input1, output, galois_key,
-                                              galois_elt);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        apply_galois_ckks_method_I(input1, output, galois_key,
-                                                   galois_elt);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        apply_galois_method_II(input1, output, galois_key,
-                                               galois_elt);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        apply_galois_ckks_method_II(input1, output, galois_key,
-                                                    galois_elt);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for rotation operation!");
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Applies a Galois automorphism to the ciphertext asynchronously
-         * and stores the result in the output.
-         *
-         * @param input1 Input ciphertext to which the Galois operation will be
-         * applied.
-         * @param output Ciphertext where the result of the Galois operation is
-         * stored.
-         * @param galois_key Galois key used for the operation.
-         * @param galois_elt The Galois element to apply.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void apply_galois(Ciphertext& input1, Ciphertext& output,
                                    Galoiskey& galois_key, int galois_elt,
-                                   HEStream& stream)
+                                   cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -1848,27 +943,10 @@ namespace heongpu
          * @param galois_key Galois key used for the operation.
          * @param galois_elt The Galois element to apply.
          */
-        __host__ void apply_galois_inplace(Ciphertext& input1,
-                                           Galoiskey& galois_key,
-                                           int galois_elt)
-        {
-            apply_galois(input1, input1, galois_key, galois_elt);
-        }
-
-        /**
-         * @brief Applies a Galois automorphism to the ciphertext asynchronously
-         * in-place, modifying the input ciphertext.
-         *
-         * @param input1 Ciphertext to which the Galois operation will be
-         * applied.
-         * @param galois_key Galois key used for the operation.
-         * @param galois_elt The Galois element to apply.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void apply_galois_inplace(Ciphertext& input1,
-                                           Galoiskey& galois_key,
-                                           int galois_elt, HEStream& stream)
+        __host__ void
+        apply_galois_inplace(Ciphertext& input1, Galoiskey& galois_key,
+                             int galois_elt,
+                             cudaStream_t stream = cudaStreamDefault)
         {
             apply_galois(input1, input1, galois_key, galois_elt, stream);
         }
@@ -1883,105 +961,8 @@ namespace heongpu
          * @param switch_key Switch key used for the key switching operation.
          */
         __host__ void keyswitch(Ciphertext& input1, Ciphertext& output,
-                                Switchkey& switch_key)
-        {
-            if (input1.rescale_required_ || input1.relinearization_required_)
-            {
-                throw std::invalid_argument("Ciphertext can not be rotated!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count));
-            }
-
-            switch (static_cast<int>(switch_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        switchkey_method_I(input1, output, switch_key);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        switchkey_ckks_method_I(input1, output, switch_key);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        switchkey_method_II(input1, output, switch_key);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        switchkey_ckks_method_II(input1, output, switch_key);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for keyswitch operation!");
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Performs key switching on the ciphertext asynchronously and
-         * stores the result in the output.
-         *
-         * @param input1 Input ciphertext to be key-switched.
-         * @param output Ciphertext where the result of the key switching is
-         * stored.
-         * @param switch_key Switch key used for the key switching operation.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void keyswitch(Ciphertext& input1, Ciphertext& output,
-                                Switchkey& switch_key, HEStream& stream)
+                                Switchkey& switch_key,
+                                cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -2082,93 +1063,8 @@ namespace heongpu
          * @param conjugate_key Switch key used for the conjugation operation.
          */
         __host__ void conjugate(Ciphertext& input1, Ciphertext& output,
-                                Galoiskey& conjugate_key)
-        {
-            if (input1.rescale_required_ || input1.relinearization_required_)
-            {
-                throw std::invalid_argument("Ciphertext can not be rotated!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count));
-            }
-
-            switch (static_cast<int>(conjugate_key.key_type))
-            {
-                case 1: // KEYSWITHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        throw std::invalid_argument("BFV Does Not Support!");
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        conjugate_ckks_method_I(input1, output, conjugate_key);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        throw std::invalid_argument("BFV Does Not Support!");
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        conjugate_ckks_method_II(input1, output, conjugate_key);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITHING_METHOD_III
-
-                    throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
-                        "high memory consumption for keyswitch operation!");
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Performs conjugation on the ciphertext and stores the result
-         * in the output.
-         *
-         * @param input1 Input ciphertext to be conjugated.
-         * @param output Ciphertext where the result of the conjugation is
-         * stored.
-         * @param conjugate_key Switch key used for the conjugation operation.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void conjugate(Ciphertext& input1, Ciphertext& output,
-                                Galoiskey& conjugate_key, HEStream& stream)
+                                Galoiskey& conjugate_key,
+                                cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -2253,46 +1149,8 @@ namespace heongpu
          *
          * @param input1 Ciphertext to be rescaled.
          */
-        __host__ void rescale_inplace(Ciphertext& input1)
-        {
-            if ((!input1.rescale_required_) || input1.relinearization_required_)
-            {
-                throw std::invalid_argument("Ciphertexts can not be rescaled!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    // TODO: implement leveled BFV.
-                    throw std::invalid_argument("BFV Does Not Support!");
-                    break;
-                case 2: // CKKS
-                    rescale_inplace_ckks_leveled(input1);
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            input1.rescale_required_ = false;
-        }
-
-        /**
-         * @brief Rescales a ciphertext asynchronously in-place, modifying the
-         * input ciphertext.
-         *
-         * @param input1 Ciphertext to be rescaled.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void rescale_inplace(Ciphertext& input1, HEStream& stream)
+        __host__ void rescale_inplace(Ciphertext& input1,
+                                      cudaStream_t stream = cudaStreamDefault)
         {
             if ((!input1.rescale_required_) || input1.relinearization_required_)
             {
@@ -2332,65 +1190,8 @@ namespace heongpu
          * @param output Ciphertext where the result of the modulus drop is
          * stored.
          */
-        __host__ void mod_drop(Ciphertext& input1, Ciphertext& output)
-        {
-            if (input1.rescale_required_ || input1.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertext's modulus can not be dropped!!");
-            }
-
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            if (output.locations_.size() < (2 * n * (current_decomp_count - 1)))
-            {
-                output.resize((2 * n * (current_decomp_count - 1)));
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    // TODO: implement leveled BFV.
-                    throw std::invalid_argument(
-                        "BFV does dot support modulus dropping!");
-                    break;
-                case 2: // CKKS
-                    mod_drop_ckks_leveled(input1, output);
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_ + 1;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Drop the last modulus of ciphertext and stores the result in
-         * the output.(CKKS)
-         *
-         * @param input1 Input ciphertext from which last modulus will be
-         * dropped.
-         * @param output Ciphertext where the result of the modulus drop is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void mod_drop(Ciphertext& input1, Ciphertext& output,
-                               HEStream& stream)
+                               cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -2444,54 +1245,8 @@ namespace heongpu
          * @param output Plaintext where the result of the modulus drop is
          * stored.
          */
-        __host__ void mod_drop(Plaintext& input1, Plaintext& output)
-        {
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.size() < (n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Plaintext size!");
-            }
-
-            if (output.size() < (n * (current_decomp_count - 1)))
-            {
-                output.resize((n * (current_decomp_count - 1)));
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    // TODO: implement leveled BFV.
-                    throw std::invalid_argument(
-                        "BFV does dot support modulus dropping!");
-                    break;
-                case 2: // CKKS
-                    mod_drop_ckks_plaintext(input1, output);
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = input1.scheme_;
-            output.plain_size_ = (n * (current_decomp_count - 1));
-            output.depth_ = input1.depth_ + 1;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-        }
-
-        /**
-         * @brief Drop the last modulus of plaintext and stores the result in
-         * the output.(CKKS)
-         *
-         * @param input1 Input plaintext from which modulus will be dropped.
-         * @param output Plaintext where the result of the modulus drop is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void mod_drop(Plaintext& input1, Plaintext& output,
-                               HEStream& stream)
+                               cudaStream_t stream = cudaStreamDefault)
         {
             int current_decomp_count = Q_size_ - input1.depth_;
 
@@ -2533,7 +1288,8 @@ namespace heongpu
          *
          * @param input1 Plaintext to perform modulus dropping on.
          */
-        __host__ void mod_drop_inplace(Plaintext& input1)
+        __host__ void mod_drop_inplace(Plaintext& input1,
+                                       cudaStream_t stream = cudaStreamDefault)
         {
             int current_decomp_count = Q_size_ - input1.depth_;
 
@@ -2550,40 +1306,7 @@ namespace heongpu
                         "BFV does dot support modulus dropping!");
                     break;
                 case 2: // CKKS
-                    mod_drop_ckks_plaintext_inplace(input1);
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Drop the last modulus of plaintext in-place on a plaintext,
-         * modifying the input plaintext.
-         *
-         * @param input1 Plaintext to perform modulus dropping on.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void mod_drop_inplace(Plaintext& input1, HEStream& stream)
-        {
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.size() < (n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Plaintext size!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    // TODO: implement leveled BFV.
-                    throw std::invalid_argument(
-                        "BFV does dot support modulus dropping!");
-                    break;
-                case 2: // CKKS
-                    mod_drop_ckks_plaintext_inplace(input1);
+                    mod_drop_ckks_plaintext_inplace(input1, stream);
                     break;
                 default:
                     throw std::invalid_argument("Invalid Scheme Type");
@@ -2597,40 +1320,8 @@ namespace heongpu
          *
          * @param input1 Ciphertext to perform modulus dropping on.
          */
-        __host__ void mod_drop_inplace(Ciphertext& input1)
-        {
-            int current_decomp_count = Q_size_ - input1.depth_;
-
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
-            {
-                throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    // TODO: implement leveled BFV.
-                    throw std::invalid_argument(
-                        "BFV does dot support modulus dropping!");
-                    break;
-                case 2: // CKKS
-                    mod_drop_ckks_leveled_inplace(input1);
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Drop the last modulus of ciphertext in-place on a ciphertext,
-         * modifying the input ciphertext.
-         *
-         * @param input1 Ciphertext to perform modulus dropping on.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void mod_drop_inplace(Ciphertext& input1, HEStream& stream)
+        __host__ void mod_drop_inplace(Ciphertext& input1,
+                                       cudaStream_t stream = cudaStreamDefault)
         {
             int current_decomp_count = Q_size_ - input1.depth_;
 
@@ -2655,57 +1346,9 @@ namespace heongpu
             }
         }
 
-        __host__ void multiply_power_of_X(Ciphertext& input1,
-                                          Ciphertext& output, int index)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (index != 0)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        if (input1.locations_.size() < (2 * n * Q_size_))
-                        {
-                            throw std::invalid_argument(
-                                "Invalid Ciphertexts size!");
-                        }
-
-                        if (output.locations_.size() < (2 * n * Q_size_))
-                        {
-                            output.resize((2 * n * Q_size_));
-                        }
-
-                        negacyclic_shift_poly_coeffmod(input1, output, index);
-                    }
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS does dot support multiply_power_of_X!");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        __host__ void multiply_power_of_X(Ciphertext& input1,
-                                          Ciphertext& output, int index,
-                                          HEStream& stream)
+        __host__ void
+        multiply_power_of_X(Ciphertext& input1, Ciphertext& output, int index,
+                            cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -2761,55 +1404,8 @@ namespace heongpu
          * @param output Plaintext where the result of the transformation is
          * stored.
          */
-        __host__ void transform_to_ntt(Plaintext& input1, Plaintext& output)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (!input1.in_ntt_domain_)
-                    {
-                        if (input1.size() < n)
-                        {
-                            throw std::invalid_argument(
-                                "Invalid Ciphertexts size!");
-                        }
-
-                        if (output.size() < (n * Q_size_))
-                        {
-                            output.resize((n * Q_size_));
-                        }
-
-                        transform_to_ntt_bfv_plain(input1, output);
-                    }
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS does dot support transform_to_ntt_inplace!");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = input1.scheme_;
-            output.plain_size_ = (n * Q_size_);
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = true;
-        }
-
-        /**
-         * @brief Transforms a plaintext to the NTT domain asynchronously and
-         * stores the result in the output.
-         *
-         * @param input1 Input plaintext to be transformed.
-         * @param output Plaintext where the result of the transformation is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void transform_to_ntt(Plaintext& input1, Plaintext& output,
-                                       HEStream& stream)
+                                       cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -2852,21 +1448,9 @@ namespace heongpu
          *
          * @param input1 Plaintext to be transformed.
          */
-        __host__ void transform_to_ntt_inplace(Plaintext& input1)
-        {
-            transform_to_ntt(input1, input1);
-        }
-
-        /**
-         * @brief Transforms a plaintext to the NTT domain asynchronously
-         * in-place, modifying the input plaintext.
-         *
-         * @param input1 Plaintext to be transformed.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void transform_to_ntt_inplace(Plaintext& input1,
-                                               HEStream& stream)
+        __host__ void
+        transform_to_ntt_inplace(Plaintext& input1,
+                                 cudaStream_t stream = cudaStreamDefault)
         {
             transform_to_ntt(input1, input1, stream);
         }
@@ -2879,65 +1463,8 @@ namespace heongpu
          * @param output Ciphertext where the result of the transformation is
          * stored.
          */
-        __host__ void transform_to_ntt(Ciphertext& input1, Ciphertext& output)
-        {
-            if (input1.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertexts can not be transformed to NTT!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (!input1.in_ntt_domain_)
-                    {
-                        if (input1.locations_.size() < (2 * n * Q_size_))
-                        {
-                            throw std::invalid_argument(
-                                "Invalid Ciphertexts size!");
-                        }
-
-                        if (output.locations_.size() < (2 * n * Q_size_))
-                        {
-                            output.resize((2 * n * Q_size_));
-                        }
-
-                        transform_to_ntt_bfv_cipher(input1, output);
-                    }
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS does dot support transform_to_ntt_inplace!");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = true;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Transforms a ciphertext to the NTT domain asynchronously and
-         * stores the result in the output.
-         *
-         * @param input1 Input ciphertext to be transformed.
-         * @param output Ciphertext where the result of the transformation is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
         __host__ void transform_to_ntt(Ciphertext& input1, Ciphertext& output,
-                                       HEStream& stream)
+                                       cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.relinearization_required_)
             {
@@ -2990,21 +1517,9 @@ namespace heongpu
          *
          * @param input1 Ciphertext to be transformed.
          */
-        __host__ void transform_to_ntt_inplace(Ciphertext& input1)
-        {
-            transform_to_ntt(input1, input1);
-        }
-
-        /**
-         * @brief Transforms a ciphertext to the NTT domain asynchronously
-         * in-place, modifying the input ciphertext.
-         *
-         * @param input1 Ciphertext to be transformed.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void transform_to_ntt_inplace(Ciphertext& input1,
-                                               HEStream& stream)
+        __host__ void
+        transform_to_ntt_inplace(Ciphertext& input1,
+                                 cudaStream_t stream = cudaStreamDefault)
         {
             transform_to_ntt(input1, input1, stream);
         }
@@ -3017,65 +1532,9 @@ namespace heongpu
          * @param output Ciphertext where the result of the transformation is
          * stored.
          */
-        __host__ void transform_from_ntt(Ciphertext& input1, Ciphertext& output)
-        {
-            if (input1.relinearization_required_)
-            {
-                throw std::invalid_argument(
-                    "Ciphertexts can not be transformed from NTT!");
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (input1.in_ntt_domain_)
-                    {
-                        if (input1.locations_.size() < (2 * n * Q_size_))
-                        {
-                            throw std::invalid_argument(
-                                "Invalid Ciphertexts size!");
-                        }
-
-                        if (output.locations_.size() < (2 * n * Q_size_))
-                        {
-                            output.resize((2 * n * Q_size_));
-                        }
-
-                        transform_from_ntt_bfv_cipher(input1, output);
-                    }
-                    break;
-                case 2: // CKKS
-                    throw std::invalid_argument(
-                        "CKKS does dot support transform_from_ntt!");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = false;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
-        }
-
-        /**
-         * @brief Transforms a ciphertext from the NTT domain asynchronously and
-         * stores the result in the output.
-         *
-         * @param input1 Input ciphertext to be transformed from the NTT domain.
-         * @param output Ciphertext where the result of the transformation is
-         * stored.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void transform_from_ntt(Ciphertext& input1, Ciphertext& output,
-                                         HEStream& stream)
+        __host__ void
+        transform_from_ntt(Ciphertext& input1, Ciphertext& output,
+                           cudaStream_t stream = cudaStreamDefault)
         {
             if (input1.relinearization_required_)
             {
@@ -3128,21 +1587,9 @@ namespace heongpu
          *
          * @param input1 Ciphertext to be transformed from the NTT domain.
          */
-        __host__ void transform_from_ntt_inplace(Ciphertext& input1)
-        {
-            transform_from_ntt(input1, input1);
-        }
-
-        /**
-         * @brief Transforms a ciphertext from the NTT domain asynchronously
-         * in-place, modifying the input ciphertext.
-         *
-         * @param input1 Ciphertext to be transformed from the NTT domain.
-         * @param stream The HEStream object representing the CUDA stream to be
-         * used for asynchronous operation.
-         */
-        __host__ void transform_from_ntt_inplace(Ciphertext& input1,
-                                                 HEStream& stream)
+        __host__ void
+        transform_from_ntt_inplace(Ciphertext& input1,
+                                   cudaStream_t stream = cudaStreamDefault)
         {
             transform_from_ntt(input1, input1, stream);
         }
@@ -3160,146 +1607,93 @@ namespace heongpu
 
       private:
         __host__ void add_plain_bfv(Ciphertext& input1, Plaintext& input2,
-                                    Ciphertext& output);
-        __host__ void add_plain_bfv(Ciphertext& input1, Plaintext& input2,
-                                    Ciphertext& output, HEStream& stream);
+                                    Ciphertext& output,
+                                    const cudaStream_t stream);
 
         __host__ void add_plain_bfv_inplace(Ciphertext& input1,
-                                            Plaintext& input2);
-        __host__ void add_plain_bfv_inplace(Ciphertext& input1,
                                             Plaintext& input2,
-                                            HEStream& stream);
+                                            const cudaStream_t stream);
 
         __host__ void add_plain_ckks(Ciphertext& input1, Plaintext& input2,
-                                     Ciphertext& output);
-        __host__ void add_plain_ckks(Ciphertext& input1, Plaintext& input2,
-                                     Ciphertext& output, HEStream& stream);
+                                     Ciphertext& output,
+                                     const cudaStream_t stream);
 
-        __host__ void add_plain_ckks_inplace(Ciphertext& input1,
-                                             Plaintext& input2);
         __host__ void add_plain_ckks_inplace(Ciphertext& input1,
                                              Plaintext& input2,
-                                             HEStream& stream);
+                                             const cudaStream_t stream);
 
         __host__ void sub_plain_bfv(Ciphertext& input1, Plaintext& input2,
-                                    Ciphertext& output);
-        __host__ void sub_plain_bfv(Ciphertext& input1, Plaintext& input2,
-                                    Ciphertext& output, HEStream& stream);
+                                    Ciphertext& output,
+                                    const cudaStream_t stream);
 
-        __host__ void sub_plain_bfv_inplace(Ciphertext& input1,
-                                            Plaintext& input2);
         __host__ void sub_plain_bfv_inplace(Ciphertext& input1,
                                             Plaintext& input2,
-                                            HEStream& stream);
+                                            const cudaStream_t stream);
 
         __host__ void sub_plain_ckks(Ciphertext& input1, Plaintext& input2,
-                                     Ciphertext& output);
-        __host__ void sub_plain_ckks(Ciphertext& input1, Plaintext& input2,
-                                     Ciphertext& output, HEStream& stream);
+                                     Ciphertext& output,
+                                     const cudaStream_t stream);
 
-        __host__ void sub_plain_ckks_inplace(Ciphertext& input1,
-                                             Plaintext& input2);
         __host__ void sub_plain_ckks_inplace(Ciphertext& input1,
                                              Plaintext& input2,
-                                             HEStream& stream);
+                                             const cudaStream_t stream);
 
         __host__ void multiply_bfv(Ciphertext& input1, Ciphertext& input2,
-                                   Ciphertext& output);
-        __host__ void multiply_bfv(Ciphertext& input1, Ciphertext& input2,
-                                   Ciphertext& output, HEStream& stream);
+                                   Ciphertext& output,
+                                   const cudaStream_t stream);
 
         __host__ void multiply_ckks(Ciphertext& input1, Ciphertext& input2,
-                                    Ciphertext& output);
-        __host__ void multiply_ckks(Ciphertext& input1, Ciphertext& input2,
-                                    Ciphertext& output, HEStream& stream);
+                                    Ciphertext& output,
+                                    const cudaStream_t stream);
 
         __host__ void multiply_plain_bfv(Ciphertext& input1, Plaintext& input2,
-                                         Ciphertext& output);
-        __host__ void multiply_plain_bfv(Ciphertext& input1, Plaintext& input2,
-                                         Ciphertext& output, HEStream& stream);
+                                         Ciphertext& output,
+                                         const cudaStream_t stream);
 
         __host__ void multiply_plain_ckks(Ciphertext& input1, Plaintext& input2,
-                                          Ciphertext& output);
-        __host__ void multiply_plain_ckks(Ciphertext& input1, Plaintext& input2,
-                                          Ciphertext& output, HEStream& stream);
+                                          Ciphertext& output,
+                                          const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
 
-        __host__ void relinearize_seal_method_inplace(Ciphertext& input1,
-                                                      Relinkey& relin_key);
-
-        __host__ void relinearize_seal_method_inplace(Ciphertext& input1,
-                                                      Relinkey& relin_key,
-                                                      HEStream& stream);
-
         __host__ void
-        relinearize_external_product_method_inplace(Ciphertext& input1,
-                                                    Relinkey& relin_key);
+        relinearize_seal_method_inplace(Ciphertext& input1, Relinkey& relin_key,
+                                        const cudaStream_t stream);
 
         __host__ void relinearize_external_product_method_inplace(
-            Ciphertext& input1, Relinkey& relin_key, HEStream& stream);
-
-        __host__ void
-        relinearize_external_product_method2_inplace(Ciphertext& input1,
-                                                     Relinkey& relin_key);
+            Ciphertext& input1, Relinkey& relin_key, const cudaStream_t stream);
 
         __host__ void relinearize_external_product_method2_inplace(
-            Ciphertext& input1, Relinkey& relin_key, HEStream& stream);
+            Ciphertext& input1, Relinkey& relin_key, const cudaStream_t stream);
 
-        __host__ void relinearize_seal_method_inplace_ckks(Ciphertext& input1,
-                                                           Relinkey& relin_key);
-
-        __host__ void relinearize_seal_method_inplace_ckks(Ciphertext& input1,
-                                                           Relinkey& relin_key,
-                                                           HEStream& stream);
-
-        __host__ void
-        relinearize_external_product_method_inplace_ckks(Ciphertext& input1,
-                                                         Relinkey& relin_key);
+        __host__ void relinearize_seal_method_inplace_ckks(
+            Ciphertext& input1, Relinkey& relin_key, const cudaStream_t stream);
 
         __host__ void relinearize_external_product_method_inplace_ckks(
-            Ciphertext& input1, Relinkey& relin_key, HEStream& stream);
-
-        __host__ void
-        relinearize_external_product_method2_inplace_ckks(Ciphertext& input1,
-                                                          Relinkey& relin_key);
+            Ciphertext& input1, Relinkey& relin_key, const cudaStream_t stream);
 
         __host__ void relinearize_external_product_method2_inplace_ckks(
-            Ciphertext& input1, Relinkey& relin_key, HEStream& stream);
+            Ciphertext& input1, Relinkey& relin_key, const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
-
-        __host__ void rotate_method_I(Ciphertext& input1, Ciphertext& output,
-                                      Galoiskey& galois_key, int shift);
 
         __host__ void rotate_method_I(Ciphertext& input1, Ciphertext& output,
                                       Galoiskey& galois_key, int shift,
-                                      HEStream& stream);
-
-        __host__ void rotate_method_II(Ciphertext& input1, Ciphertext& output,
-                                       Galoiskey& galois_key, int shift);
+                                      const cudaStream_t stream);
 
         __host__ void rotate_method_II(Ciphertext& input1, Ciphertext& output,
                                        Galoiskey& galois_key, int shift,
-                                       HEStream& stream);
-
-        __host__ void rotate_ckks_method_I(Ciphertext& input1,
-                                           Ciphertext& output,
-                                           Galoiskey& galois_key, int shift);
+                                       const cudaStream_t stream);
 
         __host__ void rotate_ckks_method_I(Ciphertext& input1,
                                            Ciphertext& output,
                                            Galoiskey& galois_key, int shift,
-                                           HEStream& stream);
-
-        __host__ void rotate_ckks_method_II(Ciphertext& input1,
-                                            Ciphertext& output,
-                                            Galoiskey& galois_key, int shift);
+                                           const cudaStream_t stream);
 
         __host__ void rotate_ckks_method_II(Ciphertext& input1,
                                             Ciphertext& output,
                                             Galoiskey& galois_key, int shift,
-                                            HEStream& stream);
+                                            const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
 
@@ -3307,184 +1701,114 @@ namespace heongpu
         __host__ void apply_galois_method_I(Ciphertext& input1,
                                             Ciphertext& output,
                                             Galoiskey& galois_key,
-                                            int galois_elt);
-
-        __host__ void apply_galois_method_I(Ciphertext& input1,
-                                            Ciphertext& output,
-                                            Galoiskey& galois_key,
-                                            int galois_elt, HEStream& stream);
+                                            int galois_elt,
+                                            const cudaStream_t stream);
 
         __host__ void apply_galois_method_II(Ciphertext& input1,
                                              Ciphertext& output,
                                              Galoiskey& galois_key,
-                                             int galois_elt);
-
-        __host__ void apply_galois_method_II(Ciphertext& input1,
-                                             Ciphertext& output,
-                                             Galoiskey& galois_key,
-                                             int galois_elt, HEStream& stream);
-
-        __host__ void apply_galois_ckks_method_I(Ciphertext& input1,
-                                                 Ciphertext& output,
-                                                 Galoiskey& galois_key,
-                                                 int galois_elt);
+                                             int galois_elt,
+                                             const cudaStream_t stream);
 
         __host__ void apply_galois_ckks_method_I(Ciphertext& input1,
                                                  Ciphertext& output,
                                                  Galoiskey& galois_key,
                                                  int galois_elt,
-                                                 HEStream& stream);
-
-        __host__ void apply_galois_ckks_method_II(Ciphertext& input1,
-                                                  Ciphertext& output,
-                                                  Galoiskey& galois_key,
-                                                  int galois_elt);
+                                                 const cudaStream_t stream);
 
         __host__ void apply_galois_ckks_method_II(Ciphertext& input1,
                                                   Ciphertext& output,
                                                   Galoiskey& galois_key,
                                                   int galois_elt,
-                                                  HEStream& stream);
+                                                  const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
-
-        __host__ void rotate_columns_method_I(Ciphertext& input1,
-                                              Ciphertext& output,
-                                              Galoiskey& galois_key);
 
         __host__ void rotate_columns_method_I(Ciphertext& input1,
                                               Ciphertext& output,
                                               Galoiskey& galois_key,
-                                              HEStream& stream);
-
-        __host__ void rotate_columns_method_II(Ciphertext& input1,
-                                               Ciphertext& output,
-                                               Galoiskey& galois_key);
+                                              const cudaStream_t stream);
 
         __host__ void rotate_columns_method_II(Ciphertext& input1,
                                                Ciphertext& output,
                                                Galoiskey& galois_key,
-                                               HEStream& stream);
+                                               const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
 
         __host__ void switchkey_method_I(Ciphertext& input1, Ciphertext& output,
-                                         Switchkey& switch_key);
-
-        __host__ void switchkey_method_I(Ciphertext& input1, Ciphertext& output,
                                          Switchkey& switch_key,
-                                         HEStream& stream);
-
-        __host__ void switchkey_method_II(Ciphertext& input1,
-                                          Ciphertext& output,
-                                          Switchkey& switch_key);
+                                         const cudaStream_t stream);
 
         __host__ void switchkey_method_II(Ciphertext& input1,
                                           Ciphertext& output,
                                           Switchkey& switch_key,
-                                          HEStream& stream);
-
-        __host__ void switchkey_ckks_method_I(Ciphertext& input1,
-                                              Ciphertext& output,
-                                              Switchkey& switch_key);
+                                          const cudaStream_t stream);
 
         __host__ void switchkey_ckks_method_I(Ciphertext& input1,
                                               Ciphertext& output,
                                               Switchkey& switch_key,
-                                              HEStream& stream);
-
-        __host__ void switchkey_ckks_method_II(Ciphertext& input1,
-                                               Ciphertext& output,
-                                               Switchkey& switch_key);
+                                              const cudaStream_t stream);
 
         __host__ void switchkey_ckks_method_II(Ciphertext& input1,
                                                Ciphertext& output,
                                                Switchkey& switch_key,
-                                               HEStream& stream);
+                                               const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
-
-        __host__ void conjugate_ckks_method_I(Ciphertext& input1,
-                                              Ciphertext& output,
-                                              Galoiskey& conjugate_key);
 
         __host__ void conjugate_ckks_method_I(Ciphertext& input1,
                                               Ciphertext& output,
                                               Galoiskey& conjugate_key,
-                                              HEStream& stream);
-
-        __host__ void conjugate_ckks_method_II(Ciphertext& input1,
-                                               Ciphertext& output,
-                                               Galoiskey& conjugate_key);
+                                              const cudaStream_t stream);
 
         __host__ void conjugate_ckks_method_II(Ciphertext& input1,
                                                Ciphertext& output,
                                                Galoiskey& conjugate_key,
-                                               HEStream& stream);
+                                               const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
-
-        __host__ void rescale_inplace_ckks_leveled(Ciphertext& input1);
 
         __host__ void rescale_inplace_ckks_leveled(Ciphertext& input1,
-                                                   HEStream& stream);
+                                                   const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
-
-        __host__ void mod_drop_ckks_leveled(Ciphertext& input1,
-                                            Ciphertext& input2);
 
         __host__ void mod_drop_ckks_leveled(Ciphertext& input1,
                                             Ciphertext& input2,
-                                            HEStream& stream);
-
-        __host__ void mod_drop_ckks_plaintext(Plaintext& input1,
-                                              Plaintext& input2);
+                                            const cudaStream_t stream);
 
         __host__ void mod_drop_ckks_plaintext(Plaintext& input1,
                                               Plaintext& input2,
-                                              HEStream& stream);
+                                              const cudaStream_t stream);
 
-        __host__ void mod_drop_ckks_plaintext_inplace(Plaintext& input1);
-
-        __host__ void mod_drop_ckks_plaintext_inplace(Plaintext& input1,
-                                                      HEStream& stream);
-
-        __host__ void mod_drop_ckks_leveled_inplace(Ciphertext& input1);
+        __host__ void
+        mod_drop_ckks_plaintext_inplace(Plaintext& input1,
+                                        const cudaStream_t stream);
 
         __host__ void mod_drop_ckks_leveled_inplace(Ciphertext& input1,
-                                                    HEStream& stream);
+                                                    const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
-
-        __host__ void negacyclic_shift_poly_coeffmod(Ciphertext& input1,
-                                                     Ciphertext& output,
-                                                     int index);
 
         __host__ void negacyclic_shift_poly_coeffmod(Ciphertext& input1,
                                                      Ciphertext& output,
                                                      int index,
-                                                     HEStream& stream);
+                                                     const cudaStream_t stream);
 
         ///////////////////////////////////////////////////
 
         __host__ void transform_to_ntt_bfv_plain(Plaintext& input1,
-                                                 Plaintext& output);
-        __host__ void transform_to_ntt_bfv_plain(Plaintext& input1,
                                                  Plaintext& output,
-                                                 HEStream& stream);
+                                                 const cudaStream_t stream);
 
-        __host__ void transform_to_ntt_bfv_cipher(Ciphertext& input1,
-                                                  Ciphertext& output);
         __host__ void transform_to_ntt_bfv_cipher(Ciphertext& input1,
                                                   Ciphertext& output,
-                                                  HEStream& stream);
+                                                  const cudaStream_t stream);
 
         __host__ void transform_from_ntt_bfv_cipher(Ciphertext& input1,
-                                                    Ciphertext& output);
-        __host__ void transform_from_ntt_bfv_cipher(Ciphertext& input1,
                                                     Ciphertext& output,
-                                                    HEStream& stream);
+                                                    const cudaStream_t stream);
 
       private:
         scheme_type scheme_;
@@ -3620,35 +1944,6 @@ namespace heongpu
         std::vector<Modulus> prime_vector_; // in CPU
 
         // Temp(to avoid allocation time)
-        DeviceVector<Data> temp_mul;
-        Data* temp1_mul;
-        Data* temp2_mul;
-
-        DeviceVector<Data> temp_relin;
-        Data* temp1_relin;
-        Data* temp2_relin;
-
-        DeviceVector<Data> temp_relin_new;
-        Data* temp1_relin_new;
-        Data* temp2_relin_new;
-        Data* temp3_relin_new;
-
-        DeviceVector<Data> temp_rescale;
-        Data* temp1_rescale;
-        Data* temp2_rescale;
-
-        DeviceVector<Data> temp_rotation;
-        Data* temp0_rotation;
-        Data* temp1_rotation;
-        Data* temp2_rotation;
-        Data* temp3_rotation;
-        Data* temp4_rotation;
-
-        DeviceVector<Data> temp_plain_mul;
-        Data* temp1_plain_mul;
-
-        DeviceVector<Data> temp_mod_drop_;
-        Data* temp_mod_drop;
 
         // new method
         DeviceVector<int> new_prime_locations_;
@@ -3662,9 +1957,9 @@ namespace heongpu
                                           const double scale,
                                           const BootstrappingConfig& config);
 
-        __host__ Ciphertext bootstrapping(Ciphertext& cipher,
-                                          Galoiskey& galois_key,
-                                          Relinkey& relin_key);
+        __host__ Ciphertext bootstrapping(
+            Ciphertext& cipher, Galoiskey& galois_key, Relinkey& relin_key,
+            cudaStream_t stream = cudaStreamDefault);
 
         __host__ std::vector<int> bootstrapping_key_indexs()
         {
@@ -3672,9 +1967,11 @@ namespace heongpu
         }
 
       private:
-        __host__ Plaintext operator_plaintext();
+        __host__ Plaintext
+        operator_plaintext(cudaStream_t stream = cudaStreamDefault);
 
-        __host__ Ciphertext operator_ciphertext(double scale = 0);
+        __host__ Ciphertext operator_ciphertext(
+            double scale, cudaStream_t stream = cudaStreamDefault);
 
         class Vandermonde
         {
@@ -3822,32 +2119,35 @@ namespace heongpu
             Ciphertext& cipher,
             std::vector<heongpu::DeviceVector<Data>>& matrix,
             std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
-            Galoiskey& galois_key);
+            Galoiskey& galois_key, const cudaStream_t stream);
 
         __host__ Ciphertext multiply_matrix_less_memory(
             Ciphertext& cipher,
             std::vector<heongpu::DeviceVector<Data>>& matrix,
             std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
             std::vector<std::vector<std::vector<int>>>& real_shift,
-            Galoiskey& galois_key);
+            Galoiskey& galois_key, const cudaStream_t stream);
 
-        __host__ std::vector<Ciphertext> coeff_to_slot(Ciphertext& cipher,
-                                                       Galoiskey& galois_key);
+        __host__ std::vector<Ciphertext>
+        coeff_to_slot(Ciphertext& cipher, Galoiskey& galois_key,
+                      const cudaStream_t stream);
 
         __host__ Ciphertext slot_to_coeff(Ciphertext& cipher0,
                                           Ciphertext& cipher1,
-                                          Galoiskey& galois_key);
+                                          Galoiskey& galois_key,
+                                          const cudaStream_t stream);
 
-        __host__ Ciphertext exp_scaled(Ciphertext& cipher, Relinkey& relin_key);
+        __host__ Ciphertext exp_scaled(Ciphertext& cipher, Relinkey& relin_key,
+                                       const cudaStream_t stream);
 
         __host__ Ciphertext exp_taylor_approximation(Ciphertext& cipher,
-                                                     Relinkey& relin_key);
+                                                     Relinkey& relin_key,
+                                                     const cudaStream_t stream);
 
         // Double-hoisting BSGS matrix×vector algorithm
-        __host__ DeviceVector<Data>
-        fast_single_hoisting_rotation_ckks(Ciphertext& input1,
-                                           std::vector<int>& bsgs_shift, int n1,
-                                           Galoiskey& galois_key)
+        __host__ DeviceVector<Data> fast_single_hoisting_rotation_ckks(
+            Ciphertext& input1, std::vector<int>& bsgs_shift, int n1,
+            Galoiskey& galois_key, const cudaStream_t stream)
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -3867,8 +2167,8 @@ namespace heongpu
                     if (scheme_ == scheme_type::ckks)
                     {
                         DeviceVector<Data> result =
-                            fast_single_hoisting_rotation_ckks_method_I_op(
-                                input1, bsgs_shift, n1, galois_key);
+                            fast_single_hoisting_rotation_ckks_method_I(
+                                input1, bsgs_shift, n1, galois_key, stream);
                         return result;
                     }
                     else
@@ -3880,8 +2180,8 @@ namespace heongpu
                     if (scheme_ == scheme_type::ckks)
                     {
                         DeviceVector<Data> result =
-                            fast_single_hoisting_rotation_ckks_method_II_op(
-                                input1, bsgs_shift, n1, galois_key);
+                            fast_single_hoisting_rotation_ckks_method_II(
+                                input1, bsgs_shift, n1, galois_key, stream);
                         return result;
                     }
                     else
@@ -3902,15 +2202,14 @@ namespace heongpu
             }
         }
 
-        __host__ DeviceVector<Data>
-        fast_single_hoisting_rotation_ckks_method_I_op(
+        __host__ DeviceVector<Data> fast_single_hoisting_rotation_ckks_method_I(
             Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
-            Galoiskey& galois_key);
+            Galoiskey& galois_key, const cudaStream_t stream);
 
         __host__ DeviceVector<Data>
-        fast_single_hoisting_rotation_ckks_method_II_op(
+        fast_single_hoisting_rotation_ckks_method_II(
             Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
-            Galoiskey& galois_key);
+            Galoiskey& galois_key, const cudaStream_t stream);
 
         // Pre-computed encoded parameters
         // CtoS part

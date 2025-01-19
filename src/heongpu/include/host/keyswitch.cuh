@@ -121,12 +121,13 @@ namespace heongpu
                 if (copy.relinkey_size_leveled_.size() == 0)
                 {
                     device_location_.resize(copy.device_location_.size(),
-                                            cudaStreamLegacy);
+                                            copy.device_location_.stream());
                     cudaMemcpyAsync(
                         device_location_.data(), copy.device_location_.data(),
                         copy.device_location_.size() * sizeof(Data),
                         cudaMemcpyDeviceToDevice,
-                        cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                        copy.device_location_
+                            .stream()); // TODO: use cudaStreamPerThread
                 }
                 else
                 {
@@ -136,14 +137,16 @@ namespace heongpu
                          i++)
                     {
                         device_location_leveled_[i].resize(
-                            copy.device_location_.size(), cudaStreamLegacy);
+                            copy.device_location_.size(),
+                            copy.device_location_leveled_[i].stream());
                         cudaMemcpyAsync(
                             device_location_leveled_[i].data(),
                             copy.device_location_leveled_[i].data(),
                             copy.device_location_leveled_[i].size() *
                                 sizeof(Data),
                             cudaMemcpyDeviceToDevice,
-                            cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                            copy.device_location_leveled_[i]
+                                .stream()); // TODO: use cudaStreamPerThread
                     }
                 }
             }
@@ -258,13 +261,14 @@ namespace heongpu
                     if (copy.relinkey_size_leveled_.size() == 0)
                     {
                         device_location_.resize(copy.device_location_.size(),
-                                                cudaStreamLegacy);
+                                                copy.device_location_.stream());
                         cudaMemcpyAsync(
                             device_location_.data(),
                             copy.device_location_.data(),
                             copy.device_location_.size() * sizeof(Data),
                             cudaMemcpyDeviceToDevice,
-                            cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                            copy.device_location_
+                                .stream()); // TODO: use cudaStreamPerThread
                     }
                     else
                     {
@@ -274,15 +278,17 @@ namespace heongpu
                              i < copy.device_location_leveled_.size(); i++)
                         {
                             device_location_leveled_[i].resize(
-                                copy.device_location_.size(), cudaStreamLegacy);
+                                copy.device_location_.size(),
+                                copy.device_location_leveled_[i].stream());
                             cudaMemcpyAsync(
                                 device_location_leveled_[i].data(),
                                 copy.device_location_leveled_[i].data(),
                                 copy.device_location_leveled_[i].size() *
                                     sizeof(Data),
                                 cudaMemcpyDeviceToDevice,
-                                cudaStreamLegacy); // TODO: use
-                                                   // cudaStreamPerThread
+                                copy.device_location_leveled_[i]
+                                    .stream()); // TODO: use
+                                                // cudaStreamPerThread
                         }
                     }
                 }
@@ -554,23 +560,24 @@ namespace heongpu
             {
                 for (const auto& [key, value] : copy.device_location_)
                 {
-                    device_location_[key].resize(value.size(),
-                                                 cudaStreamLegacy);
+                    device_location_[key].resize(value.size(), value.stream());
                     cudaMemcpyAsync(
                         device_location_[key].data(), value.data(),
                         value.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
-                        cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                        value.stream()); // TODO: use cudaStreamPerThread
                 }
 
-                zero_device_location_.resize(copy.zero_device_location_.size(),
-                                             cudaStreamLegacy);
+                zero_device_location_.resize(
+                    copy.zero_device_location_.size(),
+                    copy.zero_device_location_.stream());
 
-                cudaMemcpyAsync(
-                    zero_device_location_.data(),
-                    copy.zero_device_location_.data(),
-                    copy.zero_device_location_.size() * sizeof(Data),
-                    cudaMemcpyDeviceToDevice,
-                    cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                cudaMemcpyAsync(zero_device_location_.data(),
+                                copy.zero_device_location_.data(),
+                                copy.zero_device_location_.size() *
+                                    sizeof(Data),
+                                cudaMemcpyDeviceToDevice,
+                                copy.zero_device_location_
+                                    .stream()); // TODO: use cudaStreamPerThread
             }
             else
             {
@@ -669,23 +676,25 @@ namespace heongpu
                     for (const auto& [key, value] : copy.device_location_)
                     {
                         device_location_[key].resize(value.size(),
-                                                     cudaStreamLegacy);
+                                                     value.stream());
                         cudaMemcpyAsync(
                             device_location_[key].data(), value.data(),
                             value.size() * sizeof(Data),
                             cudaMemcpyDeviceToDevice,
-                            cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                            value.stream()); // TODO: use cudaStreamPerThread
                     }
 
                     zero_device_location_.resize(
-                        copy.zero_device_location_.size(), cudaStreamLegacy);
+                        copy.zero_device_location_.size(),
+                        copy.zero_device_location_.stream());
 
                     cudaMemcpyAsync(
                         zero_device_location_.data(),
                         copy.zero_device_location_.data(),
                         copy.zero_device_location_.size() * sizeof(Data),
                         cudaMemcpyDeviceToDevice,
-                        cudaStreamLegacy); // TODO: use cudaStreamPerThread
+                        copy.zero_device_location_
+                            .stream()); // TODO: use cudaStreamPerThread
                 }
                 else
                 {

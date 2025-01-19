@@ -9,13 +9,12 @@ namespace heongpu
 {
     __host__ Ciphertext::Ciphertext() {}
 
-    __host__ Ciphertext::Ciphertext(Parameters& context, double scale,
-                                    int depth)
+    __host__ Ciphertext::Ciphertext(Parameters& context, cudaStream_t stream)
     {
         coeff_modulus_count_ = context.Q_size;
-        cipher_size_ = 3; // default
+        cipher_size_ = 2; // default
         ring_size_ = context.n; // n
-        depth_ = depth;
+        depth_ = 0;
         scheme_ = context.scheme_;
         in_ntt_domain_ =
             (static_cast<int>(scheme_) == static_cast<int>(scheme_type::ckks))
@@ -24,43 +23,20 @@ namespace heongpu
 
         rescale_required_ = false;
         relinearization_required_ = false;
-        scale_ = scale;
-
-        locations_ = DeviceVector<Data>(3 * (coeff_modulus_count_ - depth_) *
-                                        ring_size_);
-    }
-
-    __host__ Ciphertext::Ciphertext(Parameters& context, HEStream& stream,
-                                    double scale, int depth)
-    {
-        coeff_modulus_count_ = context.Q_size;
-        cipher_size_ = 3; // default
-        ring_size_ = context.n; // n
-        depth_ = depth;
-        scheme_ = context.scheme_;
-        in_ntt_domain_ =
-            (static_cast<int>(scheme_) == static_cast<int>(scheme_type::ckks))
-                ? true
-                : false;
-
-        rescale_required_ = false;
-        relinearization_required_ = false;
-        scale_ = scale;
+        scale_ = 0;
 
         locations_ = DeviceVector<Data>(
-            3 * (coeff_modulus_count_ - depth_) * ring_size_, stream.stream);
+            cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_,
+            stream);
     }
 
-    //
-
     __host__ Ciphertext::Ciphertext(const std::vector<Data>& cipher,
-                                    Parameters& context, double scale,
-                                    int depth)
+                                    Parameters& context, cudaStream_t stream)
     {
         coeff_modulus_count_ = context.Q_size;
-        cipher_size_ = 3; // default
+        cipher_size_ = 2; // default
         ring_size_ = context.n; // n
-        depth_ = depth;
+        depth_ = 0;
         scheme_ = context.scheme_;
         in_ntt_domain_ =
             (static_cast<int>(scheme_) == static_cast<int>(scheme_type::ckks))
@@ -69,32 +45,33 @@ namespace heongpu
 
         rescale_required_ = false;
         relinearization_required_ = false;
-        scale_ = scale;
+        scale_ = 0;
 
         if (!(cipher.size() ==
-              (2 * (coeff_modulus_count_ - depth_) * ring_size_)))
+              (cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_)))
         {
             throw std::invalid_argument("Ciphertext size should be valid!");
         }
 
-        locations_ = DeviceVector<Data>(3 * (coeff_modulus_count_ - depth_) *
-                                        ring_size_);
+        locations_ = DeviceVector<Data>(
+            cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_,
+            stream);
 
-        cudaMemcpy(locations_.data(), cipher.data(),
-                   (2 * (coeff_modulus_count_ - depth_) * ring_size_) *
-                       sizeof(Data),
-                   cudaMemcpyHostToDevice);
+        cudaMemcpyAsync(
+            locations_.data(), cipher.data(),
+            (cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_) *
+                sizeof(Data),
+            cudaMemcpyHostToDevice, stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
-    __host__ Ciphertext::Ciphertext(const std::vector<Data>& cipher,
-                                    Parameters& context, HEStream& stream,
-                                    double scale, int depth)
+    __host__ Ciphertext::Ciphertext(const HostVector<Data>& cipher,
+                                    Parameters& context, cudaStream_t stream)
     {
         coeff_modulus_count_ = context.Q_size;
-        cipher_size_ = 3; // default
+        cipher_size_ = 2; // default
         ring_size_ = context.n; // n
-        depth_ = depth;
+        depth_ = 0;
         scheme_ = context.scheme_;
         in_ntt_domain_ =
             (static_cast<int>(scheme_) == static_cast<int>(scheme_type::ckks))
@@ -103,21 +80,23 @@ namespace heongpu
 
         rescale_required_ = false;
         relinearization_required_ = false;
-        scale_ = scale;
+        scale_ = 0;
 
         if (!(cipher.size() ==
-              (2 * (coeff_modulus_count_ - depth_) * ring_size_)))
+              (cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_)))
         {
             throw std::invalid_argument("Ciphertext size should be valid!");
         }
 
         locations_ = DeviceVector<Data>(
-            3 * (coeff_modulus_count_ - depth_) * ring_size_, stream.stream);
+            cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_,
+            stream);
 
-        cudaMemcpyAsync(locations_.data(), cipher.data(),
-                        (2 * (coeff_modulus_count_ - depth_) * ring_size_) *
-                            sizeof(Data),
-                        cudaMemcpyHostToDevice, stream.stream);
+        cudaMemcpyAsync(
+            locations_.data(), cipher.data(),
+            (cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_) *
+                sizeof(Data),
+            cudaMemcpyHostToDevice, stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -126,39 +105,21 @@ namespace heongpu
         return locations_.data();
     }
 
-    void Ciphertext::device_to_host(std::vector<Data>& cipher)
+    void Ciphertext::device_to_host(std::vector<Data>& cipher,
+                                    cudaStream_t stream)
     {
         if (!(cipher.size() ==
-              (2 * (coeff_modulus_count_ - depth_) * ring_size_)))
+              (cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_)))
         {
             throw std::invalid_argument("Ciphertext size should be valid!");
         }
 
-        cudaMemcpy(cipher.data(), locations_.data(),
-                   (2 * (coeff_modulus_count_ - depth_) * ring_size_) *
-                       sizeof(Data),
-                   cudaMemcpyDeviceToHost);
+        cudaMemcpyAsync(
+            cipher.data(), locations_.data(),
+            (cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_) *
+                sizeof(Data),
+            cudaMemcpyDeviceToHost, stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
-    }
-
-    void Ciphertext::device_to_host(std::vector<Data>& cipher, HEStream& stream)
-    {
-        if (!(cipher.size() ==
-              (2 * (coeff_modulus_count_ - depth_) * ring_size_)))
-        {
-            throw std::invalid_argument("Ciphertext size should be valid!");
-        }
-
-        cudaMemcpyAsync(cipher.data(), locations_.data(),
-                        (2 * (coeff_modulus_count_ - depth_) * ring_size_) *
-                            sizeof(Data),
-                        cudaMemcpyDeviceToHost, stream.stream);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
-    }
-
-    void Ciphertext::switch_stream(cudaStream_t stream)
-    {
-        locations_.set_stream(stream);
     }
 
 } // namespace heongpu

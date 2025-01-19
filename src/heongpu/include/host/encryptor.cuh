@@ -57,89 +57,8 @@ namespace heongpu
          * encryption will be stored.
          * @param plaintext Plaintext object to be encrypted.
          */
-        __host__ void encrypt(Ciphertext& ciphertext, Plaintext& plaintext)
-        {
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (plaintext.size() < n)
-                    {
-                        throw std::invalid_argument("Invalid plaintext size.");
-                    }
-
-                    if (plaintext.depth() != 0)
-                    {
-                        throw std::invalid_argument(
-                            "Invalid plaintext depth must be zero.");
-                    }
-
-                    if (ciphertext.locations_.size() < (2 * n * Q_size_))
-                    {
-                        ciphertext.resize((2 * n * Q_size_));
-                    }
-
-                    encrypt_bfv(ciphertext, plaintext);
-
-                    ciphertext.scheme_ = scheme_;
-                    ciphertext.ring_size_ = n;
-                    ciphertext.coeff_modulus_count_ = Q_size_;
-                    ciphertext.cipher_size_ = 3; // default
-                    ciphertext.depth_ = 0;
-                    ciphertext.in_ntt_domain_ = false;
-                    ciphertext.scale_ = 0;
-                    ciphertext.rescale_required_ = false;
-                    ciphertext.relinearization_required_ = false;
-                    break;
-                case 2: // CKKS
-                    if (plaintext.size() < (n * Q_size_))
-                    {
-                        throw std::invalid_argument("Invalid plaintext size.");
-                    }
-
-                    if (plaintext.depth() != 0)
-                    {
-                        throw std::invalid_argument(
-                            "Invalid plaintext depth must be zero.");
-                    }
-
-                    if (ciphertext.locations_.size() < (2 * n * Q_size_))
-                    {
-                        ciphertext.resize((2 * n * Q_size_));
-                    }
-
-                    encrypt_ckks(ciphertext, plaintext);
-
-                    ciphertext.scheme_ = scheme_;
-                    ciphertext.ring_size_ = n;
-                    ciphertext.coeff_modulus_count_ = Q_size_;
-                    ciphertext.cipher_size_ = 3; // default
-                    ciphertext.depth_ = 0;
-                    ciphertext.in_ntt_domain_ = true;
-                    ciphertext.scale_ = plaintext.scale_;
-                    ciphertext.rescale_required_ = false;
-                    ciphertext.relinearization_required_ = false;
-                    break;
-                case 3: // BGV
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
-        }
-
-        /**
-         * @brief Encrypts a plaintext into a ciphertext asynchronously,
-         * automatically determining the scheme type.
-         *
-         * @param ciphertext Ciphertext object where the result of the
-         * encryption will be stored.
-         * @param plaintext Plaintext object to be encrypted.
-         * @param stream Reference to the HEStream object representing the CUDA
-         * stream to be used for asynchronous operation.
-         */
         __host__ void encrypt(Ciphertext& ciphertext, Plaintext& plaintext,
-                              HEStream& stream)
+                              cudaStream_t stream = cudaStreamDefault)
         {
             switch (static_cast<int>(scheme_))
             {
@@ -241,16 +160,11 @@ namespace heongpu
         HEEncryptor& operator=(HEEncryptor&& assign) = default;
 
       private:
-        __host__ void encrypt_bfv(Ciphertext& ciphertext, Plaintext& plaintext);
-
         __host__ void encrypt_bfv(Ciphertext& ciphertext, Plaintext& plaintext,
-                                  HEStream& stream);
-
-        __host__ void encrypt_ckks(Ciphertext& ciphertext,
-                                   Plaintext& plaintext);
+                                  const cudaStream_t stream);
 
         __host__ void encrypt_ckks(Ciphertext& ciphertext, Plaintext& plaintext,
-                                   HEStream& stream);
+                                   const cudaStream_t stream);
 
       private:
         scheme_type scheme_;
