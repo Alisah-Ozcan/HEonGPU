@@ -23,32 +23,48 @@ void multi_stream_function_way2(
     {
         int streamID = i % num_stream;
 
-        heongpu::Ciphertext ciphertext1_in_gpu(ciphertext1_in_cpu[i], context,
-                                               s[streamID]);
-        heongpu::Plaintext plaintext_in_gpu(plaintext_in_cpu[i], context,
-                                            s[streamID]);
+        heongpu::Ciphertext ciphertext1_in_gpu(
+            ciphertext1_in_cpu[i], context,
+            heongpu::ExecutionOptions().set_stream(s[streamID]));
+        heongpu::Plaintext plaintext_in_gpu(
+            plaintext_in_cpu[i], context,
+            heongpu::ExecutionOptions().set_stream(s[streamID]));
 
-        heongpu::Ciphertext temp1(context, s[streamID]);
-        operators.multiply_plain(ciphertext1_in_gpu, plaintext_in_gpu, temp1,
-                                 s[streamID]);
+        heongpu::Ciphertext temp1(
+            context, heongpu::ExecutionOptions().set_stream(s[streamID]));
+        operators.multiply_plain(
+            ciphertext1_in_gpu, plaintext_in_gpu, temp1,
+            heongpu::ExecutionOptions().set_stream(s[streamID]));
 
-        heongpu::Ciphertext ciphertext2_in_gpu(ciphertext2_in_cpu[i], context,
-                                               s[streamID]);
+        heongpu::Ciphertext ciphertext2_in_gpu(
+            ciphertext2_in_cpu[i], context,
+            heongpu::ExecutionOptions().set_stream(s[streamID]));
 
-        heongpu::Ciphertext temp2(context, s[streamID]);
-        operators.sub(temp1, ciphertext2_in_gpu, temp2, s[streamID]);
+        heongpu::Ciphertext temp2(
+            context, heongpu::ExecutionOptions().set_stream(s[streamID]));
+        operators.sub(temp1, ciphertext2_in_gpu, temp2,
+                      heongpu::ExecutionOptions().set_stream(s[streamID]));
 
-        heongpu::Ciphertext ciphertext3_in_gpu(ciphertext3_in_cpu[i], context,
-                                               s[streamID]);
+        heongpu::Ciphertext ciphertext3_in_gpu(
+            ciphertext3_in_cpu[i], context,
+            heongpu::ExecutionOptions().set_stream(s[streamID]));
 
-        operators.multiply_inplace(temp2, ciphertext3_in_gpu, s[streamID]);
+        operators.multiply_inplace(
+            temp2, ciphertext3_in_gpu,
+            heongpu::ExecutionOptions().set_stream(s[streamID]));
 
-        operators.relinearize_inplace(temp2, relinkeys, s[streamID]);
+        operators.relinearize_inplace(
+            temp2, relinkeys,
+            heongpu::ExecutionOptions().set_stream(s[streamID]));
 
-        operators.add_inplace(temp1, temp2, s[streamID]);
+        operators.add_inplace(
+            temp1, temp2, heongpu::ExecutionOptions().set_stream(s[streamID]));
 
-        heongpu::Ciphertext result(context, s[streamID]);
-        operators.rotate_rows(temp1, result, galoiskeys, 5, s[streamID]);
+        heongpu::Ciphertext result(
+            context, heongpu::ExecutionOptions().set_stream(s[streamID]));
+        operators.rotate_rows(
+            temp1, result, galoiskeys, 5,
+            heongpu::ExecutionOptions().set_stream(s[streamID]));
 
         ciphertext_result_in_gpu[i] = std::move(result);
     }

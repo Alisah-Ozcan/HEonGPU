@@ -50,9 +50,9 @@ namespace heongpu
          * @param scale Parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain,
-                             const std::vector<uint64_t>& message,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const std::vector<uint64_t>& message,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -61,17 +61,19 @@ namespace heongpu
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
 
-                    if (plain.size() != n)
-                    {
-                        plain.resize(n);
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_bfv(plain_, message, options.stream_);
 
-                    encode_bfv(plain, message, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = 0;
-                    plain.in_ntt_domain_ = false;
+                            plain.plain_size_ = n;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = 0;
+                            plain.in_ntt_domain_ = false;
+                        },
+                        options);
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -96,9 +98,9 @@ namespace heongpu
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain,
-                             const std::vector<int64_t>& message,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const std::vector<int64_t>& message,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -107,17 +109,19 @@ namespace heongpu
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
 
-                    if (plain.size() != n)
-                    {
-                        plain.resize(n);
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_bfv(plain_, message, options.stream_);
 
-                    encode_bfv(plain, message, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = 0;
-                    plain.in_ntt_domain_ = false;
+                            plain.plain_size_ = n;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = 0;
+                            plain.in_ntt_domain_ = false;
+                        },
+                        options);
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -142,9 +146,9 @@ namespace heongpu
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain,
-                             const HostVector<uint64_t>& message,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const HostVector<uint64_t>& message,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -153,17 +157,19 @@ namespace heongpu
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
 
-                    if (plain.size() != n)
-                    {
-                        plain.resize(n);
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_bfv(plain_, message, options.stream_);
 
-                    encode_bfv(plain, message, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = 0;
-                    plain.in_ntt_domain_ = false;
+                            plain.plain_size_ = n;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = 0;
+                            plain.in_ntt_domain_ = false;
+                        },
+                        options);
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -188,9 +194,9 @@ namespace heongpu
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain,
-                             const HostVector<int64_t>& message,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const HostVector<int64_t>& message,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -199,17 +205,19 @@ namespace heongpu
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
 
-                    if (plain.size() != n)
-                    {
-                        plain.resize(n);
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_bfv(plain_, message, options.stream_);
 
-                    encode_bfv(plain, message, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = 0;
-                    plain.in_ntt_domain_ = false;
+                            plain.plain_size_ = n;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = 0;
+                            plain.in_ntt_domain_ = false;
+                        },
+                        options);
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -236,9 +244,10 @@ namespace heongpu
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain,
-                             const std::vector<double>& message, double scale,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const std::vector<double>& message,
+               double scale,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -257,17 +266,20 @@ namespace heongpu
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
 
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_));
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_ckks(plain_, message, scale,
+                                        options.stream_);
 
-                    encode_ckks(plain, message, scale, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
+                            plain.plain_size_ = n * Q_size_;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = scale;
+                            plain.in_ntt_domain_ = true;
+                        },
+                        options);
                     break;
                 case 3: // BGV
 
@@ -290,9 +302,10 @@ namespace heongpu
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain,
-                             const HostVector<double>& message, double scale,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const HostVector<double>& message,
+               double scale,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -311,17 +324,20 @@ namespace heongpu
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
 
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_));
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_ckks(plain_, message, scale,
+                                        options.stream_);
 
-                    encode_ckks(plain, message, scale, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
+                            plain.plain_size_ = n * Q_size_;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = scale;
+                            plain.in_ntt_domain_ = true;
+                        },
+                        options);
                     break;
                 case 3: // BGV
 
@@ -344,10 +360,10 @@ namespace heongpu
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain,
-                             const std::vector<COMPLEX_C>& message,
-                             double scale,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const std::vector<COMPLEX_C>& message,
+               double scale,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -366,17 +382,20 @@ namespace heongpu
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
 
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_));
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_ckks(plain_, message, scale,
+                                        options.stream_);
 
-                    encode_ckks(plain, message, scale, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
+                            plain.plain_size_ = n * Q_size_;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = scale;
+                            plain.in_ntt_domain_ = true;
+                        },
+                        options);
                     break;
                 case 3: // BGV
 
@@ -399,9 +418,10 @@ namespace heongpu
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain,
-                             const HostVector<COMPLEX_C>& message, double scale,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const HostVector<COMPLEX_C>& message,
+               double scale,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -420,17 +440,20 @@ namespace heongpu
                         throw std::invalid_argument(
                             "Vector size can not be higher than slot count!");
 
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_));
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_ckks(plain_, message, scale,
+                                        options.stream_);
 
-                    encode_ckks(plain, message, scale, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
+                            plain.plain_size_ = n * Q_size_;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = scale;
+                            plain.in_ntt_domain_ = true;
+                        },
+                        options);
                     break;
                 case 3: // BGV
 
@@ -453,9 +476,9 @@ namespace heongpu
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
-        __host__ void encode(Plaintext& plain, const double& message,
-                             double scale,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const double& message, double scale,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -477,17 +500,20 @@ namespace heongpu
                             "Encoded value is too large");
                     }
 
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_));
-                    }
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_ckks(plain_, message, scale,
+                                        options.stream_);
 
-                    encode_ckks(plain, message, scale, stream);
-
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
+                            plain.plain_size_ = n * Q_size_;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = scale;
+                            plain.in_ntt_domain_ = true;
+                        },
+                        options);
                     break;
                 case 3: // BGV
 
@@ -508,9 +534,9 @@ namespace heongpu
          * @param message int64_t representing the message to be
          * encoded.
          */
-        __host__ void encode(Plaintext& plain, const std::int64_t& message,
-                             double scale,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encode(Plaintext& plain, const std::int64_t& message, double scale,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -532,16 +558,20 @@ namespace heongpu
                             "Encoded value is too large");
                     }
 
-                    if (plain.size() != (n * Q_size_))
-                    {
-                        plain.resize((n * Q_size_));
-                    }
-                    encode_ckks(plain, message, scale, stream);
+                    output_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        {
+                            encode_ckks(plain_, message, scale,
+                                        options.stream_);
 
-                    plain.scheme_ = scheme_;
-                    plain.depth_ = 0;
-                    plain.scale_ = scale;
-                    plain.in_ntt_domain_ = true;
+                            plain.plain_size_ = n * Q_size_;
+                            plain.scheme_ = scheme_;
+                            plain.depth_ = 0;
+                            plain.scale_ = scale;
+                            plain.in_ntt_domain_ = true;
+                        },
+                        options);
                     break;
                 case 3: // BGV
 
@@ -560,13 +590,18 @@ namespace heongpu
          * @param message Vector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(std::vector<uint64_t>& message, Plaintext& plain,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decode(std::vector<uint64_t>& message, Plaintext& plain,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
-                    decode_bfv(message, plain, stream);
+                    input_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        { decode_bfv(message, plain_, options.stream_); },
+                        options, false);
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -587,13 +622,18 @@ namespace heongpu
          * @param message Vector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(std::vector<int64_t>& message, Plaintext& plain,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decode(std::vector<int64_t>& message, Plaintext& plain,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
-                    decode_bfv(message, plain, stream);
+                    input_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        { decode_bfv(message, plain_, options.stream_); },
+                        options, false);
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -617,13 +657,18 @@ namespace heongpu
          * @param message HostVector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(HostVector<uint64_t>& message, Plaintext& plain,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decode(HostVector<uint64_t>& message, Plaintext& plain,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
-                    decode_bfv(message, plain, stream);
+                    input_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        { decode_bfv(message, plain_, options.stream_); },
+                        options, false);
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -645,13 +690,18 @@ namespace heongpu
          * @param message HostVector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(HostVector<int64_t>& message, Plaintext& plain,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decode(HostVector<int64_t>& message, Plaintext& plain,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
-                    decode_bfv(message, plain, stream);
+                    input_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        { decode_bfv(message, plain_, options.stream_); },
+                        options, false);
                     break;
                 case 2: // CKKS
                     throw std::invalid_argument(
@@ -674,8 +724,9 @@ namespace heongpu
          * @param message Vector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(std::vector<double>& message, Plaintext& plain,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decode(std::vector<double>& message, Plaintext& plain,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -684,7 +735,11 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
-                    decode_ckks(message, plain, stream);
+                    input_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        { decode_ckks(message, plain_, options.stream_); },
+                        options, false);
                     break;
                 case 3: // BGV
 
@@ -703,8 +758,9 @@ namespace heongpu
          * @param message HostVector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(HostVector<double>& message, Plaintext& plain,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decode(HostVector<double>& message, Plaintext& plain,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -713,7 +769,11 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
-                    decode_ckks(message, plain, stream);
+                    input_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        { decode_ckks(message, plain_, options.stream_); },
+                        options, false);
                     break;
                 case 3: // BGV
 
@@ -730,8 +790,9 @@ namespace heongpu
          * @param message Vector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(std::vector<COMPLEX_C>& message, Plaintext& plain,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decode(std::vector<COMPLEX_C>& message, Plaintext& plain,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -740,7 +801,11 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
-                    decode_ckks(message, plain, stream);
+                    input_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        { decode_ckks(message, plain_, options.stream_); },
+                        options, false);
                     break;
                 case 3: // BGV
 
@@ -759,8 +824,9 @@ namespace heongpu
          * @param message HostVector where the decoded message will be stored.
          * @param plain Plaintext object to be decoded.
          */
-        __host__ void decode(HostVector<COMPLEX_C>& message, Plaintext& plain,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decode(HostVector<COMPLEX_C>& message, Plaintext& plain,
+               const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -769,7 +835,11 @@ namespace heongpu
                         "BFV message can not be double");
                     break;
                 case 2: // CKKS
-                    decode_ckks(message, plain, stream);
+                    input_storage_manager(
+                        plain,
+                        [&](Plaintext& plain_)
+                        { decode_ckks(message, plain_, options.stream_); },
+                        options, false);
                     break;
                 case 3: // BGV
 

@@ -162,6 +162,8 @@ namespace heongpu
                                         const std::vector<uint64_t>& message,
                                         const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n, stream);
+
         DeviceVector<Data> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data), cudaMemcpyHostToDevice,
@@ -169,8 +171,8 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         encode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
-            plain.data(), message_gpu.data(), encoding_location_->data(),
-            plain_modulus_->data(), message.size());
+            output_memory.data(), message_gpu.data(),
+            encoding_location_->data(), plain_modulus_->data(), message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_intt = {
@@ -181,14 +183,18 @@ namespace heongpu
             .mod_inverse = n_plain_inverse_->data(),
             .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), plain_intt_tables_->data(),
+        GPU_NTT_Inplace(output_memory.data(), plain_intt_tables_->data(),
                         plain_modulus_->data(), cfg_intt, 1, 1);
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::encode_bfv(Plaintext& plain,
                                         const std::vector<int64_t>& message,
                                         const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n, stream);
+
         DeviceVector<Data> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data), cudaMemcpyHostToDevice,
@@ -196,8 +202,8 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         encode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
-            plain.data(), message_gpu.data(), encoding_location_->data(),
-            plain_modulus_->data(), message.size());
+            output_memory.data(), message_gpu.data(),
+            encoding_location_->data(), plain_modulus_->data(), message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_intt = {
@@ -208,14 +214,18 @@ namespace heongpu
             .mod_inverse = n_plain_inverse_->data(),
             .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), plain_intt_tables_->data(),
+        GPU_NTT_Inplace(output_memory.data(), plain_intt_tables_->data(),
                         plain_modulus_->data(), cfg_intt, 1, 1);
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::encode_bfv(Plaintext& plain,
                                         const HostVector<uint64_t>& message,
                                         const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n, stream);
+
         DeviceVector<Data> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data), cudaMemcpyHostToDevice,
@@ -223,8 +233,8 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         encode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
-            plain.data(), message_gpu.data(), encoding_location_->data(),
-            plain_modulus_->data(), message.size());
+            output_memory.data(), message_gpu.data(),
+            encoding_location_->data(), plain_modulus_->data(), message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_intt = {
@@ -235,14 +245,18 @@ namespace heongpu
             .mod_inverse = n_plain_inverse_->data(),
             .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), plain_intt_tables_->data(),
+        GPU_NTT_Inplace(output_memory.data(), plain_intt_tables_->data(),
                         plain_modulus_->data(), cfg_intt, 1, 1);
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::encode_bfv(Plaintext& plain,
                                         const HostVector<int64_t>& message,
                                         const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n, stream);
+
         DeviceVector<Data> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data), cudaMemcpyHostToDevice,
@@ -250,8 +264,8 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         encode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
-            plain.data(), message_gpu.data(), encoding_location_->data(),
-            plain_modulus_->data(), message.size());
+            output_memory.data(), message_gpu.data(),
+            encoding_location_->data(), plain_modulus_->data(), message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_intt = {
@@ -262,15 +276,19 @@ namespace heongpu
             .mod_inverse = n_plain_inverse_->data(),
             .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), plain_intt_tables_->data(),
+        GPU_NTT_Inplace(output_memory.data(), plain_intt_tables_->data(),
                         plain_modulus_->data(), cfg_intt, 1, 1);
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::decode_bfv(std::vector<uint64_t>& message,
                                         Plaintext& plain,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> message_gpu(slot_count_, stream);
+        DeviceVector<Data> temp_memory(slot_count_ + n, stream);
+        Data* message_gpu = temp_memory.data();
+        Data* temp_plain = message_gpu + slot_count_;
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
@@ -279,17 +297,17 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), plain_ntt_tables_->data(),
-                        plain_modulus_->data(), cfg_ntt, 1, 1);
+        GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
+                plain_modulus_->data(), cfg_ntt, 1, 1);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         decode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
-            message_gpu.data(), plain.data(), encoding_location_->data());
+            message_gpu, temp_plain, encoding_location_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         message.resize(slot_count_);
 
-        cudaMemcpyAsync(message.data(), message_gpu.data(),
+        cudaMemcpyAsync(message.data(), message_gpu,
                         slot_count_ * sizeof(uint64_t), cudaMemcpyDeviceToHost,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -299,7 +317,9 @@ namespace heongpu
                                         Plaintext& plain,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> message_gpu(slot_count_, stream);
+        DeviceVector<Data> temp_memory(slot_count_ + n, stream);
+        Data* message_gpu = temp_memory.data();
+        Data* temp_plain = message_gpu + slot_count_;
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
@@ -308,21 +328,21 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), plain_ntt_tables_->data(),
-                        plain_modulus_->data(), cfg_ntt, 1, 1);
+        GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
+                plain_modulus_->data(), cfg_ntt, 1, 1);
 
         decode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
-            message_gpu.data(), plain.data(), encoding_location_->data());
+            message_gpu, temp_plain, encoding_location_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         unsigned_signed_convert<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
-                                  stream>>>(
-            message_gpu.data(), message_gpu.data(), plain_modulus_->data());
+                                  stream>>>(message_gpu, message_gpu,
+                                            plain_modulus_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         message.resize(slot_count_);
 
-        cudaMemcpyAsync(message.data(), message_gpu.data(),
+        cudaMemcpyAsync(message.data(), message_gpu,
                         slot_count_ * sizeof(int64_t), cudaMemcpyDeviceToHost,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -332,7 +352,9 @@ namespace heongpu
                                         Plaintext& plain,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> message_gpu(slot_count_, stream);
+        DeviceVector<Data> temp_memory(slot_count_ + n, stream);
+        Data* message_gpu = temp_memory.data();
+        Data* temp_plain = message_gpu + slot_count_;
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
@@ -341,16 +363,16 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), plain_ntt_tables_->data(),
-                        plain_modulus_->data(), cfg_ntt, 1, 1);
+        GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
+                plain_modulus_->data(), cfg_ntt, 1, 1);
 
         decode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
-            message_gpu.data(), plain.data(), encoding_location_->data());
+            message_gpu, temp_plain, encoding_location_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         message.resize(slot_count_);
 
-        cudaMemcpyAsync(message.data(), message_gpu.data(),
+        cudaMemcpyAsync(message.data(), message_gpu,
                         slot_count_ * sizeof(uint64_t), cudaMemcpyDeviceToHost,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -360,7 +382,9 @@ namespace heongpu
                                         Plaintext& plain,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> message_gpu(slot_count_, stream);
+        DeviceVector<Data> temp_memory(slot_count_ + n, stream);
+        Data* message_gpu = temp_memory.data();
+        Data* temp_plain = message_gpu + slot_count_;
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
@@ -369,21 +393,21 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), plain_ntt_tables_->data(),
-                        plain_modulus_->data(), cfg_ntt, 1, 1);
+        GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
+                plain_modulus_->data(), cfg_ntt, 1, 1);
 
         decode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
-            message_gpu.data(), plain.data(), encoding_location_->data());
+            message_gpu, temp_plain, encoding_location_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         unsigned_signed_convert<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
-                                  stream>>>(
-            message_gpu.data(), message_gpu.data(), plain_modulus_->data());
+                                  stream>>>(message_gpu, message_gpu,
+                                            plain_modulus_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         message.resize(slot_count_);
 
-        cudaMemcpyAsync(message.data(), message_gpu.data(),
+        cudaMemcpyAsync(message.data(), message_gpu,
                         slot_count_ * sizeof(int64_t), cudaMemcpyDeviceToHost,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -394,6 +418,8 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n * Q_size_, stream);
+
         DeviceVector<double> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(double), cudaMemcpyHostToDevice,
@@ -417,8 +443,8 @@ namespace heongpu
 
         encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256,
                                         0, stream>>>(
-            plain.data(), temp_complex.data(), modulus_->data(), Q_size_,
-            two_pow_64, reverse_order->data(), n_power);
+            output_memory.data(), temp_complex.data(), modulus_->data(),
+            Q_size_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -428,10 +454,12 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, Q_size_, Q_size_);
+        GPU_NTT_Inplace(output_memory.data(), ntt_table_->data(),
+                        modulus_->data(), cfg_ntt, Q_size_, Q_size_);
 
         plain.scale_ = scale;
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
@@ -439,6 +467,8 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n * Q_size_, stream);
+
         DeviceVector<double> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(double), cudaMemcpyHostToDevice,
@@ -462,8 +492,8 @@ namespace heongpu
 
         encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256,
                                         0, stream>>>(
-            plain.data(), temp_complex.data(), modulus_->data(), Q_size_,
-            two_pow_64, reverse_order->data(), n_power);
+            output_memory.data(), temp_complex.data(), modulus_->data(),
+            Q_size_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ntt_rns_configuration cfg_ntt = {.n_power = n_power,
@@ -473,10 +503,12 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, Q_size_, Q_size_);
+        GPU_NTT_Inplace(output_memory.data(), ntt_table_->data(),
+                        modulus_->data(), cfg_ntt, Q_size_, Q_size_);
 
         plain.scale_ = scale;
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
@@ -484,6 +516,8 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n * Q_size_, stream);
+
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(COMPLEX),
@@ -502,7 +536,7 @@ namespace heongpu
 
         encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256,
                                         0, stream>>>(
-            plain.data(), message_gpu.data(), modulus_->data(), Q_size_,
+            output_memory.data(), message_gpu.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -513,10 +547,12 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, Q_size_, Q_size_);
+        GPU_NTT_Inplace(output_memory.data(), ntt_table_->data(),
+                        modulus_->data(), cfg_ntt, Q_size_, Q_size_);
 
         plain.scale_ = scale;
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
@@ -524,6 +560,8 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n * Q_size_, stream);
+
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(COMPLEX),
@@ -542,7 +580,7 @@ namespace heongpu
 
         encode_kernel_ckks_conversion<<<dim3(((slot_count_) >> 8), 1, 1), 256,
                                         0, stream>>>(
-            plain.data(), message_gpu.data(), modulus_->data(), Q_size_,
+            output_memory.data(), message_gpu.data(), modulus_->data(), Q_size_,
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -553,10 +591,12 @@ namespace heongpu
                                          .zero_padding = false,
                                          .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, Q_size_, Q_size_);
+        GPU_NTT_Inplace(output_memory.data(), ntt_table_->data(),
+                        modulus_->data(), cfg_ntt, Q_size_, Q_size_);
 
         plain.scale_ = scale;
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
@@ -564,13 +604,17 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n * Q_size_, stream);
+
         double value = message * scale;
 
         encode_kernel_double_ckks_conversion<<<dim3((n >> 8), 1, 1), 256, 0,
                                                stream>>>(
-            plain.data(), value, modulus_->data(), Q_size_, two_pow_64,
+            output_memory.data(), value, modulus_->data(), Q_size_, two_pow_64,
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::encode_ckks(Plaintext& plain,
@@ -578,13 +622,17 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
+        DeviceVector<Data> output_memory(n * Q_size_, stream);
+
         double value = static_cast<double>(message) * scale;
 
         encode_kernel_double_ckks_conversion<<<dim3((n >> 8), 1, 1), 256, 0,
                                                stream>>>(
-            plain.data(), value, modulus_->data(), Q_size_, two_pow_64,
+            output_memory.data(), value, modulus_->data(), Q_size_, two_pow_64,
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        plain.memory_set(std::move(output_memory));
     }
 
     __host__ void HEEncoder::decode_ckks(std::vector<double>& message,
@@ -595,6 +643,8 @@ namespace heongpu
 
         DeviceVector<double> message_gpu(slot_count_, stream);
 
+        DeviceVector<Data> temp_plain(n * current_modulus_count, stream);
+
         ntt_rns_configuration cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
@@ -603,8 +653,9 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), intt_table_->data(), modulus_->data(),
-                        cfg_intt, current_modulus_count, current_modulus_count);
+        GPU_NTT(plain.data(), temp_plain.data(), intt_table_->data(),
+                modulus_->data(), cfg_intt, current_modulus_count,
+                current_modulus_count);
 
         int counter = Q_size_;
         int location1 = 0;
@@ -619,7 +670,7 @@ namespace heongpu
         DeviceVector<COMPLEX> temp_complex(n, stream);
         encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
                                 stream>>>(
-            temp_complex.data(), plain.data(), modulus_->data(),
+            temp_complex.data(), temp_plain.data(), modulus_->data(),
             Mi_inv_->data() + location1, Mi_->data() + location2,
             upper_half_threshold_->data() + location1,
             decryption_modulus_->data() + location1, current_modulus_count,
@@ -653,6 +704,8 @@ namespace heongpu
 
         DeviceVector<double> message_gpu(slot_count_, stream);
 
+        DeviceVector<Data> temp_plain(n * current_modulus_count, stream);
+
         ntt_rns_configuration cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
@@ -661,8 +714,9 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), intt_table_->data(), modulus_->data(),
-                        cfg_intt, current_modulus_count, current_modulus_count);
+        GPU_NTT(plain.data(), temp_plain.data(), intt_table_->data(),
+                modulus_->data(), cfg_intt, current_modulus_count,
+                current_modulus_count);
 
         int counter = Q_size_;
         int location1 = 0;
@@ -678,7 +732,7 @@ namespace heongpu
 
         encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
                                 stream>>>(
-            temp_complex.data(), plain.data(), modulus_->data(),
+            temp_complex.data(), temp_plain.data(), modulus_->data(),
             Mi_inv_->data() + location1, Mi_->data() + location2,
             upper_half_threshold_->data() + location1,
             decryption_modulus_->data() + location1, current_modulus_count,
@@ -712,6 +766,8 @@ namespace heongpu
 
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream);
 
+        DeviceVector<Data> temp_plain(n * current_modulus_count, stream);
+
         ntt_rns_configuration cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
@@ -720,8 +776,9 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), intt_table_->data(), modulus_->data(),
-                        cfg_intt, current_modulus_count, current_modulus_count);
+        GPU_NTT(plain.data(), temp_plain.data(), intt_table_->data(),
+                modulus_->data(), cfg_intt, current_modulus_count,
+                current_modulus_count);
 
         int counter = Q_size_;
         int location1 = 0;
@@ -735,7 +792,7 @@ namespace heongpu
 
         encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
                                 stream>>>(
-            message_gpu.data(), plain.data(), modulus_->data(),
+            message_gpu.data(), temp_plain.data(), modulus_->data(),
             Mi_inv_->data() + location1, Mi_->data() + location2,
             upper_half_threshold_->data() + location1,
             decryption_modulus_->data() + location1, current_modulus_count,
@@ -765,6 +822,8 @@ namespace heongpu
 
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream);
 
+        DeviceVector<Data> temp_plain(n * current_modulus_count, stream);
+
         ntt_rns_configuration cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
@@ -773,8 +832,9 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = stream};
 
-        GPU_NTT_Inplace(plain.data(), intt_table_->data(), modulus_->data(),
-                        cfg_intt, current_modulus_count, current_modulus_count);
+        GPU_NTT(plain.data(), temp_plain.data(), intt_table_->data(),
+                modulus_->data(), cfg_intt, current_modulus_count,
+                current_modulus_count);
 
         int counter = Q_size_;
         int location1 = 0;
@@ -788,7 +848,7 @@ namespace heongpu
 
         encode_kernel_compose<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
                                 stream>>>(
-            message_gpu.data(), plain.data(), modulus_->data(),
+            message_gpu.data(), temp_plain.data(), modulus_->data(),
             Mi_inv_->data() + location1, Mi_->data() + location2,
             upper_half_threshold_->data() + location1,
             decryption_modulus_->data() + location1, current_modulus_count,

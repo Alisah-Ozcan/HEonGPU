@@ -50,7 +50,7 @@ namespace heongpu
          */
         __host__ void add(Ciphertext& input1, Ciphertext& input2,
                           Ciphertext& output,
-                          cudaStream_t stream = cudaStreamDefault);
+                          const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Adds the second ciphertext to the first ciphertext, modifying
@@ -60,10 +60,11 @@ namespace heongpu
          * added.
          * @param input2 The ciphertext to be added to input1.
          */
-        __host__ void add_inplace(Ciphertext& input1, Ciphertext& input2,
-                                  cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        add_inplace(Ciphertext& input1, Ciphertext& input2,
+                    const ExecutionOptions& options = ExecutionOptions())
         {
-            add(input1, input2, input1, stream);
+            add(input1, input2, input1, options);
         }
 
         /**
@@ -77,7 +78,7 @@ namespace heongpu
          */
         __host__ void sub(Ciphertext& input1, Ciphertext& input2,
                           Ciphertext& output,
-                          cudaStream_t stream = cudaStreamDefault);
+                          const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Subtracts the second ciphertext from the first, modifying the
@@ -86,10 +87,11 @@ namespace heongpu
          * @param input1 The ciphertext from which input2 will be subtracted.
          * @param input2 The ciphertext to subtract from input1.
          */
-        __host__ void sub_inplace(Ciphertext& input1, Ciphertext& input2,
-                                  cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        sub_inplace(Ciphertext& input1, Ciphertext& input2,
+                    const ExecutionOptions& options = ExecutionOptions())
         {
-            sub(input1, input2, input1, stream);
+            sub(input1, input2, input1, options);
         }
 
         /**
@@ -98,18 +100,20 @@ namespace heongpu
          * @param input1 Input ciphertext to be negated.
          * @param output Ciphertext where the result of the negation is stored.
          */
-        __host__ void negate(Ciphertext& input1, Ciphertext& output,
-                             cudaStream_t stream = cudaStreamDefault);
+        __host__ void
+        negate(Ciphertext& input1, Ciphertext& output,
+               const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Negates a ciphertext in-place, modifying the input ciphertext.
          *
          * @param input1 Ciphertext to be negated.
          */
-        __host__ void negate_inplace(Ciphertext& input1,
-                                     cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        negate_inplace(Ciphertext& input1,
+                       const ExecutionOptions& options = ExecutionOptions())
         {
-            negate(input1, input1, stream);
+            negate(input1, input1, options);
         }
 
         /**
@@ -120,9 +124,9 @@ namespace heongpu
          * @param input2 Input plaintext to be added.
          * @param output Ciphertext where the result of the addition is stored.
          */
-        __host__ void add_plain(Ciphertext& input1, Plaintext& input2,
-                                Ciphertext& output,
-                                cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        add_plain(Ciphertext& input1, Plaintext& input2, Ciphertext& output,
+                  const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.depth_ != input2.depth_)
             {
@@ -136,39 +140,71 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
                 {
-                    if (input1.in_ntt_domain_ || input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in NTT domain");
-                    }
-                    add_plain_bfv(input1, input2, output, stream);
-                    break;
-                }
-                case 2: // CKKS
-                {
-                    add_plain_ckks(input1, input2, output, stream);
-                    break;
-                }
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                        {
+                                            if (input1_.in_ntt_domain_ ||
+                                                input2_.in_ntt_domain_)
+                                            {
+                                                throw std::logic_error(
+                                                    "BFV ciphertext or "
+                                                    "plaintext "
+                                                    "should be not in NTT "
+                                                    "domain");
+                                            }
+                                            add_plain_bfv(input1_, input2_,
+                                                          output_,
+                                                          options.stream_);
+                                            break;
+                                        }
+                                        case 2: // CKKS
+                                        {
+                                            add_plain_ckks(input1_, input2_,
+                                                           output_,
+                                                           options.stream_);
+                                            break;
+                                        }
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
 
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.depth_ = input1.depth_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.scale_ = input1.scale_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
+                                    output_.scheme_ = scheme_;
+                                    output_.ring_size_ = n;
+                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.cipher_size_ = 2;
+                                    output_.depth_ = input1_.depth_;
+                                    output_.in_ntt_domain_ =
+                                        input1_.in_ntt_domain_;
+                                    output_.scale_ = input1_.scale_;
+                                    output_.rescale_required_ =
+                                        input1_.rescale_required_;
+                                    output_.relinearization_required_ =
+                                        input1_.relinearization_required_;
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
         }
 
         /**
@@ -178,8 +214,9 @@ namespace heongpu
          * @param input1 Ciphertext to which the plaintext will be added.
          * @param input2 Plaintext to be added to the ciphertext.
          */
-        __host__ void add_plain_inplace(Ciphertext& input1, Plaintext& input2,
-                                        cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        add_plain_inplace(Ciphertext& input1, Plaintext& input2,
+                          const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.depth_ != input2.depth_)
             {
@@ -193,28 +230,46 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
                 {
-                    if (input1.in_ntt_domain_ || input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in NTT domain");
-                    }
-                    add_plain_bfv_inplace(input1, input2, stream);
-                    break;
-                }
-                case 2: // CKKS
-                    add_plain_ckks_inplace(input1, input2, stream);
-                    break;
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            switch (static_cast<int>(scheme_))
+                            {
+                                case 1: // BFV
+                                {
+                                    if (input1.in_ntt_domain_ ||
+                                        input2.in_ntt_domain_)
+                                    {
+                                        throw std::logic_error(
+                                            "BFV ciphertext or plaintext "
+                                            "should be not in NTT domain");
+                                    }
+                                    add_plain_bfv_inplace(input1_, input2_,
+                                                          options.stream_);
+                                    break;
+                                }
+                                case 2: // CKKS
+                                    add_plain_ckks_inplace(input1_, input2_,
+                                                           options.stream_);
+                                    break;
+                                case 3: // BGV
+                                    throw std::invalid_argument(
+                                        "Invalid Scheme Type");
+                                    break;
+                                default:
+                                    throw std::invalid_argument(
+                                        "Invalid Scheme Type");
+                                    break;
+                            }
+                        },
+                        options, false);
+                },
+                options, true);
         }
 
         /**
@@ -226,9 +281,9 @@ namespace heongpu
          * @param output Ciphertext where the result of the subtraction is
          * stored.
          */
-        __host__ void sub_plain(Ciphertext& input1, Plaintext& input2,
-                                Ciphertext& output,
-                                cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        sub_plain(Ciphertext& input1, Plaintext& input2, Ciphertext& output,
+                  const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.depth_ != input2.depth_)
             {
@@ -242,39 +297,71 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
                 {
-                    if (input1.in_ntt_domain_ || input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in NTT domain");
-                    }
-                    sub_plain_bfv(input1, input2, output, stream);
-                    break;
-                }
-                case 2: // CKKS
-                {
-                    sub_plain_ckks(input1, input2, output, stream);
-                    break;
-                }
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                        {
+                                            if (input1_.in_ntt_domain_ ||
+                                                input2_.in_ntt_domain_)
+                                            {
+                                                throw std::logic_error(
+                                                    "BFV ciphertext or "
+                                                    "plaintext "
+                                                    "should be not in NTT "
+                                                    "domain");
+                                            }
+                                            sub_plain_bfv(input1_, input2_,
+                                                          output_,
+                                                          options.stream_);
+                                            break;
+                                        }
+                                        case 2: // CKKS
+                                        {
+                                            sub_plain_ckks(input1_, input2_,
+                                                           output_,
+                                                           options.stream_);
+                                            break;
+                                        }
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
 
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.depth_ = input1.depth_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.scale_ = input1.scale_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
+                                    output_.scheme_ = scheme_;
+                                    output_.ring_size_ = n;
+                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.cipher_size_ = 2;
+                                    output_.depth_ = input1_.depth_;
+                                    output_.in_ntt_domain_ =
+                                        input1_.in_ntt_domain_;
+                                    output_.scale_ = input1_.scale_;
+                                    output_.rescale_required_ =
+                                        input1_.rescale_required_;
+                                    output_.relinearization_required_ =
+                                        input1_.relinearization_required_;
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
         }
 
         /**
@@ -284,8 +371,9 @@ namespace heongpu
          * @param input1 Ciphertext from which the plaintext will be subtracted.
          * @param input2 Plaintext to be subtracted from the ciphertext.
          */
-        __host__ void sub_plain_inplace(Ciphertext& input1, Plaintext& input2,
-                                        cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        sub_plain_inplace(Ciphertext& input1, Plaintext& input2,
+                          const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.depth_ != input2.depth_)
             {
@@ -299,28 +387,46 @@ namespace heongpu
                     "ciphertext has non-linear partl!");
             }
 
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
                 {
-                    if (input1.in_ntt_domain_ || input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in NTT domain");
-                    }
-                    sub_plain_bfv_inplace(input1, input2, stream);
-                    break;
-                }
-                case 2: // CKKS
-                    sub_plain_ckks_inplace(input1, input2, stream);
-                    break;
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            switch (static_cast<int>(scheme_))
+                            {
+                                case 1: // BFV
+                                {
+                                    if (input1.in_ntt_domain_ ||
+                                        input2.in_ntt_domain_)
+                                    {
+                                        throw std::logic_error(
+                                            "BFV ciphertext or plaintext "
+                                            "should be not in NTT domain");
+                                    }
+                                    sub_plain_bfv_inplace(input1_, input2_,
+                                                          options.stream_);
+                                    break;
+                                }
+                                case 2: // CKKS
+                                    sub_plain_ckks_inplace(input1_, input2_,
+                                                           options.stream_);
+                                    break;
+                                case 3: // BGV
+                                    throw std::invalid_argument(
+                                        "Invalid Scheme Type");
+                                    break;
+                                default:
+                                    throw std::invalid_argument(
+                                        "Invalid Scheme Type");
+                                    break;
+                            }
+                        },
+                        options, false);
+                },
+                options, true);
         }
 
         /**
@@ -332,9 +438,9 @@ namespace heongpu
          * @param output Ciphertext where the result of the multiplication is
          * stored.
          */
-        __host__ void multiply(Ciphertext& input1, Ciphertext& input2,
-                               Ciphertext& output,
-                               cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        multiply(Ciphertext& input1, Ciphertext& input2, Ciphertext& output,
+                 const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.relinearization_required_ ||
                 input2.relinearization_required_)
@@ -352,31 +458,56 @@ namespace heongpu
                     "noise!");
             }
 
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    multiply_bfv(input1, input2, output, stream);
-                    output.scale_ = 0;
-                    break;
-                case 2: // CKKS
-                    multiply_ckks(input1, input2, output, stream);
-                    output.rescale_required_ = true;
-                    break;
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Ciphertext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply_bfv(input1_, input2_,
+                                                         output_,
+                                                         options.stream_);
+                                            output_.scale_ = 0;
+                                            break;
+                                        case 2: // CKKS
+                                            multiply_ckks(input1_, input2_,
+                                                          output_,
+                                                          options.stream_);
+                                            output_.rescale_required_ = true;
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
 
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 3;
-            output.depth_ = input1.depth_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.relinearization_required_ = true;
+                                    output_.scheme_ = scheme_;
+                                    output_.ring_size_ = n;
+                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.cipher_size_ = 3;
+                                    output_.depth_ = input1_.depth_;
+                                    output_.in_ntt_domain_ =
+                                        input1_.in_ntt_domain_;
+                                    output_.relinearization_required_ = true;
+                                },
+                                options);
+                        },
+                        options, (&input2 == &output));
+                },
+                options, (&input1 == &output));
         }
 
         /**
@@ -387,10 +518,11 @@ namespace heongpu
          * be stored.
          * @param input2 Second input ciphertext to be multiplied.
          */
-        __host__ void multiply_inplace(Ciphertext& input1, Ciphertext& input2,
-                                       cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        multiply_inplace(Ciphertext& input1, Ciphertext& input2,
+                         const ExecutionOptions& options = ExecutionOptions())
         {
-            multiply(input1, input2, input1, stream);
+            multiply(input1, input2, input1, options);
         }
 
         /**
@@ -402,9 +534,10 @@ namespace heongpu
          * @param output Ciphertext where the result of the multiplication is
          * stored.
          */
-        __host__ void multiply_plain(Ciphertext& input1, Plaintext& input2,
-                                     Ciphertext& output,
-                                     cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        multiply_plain(Ciphertext& input1, Plaintext& input2,
+                       Ciphertext& output,
+                       const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.relinearization_required_)
             {
@@ -416,59 +549,88 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
 
-            if (output.locations_.size() < (3 * n * current_decomp_count))
-            {
-                output.resize((3 * n * current_decomp_count), stream);
-            }
-
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
                 {
-                    if (input1.in_ntt_domain_ != input2.in_ntt_domain_)
-                    {
-                        throw std::logic_error("BFV ciphertext or plaintext "
-                                               "should be not in same domain");
-                    }
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                        {
+                                            if (input1_.in_ntt_domain_ !=
+                                                input2_.in_ntt_domain_)
+                                            {
+                                                throw std::logic_error(
+                                                    "BFV ciphertext or "
+                                                    "plaintext "
+                                                    "should be not in same "
+                                                    "domain");
+                                            }
 
-                    if (input2.size() < n)
-                    {
-                        throw std::invalid_argument("Invalid Plaintext size!");
-                    }
+                                            if (input2_.size() < n)
+                                            {
+                                                throw std::invalid_argument(
+                                                    "Invalid Plaintext size!");
+                                            }
 
-                    multiply_plain_bfv(input1, input2, output, stream);
-                    output.rescale_required_ = input1.rescale_required_;
-                    break;
-                }
-                case 2: // CKKS
-                    if (input2.size() < (n * current_decomp_count))
-                    {
-                        throw std::invalid_argument("Invalid Plaintext size!");
-                    }
+                                            multiply_plain_bfv(input1_, input2_,
+                                                               output_,
+                                                               options.stream_);
+                                            output_.rescale_required_ =
+                                                input1_.rescale_required_;
+                                            break;
+                                        }
+                                        case 2: // CKKS
+                                            if (input2_.size() <
+                                                (n * current_decomp_count))
+                                            {
+                                                throw std::invalid_argument(
+                                                    "Invalid Plaintext size!");
+                                            }
 
-                    multiply_plain_ckks(input1, input2, output, stream);
-                    output.rescale_required_ = true;
-                    break;
-                case 3: // BGV
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
+                                            multiply_plain_ckks(
+                                                input1_, input2_, output_,
+                                                options.stream_);
+                                            output_.rescale_required_ = true;
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
 
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.relinearization_required_ = input1.relinearization_required_;
+                                    output_.scheme_ = scheme_;
+                                    output_.ring_size_ = n;
+                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.cipher_size_ = 2;
+                                    output_.depth_ = input1_.depth_;
+                                    output_.in_ntt_domain_ =
+                                        input1_.in_ntt_domain_;
+                                    output_.relinearization_required_ =
+                                        input1_.relinearization_required_;
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
         }
 
         /**
@@ -479,11 +641,11 @@ namespace heongpu
          * the result will be stored.
          * @param input2 Plaintext to be multiplied with the ciphertext.
          */
-        __host__ void
-        multiply_plain_inplace(Ciphertext& input1, Plaintext& input2,
-                               cudaStream_t stream = cudaStreamDefault)
+        __host__ void multiply_plain_inplace(
+            Ciphertext& input1, Plaintext& input2,
+            const ExecutionOptions& options = ExecutionOptions())
         {
-            multiply_plain(input1, input2, input1, stream);
+            multiply_plain(input1, input2, input1, options);
         }
 
         /**
@@ -493,9 +655,9 @@ namespace heongpu
          * @param input1 Ciphertext to be relinearized.
          * @param relin_key The Relinkey object used for relinearization.
          */
-        __host__ void
-        relinearize_inplace(Ciphertext& input1, Relinkey& relin_key,
-                            cudaStream_t stream = cudaStreamDefault)
+        __host__ void relinearize_inplace(
+            Ciphertext& input1, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions())
         {
             if ((!input1.relinearization_required_))
             {
@@ -506,92 +668,99 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (3 * n * current_decomp_count))
+            if (input1.memory_size() < (3 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
 
-            switch (static_cast<int>(relin_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    switch (static_cast<int>(relin_key.key_type))
                     {
-                        if (input1.in_ntt_domain_ != false)
-                        {
+                        case 1: // KEYSWITCHING_METHOD_I
+                            if (scheme_ == scheme_type::bfv)
+                            {
+                                if (input1_.in_ntt_domain_ != false)
+                                {
+                                    throw std::invalid_argument(
+                                        "Ciphertext should be in intt domain");
+                                }
+
+                                relinearize_seal_method_inplace(
+                                    input1_, relin_key, options.stream_);
+                            }
+                            else if (scheme_ == scheme_type::ckks)
+                            {
+                                relinearize_seal_method_inplace_ckks(
+                                    input1_, relin_key, options.stream_);
+                            }
+                            else
+                            {
+                                throw std::invalid_argument(
+                                    "Invalid Key Switching Type");
+                            }
+                            break;
+                        case 2: // KEYSWITCHING_METHOD_II
+
+                            if (scheme_ == scheme_type::bfv)
+                            {
+                                if (input1_.in_ntt_domain_ != false)
+                                {
+                                    throw std::invalid_argument(
+                                        "Ciphertext should be in intt domain");
+                                }
+
+                                relinearize_external_product_method2_inplace(
+                                    input1_, relin_key, options.stream_);
+                            }
+                            else if (scheme_ == scheme_type::ckks)
+                            {
+                                relinearize_external_product_method2_inplace_ckks(
+                                    input1_, relin_key, options.stream_);
+                            }
+                            else
+                            {
+                                throw std::invalid_argument(
+                                    "Invalid Key Switching Type");
+                            }
+
+                            break;
+                        case 3: // KEYSWITCHING_METHOD_III
+
+                            if (scheme_ == scheme_type::bfv)
+                            {
+                                if (input1_.in_ntt_domain_ != false)
+                                {
+                                    throw std::invalid_argument(
+                                        "Ciphertext should be in intt domain");
+                                }
+
+                                relinearize_external_product_method_inplace(
+                                    input1_, relin_key, options.stream_);
+                            }
+                            else if (scheme_ == scheme_type::ckks)
+                            {
+                                relinearize_external_product_method_inplace_ckks(
+                                    input1_, relin_key, options.stream_);
+                            }
+                            else
+                            {
+                                throw std::invalid_argument(
+                                    "Invalid Key Switching Type");
+                            }
+
+                            break;
+                        default:
                             throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        relinearize_seal_method_inplace(input1, relin_key,
-                                                        stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        relinearize_seal_method_inplace_ckks(input1, relin_key,
-                                                             stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        relinearize_external_product_method2_inplace(
-                            input1, relin_key, stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        relinearize_external_product_method2_inplace_ckks(
-                            input1, relin_key, stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
+                                "Invalid Key Switching Type");
+                            break;
                     }
 
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
-
-                        relinearize_external_product_method_inplace(
-                            input1, relin_key, stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        relinearize_external_product_method_inplace_ckks(
-                            input1, relin_key, stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            input1.relinearization_required_ = false;
+                    input1_.relinearization_required_ = false;
+                },
+                options, true);
         }
 
         /**
@@ -603,9 +772,10 @@ namespace heongpu
          * @param galois_key Galois key used for the rotation operation.
          * @param shift Number of positions to shift the rows.
          */
-        __host__ void rotate_rows(Ciphertext& input1, Ciphertext& output,
-                                  Galoiskey& galois_key, int shift,
-                                  cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        rotate_rows(Ciphertext& input1, Ciphertext& output,
+                    Galoiskey& galois_key, int shift,
+                    const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -614,109 +784,109 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
 
-            if (output.locations_.size() < (2 * n * current_decomp_count))
+            if (shift == 0)
             {
-                output.resize((2 * n * current_decomp_count), stream);
+                output = input1;
+                return;
             }
 
-            switch (static_cast<int>(galois_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    output_storage_manager(
+                        output,
+                        [&](Ciphertext& output_)
                         {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
+                            switch (static_cast<int>(galois_key.key_type))
+                            {
+                                case 1: // KEYSWITCHING_METHOD_I
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        if (input1_.in_ntt_domain_ != false)
+                                        {
+                                            throw std::invalid_argument(
+                                                "Ciphertext should be in intt "
+                                                "domain");
+                                        }
 
-                        if (shift == 0)
-                        {
-                            output = input1;
-                            return;
-                        }
+                                        rotate_method_I(input1_, output_,
+                                                        galois_key, shift,
+                                                        options.stream_);
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        rotate_ckks_method_I(input1_, output_,
+                                                             galois_key, shift,
+                                                             options.stream_);
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 2: // KEYSWITCHING_METHOD_II
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        if (input1_.in_ntt_domain_ != false)
+                                        {
+                                            throw std::invalid_argument(
+                                                "Ciphertext should be in intt "
+                                                "domain");
+                                        }
 
-                        rotate_method_I(input1, output, galois_key, shift,
-                                        stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        if (shift == 0)
-                        {
-                            output = input1;
-                            return;
-                        }
+                                        rotate_method_II(input1_, output_,
+                                                         galois_key, shift,
+                                                         options.stream_);
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        rotate_ckks_method_II(input1_, output_,
+                                                              galois_key, shift,
+                                                              options.stream_);
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 3: // KEYSWITCHING_METHOD_III
 
-                        rotate_ckks_method_I(input1, output, galois_key, shift,
-                                             stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
+                                    throw std::invalid_argument(
+                                        "KEYSWITCHING_METHOD_III are not "
+                                        "supported because of "
+                                        "high memory consumption for rotation "
+                                        "operation!");
 
-                        if (shift == 0)
-                        {
-                            output = input1;
-                            return;
-                        }
+                                    break;
+                                default:
+                                    throw std::invalid_argument(
+                                        "Invalid Key Switching Type");
+                                    break;
+                            }
 
-                        rotate_method_II(input1, output, galois_key, shift,
-                                         stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        if (shift == 0)
-                        {
-                            output = input1;
-                            return;
-                        }
-
-                        rotate_ckks_method_II(input1, output, galois_key, shift,
-                                              stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for rotation operation!");
-
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
+                            output_.scheme_ = scheme_;
+                            output_.ring_size_ = n;
+                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.cipher_size_ = 2;
+                            output_.depth_ = input1_.depth_;
+                            output_.scale_ = input1_.scale_;
+                            output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                            output_.rescale_required_ =
+                                input1_.rescale_required_;
+                            output_.relinearization_required_ =
+                                input1_.relinearization_required_;
+                        },
+                        options);
+                },
+                options, (&input1 == &output));
         }
 
         /**
@@ -727,16 +897,16 @@ namespace heongpu
          * @param galois_key Galois key used for the rotation operation.
          * @param shift Number of positions to shift the rows.
          */
-        __host__ void
-        rotate_rows_inplace(Ciphertext& input1, Galoiskey& galois_key,
-                            int shift, cudaStream_t stream = cudaStreamDefault)
+        __host__ void rotate_rows_inplace(
+            Ciphertext& input1, Galoiskey& galois_key, int shift,
+            const ExecutionOptions& options = ExecutionOptions())
         {
             if (shift == 0)
             {
                 return;
             }
 
-            rotate_rows(input1, input1, galois_key, shift, stream);
+            rotate_rows(input1, input1, galois_key, shift, options);
         }
 
         /**
@@ -747,9 +917,10 @@ namespace heongpu
          * @param output Ciphertext where the result of the rotation is stored.
          * @param galois_key Galois key used for the rotation operation.
          */
-        __host__ void rotate_columns(Ciphertext& input1, Ciphertext& output,
-                                     Galoiskey& galois_key,
-                                     cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        rotate_columns(Ciphertext& input1, Ciphertext& output,
+                       Galoiskey& galois_key,
+                       const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -758,77 +929,94 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
 
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count), stream);
-            }
-
-            switch (static_cast<int>(galois_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    output_storage_manager(
+                        output,
+                        [&](Ciphertext& output_)
                         {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
+                            switch (static_cast<int>(galois_key.key_type))
+                            {
+                                case 1: // KEYSWITCHING_METHOD_I
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        if (input1_.in_ntt_domain_ != false)
+                                        {
+                                            throw std::invalid_argument(
+                                                "Ciphertext should be in intt "
+                                                "domain");
+                                        }
 
-                        rotate_columns_method_I(input1, output, galois_key,
-                                                stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        throw std::invalid_argument("Unsupported scheme");
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        rotate_columns_method_II(input1, output, galois_key,
-                                                 stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        throw std::invalid_argument("Unsupported scheme");
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
+                                        rotate_columns_method_I(
+                                            input1_, output_, galois_key,
+                                            options.stream_);
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        throw std::invalid_argument(
+                                            "Unsupported scheme");
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 2: // KEYSWITCHING_METHOD_II
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        rotate_columns_method_II(
+                                            input1_, output_, galois_key,
+                                            options.stream_);
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        throw std::invalid_argument(
+                                            "Unsupported scheme");
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 3: // KEYSWITCHING_METHOD_III
 
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for rotation operation!");
+                                    throw std::invalid_argument(
+                                        "KEYSWITCHING_METHOD_III are not "
+                                        "supported because of "
+                                        "high memory consumption for rotation "
+                                        "operation!");
 
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
+                                    break;
+                                default:
+                                    throw std::invalid_argument(
+                                        "Invalid Key Switching Type");
+                                    break;
+                            }
 
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
+                            output_.scheme_ = scheme_;
+                            output_.ring_size_ = n;
+                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.cipher_size_ = 2;
+                            output_.depth_ = input1_.depth_;
+                            output_.scale_ = input1_.scale_;
+                            output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                            output_.rescale_required_ =
+                                input1_.rescale_required_;
+                            output_.relinearization_required_ =
+                                input1_.relinearization_required_;
+                        },
+                        options);
+                },
+                options, (&input1 == &output));
         }
 
         /**
@@ -842,9 +1030,10 @@ namespace heongpu
          * @param galois_key Galois key used for the operation.
          * @param galois_elt The Galois element to apply.
          */
-        __host__ void apply_galois(Ciphertext& input1, Ciphertext& output,
-                                   Galoiskey& galois_key, int galois_elt,
-                                   cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        apply_galois(Ciphertext& input1, Ciphertext& output,
+                     Galoiskey& galois_key, int galois_elt,
+                     const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -853,85 +1042,103 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
 
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count), stream);
-            }
-
-            switch (static_cast<int>(galois_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    output_storage_manager(
+                        output,
+                        [&](Ciphertext& output_)
                         {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
+                            switch (static_cast<int>(galois_key.key_type))
+                            {
+                                case 1: // KEYSWITCHING_METHOD_I
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        if (input1_.in_ntt_domain_ != false)
+                                        {
+                                            throw std::invalid_argument(
+                                                "Ciphertext should be in intt "
+                                                "domain");
+                                        }
 
-                        apply_galois_method_I(input1, output, galois_key,
-                                              galois_elt, stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        apply_galois_ckks_method_I(input1, output, galois_key,
-                                                   galois_elt, stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
+                                        apply_galois_method_I(
+                                            input1_, output_, galois_key,
+                                            galois_elt, options.stream_);
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        apply_galois_ckks_method_I(
+                                            input1_, output_, galois_key,
+                                            galois_elt, options.stream_);
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 2: // KEYSWITCHING_METHOD_II
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        if (input1_.in_ntt_domain_ != false)
+                                        {
+                                            throw std::invalid_argument(
+                                                "Ciphertext should be in intt "
+                                                "domain");
+                                        }
 
-                        apply_galois_method_II(input1, output, galois_key,
-                                               galois_elt, stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        apply_galois_ckks_method_II(input1, output, galois_key,
-                                                    galois_elt, stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
+                                        apply_galois_method_II(
+                                            input1_, output_, galois_key,
+                                            galois_elt, options.stream_);
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        apply_galois_ckks_method_II(
+                                            input1_, output_, galois_key,
+                                            galois_elt, options.stream_);
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 3: // KEYSWITCHING_METHOD_III
 
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for rotation operation!");
+                                    throw std::invalid_argument(
+                                        "KEYSWITCHING_METHOD_III are not "
+                                        "supported because of "
+                                        "high memory consumption for rotation "
+                                        "operation!");
 
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
+                                    break;
+                                default:
+                                    throw std::invalid_argument(
+                                        "Invalid Key Switching Type");
+                                    break;
+                            }
 
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
+                            output_.scheme_ = scheme_;
+                            output_.ring_size_ = n;
+                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.cipher_size_ = 2;
+                            output_.depth_ = input1_.depth_;
+                            output_.scale_ = input1_.scale_;
+                            output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                            output_.rescale_required_ =
+                                input1_.rescale_required_;
+                            output_.relinearization_required_ =
+                                input1_.relinearization_required_;
+                        },
+                        options);
+                },
+                options, (&input1 == &output));
         }
 
         /**
@@ -943,12 +1150,11 @@ namespace heongpu
          * @param galois_key Galois key used for the operation.
          * @param galois_elt The Galois element to apply.
          */
-        __host__ void
-        apply_galois_inplace(Ciphertext& input1, Galoiskey& galois_key,
-                             int galois_elt,
-                             cudaStream_t stream = cudaStreamDefault)
+        __host__ void apply_galois_inplace(
+            Ciphertext& input1, Galoiskey& galois_key, int galois_elt,
+            const ExecutionOptions& options = ExecutionOptions())
         {
-            apply_galois(input1, input1, galois_key, galois_elt, stream);
+            apply_galois(input1, input1, galois_key, galois_elt, options);
         }
 
         /**
@@ -960,9 +1166,9 @@ namespace heongpu
          * stored.
          * @param switch_key Switch key used for the key switching operation.
          */
-        __host__ void keyswitch(Ciphertext& input1, Ciphertext& output,
-                                Switchkey& switch_key,
-                                cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        keyswitch(Ciphertext& input1, Ciphertext& output, Switchkey& switch_key,
+                  const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -971,83 +1177,103 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
 
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count), stream);
-            }
-
-            switch (static_cast<int>(switch_key.key_type))
-            {
-                case 1: // KEYSWITCHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    output_storage_manager(
+                        output,
+                        [&](Ciphertext& output_)
                         {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
+                            switch (static_cast<int>(switch_key.key_type))
+                            {
+                                case 1: // KEYSWITCHING_METHOD_I
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        if (input1_.in_ntt_domain_ != false)
+                                        {
+                                            throw std::invalid_argument(
+                                                "Ciphertext should be in intt "
+                                                "domain");
+                                        }
 
-                        switchkey_method_I(input1, output, switch_key, stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        switchkey_ckks_method_I(input1, output, switch_key,
-                                                stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITCHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        if (input1.in_ntt_domain_ != false)
-                        {
-                            throw std::invalid_argument(
-                                "Ciphertext should be in intt domain");
-                        }
+                                        switchkey_method_I(input1_, output_,
+                                                           switch_key,
+                                                           options.stream_);
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        switchkey_ckks_method_I(
+                                            input1_, output_, switch_key,
+                                            options.stream_);
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 2: // KEYSWITCHING_METHOD_II
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        if (input1_.in_ntt_domain_ != false)
+                                        {
+                                            throw std::invalid_argument(
+                                                "Ciphertext should be in intt "
+                                                "domain");
+                                        }
 
-                        switchkey_method_II(input1, output, switch_key, stream);
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        switchkey_ckks_method_II(input1, output, switch_key,
-                                                 stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
+                                        switchkey_method_II(input1_, output_,
+                                                            switch_key,
+                                                            options.stream_);
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        switchkey_ckks_method_II(
+                                            input1_, output_, switch_key,
+                                            options.stream_);
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 3: // KEYSWITCHING_METHOD_III
 
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for keyswitch operation!");
+                                    throw std::invalid_argument(
+                                        "KEYSWITCHING_METHOD_III are not "
+                                        "supported because of "
+                                        "high memory consumption for keyswitch "
+                                        "operation!");
 
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
+                                    break;
+                                default:
+                                    throw std::invalid_argument(
+                                        "Invalid Key Switching Type");
+                                    break;
+                            }
 
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
+                            output_.scheme_ = scheme_;
+                            output_.ring_size_ = n;
+                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.cipher_size_ = 2;
+                            output_.depth_ = input1_.depth_;
+                            output_.scale_ = input1_.scale_;
+                            output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                            output_.rescale_required_ =
+                                input1_.rescale_required_;
+                            output_.relinearization_required_ =
+                                input1_.relinearization_required_;
+                        },
+                        options);
+                },
+                options, (&input1 == &output));
         }
 
         ///////////////////////////////////////////////////////////////////
@@ -1062,9 +1288,10 @@ namespace heongpu
          * stored.
          * @param conjugate_key Switch key used for the conjugation operation.
          */
-        __host__ void conjugate(Ciphertext& input1, Ciphertext& output,
-                                Galoiskey& conjugate_key,
-                                cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        conjugate(Ciphertext& input1, Ciphertext& output,
+                  Galoiskey& conjugate_key,
+                  const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -1073,71 +1300,87 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
 
-            if (output.locations_.size() < (2 * n * current_decomp_count))
-            {
-                output.resize((2 * n * current_decomp_count), stream);
-            }
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    output_storage_manager(
+                        output,
+                        [&](Ciphertext& output_)
+                        {
+                            switch (static_cast<int>(conjugate_key.key_type))
+                            {
+                                case 1: // KEYSWITHING_METHOD_I
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        throw std::invalid_argument(
+                                            "BFV Does Not Support!");
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        conjugate_ckks_method_I(
+                                            input1_, output_, conjugate_key,
+                                            options.stream_);
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 2: // KEYSWITHING_METHOD_II
+                                    if (scheme_ == scheme_type::bfv)
+                                    {
+                                        throw std::invalid_argument(
+                                            "BFV Does Not Support!");
+                                    }
+                                    else if (scheme_ == scheme_type::ckks)
+                                    {
+                                        conjugate_ckks_method_II(
+                                            input1_, output_, conjugate_key,
+                                            options.stream_);
+                                    }
+                                    else
+                                    {
+                                        throw std::invalid_argument(
+                                            "Invalid Key Switching Type");
+                                    }
+                                    break;
+                                case 3: // KEYSWITHING_METHOD_III
 
-            switch (static_cast<int>(conjugate_key.key_type))
-            {
-                case 1: // KEYSWITHING_METHOD_I
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        throw std::invalid_argument("BFV Does Not Support!");
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        conjugate_ckks_method_I(input1, output, conjugate_key,
-                                                stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 2: // KEYSWITHING_METHOD_II
-                    if (scheme_ == scheme_type::bfv)
-                    {
-                        throw std::invalid_argument("BFV Does Not Support!");
-                    }
-                    else if (scheme_ == scheme_type::ckks)
-                    {
-                        conjugate_ckks_method_II(input1, output, conjugate_key,
-                                                 stream);
-                    }
-                    else
-                    {
-                        throw std::invalid_argument(
-                            "Invalid Key Switching Type");
-                    }
-                    break;
-                case 3: // KEYSWITHING_METHOD_III
+                                    throw std::invalid_argument(
+                                        "KEYSWITHING_METHOD_III are not "
+                                        "supported because of "
+                                        "high memory consumption for keyswitch "
+                                        "operation!");
 
-                    throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
-                        "high memory consumption for keyswitch operation!");
+                                    break;
+                                default:
+                                    throw std::invalid_argument(
+                                        "Invalid Key Switching Type");
+                                    break;
+                            }
 
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Key Switching Type");
-                    break;
-            }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
+                            output_.scheme_ = scheme_;
+                            output_.ring_size_ = n;
+                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.cipher_size_ = 2;
+                            output_.depth_ = input1_.depth_;
+                            output_.scale_ = input1_.scale_;
+                            output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                            output_.rescale_required_ =
+                                input1_.rescale_required_;
+                            output_.relinearization_required_ =
+                                input1_.relinearization_required_;
+                        },
+                        options);
+                },
+                options, (&input1 == &output));
         }
 
         ///////////////////////////////////////////////////////////////////
@@ -1149,8 +1392,9 @@ namespace heongpu
          *
          * @param input1 Ciphertext to be rescaled.
          */
-        __host__ void rescale_inplace(Ciphertext& input1,
-                                      cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        rescale_inplace(Ciphertext& input1,
+                        const ExecutionOptions& options = ExecutionOptions())
         {
             if ((!input1.rescale_required_) || input1.relinearization_required_)
             {
@@ -1159,7 +1403,7 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1171,7 +1415,13 @@ namespace heongpu
                     throw std::invalid_argument("BFV Does Not Support!");
                     break;
                 case 2: // CKKS
-                    rescale_inplace_ckks_leveled(input1, stream);
+                    input_storage_manager(
+                        input1,
+                        [&](Ciphertext& input1_) {
+                            rescale_inplace_ckks_leveled(input1_,
+                                                         options.stream_);
+                        },
+                        options, true);
                     break;
                 default:
                     throw std::invalid_argument("Invalid Scheme Type");
@@ -1190,8 +1440,9 @@ namespace heongpu
          * @param output Ciphertext where the result of the modulus drop is
          * stored.
          */
-        __host__ void mod_drop(Ciphertext& input1, Ciphertext& output,
-                               cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        mod_drop(Ciphertext& input1, Ciphertext& output,
+                 const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.rescale_required_ || input1.relinearization_required_)
             {
@@ -1201,14 +1452,9 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
-            }
-
-            if (output.locations_.size() < (2 * n * (current_decomp_count - 1)))
-            {
-                output.resize((2 * n * (current_decomp_count - 1)), stream);
             }
 
             switch (static_cast<int>(scheme_))
@@ -1219,22 +1465,38 @@ namespace heongpu
                         "BFV does dot support modulus dropping!");
                     break;
                 case 2: // CKKS
-                    mod_drop_ckks_leveled(input1, output, stream);
+                    input_storage_manager(
+                        input1,
+                        [&](Ciphertext& input1_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    mod_drop_ckks_leveled(input1_, output_,
+                                                          options.stream_);
+
+                                    output.scheme_ = scheme_;
+                                    output.ring_size_ = n;
+                                    output.coeff_modulus_count_ = Q_size_;
+                                    output.cipher_size_ = 2;
+                                    output.depth_ = input1.depth_ + 1;
+                                    output.scale_ = input1.scale_;
+                                    output.in_ntt_domain_ =
+                                        input1.in_ntt_domain_;
+                                    output.rescale_required_ =
+                                        input1.rescale_required_;
+                                    output.relinearization_required_ =
+                                        input1.relinearization_required_;
+                                },
+                                options);
+                        },
+                        options, (&input1 == &output));
                     break;
                 default:
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_ + 1;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
         }
 
         /**
@@ -1245,19 +1507,15 @@ namespace heongpu
          * @param output Plaintext where the result of the modulus drop is
          * stored.
          */
-        __host__ void mod_drop(Plaintext& input1, Plaintext& output,
-                               cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        mod_drop(Plaintext& input1, Plaintext& output,
+                 const ExecutionOptions& options = ExecutionOptions())
         {
             int current_decomp_count = Q_size_ - input1.depth_;
 
             if (input1.size() < (n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Plaintext size!");
-            }
-
-            if (output.size() < (n * (current_decomp_count - 1)))
-            {
-                output.resize((n * (current_decomp_count - 1)), stream);
             }
 
             switch (static_cast<int>(scheme_))
@@ -1268,18 +1526,33 @@ namespace heongpu
                         "BFV does dot support modulus dropping!");
                     break;
                 case 2: // CKKS
-                    mod_drop_ckks_plaintext(input1, output, stream);
+                    input_storage_manager(
+                        input1,
+                        [&](Plaintext& input1_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Plaintext& output_)
+                                {
+                                    mod_drop_ckks_plaintext(input1_, output_,
+                                                            options.stream_);
+
+                                    output.scheme_ = input1.scheme_;
+                                    output.plain_size_ =
+                                        (n * (current_decomp_count - 1));
+                                    output.depth_ = input1.depth_ + 1;
+                                    output.scale_ = input1.scale_;
+                                    output.in_ntt_domain_ =
+                                        input1.in_ntt_domain_;
+                                },
+                                options);
+                        },
+                        options, (&input1 == &output));
                     break;
                 default:
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
-
-            output.scheme_ = input1.scheme_;
-            output.plain_size_ = (n * (current_decomp_count - 1));
-            output.depth_ = input1.depth_ + 1;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
         }
 
         /**
@@ -1288,8 +1561,9 @@ namespace heongpu
          *
          * @param input1 Plaintext to perform modulus dropping on.
          */
-        __host__ void mod_drop_inplace(Plaintext& input1,
-                                       cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        mod_drop_inplace(Plaintext& input1,
+                         const ExecutionOptions& options = ExecutionOptions())
         {
             int current_decomp_count = Q_size_ - input1.depth_;
 
@@ -1306,7 +1580,13 @@ namespace heongpu
                         "BFV does dot support modulus dropping!");
                     break;
                 case 2: // CKKS
-                    mod_drop_ckks_plaintext_inplace(input1, stream);
+                    input_storage_manager(
+                        input1,
+                        [&](Plaintext& input1_) {
+                            mod_drop_ckks_plaintext_inplace(input1_,
+                                                            options.stream_);
+                        },
+                        options, true);
                     break;
                 default:
                     throw std::invalid_argument("Invalid Scheme Type");
@@ -1320,12 +1600,13 @@ namespace heongpu
          *
          * @param input1 Ciphertext to perform modulus dropping on.
          */
-        __host__ void mod_drop_inplace(Ciphertext& input1,
-                                       cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        mod_drop_inplace(Ciphertext& input1,
+                         const ExecutionOptions& options = ExecutionOptions())
         {
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1338,7 +1619,13 @@ namespace heongpu
                         "BFV does dot support modulus dropping!");
                     break;
                 case 2: // CKKS
-                    mod_drop_ckks_leveled_inplace(input1, stream);
+                    input_storage_manager(
+                        input1,
+                        [&](Ciphertext& input1_) {
+                            mod_drop_ckks_leveled_inplace(input1_,
+                                                          options.stream_);
+                        },
+                        options, true);
                     break;
                 default:
                     throw std::invalid_argument("Invalid Scheme Type");
@@ -1346,9 +1633,9 @@ namespace heongpu
             }
         }
 
-        __host__ void
-        multiply_power_of_X(Ciphertext& input1, Ciphertext& output, int index,
-                            cudaStream_t stream = cudaStreamDefault)
+        __host__ void multiply_power_of_X(
+            Ciphertext& input1, Ciphertext& output, int index,
+            const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1361,19 +1648,40 @@ namespace heongpu
                                 "Ciphertext should be in intt domain");
                         }
 
-                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        if (input1.memory_size() < (2 * n * Q_size_))
                         {
                             throw std::invalid_argument(
                                 "Invalid Ciphertexts size!");
                         }
 
-                        if (output.locations_.size() < (2 * n * Q_size_))
-                        {
-                            output.resize((2 * n * Q_size_), stream);
-                        }
+                        input_storage_manager(
+                            input1,
+                            [&](Ciphertext& input1_)
+                            {
+                                output_storage_manager(
+                                    output,
+                                    [&](Ciphertext& output_)
+                                    {
+                                        negacyclic_shift_poly_coeffmod(
+                                            input1_, output_, index,
+                                            options.stream_);
 
-                        negacyclic_shift_poly_coeffmod(input1, output, index,
-                                                       stream);
+                                        output.scheme_ = scheme_;
+                                        output.ring_size_ = n;
+                                        output.coeff_modulus_count_ = Q_size_;
+                                        output.cipher_size_ = 2;
+                                        output.depth_ = input1.depth_;
+                                        output.scale_ = input1.scale_;
+                                        output.in_ntt_domain_ =
+                                            input1.in_ntt_domain_;
+                                        output.rescale_required_ =
+                                            input1.rescale_required_;
+                                        output.relinearization_required_ =
+                                            input1.relinearization_required_;
+                                    },
+                                    options);
+                            },
+                            options, (&input1 == &output));
                     }
                     break;
                 case 2: // CKKS
@@ -1384,16 +1692,6 @@ namespace heongpu
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = input1.in_ntt_domain_;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
         }
 
         /**
@@ -1404,8 +1702,9 @@ namespace heongpu
          * @param output Plaintext where the result of the transformation is
          * stored.
          */
-        __host__ void transform_to_ntt(Plaintext& input1, Plaintext& output,
-                                       cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        transform_to_ntt(Plaintext& input1, Plaintext& output,
+                         const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -1418,12 +1717,26 @@ namespace heongpu
                                 "Invalid Ciphertexts size!");
                         }
 
-                        if (output.size() < (n * Q_size_))
-                        {
-                            output.resize((n * Q_size_), stream);
-                        }
+                        input_storage_manager(
+                            input1,
+                            [&](Plaintext& input1_)
+                            {
+                                output_storage_manager(
+                                    output,
+                                    [&](Plaintext& output_)
+                                    {
+                                        transform_to_ntt_bfv_plain(
+                                            input1, output, options.stream_);
 
-                        transform_to_ntt_bfv_plain(input1, output, stream);
+                                        output.scheme_ = input1.scheme_;
+                                        output.plain_size_ = (n * Q_size_);
+                                        output.depth_ = input1.depth_;
+                                        output.scale_ = input1.scale_;
+                                        output.in_ntt_domain_ = true;
+                                    },
+                                    options);
+                            },
+                            options, (&input1 == &output));
                     }
                     break;
                 case 2: // CKKS
@@ -1434,12 +1747,6 @@ namespace heongpu
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
-
-            output.scheme_ = input1.scheme_;
-            output.plain_size_ = (n * Q_size_);
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = true;
         }
 
         /**
@@ -1448,11 +1755,11 @@ namespace heongpu
          *
          * @param input1 Plaintext to be transformed.
          */
-        __host__ void
-        transform_to_ntt_inplace(Plaintext& input1,
-                                 cudaStream_t stream = cudaStreamDefault)
+        __host__ void transform_to_ntt_inplace(
+            Plaintext& input1,
+            const ExecutionOptions& options = ExecutionOptions())
         {
-            transform_to_ntt(input1, input1, stream);
+            transform_to_ntt(input1, input1, options);
         }
 
         /**
@@ -1463,8 +1770,9 @@ namespace heongpu
          * @param output Ciphertext where the result of the transformation is
          * stored.
          */
-        __host__ void transform_to_ntt(Ciphertext& input1, Ciphertext& output,
-                                       cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        transform_to_ntt(Ciphertext& input1, Ciphertext& output,
+                         const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.relinearization_required_)
             {
@@ -1477,18 +1785,38 @@ namespace heongpu
                 case 1: // BFV
                     if (!input1.in_ntt_domain_)
                     {
-                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        if (input1.memory_size() < (2 * n * Q_size_))
                         {
                             throw std::invalid_argument(
                                 "Invalid Ciphertexts size!");
                         }
 
-                        if (output.locations_.size() < (2 * n * Q_size_))
-                        {
-                            output.resize((2 * n * Q_size_), stream);
-                        }
+                        input_storage_manager(
+                            input1,
+                            [&](Ciphertext& input1_)
+                            {
+                                output_storage_manager(
+                                    output,
+                                    [&](Ciphertext& output_)
+                                    {
+                                        transform_to_ntt_bfv_cipher(
+                                            input1_, output_, options.stream_);
 
-                        transform_to_ntt_bfv_cipher(input1, output, stream);
+                                        output.scheme_ = scheme_;
+                                        output.ring_size_ = n;
+                                        output.coeff_modulus_count_ = Q_size_;
+                                        output.cipher_size_ = 2;
+                                        output.depth_ = input1.depth_;
+                                        output.scale_ = input1.scale_;
+                                        output.in_ntt_domain_ = true;
+                                        output.rescale_required_ =
+                                            input1.rescale_required_;
+                                        output.relinearization_required_ =
+                                            input1.relinearization_required_;
+                                    },
+                                    options);
+                            },
+                            options, (&input1 == &output));
                     }
                     break;
                 case 2: // CKKS
@@ -1499,16 +1827,6 @@ namespace heongpu
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = true;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
         }
 
         /**
@@ -1517,11 +1835,11 @@ namespace heongpu
          *
          * @param input1 Ciphertext to be transformed.
          */
-        __host__ void
-        transform_to_ntt_inplace(Ciphertext& input1,
-                                 cudaStream_t stream = cudaStreamDefault)
+        __host__ void transform_to_ntt_inplace(
+            Ciphertext& input1,
+            const ExecutionOptions& options = ExecutionOptions())
         {
-            transform_to_ntt(input1, input1, stream);
+            transform_to_ntt(input1, input1, options);
         }
 
         /**
@@ -1534,7 +1852,7 @@ namespace heongpu
          */
         __host__ void
         transform_from_ntt(Ciphertext& input1, Ciphertext& output,
-                           cudaStream_t stream = cudaStreamDefault)
+                           const ExecutionOptions& options = ExecutionOptions())
         {
             if (input1.relinearization_required_)
             {
@@ -1547,18 +1865,38 @@ namespace heongpu
                 case 1: // BFV
                     if (input1.in_ntt_domain_)
                     {
-                        if (input1.locations_.size() < (2 * n * Q_size_))
+                        if (input1.memory_size() < (2 * n * Q_size_))
                         {
                             throw std::invalid_argument(
                                 "Invalid Ciphertexts size!");
                         }
 
-                        if (output.locations_.size() < (2 * n * Q_size_))
-                        {
-                            output.resize((2 * n * Q_size_), stream);
-                        }
+                        input_storage_manager(
+                            input1,
+                            [&](Ciphertext& input1_)
+                            {
+                                output_storage_manager(
+                                    output,
+                                    [&](Ciphertext& output_)
+                                    {
+                                        transform_from_ntt_bfv_cipher(
+                                            input1_, output_, options.stream_);
 
-                        transform_from_ntt_bfv_cipher(input1, output, stream);
+                                        output.scheme_ = scheme_;
+                                        output.ring_size_ = n;
+                                        output.coeff_modulus_count_ = Q_size_;
+                                        output.cipher_size_ = 2;
+                                        output.depth_ = input1.depth_;
+                                        output.scale_ = input1.scale_;
+                                        output.in_ntt_domain_ = false;
+                                        output.rescale_required_ =
+                                            input1.rescale_required_;
+                                        output.relinearization_required_ =
+                                            input1.relinearization_required_;
+                                    },
+                                    options);
+                            },
+                            options, (&input1 == &output));
                     }
                     break;
                 case 2: // CKKS
@@ -1569,16 +1907,6 @@ namespace heongpu
                     throw std::invalid_argument("Invalid Scheme Type");
                     break;
             }
-
-            output.scheme_ = scheme_;
-            output.ring_size_ = n;
-            output.coeff_modulus_count_ = Q_size_;
-            output.cipher_size_ = 2;
-            output.depth_ = input1.depth_;
-            output.scale_ = input1.scale_;
-            output.in_ntt_domain_ = false;
-            output.rescale_required_ = input1.rescale_required_;
-            output.relinearization_required_ = input1.relinearization_required_;
         }
 
         /**
@@ -1587,11 +1915,11 @@ namespace heongpu
          *
          * @param input1 Ciphertext to be transformed from the NTT domain.
          */
-        __host__ void
-        transform_from_ntt_inplace(Ciphertext& input1,
-                                   cudaStream_t stream = cudaStreamDefault)
+        __host__ void transform_from_ntt_inplace(
+            Ciphertext& input1,
+            const ExecutionOptions& options = ExecutionOptions())
         {
-            transform_from_ntt(input1, input1, stream);
+            transform_from_ntt(input1, input1, options);
         }
 
         ////////////////////////////////////////
@@ -1775,11 +2103,11 @@ namespace heongpu
         ///////////////////////////////////////////////////
 
         __host__ void mod_drop_ckks_leveled(Ciphertext& input1,
-                                            Ciphertext& input2,
+                                            Ciphertext& output,
                                             const cudaStream_t stream);
 
         __host__ void mod_drop_ckks_plaintext(Plaintext& input1,
-                                              Plaintext& input2,
+                                              Plaintext& output,
                                               const cudaStream_t stream);
 
         __host__ void
@@ -1958,8 +2286,8 @@ namespace heongpu
                                           const BootstrappingConfig& config);
 
         __host__ Ciphertext bootstrapping(
-            Ciphertext& cipher, Galoiskey& galois_key, Relinkey& relin_key,
-            cudaStream_t stream = cudaStreamDefault);
+            Ciphertext& input1, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
 
         __host__ std::vector<int> bootstrapping_key_indexs()
         {
@@ -2119,30 +2447,32 @@ namespace heongpu
             Ciphertext& cipher,
             std::vector<heongpu::DeviceVector<Data>>& matrix,
             std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
-            Galoiskey& galois_key, const cudaStream_t stream);
+            Galoiskey& galois_key,
+            const ExecutionOptions& options = ExecutionOptions());
 
         __host__ Ciphertext multiply_matrix_less_memory(
             Ciphertext& cipher,
             std::vector<heongpu::DeviceVector<Data>>& matrix,
             std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
             std::vector<std::vector<std::vector<int>>>& real_shift,
-            Galoiskey& galois_key, const cudaStream_t stream);
+            Galoiskey& galois_key,
+            const ExecutionOptions& options = ExecutionOptions());
 
         __host__ std::vector<Ciphertext>
         coeff_to_slot(Ciphertext& cipher, Galoiskey& galois_key,
-                      const cudaStream_t stream);
+                      const ExecutionOptions& options = ExecutionOptions());
 
-        __host__ Ciphertext slot_to_coeff(Ciphertext& cipher0,
-                                          Ciphertext& cipher1,
-                                          Galoiskey& galois_key,
-                                          const cudaStream_t stream);
+        __host__ Ciphertext slot_to_coeff(
+            Ciphertext& cipher0, Ciphertext& cipher1, Galoiskey& galois_key,
+            const ExecutionOptions& options = ExecutionOptions());
 
-        __host__ Ciphertext exp_scaled(Ciphertext& cipher, Relinkey& relin_key,
-                                       const cudaStream_t stream);
+        __host__ Ciphertext
+        exp_scaled(Ciphertext& cipher, Relinkey& relin_key,
+                   const ExecutionOptions& options = ExecutionOptions());
 
-        __host__ Ciphertext exp_taylor_approximation(Ciphertext& cipher,
-                                                     Relinkey& relin_key,
-                                                     const cudaStream_t stream);
+        __host__ Ciphertext exp_taylor_approximation(
+            Ciphertext& cipher, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
 
         // Double-hoisting BSGS matrix×vector algorithm
         __host__ DeviceVector<Data> fast_single_hoisting_rotation_ckks(
@@ -2156,7 +2486,7 @@ namespace heongpu
 
             int current_decomp_count = Q_size_ - input1.depth_;
 
-            if (input1.locations_.size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }

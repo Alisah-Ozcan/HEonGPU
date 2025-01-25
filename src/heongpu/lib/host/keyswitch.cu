@@ -241,7 +241,7 @@ namespace heongpu
         }
     }
 
-    void Relinkey::store_key_in_device()
+    void Relinkey::store_in_device(cudaStream_t stream)
     {
         if (store_in_gpu_)
         {
@@ -256,7 +256,7 @@ namespace heongpu
                 for (int i = 0; i < max_depth; i++)
                 {
                     device_location_leveled_.push_back(std::move(
-                        DeviceVector<Data>(host_location_leveled_[i])));
+                        DeviceVector<Data>(host_location_leveled_[i], stream)));
                     host_location_leveled_[i].resize(0);
                     host_location_leveled_[i].shrink_to_fit();
                 }
@@ -265,7 +265,7 @@ namespace heongpu
             }
             else
             {
-                device_location_ = DeviceVector<Data>(host_location_);
+                device_location_ = DeviceVector<Data>(host_location_, stream);
                 host_location_.resize(0);
                 host_location_.shrink_to_fit();
             }
@@ -274,7 +274,7 @@ namespace heongpu
         }
     }
 
-    void Relinkey::store_key_in_host()
+    void Relinkey::store_in_host(cudaStream_t stream)
     {
         if (store_in_gpu_)
         {
@@ -287,13 +287,13 @@ namespace heongpu
                     host_location_leveled_.push_back(
                         HostVector<Data>(relinkey_size_leveled_[i]));
 
-                    cudaMemcpy(host_location_leveled_[i].data(),
-                               device_location_leveled_[i].data(),
-                               relinkey_size_leveled_[i] * sizeof(Data),
-                               cudaMemcpyDeviceToHost);
+                    cudaMemcpyAsync(host_location_leveled_[i].data(),
+                                    device_location_leveled_[i].data(),
+                                    relinkey_size_leveled_[i] * sizeof(Data),
+                                    cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                    device_location_leveled_[i].resize(0);
+                    device_location_leveled_[i].resize(0, stream);
                 }
                 device_location_leveled_.resize(0);
                 device_location_leveled_.shrink_to_fit();
@@ -301,12 +301,12 @@ namespace heongpu
             else
             {
                 host_location_ = HostVector<Data>(relinkey_size_);
-                cudaMemcpy(host_location_.data(), device_location_.data(),
-                           relinkey_size_ * sizeof(Data),
-                           cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(host_location_.data(), device_location_.data(),
+                                relinkey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                device_location_.resize(0);
+                device_location_.resize(0, stream);
             }
 
             store_in_gpu_ = false;
@@ -576,7 +576,7 @@ namespace heongpu
         }
     }
 
-    void Galoiskey::store_key_in_device()
+    void Galoiskey::store_in_device(cudaStream_t stream)
     {
         if (store_in_gpu_)
         {
@@ -587,10 +587,11 @@ namespace heongpu
             for (const auto& galois_ : host_location_)
             {
                 device_location_[galois_.first] =
-                    DeviceVector<Data>(galois_.second);
+                    DeviceVector<Data>(galois_.second, stream);
             }
 
-            zero_device_location_ = DeviceVector<Data>(zero_host_location_);
+            zero_device_location_ =
+                DeviceVector<Data>(zero_host_location_, stream);
 
             host_location_.clear();
             zero_host_location_.resize(0);
@@ -600,7 +601,7 @@ namespace heongpu
         }
     }
 
-    void Galoiskey::store_key_in_host()
+    void Galoiskey::store_in_host(cudaStream_t stream)
     {
         if (store_in_gpu_)
         {
@@ -608,15 +609,19 @@ namespace heongpu
             {
                 host_location_[galois_.first] =
                     HostVector<Data>(galoiskey_size_);
-                cudaMemcpy(
-                    host_location_[galois_.first].data(), galois_.second.data(),
-                    galoiskey_size_ * sizeof(Data), cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(host_location_[galois_.first].data(),
+                                galois_.second.data(),
+                                galoiskey_size_ * sizeof(Data),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+                galois_.second.resize(0, stream);
             }
 
             zero_host_location_ = HostVector<Data>(galoiskey_size_);
-            cudaMemcpy(zero_host_location_.data(), zero_device_location_.data(),
-                       galoiskey_size_ * sizeof(Data), cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(
+                zero_host_location_.data(), zero_device_location_.data(),
+                galoiskey_size_ * sizeof(Data), cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             device_location_.clear();
@@ -739,7 +744,7 @@ namespace heongpu
 
     //////////////////////////
 
-    void Switchkey::store_key_in_device()
+    void Switchkey::store_in_device(cudaStream_t stream)
     {
         if (store_in_gpu_)
         {
@@ -747,7 +752,7 @@ namespace heongpu
         }
         else
         {
-            device_location_ = DeviceVector<Data>(host_location_);
+            device_location_ = DeviceVector<Data>(host_location_, stream);
             host_location_.resize(0);
             host_location_.shrink_to_fit();
 
@@ -755,16 +760,17 @@ namespace heongpu
         }
     }
 
-    void Switchkey::store_key_in_host()
+    void Switchkey::store_in_host(cudaStream_t stream)
     {
         if (store_in_gpu_)
         {
             host_location_ = HostVector<Data>(switchkey_size_);
-            cudaMemcpy(host_location_.data(), device_location_.data(),
-                       switchkey_size_ * sizeof(Data), cudaMemcpyDeviceToHost);
+            cudaMemcpyAsync(host_location_.data(), device_location_.data(),
+                            switchkey_size_ * sizeof(Data),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            device_location_.resize(0);
+            device_location_.resize(0, stream);
 
             store_in_gpu_ = false;
         }

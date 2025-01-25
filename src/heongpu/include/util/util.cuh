@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <set>
+#include "storagemanager.cuh"
 
 class CudaException_ : public std::exception
 {
@@ -94,12 +95,6 @@ namespace heongpu
         KEYSWITCHING_METHOD_I = 0x1, // SEALMETHOD = 0x1,
         KEYSWITCHING_METHOD_II = 0x2, // EXTERNALPRODUCT = 0x2,
         KEYSWITCHING_METHOD_III = 0x3, // EXTERNALPRODUCT_2 = 0x3
-    };
-
-    enum class storage_type : std::uint8_t
-    {
-        HOST = 0x1,
-        DEVICE = 0x2
     };
 
     struct BootstrappingConfig

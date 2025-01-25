@@ -16,6 +16,16 @@ namespace heongpu
         friend class HEDecryptor;
         friend class HEOperator;
 
+        template <typename T, typename F>
+        friend void input_storage_manager(T& object, F function,
+                                          ExecutionOptions options,
+                                          bool check_initial_condition);
+        template <typename T, typename F>
+        friend void input_vector_storage_manager(std::vector<T>& objects,
+                                                 F function,
+                                                 ExecutionOptions options,
+                                                 bool is_input_output_same);
+
       public:
         /**
          * @brief Constructs an empty Ciphertext object.
@@ -31,8 +41,9 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        __host__ Ciphertext(Parameters& context,
-                            cudaStream_t stream = cudaStreamDefault);
+        __host__
+        Ciphertext(Parameters& context,
+                   const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Constructs a new Ciphertext object from a vector of data with
@@ -45,9 +56,9 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        __host__ Ciphertext(const std::vector<Data>& cipher,
-                            Parameters& context,
-                            cudaStream_t stream = cudaStreamDefault);
+        __host__
+        Ciphertext(const std::vector<Data>& cipher, Parameters& context,
+                   const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Constructs a new Ciphertext object from a HostVector of data
@@ -60,8 +71,34 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        __host__ Ciphertext(const HostVector<Data>& cipher, Parameters& context,
-                            cudaStream_t stream = cudaStreamDefault);
+        __host__
+        Ciphertext(const HostVector<Data>& cipher, Parameters& context,
+                   const ExecutionOptions& options = ExecutionOptions());
+
+        /**
+         * @brief Stores the ciphertext in the device (GPU) memory.
+         */
+        void store_in_device(cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Stores the ciphertext in the host (CPU) memory.
+         */
+        void store_in_host(cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Checks whether the data is stored on the device (GPU) memory.
+         */
+        bool is_on_device() const noexcept
+        {
+            if (storage_type_ == storage_type::DEVICE)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         /**
          * @brief Returns a pointer to the underlying data of the ciphertext.
@@ -71,19 +108,6 @@ namespace heongpu
         Data* data();
 
         /**
-         * @brief Resizes the ciphertext to the new specified size using the
-         * given CUDA stream.
-         *
-         * @param new_size The new size of the ciphertext.
-         * @param stream CUDA stream to be used for the resize operation,
-         * default is cudaStreamDefault.
-         */
-        void resize(int new_size, cudaStream_t stream = cudaStreamDefault)
-        {
-            locations_.resize(new_size, stream);
-        }
-
-        /**
          * @brief Copies the data from the device to the host.
          *
          * @param cipher Reference to a vector where the device data will be
@@ -91,8 +115,20 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void device_to_host(std::vector<Data>& cipher,
-                            cudaStream_t stream = cudaStreamDefault);
+        void get_data(std::vector<Data>& cipher,
+                      cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Copies the data from the device to the host.
+         *
+         * @param cipher Reference to a HostVector where the device data will be
+         * copied to.
+         * @param stream The CUDA stream to be used for asynchronous operations.
+         * Defaults to `cudaStreamDefault`.
+         */
+        void get_data(HostVector<Data>& cipher,
+                      cudaStream_t stream =
+                          cudaStreamDefault); // TODO: add check mechanism
 
         /**
          * @brief Switches the Ciphertext CUDA stream.
@@ -101,7 +137,7 @@ namespace heongpu
          */
         void switch_stream(cudaStream_t stream)
         {
-            locations_.set_stream(stream);
+            device_locations_.set_stream(stream);
         }
 
         /**
@@ -112,7 +148,10 @@ namespace heongpu
          *
          * @return The CUDA stream associated with the ciphertext.
          */
-        cudaStream_t stream() const { return locations_.stream(); }
+        cudaStream_t stream() const noexcept
+        {
+            return device_locations_.stream();
+        }
 
         /**
          * @brief Returns the size of the polynomial ring used in ciphertext.
@@ -187,14 +226,26 @@ namespace heongpu
               coeff_modulus_count_(copy.coeff_modulus_count_),
               cipher_size_(copy.cipher_size_), depth_(copy.depth_),
               scheme_(copy.scheme_), in_ntt_domain_(copy.in_ntt_domain_),
-              scale_(copy.scale_), rescale_required_(copy.rescale_required_),
+              storage_type_(copy.storage_type_), scale_(copy.scale_),
+              rescale_required_(copy.rescale_required_),
               relinearization_required_(copy.relinearization_required_)
         {
-            locations_.resize(copy.locations_.size(), copy.locations_.stream());
-            cudaMemcpyAsync(
-                locations_.data(), copy.locations_.data(),
-                copy.locations_.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
-                copy.locations_.stream()); // TODO: use cudaStreamPerThread
+            if (copy.storage_type_ == storage_type::DEVICE)
+            {
+                device_locations_.resize(copy.device_locations_.size(),
+                                         copy.device_locations_.stream());
+                cudaMemcpyAsync(device_locations_.data(),
+                                copy.device_locations_.data(),
+                                copy.device_locations_.size() * sizeof(Data),
+                                cudaMemcpyDeviceToDevice,
+                                copy.device_locations_
+                                    .stream()); // TODO: use cudaStreamPerThread
+            }
+            else
+            {
+                std::memcpy(host_locations_.data(), copy.host_locations_.data(),
+                            copy.host_locations_.size() * sizeof(Data));
+            }
         }
 
         Ciphertext(Ciphertext&& assign) noexcept
@@ -204,11 +255,13 @@ namespace heongpu
               depth_(std::move(assign.depth_)),
               scheme_(std::move(assign.scheme_)),
               in_ntt_domain_(std::move(assign.in_ntt_domain_)),
+              storage_type_(std::move(assign.storage_type_)),
               scale_(std::move(assign.scale_)),
               rescale_required_(std::move(assign.rescale_required_)),
               relinearization_required_(
                   std::move(assign.relinearization_required_)),
-              locations_(std::move(assign.locations_))
+              device_locations_(std::move(assign.device_locations_)),
+              host_locations_(std::move(assign.host_locations_))
         {
         }
 
@@ -222,18 +275,29 @@ namespace heongpu
                 depth_ = copy.depth_;
                 scheme_ = copy.scheme_;
                 in_ntt_domain_ = copy.in_ntt_domain_;
+                storage_type_ = copy.storage_type_;
 
                 scale_ = copy.scale_;
                 rescale_required_ = copy.rescale_required_;
                 relinearization_required_ = copy.relinearization_required_;
 
-                locations_.resize(copy.locations_.size(),
-                                  copy.locations_.stream());
-                cudaMemcpyAsync(
-                    locations_.data(), copy.locations_.data(),
-                    copy.locations_.size() * sizeof(Data),
-                    cudaMemcpyDeviceToDevice,
-                    copy.locations_.stream()); // TODO: use cudaStreamPerThread
+                if (copy.storage_type_ == storage_type::DEVICE)
+                {
+                    device_locations_.resize(copy.device_locations_.size(),
+                                             copy.device_locations_.stream());
+                    cudaMemcpyAsync(
+                        device_locations_.data(), copy.device_locations_.data(),
+                        copy.device_locations_.size() * sizeof(Data),
+                        cudaMemcpyDeviceToDevice,
+                        copy.device_locations_
+                            .stream()); // TODO: use cudaStreamPerThread
+                }
+                else
+                {
+                    std::memcpy(host_locations_.data(),
+                                copy.host_locations_.data(),
+                                copy.host_locations_.size() * sizeof(Data));
+                }
             }
             return *this;
         }
@@ -248,13 +312,15 @@ namespace heongpu
                 depth_ = std::move(assign.depth_);
                 scheme_ = std::move(assign.scheme_);
                 in_ntt_domain_ = std::move(assign.in_ntt_domain_);
+                storage_type_ = std::move(assign.storage_type_);
 
                 scale_ = std::move(assign.scale_);
                 rescale_required_ = std::move(assign.rescale_required_);
                 relinearization_required_ =
                     std::move(assign.relinearization_required_);
 
-                locations_ = std::move(assign.locations_);
+                device_locations_ = std::move(assign.device_locations_);
+                host_locations_ = std::move(assign.host_locations_);
             }
             return *this;
         }
@@ -268,12 +334,22 @@ namespace heongpu
         int depth_;
 
         bool in_ntt_domain_;
+        storage_type storage_type_;
 
         double scale_;
         bool rescale_required_;
         bool relinearization_required_;
 
-        DeviceVector<Data> locations_;
+        DeviceVector<Data> device_locations_;
+        HostVector<Data> host_locations_;
+
+        int memory_size();
+        void memory_clear(cudaStream_t stream);
+        void memory_set(DeviceVector<Data>&& new_device_vector);
+
+        void copy_to_device(cudaStream_t stream);
+        void remove_from_device(cudaStream_t stream);
+        void remove_from_host();
     };
 } // namespace heongpu
 #endif // CIPHERTEXT_H

@@ -24,34 +24,50 @@ void multi_stream_function_way1(
     {
         int threadID = omp_get_thread_num();
 
-        heongpu::Ciphertext ciphertext1_in_gpu(ciphertext1_in_cpu[i], context,
-                                               s[threadID]);
-        heongpu::Plaintext plaintext_in_gpu(plaintext_in_cpu[i], context,
-                                            s[threadID]);
+        heongpu::Ciphertext ciphertext1_in_gpu(
+            ciphertext1_in_cpu[i], context,
+            heongpu::ExecutionOptions().set_stream(s[threadID]));
+        heongpu::Plaintext plaintext_in_gpu(
+            plaintext_in_cpu[i], context,
+            heongpu::ExecutionOptions().set_stream(s[threadID]));
 
-        heongpu::Ciphertext temp1(context, s[threadID]);
-        operators.multiply_plain(ciphertext1_in_gpu, plaintext_in_gpu, temp1,
-                                 s[threadID]);
+        heongpu::Ciphertext temp1(
+            context, heongpu::ExecutionOptions().set_stream(s[threadID]));
+        operators.multiply_plain(
+            ciphertext1_in_gpu, plaintext_in_gpu, temp1,
+            heongpu::ExecutionOptions().set_stream(s[threadID]));
 
-        heongpu::Ciphertext ciphertext2_in_gpu(ciphertext2_in_cpu[i], context,
-                                               s[threadID]);
+        heongpu::Ciphertext ciphertext2_in_gpu(
+            ciphertext2_in_cpu[i], context,
+            heongpu::ExecutionOptions().set_stream(s[threadID]));
 
-        heongpu::Ciphertext temp2(context, s[threadID]);
-        operators.sub(temp1, ciphertext2_in_gpu, temp2, s[threadID]);
+        heongpu::Ciphertext temp2(
+            context, heongpu::ExecutionOptions().set_stream(s[threadID]));
+        operators.sub(temp1, ciphertext2_in_gpu, temp2,
+                      heongpu::ExecutionOptions().set_stream(s[threadID]));
 
-        heongpu::Ciphertext ciphertext3_in_gpu(ciphertext3_in_cpu[i], context,
-                                               s[threadID]);
+        heongpu::Ciphertext ciphertext3_in_gpu(
+            ciphertext3_in_cpu[i], context,
+            heongpu::ExecutionOptions().set_stream(s[threadID]));
 
-        operators.multiply_inplace(temp2, ciphertext3_in_gpu, s[threadID]);
+        operators.multiply_inplace(
+            temp2, ciphertext3_in_gpu,
+            heongpu::ExecutionOptions().set_stream(s[threadID]));
 
-        operators.relinearize_inplace(temp2, relinkeys, s[threadID]);
+        operators.relinearize_inplace(
+            temp2, relinkeys,
+            heongpu::ExecutionOptions().set_stream(s[threadID]));
 
-        operators.add_inplace(temp1, temp2, s[threadID]);
+        operators.add_inplace(
+            temp1, temp2, heongpu::ExecutionOptions().set_stream(s[threadID]));
 
         heongpu::Ciphertext result(
-            context, s[threadID]); // DO not forget result stream is
-                                   // s[threadID], not default or others!
-        operators.rotate_rows(temp1, result, galoiskeys, 5, s[threadID]);
+            context, heongpu::ExecutionOptions().set_stream(
+                         s[threadID])); // DO not forget result stream is
+                                        // s[threadID], not default or others!
+        operators.rotate_rows(
+            temp1, result, galoiskeys, 5,
+            heongpu::ExecutionOptions().set_stream(s[threadID]));
 
         // Ensure the ciphertext_result_in_gpu's streams, while using different
         // place!

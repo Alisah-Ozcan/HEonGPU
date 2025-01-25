@@ -57,36 +57,56 @@ namespace heongpu
          * will be stored.
          * @param ciphertext Ciphertext object to be decrypted.
          */
-        __host__ void decrypt(Plaintext& plaintext, Ciphertext& ciphertext,
-                              cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        decrypt(Plaintext& plaintext, Ciphertext& ciphertext,
+                const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
-                    if (plaintext.size() != n)
-                    {
-                        plaintext.resize(n);
-                    }
+                    input_storage_manager(
+                        ciphertext,
+                        [&](Ciphertext& ciphertext_)
+                        {
+                            output_storage_manager(
+                                plaintext,
+                                [&](Plaintext& plaintext_)
+                                {
+                                    decrypt_bfv(plaintext_, ciphertext_,
+                                                options.stream_);
 
-                    decrypt_bfv(plaintext, ciphertext, stream);
-
-                    plaintext.scheme_ = scheme_;
-                    plaintext.depth_ = 0;
-                    plaintext.scale_ = 0;
-                    plaintext.in_ntt_domain_ = false;
+                                    plaintext.plain_size_ = n;
+                                    plaintext.scheme_ = scheme_;
+                                    plaintext.depth_ = 0;
+                                    plaintext.scale_ = 0;
+                                    plaintext.in_ntt_domain_ = false;
+                                },
+                                options);
+                        },
+                        options, false);
                     break;
                 case 2: // CKKS
-                    if (plaintext.size() != (n * (Q_size_ - ciphertext.depth_)))
-                    {
-                        plaintext.resize((n * (Q_size_ - ciphertext.depth_)));
-                    }
 
-                    decrypt_ckks(plaintext, ciphertext, stream);
+                    input_storage_manager(
+                        ciphertext,
+                        [&](Ciphertext& ciphertext_)
+                        {
+                            output_storage_manager(
+                                plaintext,
+                                [&](Plaintext& plaintext_)
+                                {
+                                    decrypt_ckks(plaintext_, ciphertext,
+                                                 options.stream_);
 
-                    plaintext.scheme_ = scheme_;
-                    plaintext.depth_ = ciphertext.depth_;
-                    plaintext.scale_ = ciphertext.scale_;
-                    plaintext.in_ntt_domain_ = true;
+                                    plaintext.plain_size_ = n * Q_size_;
+                                    plaintext.scheme_ = scheme_;
+                                    plaintext.depth_ = ciphertext.depth_;
+                                    plaintext.scale_ = ciphertext.scale_;
+                                    plaintext.in_ntt_domain_ = true;
+                                },
+                                options);
+                        },
+                        options, false);
                     break;
                 case 3: // BGV
 
@@ -104,14 +124,14 @@ namespace heongpu
          * budget is calculated.
          * @return int The remainder of the noise budget in the ciphertext.
          */
-        __host__ int
-        remainder_noise_budget(Ciphertext& ciphertext,
-                               cudaStream_t stream = cudaStreamDefault)
+        __host__ int remainder_noise_budget(
+            Ciphertext& ciphertext,
+            const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
                 case 1: // BFV
-                    return noise_budget_calculation(ciphertext, stream);
+                    return noise_budget_calculation(ciphertext, options);
                 case 2: // CKKS
                     throw std::invalid_argument(
                         "Can not be used for CKKS Scheme");
@@ -205,10 +225,9 @@ namespace heongpu
          * @param plaintext The output plaintext resulting from the fusion of
          * all partial decryptions.
          */
-        __host__ void
-        multi_party_decrypt_fusion(std::vector<Ciphertext>& ciphertexts,
-                                   Plaintext& plaintext,
-                                   cudaStream_t stream = cudaStreamDefault)
+        __host__ void multi_party_decrypt_fusion(
+            std::vector<Ciphertext>& ciphertexts, Plaintext& plaintext,
+            const ExecutionOptions& options = ExecutionOptions())
         {
             int cipher_count = ciphertexts.size();
 
@@ -242,42 +261,53 @@ namespace heongpu
                 }
             }
 
-            switch (static_cast<int>(scheme_))
-            {
-                case 1: // BFV
-                    if (plaintext.size() != n)
+            input_vector_storage_manager(
+                ciphertexts,
+                [&](std::vector<Ciphertext>& ciphertexts_)
+                {
+                    switch (static_cast<int>(scheme_))
                     {
-                        plaintext.resize(n);
+                        case 1: // BFV
+                            output_storage_manager(
+                                plaintext,
+                                [&](Plaintext& plaintext_)
+                                {
+                                    decrypt_fusion_bfv(ciphertexts_, plaintext_,
+                                                       options.stream_);
+
+                                    plaintext.plain_size_ = n;
+                                    plaintext.scheme_ = scheme_;
+                                    plaintext.depth_ = 0;
+                                    plaintext.scale_ = 0;
+                                    plaintext.in_ntt_domain_ = false;
+                                },
+                                options);
+                            break;
+                        case 2: // CKKS
+                            output_storage_manager(
+                                plaintext,
+                                [&](Plaintext& plaintext_)
+                                {
+                                    decrypt_fusion_ckks(ciphertexts_,
+                                                        plaintext_,
+                                                        options.stream_);
+
+                                    plaintext.plain_size_ = n * Q_size_;
+                                    plaintext.scheme_ = scheme_;
+                                    plaintext.depth_ = depth_check;
+                                    plaintext.scale_ = scale_check;
+                                    plaintext.in_ntt_domain_ = true;
+                                },
+                                options);
+                            break;
+                        case 3: // BGV
+                            break;
+                        default:
+                            throw std::invalid_argument("Invalid Scheme Type");
+                            break;
                     }
-
-                    decrypt_fusion_bfv(ciphertexts, plaintext, stream);
-
-                    plaintext.scheme_ = scheme_;
-                    plaintext.depth_ = 0;
-                    plaintext.scale_ = 0;
-                    plaintext.in_ntt_domain_ = false;
-
-                    break;
-                case 2: // CKKS
-                    if (plaintext.size() != (n * (Q_size_ - depth_check)))
-                    {
-                        plaintext.resize((n * (Q_size_ - depth_check)));
-                    }
-
-                    decrypt_fusion_ckks(ciphertexts, plaintext, stream);
-
-                    plaintext.scheme_ = scheme_;
-                    plaintext.depth_ = depth_check;
-                    plaintext.scale_ = scale_check;
-                    plaintext.in_ntt_domain_ = true;
-
-                    break;
-                case 3: // BGV
-                    break;
-                default:
-                    throw std::invalid_argument("Invalid Scheme Type");
-                    break;
-            }
+                },
+                options, false);
         }
 
         /**
@@ -321,8 +351,9 @@ namespace heongpu
         __host__ void decrypt_ckks(Plaintext& plaintext, Ciphertext& ciphertext,
                                    const cudaStream_t stream);
 
-        __host__ int noise_budget_calculation(Ciphertext& ciphertext,
-                                              const cudaStream_t stream);
+        __host__ int noise_budget_calculation(
+            Ciphertext& ciphertext,
+            const ExecutionOptions& options = ExecutionOptions());
 
         __host__ void partial_decrypt_bfv(Ciphertext& ciphertext, Secretkey& sk,
                                           Ciphertext& partial_ciphertext,
@@ -346,7 +377,7 @@ namespace heongpu
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
 
-        Data* secret_key_;
+        DeviceVector<Data> secret_key_;
 
         int n;
 

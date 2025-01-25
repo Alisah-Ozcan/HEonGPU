@@ -9,7 +9,8 @@ namespace heongpu
 {
     __host__ Plaintext::Plaintext() {}
 
-    __host__ Plaintext::Plaintext(Parameters& context, cudaStream_t stream)
+    __host__ Plaintext::Plaintext(Parameters& context,
+                                  const ExecutionOptions& options)
     {
         scheme_ = context.scheme_;
         switch (static_cast<int>(context.scheme_))
@@ -19,22 +20,33 @@ namespace heongpu
                 depth_ = 0;
                 scale_ = 0;
                 in_ntt_domain_ = false;
+                storage_type_ = options.storage_;
                 break;
             case 2: // CKKS
                 plain_size_ = context.n * context.Q_size; // n
                 depth_ = 0;
                 scale_ = 0;
                 in_ntt_domain_ = true;
+                storage_type_ = options.storage_;
                 break;
             default:
                 break;
         }
 
-        locations_ = DeviceVector<Data>(plain_size_, stream);
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            device_locations_ =
+                DeviceVector<Data>(plain_size_, options.stream_);
+        }
+        else
+        {
+            host_locations_ = HostVector<Data>(plain_size_);
+        }
     }
 
     __host__ Plaintext::Plaintext(const std::vector<Data>& plain,
-                                  Parameters& context, cudaStream_t stream)
+                                  Parameters& context,
+                                  const ExecutionOptions& options)
     {
         scheme_ = context.scheme_;
         switch (static_cast<int>(context.scheme_))
@@ -44,6 +56,7 @@ namespace heongpu
                 depth_ = 0;
                 scale_ = 0;
                 in_ntt_domain_ = false;
+                storage_type_ = options.storage_;
 
                 if (!(plain.size() == plain_size_))
                 {
@@ -57,6 +70,7 @@ namespace heongpu
                 depth_ = 0;
                 scale_ = 0;
                 in_ntt_domain_ = true;
+                storage_type_ = options.storage_;
 
                 if (!(plain.size() == plain_size_))
                 {
@@ -69,11 +83,27 @@ namespace heongpu
                 break;
         }
 
-        locations_ = DeviceVector<Data>(plain, stream);
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            device_locations_ =
+                DeviceVector<Data>(plain_size_, options.stream_);
+
+            cudaMemcpyAsync(device_locations_.data(), plain.data(),
+                            plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
+                            options.stream_);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+        else
+        {
+            host_locations_ = HostVector<Data>(plain_size_);
+            std::memcpy(host_locations_.data(), plain.data(),
+                        plain.size() * sizeof(Data));
+        }
     }
 
     __host__ Plaintext::Plaintext(const HostVector<Data>& plain,
-                                  Parameters& context, cudaStream_t stream)
+                                  Parameters& context,
+                                  const ExecutionOptions& options)
     {
         scheme_ = context.scheme_;
         switch (static_cast<int>(context.scheme_))
@@ -83,6 +113,7 @@ namespace heongpu
                 depth_ = 0;
                 scale_ = 0;
                 in_ntt_domain_ = false;
+                storage_type_ = options.storage_;
 
                 if (!(plain.size() == plain_size_))
                 {
@@ -96,6 +127,7 @@ namespace heongpu
                 depth_ = 0;
                 scale_ = 0;
                 in_ntt_domain_ = true;
+                storage_type_ = options.storage_;
 
                 if (!(plain.size() == plain_size_))
                 {
@@ -108,66 +140,261 @@ namespace heongpu
                 break;
         }
 
-        locations_ = DeviceVector<Data>(plain, stream);
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            device_locations_ =
+                DeviceVector<Data>(plain_size_, options.stream_);
+
+            cudaMemcpyAsync(device_locations_.data(), plain.data(),
+                            plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
+                            options.stream_);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+        else
+        {
+            host_locations_ = HostVector<Data>(plain_size_);
+            std::memcpy(host_locations_.data(), plain.data(),
+                        plain.size() * sizeof(Data));
+        }
+    }
+
+    void Plaintext::store_in_device(cudaStream_t stream)
+    {
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            // pass
+        }
+        else
+        {
+            if (memory_size() == 0)
+            {
+                // pass
+            }
+            else
+            {
+                device_locations_ = DeviceVector<Data>(host_locations_, stream);
+                host_locations_.resize(0);
+                host_locations_.shrink_to_fit();
+            }
+
+            storage_type_ = storage_type::DEVICE;
+        }
+    }
+
+    void Plaintext::store_in_host(cudaStream_t stream)
+    {
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            if (memory_size() == 0)
+            {
+                // pass
+            }
+            else
+            {
+                host_locations_ = HostVector<Data>(plain_size_);
+                cudaMemcpyAsync(
+                    host_locations_.data(), device_locations_.data(),
+                    plain_size_ * sizeof(Data), cudaMemcpyDeviceToHost, stream);
+                HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+                device_locations_.resize(0, stream);
+                device_locations_.shrink_to_fit(stream);
+            }
+
+            storage_type_ = storage_type::HOST;
+        }
+        else
+        {
+            // pass
+        }
     }
 
     Data* Plaintext::data()
     {
-        return locations_.data();
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            return device_locations_.data();
+        }
+        else
+        {
+            return host_locations_.data();
+        }
     }
 
-    void Plaintext::device_to_host(std::vector<Data>& plain,
-                                   cudaStream_t stream)
+    void Plaintext::get_data(std::vector<Data>& plain, cudaStream_t stream)
     {
         if (plain.size() < plain_size_)
         {
             plain.resize(plain_size_);
         }
 
-        cudaMemcpyAsync(plain.data(), locations_.data(),
-                        plain_size_ * sizeof(Data), cudaMemcpyDeviceToHost,
-                        stream);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            cudaMemcpyAsync(plain.data(), device_locations_.data(),
+                            plain_size_ * sizeof(Data), cudaMemcpyDeviceToHost,
+                            stream);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+        else
+        {
+            std::memcpy(plain.data(), host_locations_.data(),
+                        host_locations_.size() * sizeof(Data));
+        }
     }
 
-    void Plaintext::host_to_device(std::vector<Data>& plain,
-                                   cudaStream_t stream)
+    void Plaintext::set_data(const std::vector<Data>& plain,
+                             const ExecutionOptions& options)
     {
         if (!(plain.size() == plain_size_))
         {
             throw std::invalid_argument("Plaintext size should be valid!");
         }
 
-        cudaMemcpyAsync(locations_.data(), plain.data(),
-                        plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
-                        stream);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            cudaMemcpyAsync(device_locations_.data(), plain.data(),
+                            plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
+                            options.stream_);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+        else
+        {
+            std::memcpy(host_locations_.data(), plain.data(),
+                        plain.size() * sizeof(Data));
+        }
     }
 
-    void Plaintext::device_to_host(HostVector<Data>& plain, cudaStream_t stream)
+    void Plaintext::get_data(HostVector<Data>& plain, cudaStream_t stream)
     {
         if (plain.size() < plain_size_)
         {
             plain.resize(plain_size_);
         }
 
-        cudaMemcpyAsync(plain.data(), locations_.data(),
-                        plain_size_ * sizeof(Data), cudaMemcpyDeviceToHost,
-                        stream);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            cudaMemcpyAsync(plain.data(), device_locations_.data(),
+                            plain_size_ * sizeof(Data), cudaMemcpyDeviceToHost,
+                            stream);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+        else
+        {
+            std::memcpy(plain.data(), host_locations_.data(),
+                        host_locations_.size() * sizeof(Data));
+        }
     }
 
-    void Plaintext::host_to_device(HostVector<Data>& plain, cudaStream_t stream)
+    void Plaintext::set_data(const HostVector<Data>& plain,
+                             const ExecutionOptions& options)
     {
         if (!(plain.size() == plain_size_))
         {
             throw std::invalid_argument("Plaintext size should be valid!");
         }
 
-        cudaMemcpyAsync(locations_.data(), plain.data(),
-                        plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
-                        stream);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            cudaMemcpyAsync(device_locations_.data(), plain.data(),
+                            plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
+                            options.stream_);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+        }
+        else
+        {
+            std::memcpy(host_locations_.data(), plain.data(),
+                        plain.size() * sizeof(Data));
+        }
+    }
+
+    int Plaintext::memory_size()
+    {
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            return device_locations_.size();
+        }
+        else
+        {
+            return host_locations_.size();
+        }
+    }
+
+    void Plaintext::memory_clear(cudaStream_t stream)
+    {
+        if (device_locations_.size() > 0)
+        {
+            device_locations_.resize(0, stream);
+            device_locations_.shrink_to_fit(stream);
+        }
+
+        if (host_locations_.size() > 0)
+        {
+            host_locations_.resize(0);
+            host_locations_.shrink_to_fit();
+        }
+    }
+
+    void Plaintext::memory_set(DeviceVector<Data>&& new_device_vector)
+    {
+        storage_type_ = storage_type::DEVICE;
+        device_locations_ = std::move(new_device_vector);
+
+        if (host_locations_.size() > 0)
+        {
+            host_locations_.resize(0);
+            host_locations_.shrink_to_fit();
+        }
+    }
+
+    void Plaintext::copy_to_device(cudaStream_t stream)
+    {
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            // pass
+        }
+        else
+        {
+            if (memory_size() == 0)
+            {
+                // pass
+            }
+            else
+            {
+                device_locations_ = DeviceVector<Data>(host_locations_, stream);
+            }
+
+            storage_type_ = storage_type::DEVICE;
+        }
+    }
+
+    void Plaintext::remove_from_device(cudaStream_t stream)
+    {
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            device_locations_.resize(0, stream);
+            device_locations_.shrink_to_fit(stream);
+
+            storage_type_ = storage_type::HOST;
+        }
+        else
+        {
+            // pass
+        }
+    }
+
+    void Plaintext::remove_from_host()
+    {
+        if (storage_type_ == storage_type::DEVICE)
+        {
+            // pass
+        }
+        else
+        {
+            host_locations_.resize(0);
+            host_locations_.shrink_to_fit();
+
+            storage_type_ = storage_type::DEVICE;
+        }
     }
 
 } // namespace heongpu

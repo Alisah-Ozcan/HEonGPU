@@ -57,8 +57,9 @@ namespace heongpu
          * encryption will be stored.
          * @param plaintext Plaintext object to be encrypted.
          */
-        __host__ void encrypt(Ciphertext& ciphertext, Plaintext& plaintext,
-                              cudaStream_t stream = cudaStreamDefault)
+        __host__ void
+        encrypt(Ciphertext& ciphertext, Plaintext& plaintext,
+                const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
             {
@@ -74,22 +75,32 @@ namespace heongpu
                             "Invalid plaintext depth must be zero.");
                     }
 
-                    if (ciphertext.locations_.size() < (2 * n * Q_size_))
-                    {
-                        ciphertext.resize((2 * n * Q_size_), stream);
-                    }
+                    input_storage_manager(
+                        plaintext,
+                        [&](Plaintext& plaintext_)
+                        {
+                            output_storage_manager(
+                                ciphertext,
+                                [&](Ciphertext& ciphertext_)
+                                {
+                                    encrypt_bfv(ciphertext_, plaintext_,
+                                                options.stream_);
 
-                    encrypt_bfv(ciphertext, plaintext, stream);
+                                    ciphertext.scheme_ = scheme_;
+                                    ciphertext.ring_size_ = n;
+                                    ciphertext.coeff_modulus_count_ = Q_size_;
+                                    ciphertext.cipher_size_ = 2;
+                                    ciphertext.depth_ = 0;
+                                    ciphertext.in_ntt_domain_ = false;
+                                    ciphertext.scale_ = 0;
+                                    ciphertext.rescale_required_ = false;
+                                    ciphertext.relinearization_required_ =
+                                        false;
+                                },
+                                options);
+                        },
+                        options, false);
 
-                    ciphertext.scheme_ = scheme_;
-                    ciphertext.ring_size_ = n;
-                    ciphertext.coeff_modulus_count_ = Q_size_;
-                    ciphertext.cipher_size_ = 3; // default
-                    ciphertext.depth_ = 0;
-                    ciphertext.in_ntt_domain_ = false;
-                    ciphertext.scale_ = 0;
-                    ciphertext.rescale_required_ = false;
-                    ciphertext.relinearization_required_ = false;
                     break;
                 case 2: // CKKS
                     if (plaintext.size() < (n * Q_size_))
@@ -103,22 +114,32 @@ namespace heongpu
                             "Invalid plaintext depth must be zero.");
                     }
 
-                    if (ciphertext.locations_.size() < (2 * n * Q_size_))
-                    {
-                        ciphertext.resize((2 * n * Q_size_), stream);
-                    }
+                    input_storage_manager(
+                        plaintext,
+                        [&](Plaintext& plaintext_)
+                        {
+                            output_storage_manager(
+                                ciphertext,
+                                [&](Ciphertext& ciphertext_)
+                                {
+                                    encrypt_ckks(ciphertext_, plaintext,
+                                                 options.stream_);
 
-                    encrypt_ckks(ciphertext, plaintext, stream);
+                                    ciphertext.scheme_ = scheme_;
+                                    ciphertext.ring_size_ = n;
+                                    ciphertext.coeff_modulus_count_ = Q_size_;
+                                    ciphertext.cipher_size_ = 2;
+                                    ciphertext.depth_ = 0;
+                                    ciphertext.in_ntt_domain_ = true;
+                                    ciphertext.scale_ = plaintext.scale_;
+                                    ciphertext.rescale_required_ = false;
+                                    ciphertext.relinearization_required_ =
+                                        false;
+                                },
+                                options);
+                        },
+                        options, false);
 
-                    ciphertext.scheme_ = scheme_;
-                    ciphertext.ring_size_ = n;
-                    ciphertext.coeff_modulus_count_ = Q_size_;
-                    ciphertext.cipher_size_ = 3; // default
-                    ciphertext.depth_ = 0;
-                    ciphertext.in_ntt_domain_ = true;
-                    ciphertext.scale_ = plaintext.scale_;
-                    ciphertext.rescale_required_ = false;
-                    ciphertext.relinearization_required_ = false;
                     break;
                 case 3: // BGV
 
@@ -171,7 +192,7 @@ namespace heongpu
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
 
-        Data* public_key_;
+        DeviceVector<Data> public_key_;
 
         int n;
 

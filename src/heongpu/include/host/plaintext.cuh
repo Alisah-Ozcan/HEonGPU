@@ -27,6 +27,16 @@ namespace heongpu
         friend class HEDecryptor;
         friend class HEOperator;
 
+        template <typename T, typename F>
+        friend void input_storage_manager(T& object, F function,
+                                          ExecutionOptions options,
+                                          bool check_initial_condition);
+        template <typename T, typename F>
+        friend void input_vector_storage_manager(std::vector<T>& objects,
+                                                 F function,
+                                                 ExecutionOptions options,
+                                                 bool is_input_output_same);
+
       public:
         /**
          * @brief Constructs an empty Plaintext object.
@@ -42,8 +52,9 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        explicit __host__ Plaintext(Parameters& context,
-                                    cudaStream_t stream = cudaStreamDefault);
+        explicit __host__
+        Plaintext(Parameters& context,
+                  const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Constructs a new Plaintext object from a vector of data with
@@ -56,9 +67,9 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        explicit __host__ Plaintext(const std::vector<Data>& plain,
-                                    Parameters& context,
-                                    cudaStream_t stream = cudaStreamDefault);
+        explicit __host__
+        Plaintext(const std::vector<Data>& plain, Parameters& context,
+                  const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Constructs a new Plaintext object from a HostVector of data
@@ -71,9 +82,34 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        explicit __host__ Plaintext(const HostVector<Data>& plain,
-                                    Parameters& context,
-                                    cudaStream_t stream = cudaStreamDefault);
+        explicit __host__
+        Plaintext(const HostVector<Data>& plain, Parameters& context,
+                  const ExecutionOptions& options = ExecutionOptions());
+
+        /**
+         * @brief Stores the plaintext in the device (GPU) memory.
+         */
+        void store_in_device(cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Stores the plaintext in the host (CPU) memory.
+         */
+        void store_in_host(cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Checks whether the data is stored on the device (GPU) memory.
+         */
+        bool is_on_device() const noexcept
+        {
+            if (storage_type_ == storage_type::DEVICE)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         /**
          * @brief Returns a pointer to the underlying plaintext data.
@@ -83,20 +119,6 @@ namespace heongpu
         Data* data();
 
         /**
-         * @brief Resizes the plaintext to the new specified size using the
-         * given CUDA stream.
-         *
-         * @param new_size The new size of the plaintext.
-         * @param stream The CUDA stream to be used for asynchronous operations.
-         * Defaults to `cudaStreamDefault`.
-         */
-        void resize(int new_size, cudaStream_t stream = cudaStreamDefault)
-        {
-            locations_.resize(new_size, stream);
-            plain_size_ = new_size;
-        }
-
-        /**
          * @brief Transfers the plaintext data from the device (GPU) to the host
          * (CPU) using the specified CUDA stream.
          *
@@ -104,8 +126,8 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void device_to_host(std::vector<Data>& plain,
-                            cudaStream_t stream = cudaStreamDefault);
+        void get_data(std::vector<Data>& plain,
+                      cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Transfers the plaintext data from the host (CPU) to the device
@@ -115,8 +137,8 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void host_to_device(std::vector<Data>& plain,
-                            cudaStream_t stream = cudaStreamDefault);
+        void set_data(const std::vector<Data>& plain,
+                      const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Transfers the plaintext data from the device (GPU) to the host
@@ -126,8 +148,8 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void device_to_host(HostVector<Data>& plain,
-                            cudaStream_t stream = cudaStreamDefault);
+        void get_data(HostVector<Data>& plain,
+                      cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Transfers the plaintext data from the host (CPU) to the device
@@ -137,8 +159,8 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void host_to_device(HostVector<Data>& plain,
-                            cudaStream_t stream = cudaStreamDefault);
+        void set_data(const HostVector<Data>& plain,
+                      const ExecutionOptions& options = ExecutionOptions());
 
         /**
          * @brief Returns the size of the plaintext.
@@ -172,13 +194,25 @@ namespace heongpu
         Plaintext(const Plaintext& copy)
             : scheme_(copy.scheme_), plain_size_(copy.plain_size_),
               depth_(copy.depth_), scale_(copy.scale_),
-              in_ntt_domain_(copy.in_ntt_domain_)
+              in_ntt_domain_(copy.in_ntt_domain_),
+              storage_type_(copy.storage_type_)
         {
-            locations_.resize(copy.locations_.size(), copy.locations_.stream());
-            cudaMemcpyAsync(
-                locations_.data(), copy.locations_.data(),
-                copy.locations_.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
-                copy.locations_.stream()); // TODO: use cudaStreamPerThread
+            if (copy.storage_type_ == storage_type::DEVICE)
+            {
+                device_locations_.resize(copy.device_locations_.size(),
+                                         copy.device_locations_.stream());
+                cudaMemcpyAsync(device_locations_.data(),
+                                copy.device_locations_.data(),
+                                copy.device_locations_.size() * sizeof(Data),
+                                cudaMemcpyDeviceToDevice,
+                                copy.device_locations_
+                                    .stream()); // TODO: use cudaStreamPerThread
+            }
+            else
+            {
+                std::memcpy(host_locations_.data(), copy.host_locations_.data(),
+                            copy.host_locations_.size() * sizeof(Data));
+            }
         }
 
         Plaintext(Plaintext&& assign) noexcept
@@ -187,7 +221,9 @@ namespace heongpu
               depth_(std::move(assign.depth_)),
               scale_(std::move(assign.scale_)),
               in_ntt_domain_(std::move(assign.in_ntt_domain_)),
-              locations_(std::move(assign.locations_))
+              storage_type_(std::move(assign.storage_type_)),
+              device_locations_(std::move(assign.device_locations_)),
+              host_locations_(std::move(assign.host_locations_))
         {
         }
 
@@ -200,14 +236,25 @@ namespace heongpu
                 depth_ = copy.depth_;
                 scale_ = copy.scale_;
                 in_ntt_domain_ = copy.in_ntt_domain_;
+                storage_type_ = copy.storage_type_;
 
-                locations_.resize(copy.locations_.size(),
-                                  copy.locations_.stream());
-                cudaMemcpyAsync(
-                    locations_.data(), copy.locations_.data(),
-                    copy.locations_.size() * sizeof(Data),
-                    cudaMemcpyDeviceToDevice,
-                    copy.locations_.stream()); // TODO: use cudaStreamPerThread
+                if (copy.storage_type_ == storage_type::DEVICE)
+                {
+                    device_locations_.resize(copy.device_locations_.size(),
+                                             copy.device_locations_.stream());
+                    cudaMemcpyAsync(
+                        device_locations_.data(), copy.device_locations_.data(),
+                        copy.device_locations_.size() * sizeof(Data),
+                        cudaMemcpyDeviceToDevice,
+                        copy.device_locations_
+                            .stream()); // TODO: use cudaStreamPerThread
+                }
+                else
+                {
+                    std::memcpy(host_locations_.data(),
+                                copy.host_locations_.data(),
+                                copy.host_locations_.size() * sizeof(Data));
+                }
             }
             return *this;
         }
@@ -221,8 +268,10 @@ namespace heongpu
                 depth_ = std::move(assign.depth_);
                 scale_ = std::move(assign.scale_);
                 in_ntt_domain_ = std::move(assign.in_ntt_domain_);
+                storage_type_ = std::move(assign.storage_type_);
 
-                locations_ = std::move(assign.locations_);
+                device_locations_ = std::move(assign.device_locations_);
+                host_locations_ = std::move(assign.host_locations_);
             }
             return *this;
         }
@@ -237,8 +286,18 @@ namespace heongpu
         double scale_;
 
         bool in_ntt_domain_;
+        storage_type storage_type_;
 
-        DeviceVector<Data> locations_;
+        DeviceVector<Data> device_locations_;
+        HostVector<Data> host_locations_;
+
+        int memory_size();
+        void memory_clear(cudaStream_t stream);
+        void memory_set(DeviceVector<Data>&& new_device_vector);
+
+        void copy_to_device(cudaStream_t stream);
+        void remove_from_device(cudaStream_t stream);
+        void remove_from_host();
     };
 } // namespace heongpu
 #endif // PLAINTEXT_H

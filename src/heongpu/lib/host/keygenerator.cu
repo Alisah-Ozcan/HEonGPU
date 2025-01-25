@@ -423,7 +423,7 @@ namespace heongpu
                     "MultipartyRelinkey is not generated!");
             }
 
-            rk_stage_1.store_key_in_device();
+            rk_stage_1.store_in_device();
         }
 
         DeviceVector<Data> random_values(
@@ -611,7 +611,7 @@ namespace heongpu
                     "MultipartyRelinkey is not generated!");
             }
 
-            rk_stage_1.store_key_in_device();
+            rk_stage_1.store_in_device();
         }
 
         DeviceVector<Data> random_values(Q_prime_size_ * ((2 * d_) + 1) * n,
@@ -801,7 +801,7 @@ namespace heongpu
                     "MultipartyRelinkey is not generated!");
             }
 
-            rk_stage_1.store_key_in_device();
+            rk_stage_1.store_in_device();
         }
 
         DeviceVector<Data> random_values(
@@ -934,7 +934,7 @@ namespace heongpu
                         "MultipartyRelinkey is not generated!");
                 }
 
-                all_rk[i].store_key_in_device();
+                all_rk[i].store_in_device();
             }
         }
 
@@ -1023,7 +1023,7 @@ namespace heongpu
                         "MultipartyRelinkey is not generated!");
                 }
 
-                all_rk[i].store_key_in_device();
+                all_rk[i].store_in_device();
             }
         }
 
@@ -1031,7 +1031,7 @@ namespace heongpu
 
         if (!rk_common_stage1.store_in_gpu_)
         {
-            rk_common_stage1.store_key_in_device();
+            rk_common_stage1.store_in_device();
         }
 
         multi_party_relinkey_method_I_stage_II_kernel<<<
@@ -2793,7 +2793,7 @@ namespace heongpu
                     }
                 }
 
-                all_gk[i].store_key_in_device();
+                all_gk[i].store_in_device();
             }
         }
 

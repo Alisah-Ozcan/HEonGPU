@@ -22,6 +22,7 @@ namespace heongpu
     class Publickey
     {
         friend class HEKeyGenerator;
+        friend class HEEncryptor;
 
       public:
         /**

@@ -66,14 +66,19 @@ namespace heongpu
                           bool store_in_gpu = true);
 
         /**
-         * @brief Stores the relinearization key in the GPU memory.
+         * @brief Stores the relinearization key in the device (GPU) memory.
          */
-        void store_key_in_device();
+        void store_in_device(cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Stores the relinearization key in the host (CPU) memory.
          */
-        void store_key_in_host();
+        void store_in_host(cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Checks whether the data is stored on the device (GPU) memory.
+         */
+        bool is_on_device() const { return store_in_gpu_; }
 
         /**
          * @brief Returns a pointer to the underlying relinearization key data.
@@ -501,14 +506,19 @@ namespace heongpu
                            bool store_in_gpu = true);
 
         /**
-         * @brief Stores the Galois key in the GPU memory.
+         * @brief Stores the galois key in the device (GPU) memory.
          */
-        void store_key_in_device();
+        void store_in_device(cudaStream_t stream = cudaStreamDefault);
 
         /**
-         * @brief Stores the Galois key in the host (CPU) memory.
+         * @brief Stores the galois key in the host (CPU) memory.
          */
-        void store_key_in_host();
+        void store_in_host(cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Checks whether the data is stored on the device (GPU) memory.
+         */
+        bool is_on_device() const { return store_in_gpu_; }
 
         /**
          * @brief Returns a pointer to the specified part of the Galois key
@@ -863,14 +873,19 @@ namespace heongpu
         __host__ Switchkey(Parameters& context, bool store_in_gpu = true);
 
         /**
-         * @brief Stores the switch key in the GPU memory.
+         * @brief Stores the switch key in the device (GPU) memory.
          */
-        void store_key_in_device();
+        void store_in_device(cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Stores the switch key in the host (CPU) memory.
          */
-        void store_key_in_host();
+        void store_in_host(cudaStream_t stream = cudaStreamDefault);
+
+        /**
+         * @brief Checks whether the data is stored on the device (GPU) memory.
+         */
+        bool is_on_device() const { return store_in_gpu_; }
 
         /**
          * @brief Returns a pointer to the underlying switch key data.

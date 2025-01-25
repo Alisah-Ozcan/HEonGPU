@@ -159,6 +159,50 @@ Features in [define.h](src/heongpu/include/kernel/defines.h):
 If your system allows, you can redefine the memory pool sizes to better suit your use case. 
 
 
+## Storage Management
+
+In HEonGPU, Fully Homomorphic Encryption (FHE) operations rely on an efficient storage management system that ensures data can seamlessly transition between host (CPU) and device (GPU) memory. The Storage Manager module enables this flexibility, allowing data to be stored and accessed as needed on either the host or device.
+
+### How Storage Management Works
+
+The `ExecutionOptions` struct in HEonGPU determines how input data is handled during and after GPU computations. Specifically:
+
+- `set_storage_type`: Defines where the output data should reside after the operation (`DEVICE` or `HOST`).
+
+- `set_initial_location`: Determines whether the input data should return to its original location after the computation.
+
+```c++
+// ...
+ExecutionOptions options;
+options.set_storage_type(storage_type::DEVICE)
+       .set_initial_location(true);
+
+operators.add(input1, input2, output, options);
+// ...
+```
+
+- Simple case:
+  - If `input1` and `input2` are initially on the `HOST`, they will be copied to the `DEVICE` for the computation.
+  - After the operation, since `set_initial_location(true)` is specified, both `input1` and `input2` will return to the `HOST`.
+  - The `output` will remain on the `DEVICE`, as specified by `set_storage_type(storage_type::DEVICE)`.
+
+- All case:
+
+| `set_storage_type` | `set_initial_location` | Input Locations (Before)            | Input Locations (After)             | Output Location After Computation |
+|---------------------|------------------------|--------------------------------------|--------------------------------------|------------------------------------|
+| `DEVICE`           | `true`                | `input1: HOST, input2: HOST`        | `input1: HOST, input2: HOST`        | `DEVICE`                             |
+| `DEVICE`           | `false`               | `input1: HOST, input2: HOST`        | `input1: DEVICE, input2: DEVICE`    | `DEVICE`                             |
+| `DEVICE`           | `true`                | `input1: HOST, input2: DEVICE`      | `input1: HOST, input2: DEVICE`      | `DEVICE`                             |
+| `DEVICE`           | `false`               | `input1: HOST, input2: DEVICE`      | `input1: DEVICE, input2: DEVICE`    | `DEVICE`                             |
+| `DEVICE`           | `true`                | `input1: DEVICE, input2: DEVICE`    | `input1: DEVICE, input2: DEVICE`    | `DEVICE`                             |
+| `DEVICE`           | `false`               | `input1: DEVICE, input2: DEVICE`    | `input1: DEVICE, input2: DEVICE`    | `DEVICE`                             |
+| `HOST`             | `true`                | `input1: HOST, input2: HOST`        | `input1: HOST, input2: HOST`        | `HOST`                               |
+| `HOST`             | `false`               | `input1: HOST, input2: HOST`        | `input1: DEVICE, input2: DEVICE`    | `HOST`                               |
+| `HOST`             | `true`                | `input1: HOST, input2: DEVICE`      | `input1: HOST, input2: HOST`        | `HOST`                               |
+| `HOST`             | `false`               | `input1: HOST, input2: DEVICE`      | `input1: DEVICE, input2: DEVICE`    | `HOST`                               |
+| `HOST`             | `true`                | `input1: DEVICE, input2: DEVICE`    | `input1: DEVICE, input2: DEVICE`    | `HOST`                               |
+| `HOST`             | `false`               | `input1: DEVICE, input2: DEVICE`    | `input1: DEVICE, input2: DEVICE`    | `HOST`                               |
+
 
 ## Using HEonGPU in a downstream CMake project
 
