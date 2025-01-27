@@ -238,6 +238,18 @@ Please use the below BibTeX, to cite HEonGPU in academic papers.
 }
 ```
 
+Please use the below BibTeX, to cite key-switching optimizations in academic papers.
+
+```
+@misc{cryptoeprint:2025/124,
+      author = {Ali Şah Özcan and Erkay Savaş},
+      title = {{GPU} Implementations of Three Different Key-Switching Methods for Homomorphic Encryption Schemes},
+      howpublished = {Cryptology {ePrint} Archive, Paper 2025/124},
+      year = {2025},
+      url = {https://eprint.iacr.org/2025/124}
+}
+```
+
 ## License
 This project is licensed under the [Apache License](LICENSE). For more details, please refer to the License file.
 
