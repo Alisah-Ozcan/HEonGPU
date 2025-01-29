@@ -149,7 +149,8 @@ namespace heongpu
             }
             else
             {
-                device_locations_ = DeviceVector<Data64>(host_locations_, stream);
+                device_locations_ =
+                    DeviceVector<Data64>(host_locations_, stream);
                 host_locations_.resize(0);
                 host_locations_.shrink_to_fit();
             }
@@ -302,7 +303,8 @@ namespace heongpu
             }
             else
             {
-                device_locations_ = DeviceVector<Data64>(host_locations_, stream);
+                device_locations_ =
+                    DeviceVector<Data64>(host_locations_, stream);
             }
 
             storage_type_ = storage_type::DEVICE;

@@ -17,8 +17,9 @@ namespace heongpu
         friend class Parameters;
 
       public:
-        KeySwitchParameterGenerator(int poly_degree, std::vector<Data64> modulus,
-                                    int P_size, scheme_type scheme,
+        KeySwitchParameterGenerator(int poly_degree,
+                                    std::vector<Data64> modulus, int P_size,
+                                    scheme_type scheme,
                                     keyswitching_type method);
 
       private:

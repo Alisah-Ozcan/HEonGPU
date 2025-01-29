@@ -96,12 +96,12 @@ namespace heongpu
             Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(sk.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_prime_size_, Q_prime_size_);
@@ -142,12 +142,12 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(errors_a.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_prime_size_, Q_prime_size_);
@@ -195,12 +195,12 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(errors_a.data(), ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_prime_size_, Q_prime_size_);
@@ -278,12 +278,12 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
@@ -352,12 +352,12 @@ namespace heongpu
 
         //
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -446,12 +446,12 @@ namespace heongpu
 
         //
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -473,7 +473,7 @@ namespace heongpu
         else
         {
             DeviceVector<Data64> temp_location(rk_stage_1.device_location_,
-                                             stream);
+                                               stream);
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp_location.data(), rk_stage_2.device_location_.data(),
@@ -513,7 +513,7 @@ namespace heongpu
         int common_seed = rk.seed();
 
         DeviceVector<Data64> random_values(Q_prime_size_ * ((3 * d_) + 1) * n,
-                                         stream);
+                                           stream);
         Data64* e0 = random_values.data();
         Data64* e1 = e0 + (Q_prime_size_ * d_ * n);
         Data64* u = e1 + (Q_prime_size_ * d_ * n);
@@ -539,12 +539,12 @@ namespace heongpu
 
         //
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -615,7 +615,7 @@ namespace heongpu
         }
 
         DeviceVector<Data64> random_values(Q_prime_size_ * ((2 * d_) + 1) * n,
-                                         stream);
+                                           stream);
         Data64* e0 = random_values.data();
         Data64* e1 = e0 + (Q_prime_size_ * d_ * n);
         Data64* u = e1 + (Q_prime_size_ * d_ * n);
@@ -634,12 +634,12 @@ namespace heongpu
 
         //
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -661,7 +661,7 @@ namespace heongpu
         else
         {
             DeviceVector<Data64> temp_location(rk_stage_1.device_location_,
-                                             stream);
+                                               stream);
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp_location.data(), rk_stage_2.device_location_.data(),
@@ -727,12 +727,12 @@ namespace heongpu
 
         //
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -824,12 +824,12 @@ namespace heongpu
 
         //
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(random_values.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt,
@@ -852,7 +852,7 @@ namespace heongpu
         else
         {
             DeviceVector<Data64> temp_location(rk_stage_1.device_location_,
-                                             stream);
+                                               stream);
             multi_party_relinkey_piece_method_I_II_stage_II_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp_location.data(), rk_stage_2.device_location_.data(),
@@ -1087,12 +1087,12 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
@@ -1143,18 +1143,19 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        DeviceVector<Data64> temp_calculation(2 * Q_prime_size_ * d_ * n, stream);
+        DeviceVector<Data64> temp_calculation(2 * Q_prime_size_ * d_ * n,
+                                              stream);
 
         relinkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
                                  stream>>>(
@@ -1162,13 +1163,13 @@ namespace heongpu
             modulus_->data(), factor_->data(), Sk_pair_->data(), n_power,
             Q_prime_size_, d_, Q_size_, P_size_);
 
-        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
-                                          .ntt_type = INVERSE,
-                                          .reduction_poly =
-                                              ReductionPolynomial::X_N_plus,
-                                          .zero_padding = false,
-                                          .mod_inverse = n_inverse_->data(),
-                                          .stream = stream};
+        ntt_rns_configuration<Data64> cfg_intt = {
+            .n_power = n_power,
+            .ntt_type = INVERSE,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .mod_inverse = n_inverse_->data(),
+            .stream = stream};
 
         GPU_NTT_Inplace(temp_calculation.data(), intt_table_->data(),
                         modulus_->data(), cfg_intt, 2 * Q_prime_size_ * d_,
@@ -1229,12 +1230,12 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
@@ -1309,12 +1310,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Modulus_Ordered_Inplace(
                 error_poly, ntt_table_->data(), modulus_->data(), cfg_ntt,
@@ -1331,13 +1332,13 @@ namespace heongpu
                 prime_location_leveled_->data() + location);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
-                                              .ntt_type = INVERSE,
-                                              .reduction_poly =
-                                                  ReductionPolynomial::X_N_plus,
-                                              .zero_padding = false,
-                                              .mod_inverse = n_inverse_->data(),
-                                              .stream = stream};
+            ntt_rns_configuration<Data64> cfg_intt = {
+                .n_power = n_power,
+                .ntt_type = INVERSE,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .mod_inverse = n_inverse_->data(),
+                .stream = stream};
 
             GPU_NTT_Modulus_Ordered_Inplace(
                 temp_calculation.data(), intt_table_->data(), modulus_->data(),
@@ -1457,12 +1458,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
@@ -1562,12 +1563,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
@@ -1678,12 +1679,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
@@ -1784,12 +1785,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
@@ -1902,12 +1903,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
@@ -2009,12 +2010,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
@@ -2127,12 +2128,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
@@ -2218,12 +2219,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
@@ -2335,12 +2336,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
@@ -2427,12 +2428,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
@@ -2546,12 +2547,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
@@ -2640,12 +2641,12 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
             offset_++;
 
-            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                             .ntt_type = FORWARD,
-                                             .reduction_poly =
-                                                 ReductionPolynomial::X_N_plus,
-                                             .zero_padding = false,
-                                             .stream = stream};
+            ntt_rns_configuration<Data64> cfg_ntt = {
+                .n_power = n_power,
+                .ntt_type = FORWARD,
+                .reduction_poly = ReductionPolynomial::X_N_plus,
+                .zero_padding = false,
+                .stream = stream};
 
             GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                             cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
@@ -2892,18 +2893,19 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, Q_size_ * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        swk.device_location_ = DeviceVector<Data64>(swk.switchkey_size_, stream);
+        swk.device_location_ =
+            DeviceVector<Data64>(swk.switchkey_size_, stream);
         switchkey_gen_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
                                stream>>>(
             swk.device_location_.data(), new_sk.data(), old_sk.data(),
@@ -2949,18 +2951,19 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_ * Q_prime_size_, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        swk.device_location_ = DeviceVector<Data64>(swk.switchkey_size_, stream);
+        swk.device_location_ =
+            DeviceVector<Data64>(swk.switchkey_size_, stream);
         switchkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
                                   stream>>>(
             swk.device_location_.data(), new_sk.data(), old_sk.data(),
@@ -3008,19 +3011,20 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
-                                         .ntt_type = FORWARD,
-                                         .reduction_poly =
-                                             ReductionPolynomial::X_N_plus,
-                                         .zero_padding = false,
-                                         .stream = stream};
+        ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = FORWARD,
+            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
 
         GPU_NTT_Inplace(error_poly, ntt_table_->data(), modulus_->data(),
                         cfg_ntt, d_leveled_->operator[](0) * Q_prime_size_,
                         Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        swk.device_location_ = DeviceVector<Data64>(swk.switchkey_size_, stream);
+        swk.device_location_ =
+            DeviceVector<Data64>(swk.switchkey_size_, stream);
         switchkey_gen_II_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256, 0,
                                   stream>>>(
             swk.device_location_.data(), new_sk.data(), old_sk.data(),

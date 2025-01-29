@@ -71,7 +71,10 @@ namespace heongpu
 
         inline int key_modulus_count() const noexcept { return Q_prime_size; }
 
-        inline Modulus64 plain_modulus() const noexcept { return plain_modulus_; }
+        inline Modulus64 plain_modulus() const noexcept
+        {
+            return plain_modulus_;
+        }
 
         inline std::vector<Modulus64> key_modulus() const noexcept
         {
@@ -130,7 +133,8 @@ namespace heongpu
 
         Modulus64 m_tilde_;
         std::shared_ptr<DeviceVector<Data64>> base_change_matrix_Bsk_;
-        std::shared_ptr<DeviceVector<Data64>> inv_punctured_prod_mod_base_array_;
+        std::shared_ptr<DeviceVector<Data64>>
+            inv_punctured_prod_mod_base_array_;
         std::shared_ptr<DeviceVector<Data64>> base_change_matrix_m_tilde_;
 
         Data64 inv_prod_q_mod_m_tilde_;
@@ -230,7 +234,8 @@ namespace heongpu
             base_change_matrix_D_to_B_leveled;
         std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_B_to_D_leveled;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>> Mi_inv_D_to_B_leveled;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
+            Mi_inv_D_to_B_leveled;
         std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_leveled;
         std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_D_to_B_leveled;
         std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_B_to_D_leveled;
@@ -260,18 +265,19 @@ namespace heongpu
 
         // RNS PARAMETER GENERATOR
 
-        std::vector<Data64> generate_Mi(std::vector<Modulus64> primes, int size);
+        std::vector<Data64> generate_Mi(std::vector<Modulus64> primes,
+                                        int size);
 
         std::vector<Data64> generate_Mi_inv(std::vector<Modulus64> primes,
-                                          int size);
+                                            int size);
 
         std::vector<Data64> generate_M(std::vector<Modulus64> primes, int size);
 
         std::vector<Data64>
         generate_upper_half_threshold(std::vector<Modulus64> primes, int size);
 
-        Data64 generate_Q_mod_t(std::vector<Modulus64> primes, Modulus64& plain_mod,
-                              int size);
+        Data64 generate_Q_mod_t(std::vector<Modulus64> primes,
+                                Modulus64& plain_mod, int size);
 
         std::vector<Data64>
         generate_coeff_div_plain_modulus(std::vector<Modulus64> primes,
@@ -290,15 +296,15 @@ namespace heongpu
                                             Modulus64 mtilda, int size);
 
         Data64 generate_inv_prod_q_mod_m_tilde(std::vector<Modulus64> primes,
-                                             Modulus64 mtilda, int size);
+                                               Modulus64 mtilda, int size);
 
         std::vector<Data64>
         generate_inv_m_tilde_mod_Bsk(std::vector<Modulus64> bsk_mod,
                                      Modulus64 mtilda);
 
-        std::vector<Data64> generate_prod_q_mod_Bsk(std::vector<Modulus64> primes,
-                                                  std::vector<Modulus64> bsk_mod,
-                                                  int size);
+        std::vector<Data64>
+        generate_prod_q_mod_Bsk(std::vector<Modulus64> primes,
+                                std::vector<Modulus64> bsk_mod, int size);
 
         std::vector<Data64>
         generate_inv_prod_q_mod_Bsk(std::vector<Modulus64> primes,
@@ -316,9 +322,9 @@ namespace heongpu
 
         Data64 generate_inv_prod_B_mod_m_sk(std::vector<Modulus64> bsk_mod);
 
-        std::vector<Data64> generate_prod_B_mod_q(std::vector<Modulus64> primes,
-                                                std::vector<Modulus64> bsk_mod,
-                                                int size);
+        std::vector<Data64>
+        generate_prod_B_mod_q(std::vector<Modulus64> primes,
+                              std::vector<Modulus64> bsk_mod, int size);
 
         std::vector<Modulus64>
         generate_q_Bsk_merge_modulus(std::vector<Modulus64> primes,
@@ -331,19 +337,20 @@ namespace heongpu
         // BFV DECRYPTION PARAMETERS
 
         std::vector<Data64> generate_Qi_t(std::vector<Modulus64> primes,
-                                        Modulus64& plain_mod, int size);
+                                          Modulus64& plain_mod, int size);
 
         std::vector<Data64> generate_Qi_gamma(std::vector<Modulus64> primes,
-                                            Modulus64& gamma, int size);
+                                              Modulus64& gamma, int size);
 
-        std::vector<Data64> generate_Qi_inverse(std::vector<Modulus64> primes,
-                                              int size); // use generate_Mi_inv
+        std::vector<Data64>
+        generate_Qi_inverse(std::vector<Modulus64> primes,
+                            int size); // use generate_Mi_inv
 
         Data64 generate_mulq_inv_t(std::vector<Modulus64> primes,
-                                 Modulus64& plain_mod, int size);
+                                   Modulus64& plain_mod, int size);
 
         Data64 generate_mulq_inv_gamma(std::vector<Modulus64> primes,
-                                     Modulus64& gamma, int size);
+                                       Modulus64& gamma, int size);
 
         Data64 generate_inv_gamma(Modulus64& plain_mod, Modulus64& gamma);
     };

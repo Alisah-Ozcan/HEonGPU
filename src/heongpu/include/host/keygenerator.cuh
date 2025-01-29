@@ -639,7 +639,8 @@ namespace heongpu
             base_change_matrix_D_to_B_leveled_;
         std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_B_to_D_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>> Mi_inv_D_to_B_leveled_;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
+            Mi_inv_D_to_B_leveled_;
         std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_leveled_;
         std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_D_to_B_leveled_;
         std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_B_to_D_leveled_;

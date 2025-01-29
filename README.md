@@ -216,9 +216,7 @@ find_package(HEonGPU)
 # ...
 target_link_libraries(<your-target> (PRIVATE|PUBLIC|INTERFACE) HEonGPU::heongpu CUDA::cudart)
 # ...
-add_compile_definitions(BARRETT_64)
 add_compile_definitions(FLOAT_64)
-target_compile_definitions(<your-target> PRIVATE BARRETT_64)
 target_compile_definitions(<your-target> PRIVATE FLOAT_64)
 set_target_properties(<your-target> PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 # ...

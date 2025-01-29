@@ -154,7 +154,8 @@ namespace heongpu
             location_.resize(copy.location_.size(), copy.location_.stream());
             cudaMemcpyAsync(
                 location_.data(), copy.location_.data(),
-                copy.location_.size() * sizeof(Data64), cudaMemcpyDeviceToDevice,
+                copy.location_.size() * sizeof(Data64),
+                cudaMemcpyDeviceToDevice,
                 copy.location_.stream()); // TODO: use cudaStreamPerThread
         }
 

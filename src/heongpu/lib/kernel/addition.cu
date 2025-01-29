@@ -7,8 +7,8 @@
 
 namespace heongpu
 {
-    __global__ void addition(Data64* in1, Data64* in2, Data64* out, Modulus64* modulus,
-                             int n_power)
+    __global__ void addition(Data64* in1, Data64* in2, Data64* out,
+                             Modulus64* modulus, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
         int idy = blockIdx.y; // rns count
@@ -69,8 +69,8 @@ namespace heongpu
             fix = fix + upper_threshold;
             fix = int(fix / plain_mod.value);
 
-            Data64 result = OPERATOR_GPU_64::mult(message, coeffdiv_plain[block_y],
-                                          modulus[block_y]);
+            Data64 result = OPERATOR_GPU_64::mult(
+                message, coeffdiv_plain[block_y], modulus[block_y]);
             result = OPERATOR_GPU_64::add(result, fix, modulus[block_y]);
 
             result = OPERATOR_GPU_64::add(result, ciphertext, modulus[block_y]);
@@ -84,11 +84,10 @@ namespace heongpu
         }
     }
 
-    __global__ void
-    addition_plain_bfv_poly_inplace(Data64* cipher, Data64* plain, Data64* output,
-                                    Modulus64* modulus, Modulus64 plain_mod,
-                                    Data64 Q_mod_t, Data64 upper_threshold,
-                                    Data64* coeffdiv_plain, int n_power)
+    __global__ void addition_plain_bfv_poly_inplace(
+        Data64* cipher, Data64* plain, Data64* output, Modulus64* modulus,
+        Modulus64 plain_mod, Data64 Q_mod_t, Data64 upper_threshold,
+        Data64* coeffdiv_plain, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
         int block_y = blockIdx.y; // rns count
@@ -102,8 +101,8 @@ namespace heongpu
         fix = fix + upper_threshold;
         fix = int(fix / plain_mod.value);
 
-        Data64 result =
-            OPERATOR_GPU_64::mult(message, coeffdiv_plain[block_y], modulus[block_y]);
+        Data64 result = OPERATOR_GPU_64::mult(message, coeffdiv_plain[block_y],
+                                              modulus[block_y]);
         result = OPERATOR_GPU_64::add(result, fix, modulus[block_y]);
 
         result = OPERATOR_GPU_64::add(result, ciphertext, modulus[block_y]);
@@ -111,12 +110,11 @@ namespace heongpu
         output[location] = result;
     }
 
-    __global__ void substraction_plain_bfv_poly(Data64* cipher, Data64* plain,
-                                                Data64* output, Modulus64* modulus,
-                                                Modulus64 plain_mod, Data64 Q_mod_t,
-                                                Data64 upper_threshold,
-                                                Data64* coeffdiv_plain,
-                                                int n_power)
+    __global__ void
+    substraction_plain_bfv_poly(Data64* cipher, Data64* plain, Data64* output,
+                                Modulus64* modulus, Modulus64 plain_mod,
+                                Data64 Q_mod_t, Data64 upper_threshold,
+                                Data64* coeffdiv_plain, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
         int block_y = blockIdx.y; // rns count
@@ -133,8 +131,8 @@ namespace heongpu
             fix = fix + upper_threshold;
             fix = int(fix / plain_mod.value);
 
-            Data64 result = OPERATOR_GPU_64::mult(message, coeffdiv_plain[block_y],
-                                          modulus[block_y]);
+            Data64 result = OPERATOR_GPU_64::mult(
+                message, coeffdiv_plain[block_y], modulus[block_y]);
             result = OPERATOR_GPU_64::add(result, fix, modulus[block_y]);
 
             result = OPERATOR_GPU_64::sub(ciphertext, result, modulus[block_y]);
@@ -148,11 +146,10 @@ namespace heongpu
         }
     }
 
-    __global__ void
-    substraction_plain_bfv_poly_inplace(Data64* cipher, Data64* plain, Data64* output,
-                                        Modulus64* modulus, Modulus64 plain_mod,
-                                        Data64 Q_mod_t, Data64 upper_threshold,
-                                        Data64* coeffdiv_plain, int n_power)
+    __global__ void substraction_plain_bfv_poly_inplace(
+        Data64* cipher, Data64* plain, Data64* output, Modulus64* modulus,
+        Modulus64 plain_mod, Data64 Q_mod_t, Data64 upper_threshold,
+        Data64* coeffdiv_plain, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
         int block_y = blockIdx.y; // rns count
@@ -166,8 +163,8 @@ namespace heongpu
         fix = fix + upper_threshold;
         fix = int(fix / plain_mod.value);
 
-        Data64 result =
-            OPERATOR_GPU_64::mult(message, coeffdiv_plain[block_y], modulus[block_y]);
+        Data64 result = OPERATOR_GPU_64::mult(message, coeffdiv_plain[block_y],
+                                              modulus[block_y]);
         result = OPERATOR_GPU_64::add(result, fix, modulus[block_y]);
 
         result = OPERATOR_GPU_64::sub(ciphertext, result, modulus[block_y]);
@@ -175,8 +172,9 @@ namespace heongpu
         output[location] = result;
     }
 
-    __global__ void addition_plain_ckks_poly(Data64* in1, Data64* in2, Data64* out,
-                                             Modulus64* modulus, int n_power)
+    __global__ void addition_plain_ckks_poly(Data64* in1, Data64* in2,
+                                             Data64* out, Modulus64* modulus,
+                                             int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
         int idy = blockIdx.y; // rns count
@@ -186,8 +184,8 @@ namespace heongpu
 
         if (idz == 0)
         {
-            out[location] =
-                OPERATOR_GPU_64::add(in1[location], in2[location], modulus[idy]);
+            out[location] = OPERATOR_GPU_64::add(in1[location], in2[location],
+                                                 modulus[idy]);
         }
         else
         {
@@ -198,7 +196,8 @@ namespace heongpu
     }
 
     __global__ void substraction_plain_ckks_poly(Data64* in1, Data64* in2,
-                                                 Data64* out, Modulus64* modulus,
+                                                 Data64* out,
+                                                 Modulus64* modulus,
                                                  int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
@@ -209,8 +208,8 @@ namespace heongpu
 
         if (idz == 0)
         {
-            out[location] =
-                OPERATOR_GPU_64::sub(in1[location], in2[location], modulus[idy]);
+            out[location] = OPERATOR_GPU_64::sub(in1[location], in2[location],
+                                                 modulus[idy]);
         }
         else
         {

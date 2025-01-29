@@ -26,11 +26,10 @@ namespace heongpu
         }
     }
 
-    __global__ void cipher_broadcast_leveled_kernel(Data64* input, Data64* output,
-                                                    Modulus64* modulus,
-                                                    int first_rns_mod_count,
-                                                    int current_rns_mod_count,
-                                                    int n_power)
+    __global__ void
+    cipher_broadcast_leveled_kernel(Data64* input, Data64* output,
+                                    Modulus64* modulus, int first_rns_mod_count,
+                                    int current_rns_mod_count, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Current Decomposition Modulus Count
@@ -52,15 +51,16 @@ namespace heongpu
                 mod_index = i + level;
             }
 
-            Data64 result = OPERATOR_GPU_64::reduce_forced(input_, modulus[mod_index]);
+            Data64 result =
+                OPERATOR_GPU_64::reduce_forced(input_, modulus[mod_index]);
 
             output[idx + (i << n_power) + location] = result;
         }
     }
 
     __global__ void multiply_accumulate_kernel(Data64* input, Data64* relinkey,
-                                               Data64* output, Modulus64* modulus,
-                                               int n_power,
+                                               Data64* output,
+                                               Modulus64* modulus, int n_power,
                                                int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -75,14 +75,17 @@ namespace heongpu
         for (int i = 0; i < decomp_mod_count; i++)
         {
             Data64 in_piece = input[idx + (block_y << n_power) +
-                                  ((i * (decomp_mod_count + 1)) << n_power)];
+                                    ((i * (decomp_mod_count + 1)) << n_power)];
 
-            Data64 rk0 = relinkey[idx + (block_y << n_power) + (key_offset2 * i)];
-            Data64 rk1 = relinkey[idx + (block_y << n_power) + (key_offset2 * i) +
-                                key_offset1];
+            Data64 rk0 =
+                relinkey[idx + (block_y << n_power) + (key_offset2 * i)];
+            Data64 rk1 = relinkey[idx + (block_y << n_power) +
+                                  (key_offset2 * i) + key_offset1];
 
-            Data64 mult0 = OPERATOR_GPU_64::mult(in_piece, rk0, modulus[block_y]);
-            Data64 mult1 = OPERATOR_GPU_64::mult(in_piece, rk1, modulus[block_y]);
+            Data64 mult0 =
+                OPERATOR_GPU_64::mult(in_piece, rk0, modulus[block_y]);
+            Data64 mult1 =
+                OPERATOR_GPU_64::mult(in_piece, rk1, modulus[block_y]);
 
             ct_0_sum = OPERATOR_GPU_64::add(ct_0_sum, mult0, modulus[block_y]);
             ct_1_sum = OPERATOR_GPU_64::add(ct_1_sum, mult1, modulus[block_y]);
@@ -109,14 +112,17 @@ namespace heongpu
         for (int i = 0; i < d; i++)
         {
             Data64 in_piece = input[idx + (block_y << n_power) +
-                                  ((i * (Q_tilda_size)) << n_power)];
+                                    ((i * (Q_tilda_size)) << n_power)];
 
-            Data64 rk0 = relinkey[idx + (block_y << n_power) + (key_offset2 * i)];
-            Data64 rk1 = relinkey[idx + (block_y << n_power) + (key_offset2 * i) +
-                                key_offset1];
+            Data64 rk0 =
+                relinkey[idx + (block_y << n_power) + (key_offset2 * i)];
+            Data64 rk1 = relinkey[idx + (block_y << n_power) +
+                                  (key_offset2 * i) + key_offset1];
 
-            Data64 mult0 = OPERATOR_GPU_64::mult(in_piece, rk0, modulus[block_y]);
-            Data64 mult1 = OPERATOR_GPU_64::mult(in_piece, rk1, modulus[block_y]);
+            Data64 mult0 =
+                OPERATOR_GPU_64::mult(in_piece, rk0, modulus[block_y]);
+            Data64 mult1 =
+                OPERATOR_GPU_64::mult(in_piece, rk1, modulus[block_y]);
 
             ct_0_sum = OPERATOR_GPU_64::add(ct_0_sum, mult0, modulus[block_y]);
             ct_1_sum = OPERATOR_GPU_64::add(ct_1_sum, mult1, modulus[block_y]);
@@ -152,13 +158,17 @@ namespace heongpu
             Data64 rk0 =
                 relinkey[idx + (key_index << n_power) + (key_offset2 * i)];
             Data64 rk1 = relinkey[idx + (key_index << n_power) +
-                                (key_offset2 * i) + key_offset1];
+                                  (key_offset2 * i) + key_offset1];
 
-            Data64 mult0 = OPERATOR_GPU_64::mult(in_piece, rk0, modulus[key_index]);
-            Data64 mult1 = OPERATOR_GPU_64::mult(in_piece, rk1, modulus[key_index]);
+            Data64 mult0 =
+                OPERATOR_GPU_64::mult(in_piece, rk0, modulus[key_index]);
+            Data64 mult1 =
+                OPERATOR_GPU_64::mult(in_piece, rk1, modulus[key_index]);
 
-            ct_0_sum = OPERATOR_GPU_64::add(ct_0_sum, mult0, modulus[key_index]);
-            ct_1_sum = OPERATOR_GPU_64::add(ct_1_sum, mult1, modulus[key_index]);
+            ct_0_sum =
+                OPERATOR_GPU_64::add(ct_0_sum, mult0, modulus[key_index]);
+            ct_1_sum =
+                OPERATOR_GPU_64::add(ct_1_sum, mult1, modulus[key_index]);
         }
 
         output[idx + (block_y << n_power)] = ct_0_sum;
@@ -186,18 +196,22 @@ namespace heongpu
         for (int i = 0; i < d; i++)
         {
             Data64 in_piece = input[idx + (block_y << n_power) +
-                                  ((i * (current_rns_mod_count)) << n_power)];
+                                    ((i * (current_rns_mod_count)) << n_power)];
 
             Data64 rk0 =
                 relinkey[idx + (key_index << n_power) + (key_offset2 * i)];
             Data64 rk1 = relinkey[idx + (key_index << n_power) +
-                                (key_offset2 * i) + key_offset1];
+                                  (key_offset2 * i) + key_offset1];
 
-            Data64 mult0 = OPERATOR_GPU_64::mult(in_piece, rk0, modulus[key_index]);
-            Data64 mult1 = OPERATOR_GPU_64::mult(in_piece, rk1, modulus[key_index]);
+            Data64 mult0 =
+                OPERATOR_GPU_64::mult(in_piece, rk0, modulus[key_index]);
+            Data64 mult1 =
+                OPERATOR_GPU_64::mult(in_piece, rk1, modulus[key_index]);
 
-            ct_0_sum = OPERATOR_GPU_64::add(ct_0_sum, mult0, modulus[key_index]);
-            ct_1_sum = OPERATOR_GPU_64::add(ct_1_sum, mult1, modulus[key_index]);
+            ct_0_sum =
+                OPERATOR_GPU_64::add(ct_0_sum, mult0, modulus[key_index]);
+            ct_1_sum =
+                OPERATOR_GPU_64::add(ct_1_sum, mult1, modulus[key_index]);
         }
 
         output[idx + (block_y << n_power)] = ct_0_sum;
@@ -206,35 +220,38 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_kernel(Data64* input, Data64* ct,
-                                              Data64* output, Modulus64* modulus,
-                                              Data64* half, Data64* half_mod,
-                                              Data64* last_q_modinv, int n_power,
-                                              int decomp_mod_count)
+                                              Data64* output,
+                                              Modulus64* modulus, Data64* half,
+                                              Data64* half_mod,
+                                              Data64* last_q_modinv,
+                                              int n_power, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count
         int block_z = blockIdx.z; // Cipher Size (2)
 
         Data64 last_ct = input[idx + (decomp_mod_count << n_power) +
-                             (((decomp_mod_count + 1) << n_power) * block_z)];
+                               (((decomp_mod_count + 1) << n_power) * block_z)];
 
-        last_ct = OPERATOR_GPU_64::add(last_ct, half[0], modulus[decomp_mod_count]);
+        last_ct =
+            OPERATOR_GPU_64::add(last_ct, half[0], modulus[decomp_mod_count]);
 
         Data64 zero_ = 0;
         last_ct = OPERATOR_GPU_64::add(last_ct, zero_, modulus[block_y]);
 
-        last_ct = OPERATOR_GPU_64::sub(last_ct, half_mod[block_y], modulus[block_y]);
+        last_ct =
+            OPERATOR_GPU_64::sub(last_ct, half_mod[block_y], modulus[block_y]);
 
         Data64 input_ = input[idx + (block_y << n_power) +
-                            (((decomp_mod_count + 1) << n_power) * block_z)];
+                              (((decomp_mod_count + 1) << n_power) * block_z)];
 
         input_ = OPERATOR_GPU_64::sub(input_, last_ct, modulus[block_y]);
 
-        input_ =
-            OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y], modulus[block_y]);
+        input_ = OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y],
+                                       modulus[block_y]);
 
         Data64 ct_in = ct[idx + (block_y << n_power) +
-                        (((decomp_mod_count) << n_power) * block_z)];
+                          (((decomp_mod_count) << n_power) * block_z)];
 
         ct_in = OPERATOR_GPU_64::add(ct_in, input_, modulus[block_y]);
 
@@ -243,30 +260,33 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_switchkey_kernel(
-        Data64* input, Data64* ct, Data64* output, Modulus64* modulus, Data64* half,
-        Data64* half_mod, Data64* last_q_modinv, int n_power, int decomp_mod_count)
+        Data64* input, Data64* ct, Data64* output, Modulus64* modulus,
+        Data64* half, Data64* half_mod, Data64* last_q_modinv, int n_power,
+        int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count
         int block_z = blockIdx.z; // Cipher Size (2)
 
         Data64 last_ct = input[idx + (decomp_mod_count << n_power) +
-                             (((decomp_mod_count + 1) << n_power) * block_z)];
+                               (((decomp_mod_count + 1) << n_power) * block_z)];
 
-        last_ct = OPERATOR_GPU_64::add(last_ct, half[0], modulus[decomp_mod_count]);
+        last_ct =
+            OPERATOR_GPU_64::add(last_ct, half[0], modulus[decomp_mod_count]);
 
         Data64 zero_ = 0;
         last_ct = OPERATOR_GPU_64::add(last_ct, zero_, modulus[block_y]);
 
-        last_ct = OPERATOR_GPU_64::sub(last_ct, half_mod[block_y], modulus[block_y]);
+        last_ct =
+            OPERATOR_GPU_64::sub(last_ct, half_mod[block_y], modulus[block_y]);
 
         Data64 input_ = input[idx + (block_y << n_power) +
-                            (((decomp_mod_count + 1) << n_power) * block_z)];
+                              (((decomp_mod_count + 1) << n_power) * block_z)];
 
         input_ = OPERATOR_GPU_64::sub(input_, last_ct, modulus[block_y]);
 
-        input_ =
-            OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y], modulus[block_y]);
+        input_ = OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y],
+                                       modulus[block_y]);
 
         Data64 ct_in = 0ULL;
         if (block_z == 0)
@@ -282,9 +302,9 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_extended_kernel(
-        Data64* input, Data64* ct, Data64* output, Modulus64* modulus, Data64* half,
-        Data64* half_mod, Data64* last_q_modinv, int n_power, int Q_prime_size,
-        int Q_size, int P_size)
+        Data64* input, Data64* ct, Data64* output, Modulus64* modulus,
+        Data64* half, Data64* half_mod, Data64* last_q_modinv, int n_power,
+        int Q_prime_size, int Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
@@ -299,38 +319,40 @@ namespace heongpu
         }
 
         Data64 input_ = input[idx + (block_y << n_power) +
-                            ((Q_prime_size << n_power) * block_z)];
+                              ((Q_prime_size << n_power) * block_z)];
 
         Data64 zero_ = 0;
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
         {
             Data64 last_ct_add_half_ = last_ct[(P_size - 1 - i)];
-            last_ct_add_half_ = OPERATOR_GPU_64::add(last_ct_add_half_, half[i],
-                                               modulus[(Q_prime_size - 1 - i)]);
+            last_ct_add_half_ = OPERATOR_GPU_64::add(
+                last_ct_add_half_, half[i], modulus[(Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
                 Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                            modulus[Q_size + j]);
-                temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + Q_size + j],
-                                       modulus[Q_size + j]);
+                                                    modulus[Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(temp1,
+                                             half_mod[location_ + Q_size + j],
+                                             modulus[Q_size + j]);
 
-                temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1, modulus[Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1,
+                                             modulus[Q_size + j]);
 
                 last_ct[j] = OPERATOR_GPU_64::mult(
                     temp1, last_q_modinv[location_ + Q_size + j],
                     modulus[Q_size + j]);
             }
 
-            Data64 temp1 =
-                OPERATOR_GPU_64::add(last_ct_add_half_, zero_, modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
+                                                modulus[block_y]);
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
-                                   modulus[block_y]);
+                                         modulus[block_y]);
 
             temp1 = OPERATOR_GPU_64::sub(input_, temp1, modulus[block_y]);
 
-            input_ = OPERATOR_GPU_64::mult(temp1, last_q_modinv[location_ + block_y],
-                                     modulus[block_y]);
+            input_ = OPERATOR_GPU_64::mult(
+                temp1, last_q_modinv[location_ + block_y], modulus[block_y]);
 
             location_ = location_ + (Q_prime_size - 1 - i);
         }
@@ -345,9 +367,9 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_extended_switchkey_kernel(
-        Data64* input, Data64* ct, Data64* output, Modulus64* modulus, Data64* half,
-        Data64* half_mod, Data64* last_q_modinv, int n_power, int Q_prime_size,
-        int Q_size, int P_size)
+        Data64* input, Data64* ct, Data64* output, Modulus64* modulus,
+        Data64* half, Data64* half_mod, Data64* last_q_modinv, int n_power,
+        int Q_prime_size, int Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
@@ -362,38 +384,40 @@ namespace heongpu
         }
 
         Data64 input_ = input[idx + (block_y << n_power) +
-                            ((Q_prime_size << n_power) * block_z)];
+                              ((Q_prime_size << n_power) * block_z)];
 
         Data64 zero_ = 0;
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
         {
             Data64 last_ct_add_half_ = last_ct[(P_size - 1 - i)];
-            last_ct_add_half_ = OPERATOR_GPU_64::add(last_ct_add_half_, half[i],
-                                               modulus[(Q_prime_size - 1 - i)]);
+            last_ct_add_half_ = OPERATOR_GPU_64::add(
+                last_ct_add_half_, half[i], modulus[(Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
                 Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                            modulus[Q_size + j]);
-                temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + Q_size + j],
-                                       modulus[Q_size + j]);
+                                                    modulus[Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(temp1,
+                                             half_mod[location_ + Q_size + j],
+                                             modulus[Q_size + j]);
 
-                temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1, modulus[Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1,
+                                             modulus[Q_size + j]);
 
                 last_ct[j] = OPERATOR_GPU_64::mult(
                     temp1, last_q_modinv[location_ + Q_size + j],
                     modulus[Q_size + j]);
             }
 
-            Data64 temp1 =
-                OPERATOR_GPU_64::add(last_ct_add_half_, zero_, modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
+                                                modulus[block_y]);
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
-                                   modulus[block_y]);
+                                         modulus[block_y]);
 
             temp1 = OPERATOR_GPU_64::sub(input_, temp1, modulus[block_y]);
 
-            input_ = OPERATOR_GPU_64::mult(temp1, last_q_modinv[location_ + block_y],
-                                     modulus[block_y]);
+            input_ = OPERATOR_GPU_64::mult(
+                temp1, last_q_modinv[location_ + block_y], modulus[block_y]);
 
             location_ = location_ + (Q_prime_size - 1 - i);
         }
@@ -411,12 +435,10 @@ namespace heongpu
             ct_in;
     }
 
-    __global__ void DivideRoundLastqNewP_leveled(Data64* input, Data64* ct,
-                                                 Data64* output, Modulus64* modulus,
-                                                 Data64* half, Data64* half_mod,
-                                                 Data64* last_q_modinv,
-                                                 int n_power, int Q_prime_size,
-                                                 int Q_size, int P_size)
+    __global__ void DivideRoundLastqNewP_leveled(
+        Data64* input, Data64* ct, Data64* output, Modulus64* modulus,
+        Data64* half, Data64* half_mod, Data64* last_q_modinv, int n_power,
+        int Q_prime_size, int Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
@@ -431,38 +453,40 @@ namespace heongpu
         }
 
         Data64 input_ = input[idx + (block_y << n_power) +
-                            ((Q_prime_size << n_power) * block_z)];
+                              ((Q_prime_size << n_power) * block_z)];
 
         Data64 zero_ = 0;
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
         {
             Data64 last_ct_add_half_ = last_ct[(P_size - 1 - i)];
-            last_ct_add_half_ = OPERATOR_GPU_64::add(last_ct_add_half_, half[i],
-                                               modulus[(Q_prime_size - 1 - i)]);
+            last_ct_add_half_ = OPERATOR_GPU_64::add(
+                last_ct_add_half_, half[i], modulus[(Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
                 Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                            modulus[Q_size + j]);
-                temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + Q_size + j],
-                                       modulus[Q_size + j]);
+                                                    modulus[Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(temp1,
+                                             half_mod[location_ + Q_size + j],
+                                             modulus[Q_size + j]);
 
-                temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1, modulus[Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1,
+                                             modulus[Q_size + j]);
 
                 last_ct[j] = OPERATOR_GPU_64::mult(
                     temp1, last_q_modinv[location_ + Q_size + j],
                     modulus[Q_size + j]);
             }
 
-            Data64 temp1 =
-                OPERATOR_GPU_64::add(last_ct_add_half_, zero_, modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
+                                                modulus[block_y]);
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
-                                   modulus[block_y]);
+                                         modulus[block_y]);
 
             temp1 = OPERATOR_GPU_64::sub(input_, temp1, modulus[block_y]);
 
-            input_ = OPERATOR_GPU_64::mult(temp1, last_q_modinv[location_ + block_y],
-                                     modulus[block_y]);
+            input_ = OPERATOR_GPU_64::mult(
+                temp1, last_q_modinv[location_ + block_y], modulus[block_y]);
 
             location_ = location_ + (Q_prime_size - 1 - i);
         }
@@ -478,8 +502,9 @@ namespace heongpu
 
     ////////////
     __global__ void divide_round_lastq_leveled_stage_one_kernel(
-        Data64* input, Data64* output, Modulus64* modulus, Data64* half, Data64* half_mod,
-        int n_power, int first_decomp_count, int current_decomp_count)
+        Data64* input, Data64* output, Modulus64* modulus, Data64* half,
+        Data64* half_mod, int n_power, int first_decomp_count,
+        int current_decomp_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Cipher Size (2)
@@ -488,14 +513,17 @@ namespace heongpu
             input[idx + (current_decomp_count << n_power) +
                   (((current_decomp_count + 1) << n_power) * block_y)];
 
-        last_ct = OPERATOR_GPU_64::add(last_ct, half[0], modulus[first_decomp_count]);
+        last_ct =
+            OPERATOR_GPU_64::add(last_ct, half[0], modulus[first_decomp_count]);
 
 #pragma unroll
         for (int i = 0; i < current_decomp_count; i++)
         {
-            Data64 last_ct_i = OPERATOR_GPU_64::reduce_forced(last_ct, modulus[i]);
+            Data64 last_ct_i =
+                OPERATOR_GPU_64::reduce_forced(last_ct, modulus[i]);
 
-            last_ct_i = OPERATOR_GPU_64::sub(last_ct_i, half_mod[i], modulus[i]);
+            last_ct_i =
+                OPERATOR_GPU_64::sub(last_ct_i, half_mod[i], modulus[i]);
 
             output[idx + (i << n_power) +
                    (((current_decomp_count) << n_power) * block_y)] = last_ct_i;
@@ -503,8 +531,9 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_leveled_stage_two_kernel(
-        Data64* input_last, Data64* input, Data64* ct, Data64* output, Modulus64* modulus,
-        Data64* last_q_modinv, int n_power, int current_decomp_count)
+        Data64* input_last, Data64* input, Data64* ct, Data64* output,
+        Modulus64* modulus, Data64* last_q_modinv, int n_power,
+        int current_decomp_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count
@@ -520,11 +549,11 @@ namespace heongpu
 
         input_ = OPERATOR_GPU_64::sub(input_, last_ct, modulus[block_y]);
 
-        input_ =
-            OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y], modulus[block_y]);
+        input_ = OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y],
+                                       modulus[block_y]);
 
         Data64 ct_in = ct[idx + (block_y << n_power) +
-                        (((current_decomp_count) << n_power) * block_z)];
+                          (((current_decomp_count) << n_power) * block_z)];
 
         ct_in = OPERATOR_GPU_64::add(ct_in, input_, modulus[block_y]);
 
@@ -533,8 +562,9 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_leveled_stage_two_switchkey_kernel(
-        Data64* input_last, Data64* input, Data64* ct, Data64* output, Modulus64* modulus,
-        Data64* last_q_modinv, int n_power, int current_decomp_count)
+        Data64* input_last, Data64* input, Data64* ct, Data64* output,
+        Modulus64* modulus, Data64* last_q_modinv, int n_power,
+        int current_decomp_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count
@@ -550,8 +580,8 @@ namespace heongpu
 
         input_ = OPERATOR_GPU_64::sub(input_, last_ct, modulus[block_y]);
 
-        input_ =
-            OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y], modulus[block_y]);
+        input_ = OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y],
+                                       modulus[block_y]);
 
         Data64 ct_in = 0ULL;
         if (block_z == 0)
@@ -603,8 +633,8 @@ namespace heongpu
 
         input_ = OPERATOR_GPU_64::sub(input_, last_ct, modulus[block_y]);
 
-        input_ =
-            OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y], modulus[block_y]);
+        input_ = OPERATOR_GPU_64::mult(input_, last_q_modinv[block_y],
+                                       modulus[block_y]);
 
         output[idx + (block_y << n_power) +
                (((current_decomp_count) << n_power) * block_z)] = input_;
@@ -613,10 +643,10 @@ namespace heongpu
     ////////////////////////////////////////////////////////////////////////////
 
     __global__ void base_conversion_DtoB_relin_kernel(
-        Data64* ciphertext, Data64* output, Modulus64* modulus, Modulus64* B_base,
-        Data64* base_change_matrix_D_to_B, Data64* Mi_inv_D_to_B, Data64* prod_D_to_B,
-        int* I_j_, int* I_location_, int n_power, int l, int d_tilda, int d,
-        int r_prime)
+        Data64* ciphertext, Data64* output, Modulus64* modulus,
+        Modulus64* B_base, Data64* base_change_matrix_D_to_B,
+        Data64* Mi_inv_D_to_B, Data64* prod_D_to_B, int* I_j_, int* I_location_,
+        int n_power, int l, int d_tilda, int d, int r_prime)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // d
@@ -636,8 +666,8 @@ namespace heongpu
         for (int i = 0; i < I_j; i++)
         {
             Data64 temp = ciphertext[location + (i << n_power)];
-            partial[i] = OPERATOR_GPU_64::mult(temp, Mi_inv_D_to_B[I_location + i],
-                                         modulus[I_location + i]);
+            partial[i] = OPERATOR_GPU_64::mult(
+                temp, Mi_inv_D_to_B[I_location + i], modulus[I_location + i]);
             div = static_cast<float>(partial[i]);
             mod = static_cast<float>(modulus[I_location + i].value);
             r += (div / mod);
@@ -670,8 +700,8 @@ namespace heongpu
     __global__ void base_conversion_DtoQtilde_relin_kernel(
         Data64* ciphertext, Data64* output, Modulus64* modulus,
         Data64* base_change_matrix_D_to_Qtilda, Data64* Mi_inv_D_to_Qtilda,
-        Data64* prod_D_to_Qtilda, int* I_j_, int* I_location_, int n_power, int l,
-        int Q_tilda, int d)
+        Data64* prod_D_to_Qtilda, int* I_j_, int* I_location_, int n_power,
+        int l, int Q_tilda, int d)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // d
@@ -693,7 +723,7 @@ namespace heongpu
             Data64 temp = ciphertext[location + (i << n_power)];
             partial[i] =
                 OPERATOR_GPU_64::mult(temp, Mi_inv_D_to_Qtilda[I_location + i],
-                                modulus[I_location + i]);
+                                      modulus[I_location + i]);
             div = static_cast<float>(partial[i]);
             mod = static_cast<float>(modulus[I_location + i].value);
             r += (div / mod);
@@ -725,10 +755,10 @@ namespace heongpu
     }
 
     __global__ void base_conversion_DtoB_relin_leveled_kernel(
-        Data64* ciphertext, Data64* output, Modulus64* modulus, Modulus64* B_base,
-        Data64* base_change_matrix_D_to_B, Data64* Mi_inv_D_to_B, Data64* prod_D_to_B,
-        int* I_j_, int* I_location_, int n_power, int d_tilda, int d,
-        int r_prime, int* mod_index)
+        Data64* ciphertext, Data64* output, Modulus64* modulus,
+        Modulus64* B_base, Data64* base_change_matrix_D_to_B,
+        Data64* Mi_inv_D_to_B, Data64* prod_D_to_B, int* I_j_, int* I_location_,
+        int n_power, int d_tilda, int d, int r_prime, int* mod_index)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // d
@@ -748,8 +778,9 @@ namespace heongpu
         for (int i = 0; i < I_j; i++)
         {
             Data64 temp = ciphertext[location + (i << n_power)];
-            partial[i] = OPERATOR_GPU_64::mult(temp, Mi_inv_D_to_B[I_location + i],
-                                         modulus[mod_index[I_location + i]]);
+            partial[i] =
+                OPERATOR_GPU_64::mult(temp, Mi_inv_D_to_B[I_location + i],
+                                      modulus[mod_index[I_location + i]]);
             div = static_cast<float>(partial[i]);
             mod = static_cast<float>(modulus[mod_index[I_location + i]].value);
             r += (div / mod);
@@ -782,8 +813,9 @@ namespace heongpu
     __global__ void base_conversion_DtoQtilde_relin_leveled_kernel(
         Data64* ciphertext, Data64* output, Modulus64* modulus,
         Data64* base_change_matrix_D_to_Qtilda, Data64* Mi_inv_D_to_Qtilda,
-        Data64* prod_D_to_Qtilda, int* I_j_, int* I_location_, int n_power, int d,
-        int current_Qtilda_size, int current_Q_size, int level, int* mod_index)
+        Data64* prod_D_to_Qtilda, int* I_j_, int* I_location_, int n_power,
+        int d, int current_Qtilda_size, int current_Q_size, int level,
+        int* mod_index)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // d
@@ -805,7 +837,7 @@ namespace heongpu
             Data64 temp = ciphertext[location + (i << n_power)];
             partial[i] =
                 OPERATOR_GPU_64::mult(temp, Mi_inv_D_to_Qtilda[I_location + i],
-                                modulus[I_location + i]);
+                                      modulus[I_location + i]);
             div = static_cast<float>(partial[i]);
             mod = static_cast<float>(modulus[I_location + i].value);
             r += (div / mod);
@@ -823,8 +855,8 @@ namespace heongpu
 #pragma unroll
             for (int j = 0; j < I_j; j++)
             {
-                Data64 mult =
-                    OPERATOR_GPU_64::reduce_forced(partial[j], modulus[mod_location]);
+                Data64 mult = OPERATOR_GPU_64::reduce_forced(
+                    partial[j], modulus[mod_location]);
                 mult = OPERATOR_GPU_64::mult(
                     mult,
                     base_change_matrix_D_to_Qtilda[j + (i * I_j) +
@@ -865,7 +897,8 @@ namespace heongpu
 #pragma unroll 2
         for (int i = 0; i < d; i++)
         {
-            Data64 in_piece = __ldg(input + offset1 + ((i * r_prime) << n_power));
+            Data64 in_piece =
+                __ldg(input + offset1 + ((i * r_prime) << n_power));
 
             Data64 rk0 = __ldg(relinkey_ + (key_offset2 * i));
             Data64 mult0 = OPERATOR_GPU_64::mult(in_piece, rk0, modulus);
@@ -882,9 +915,9 @@ namespace heongpu
 
     __global__ void base_conversion_BtoD_relin_kernel(
         Data64* input, Data64* output, Modulus64* modulus, Modulus64* B_base,
-        Data64* base_change_matrix_B_to_D, Data64* Mi_inv_B_to_D, Data64* prod_B_to_D,
-        int* I_j_, int* I_location_, int n_power, int l_tilda, int d_tilda,
-        int d, int r_prime)
+        Data64* base_change_matrix_B_to_D, Data64* Mi_inv_B_to_D,
+        Data64* prod_B_to_D, int* I_j_, int* I_location_, int n_power,
+        int l_tilda, int d_tilda, int d, int r_prime)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // d_tilda
@@ -905,7 +938,8 @@ namespace heongpu
         for (int i = 0; i < r_prime; i++)
         {
             Data64 temp = input[location + (i << n_power)];
-            partial[i] = OPERATOR_GPU_64::mult(temp, Mi_inv_B_to_D[i], B_base[i]);
+            partial[i] =
+                OPERATOR_GPU_64::mult(temp, Mi_inv_B_to_D[i], B_base[i]);
             float div = static_cast<float>(partial[i]);
             float mod = static_cast<float>(B_base[i].value);
             r += (div / mod);
@@ -928,14 +962,16 @@ namespace heongpu
                     partial_,
                     base_change_matrix_B_to_D[j + (i * r_prime) + matrix_index],
                     modulus[i + I_location]);
-                temp = OPERATOR_GPU_64::add(temp, mult, modulus[i + I_location]);
+                temp =
+                    OPERATOR_GPU_64::add(temp, mult, modulus[i + I_location]);
             }
 
-            Data64 r_mul = OPERATOR_GPU_64::mult(r_, prod_B_to_D[i + I_location],
-                                         modulus[i + I_location]);
+            Data64 r_mul = OPERATOR_GPU_64::mult(
+                r_, prod_B_to_D[i + I_location], modulus[i + I_location]);
             temp = OPERATOR_GPU_64::sub(temp, r_mul, modulus[i + I_location]);
 
-            temp = OPERATOR_GPU_64::reduce(temp, modulus[i + I_location]); // new
+            temp =
+                OPERATOR_GPU_64::reduce(temp, modulus[i + I_location]); // new
 
             output[location_out + (i << n_power)] = temp;
         }
@@ -943,9 +979,9 @@ namespace heongpu
 
     __global__ void base_conversion_BtoD_relin_leveled_kernel(
         Data64* input, Data64* output, Modulus64* modulus, Modulus64* B_base,
-        Data64* base_change_matrix_B_to_D, Data64* Mi_inv_B_to_D, Data64* prod_B_to_D,
-        int* I_j_, int* I_location_, int n_power, int l_tilda, int d_tilda,
-        int d, int r_prime, int* mod_index)
+        Data64* base_change_matrix_B_to_D, Data64* Mi_inv_B_to_D,
+        Data64* prod_B_to_D, int* I_j_, int* I_location_, int n_power,
+        int l_tilda, int d_tilda, int d, int r_prime, int* mod_index)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // d_tilda
@@ -966,7 +1002,8 @@ namespace heongpu
         for (int i = 0; i < r_prime; i++)
         {
             Data64 temp = input[location + (i << n_power)];
-            partial[i] = OPERATOR_GPU_64::mult(temp, Mi_inv_B_to_D[i], B_base[i]);
+            partial[i] =
+                OPERATOR_GPU_64::mult(temp, Mi_inv_B_to_D[i], B_base[i]);
             float div = static_cast<float>(partial[i]);
             float mod = static_cast<float>(B_base[i].value);
             r += (div / mod);
@@ -992,16 +1029,17 @@ namespace heongpu
                     base_change_matrix_B_to_D[j + (i * r_prime) + matrix_index],
                     modulus[mod_index[I_location + i]]);
                 temp = OPERATOR_GPU_64::add(temp, mult,
-                                      modulus[mod_index[I_location + i]]);
+                                            modulus[mod_index[I_location + i]]);
             }
 
-            Data64 r_mul = OPERATOR_GPU_64::mult(r_, prod_B_to_D[i + I_location],
-                                         modulus[mod_index[I_location + i]]);
-            temp =
-                OPERATOR_GPU_64::sub(temp, r_mul, modulus[mod_index[I_location + i]]);
+            Data64 r_mul =
+                OPERATOR_GPU_64::mult(r_, prod_B_to_D[i + I_location],
+                                      modulus[mod_index[I_location + i]]);
+            temp = OPERATOR_GPU_64::sub(temp, r_mul,
+                                        modulus[mod_index[I_location + i]]);
 
-            // temp = OPERATOR_GPU_64::reduce(temp, modulus[mod_index[I_location +
-            // i]]);// new
+            // temp = OPERATOR_GPU_64::reduce(temp, modulus[mod_index[I_location
+            // + i]]);// new
             temp = OPERATOR_GPU_64::reduce_forced(
                 temp, modulus[mod_index[I_location + i]]); // new
 
@@ -1010,9 +1048,9 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_extended_leveled_kernel(
-        Data64* input, Data64* output, Modulus64* modulus, Data64* half, Data64* half_mod,
-        Data64* last_q_modinv, int n_power, int Q_prime_size, int Q_size,
-        int first_Q_prime_size, int first_Q_size, int P_size)
+        Data64* input, Data64* output, Modulus64* modulus, Data64* half,
+        Data64* half_mod, Data64* last_q_modinv, int n_power, int Q_prime_size,
+        int Q_size, int first_Q_prime_size, int first_Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
@@ -1027,7 +1065,7 @@ namespace heongpu
         }
 
         Data64 input_ = input[idx + (block_y << n_power) +
-                            ((Q_prime_size << n_power) * block_z)];
+                              ((Q_prime_size << n_power) * block_z)];
 
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
@@ -1035,34 +1073,34 @@ namespace heongpu
             Data64 last_ct_add_half_ = last_ct[(P_size - 1 - i)];
             last_ct_add_half_ =
                 OPERATOR_GPU_64::add(last_ct_add_half_, half[i],
-                               modulus[(first_Q_prime_size - 1 - i)]);
+                                     modulus[(first_Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
                 Data64 temp1 = OPERATOR_GPU_64::reduce_forced(
                     last_ct_add_half_, modulus[first_Q_size + j]);
 
-                temp1 = OPERATOR_GPU_64::sub(temp1,
-                                       half_mod[location_ + first_Q_size + j],
-                                       modulus[first_Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(
+                    temp1, half_mod[location_ + first_Q_size + j],
+                    modulus[first_Q_size + j]);
 
                 temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1,
-                                       modulus[first_Q_size + j]);
+                                             modulus[first_Q_size + j]);
 
                 last_ct[j] = OPERATOR_GPU_64::mult(
                     temp1, last_q_modinv[location_ + first_Q_size + j],
                     modulus[first_Q_size + j]);
             }
 
-            Data64 temp1 =
-                OPERATOR_GPU_64::reduce_forced(last_ct_add_half_, modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::reduce_forced(last_ct_add_half_,
+                                                          modulus[block_y]);
 
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
-                                   modulus[block_y]);
+                                         modulus[block_y]);
 
             temp1 = OPERATOR_GPU_64::sub(input_, temp1, modulus[block_y]);
 
-            input_ = OPERATOR_GPU_64::mult(temp1, last_q_modinv[location_ + block_y],
-                                     modulus[block_y]);
+            input_ = OPERATOR_GPU_64::mult(
+                temp1, last_q_modinv[location_ + block_y], modulus[block_y]);
 
             location_ = location_ + (first_Q_prime_size - 1 - i);
         }
@@ -1086,8 +1124,10 @@ namespace heongpu
         output[location] = in_reg;
     }
 
-    __global__ void global_memory_replace_offset_kernel(
-        Data64* input, Data64* output, int current_decomposition_count, int n_power)
+    __global__ void
+    global_memory_replace_offset_kernel(Data64* input, Data64* output,
+                                        int current_decomposition_count,
+                                        int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
@@ -1104,11 +1144,10 @@ namespace heongpu
         output[location_out] = in_reg;
     }
 
-    __global__ void cipher_broadcast_switchkey_kernel(Data64* cipher, Data64* out0,
-                                                      Data64* out1,
-                                                      Modulus64* modulus,
-                                                      int n_power,
-                                                      int decomp_mod_count)
+    __global__ void
+    cipher_broadcast_switchkey_kernel(Data64* cipher, Data64* out0,
+                                      Data64* out1, Modulus64* modulus,
+                                      int n_power, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count
@@ -1117,7 +1156,7 @@ namespace heongpu
         int rns_mod_count = (decomp_mod_count + 1);
 
         Data64 result_value = cipher[idx + (block_y << n_power) +
-                                   ((decomp_mod_count << n_power) * block_z)];
+                                     ((decomp_mod_count << n_power) * block_z)];
 
         if (block_z == 0)
         {
@@ -1136,15 +1175,15 @@ namespace heongpu
     }
 
     __global__ void cipher_broadcast_switchkey_method_II_kernel(
-        Data64* cipher, Data64* out0, Data64* out1, Modulus64* modulus, int n_power,
-        int decomp_mod_count)
+        Data64* cipher, Data64* out0, Data64* out1, Modulus64* modulus,
+        int n_power, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count
         int block_z = blockIdx.z; // Cipher Size (2)
 
         Data64 result_value = cipher[idx + (block_y << n_power) +
-                                   ((decomp_mod_count << n_power) * block_z)];
+                                     ((decomp_mod_count << n_power) * block_z)];
 
         if (block_z == 0)
         {
@@ -1157,8 +1196,8 @@ namespace heongpu
     }
 
     __global__ void cipher_broadcast_switchkey_leveled_kernel(
-        Data64* cipher, Data64* out0, Data64* out1, Modulus64* modulus, int n_power,
-        int first_rns_mod_count, int current_rns_mod_count,
+        Data64* cipher, Data64* out0, Data64* out1, Modulus64* modulus,
+        int n_power, int first_rns_mod_count, int current_rns_mod_count,
         int current_decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -1191,8 +1230,8 @@ namespace heongpu
                     mod_index = i + level;
                 }
 
-                Data64 reduced_result =
-                    OPERATOR_GPU_64::reduce_forced(result_value, modulus[mod_index]);
+                Data64 reduced_result = OPERATOR_GPU_64::reduce_forced(
+                    result_value, modulus[mod_index]);
 
                 out1[idx + (i << n_power) + location] = reduced_result;
             }
@@ -1210,8 +1249,8 @@ namespace heongpu
 
         if (idz == 0)
         {
-            out[location] =
-                OPERATOR_GPU_64::add(in1[location], in2[location], modulus[idy]);
+            out[location] = OPERATOR_GPU_64::add(in1[location], in2[location],
+                                                 modulus[idy]);
         }
         else
         {
@@ -1234,7 +1273,7 @@ namespace heongpu
         int index_raw = idx + shift;
         int index = index_raw & coeff_count_minus_one;
         Data64 result_value = cipher_in[idx + (block_y << n_power) +
-                                      ((gridDim.y << n_power) * block_z)];
+                                        ((gridDim.y << n_power) * block_z)];
 
         if ((index_raw >> n_power) & 1)
         {
@@ -1259,7 +1298,7 @@ namespace heongpu
         int block_y = blockIdx.y; // Decomposition Modulus Count
 
         Data64 result_value = cipher[idx + (block_y << n_power) +
-                                   ((current_decomp_mod_count << n_power))];
+                                     ((current_decomp_mod_count << n_power))];
 
         int location = (current_rns_mod_count * block_y) << n_power;
         int level = first_rns_mod_count - current_rns_mod_count;
@@ -1276,8 +1315,8 @@ namespace heongpu
                 mod_index = i + level;
             }
 
-            Data64 reduced_result =
-                OPERATOR_GPU_64::reduce_forced(result_value, modulus[mod_index]);
+            Data64 reduced_result = OPERATOR_GPU_64::reduce_forced(
+                result_value, modulus[mod_index]);
 
             output[idx + (i << n_power) + location] = reduced_result;
         }
@@ -1292,7 +1331,7 @@ namespace heongpu
         int block_z = blockIdx.z; // Decomposition Modulus Count
 
         Data64 result_value = cipher[idx + (block_y << n_power) +
-                                   ((gridDim.y << n_power) * block_z)];
+                                     ((gridDim.y << n_power) * block_z)];
 
         if (block_z == 0)
         {
@@ -1313,10 +1352,10 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_permute_ckks_kernel(
-        Data64* input, Data64* input2, Data64* output, Modulus64* modulus, Data64* half,
-        Data64* half_mod, Data64* last_q_modinv, int galois_elt, int n_power,
-        int Q_prime_size, int Q_size, int first_Q_prime_size, int first_Q_size,
-        int P_size)
+        Data64* input, Data64* input2, Data64* output, Modulus64* modulus,
+        Data64* half, Data64* half_mod, Data64* last_q_modinv, int galois_elt,
+        int n_power, int Q_prime_size, int Q_size, int first_Q_prime_size,
+        int first_Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
@@ -1331,7 +1370,7 @@ namespace heongpu
         }
 
         Data64 input_ = input[idx + (block_y << n_power) +
-                            ((Q_prime_size << n_power) * block_z)];
+                              ((Q_prime_size << n_power) * block_z)];
 
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
@@ -1339,34 +1378,34 @@ namespace heongpu
             Data64 last_ct_add_half_ = last_ct[(P_size - 1 - i)];
             last_ct_add_half_ =
                 OPERATOR_GPU_64::add(last_ct_add_half_, half[i],
-                               modulus[(first_Q_prime_size - 1 - i)]);
+                                     modulus[(first_Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
                 Data64 temp1 = OPERATOR_GPU_64::reduce_forced(
                     last_ct_add_half_, modulus[first_Q_size + j]);
 
-                temp1 = OPERATOR_GPU_64::sub(temp1,
-                                       half_mod[location_ + first_Q_size + j],
-                                       modulus[first_Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(
+                    temp1, half_mod[location_ + first_Q_size + j],
+                    modulus[first_Q_size + j]);
 
                 temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1,
-                                       modulus[first_Q_size + j]);
+                                             modulus[first_Q_size + j]);
 
                 last_ct[j] = OPERATOR_GPU_64::mult(
                     temp1, last_q_modinv[location_ + first_Q_size + j],
                     modulus[first_Q_size + j]);
             }
 
-            Data64 temp1 =
-                OPERATOR_GPU_64::reduce_forced(last_ct_add_half_, modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::reduce_forced(last_ct_add_half_,
+                                                          modulus[block_y]);
 
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
-                                   modulus[block_y]);
+                                         modulus[block_y]);
 
             temp1 = OPERATOR_GPU_64::sub(input_, temp1, modulus[block_y]);
 
-            input_ = OPERATOR_GPU_64::mult(temp1, last_q_modinv[location_ + block_y],
-                                     modulus[block_y]);
+            input_ = OPERATOR_GPU_64::mult(
+                temp1, last_q_modinv[location_ + block_y], modulus[block_y]);
 
             location_ = location_ + (first_Q_prime_size - 1 - i);
         }
@@ -1412,9 +1451,9 @@ namespace heongpu
     }
 
     __global__ void divide_round_lastq_permute_bfv_kernel(
-        Data64* input, Data64* ct, Data64* output, Modulus64* modulus, Data64* half,
-        Data64* half_mod, Data64* last_q_modinv, int galois_elt, int n_power,
-        int Q_prime_size, int Q_size, int P_size)
+        Data64* input, Data64* ct, Data64* output, Modulus64* modulus,
+        Data64* half, Data64* half_mod, Data64* last_q_modinv, int galois_elt,
+        int n_power, int Q_prime_size, int Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // Decomposition Modulus Count (Q_size)
@@ -1429,38 +1468,40 @@ namespace heongpu
         }
 
         Data64 input_ = input[idx + (block_y << n_power) +
-                            ((Q_prime_size << n_power) * block_z)];
+                              ((Q_prime_size << n_power) * block_z)];
 
         Data64 zero_ = 0;
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
         {
             Data64 last_ct_add_half_ = last_ct[(P_size - 1 - i)];
-            last_ct_add_half_ = OPERATOR_GPU_64::add(last_ct_add_half_, half[i],
-                                               modulus[(Q_prime_size - 1 - i)]);
+            last_ct_add_half_ = OPERATOR_GPU_64::add(
+                last_ct_add_half_, half[i], modulus[(Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
                 Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                            modulus[Q_size + j]);
-                temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + Q_size + j],
-                                       modulus[Q_size + j]);
+                                                    modulus[Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(temp1,
+                                             half_mod[location_ + Q_size + j],
+                                             modulus[Q_size + j]);
 
-                temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1, modulus[Q_size + j]);
+                temp1 = OPERATOR_GPU_64::sub(last_ct[j], temp1,
+                                             modulus[Q_size + j]);
 
                 last_ct[j] = OPERATOR_GPU_64::mult(
                     temp1, last_q_modinv[location_ + Q_size + j],
                     modulus[Q_size + j]);
             }
 
-            Data64 temp1 =
-                OPERATOR_GPU_64::add(last_ct_add_half_, zero_, modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
+                                                modulus[block_y]);
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
-                                   modulus[block_y]);
+                                         modulus[block_y]);
 
             temp1 = OPERATOR_GPU_64::sub(input_, temp1, modulus[block_y]);
 
-            input_ = OPERATOR_GPU_64::mult(temp1, last_q_modinv[location_ + block_y],
-                                     modulus[block_y]);
+            input_ = OPERATOR_GPU_64::mult(
+                temp1, last_q_modinv[location_ + block_y], modulus[block_y]);
 
             location_ = location_ + (Q_prime_size - 1 - i);
         }

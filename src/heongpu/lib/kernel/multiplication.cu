@@ -58,16 +58,16 @@ namespace heongpu
         for (int j = 0; j < ibase_size; j++)
         {
             Data64 temp_in = OPERATOR_GPU_64::reduce_forced(temp[j], m_tilde);
-            Data64 mult = OPERATOR_GPU_64::mult(temp_in, base_change_matrix_m_tilde[j],
-                                        m_tilde);
+            Data64 mult = OPERATOR_GPU_64::mult(
+                temp_in, base_change_matrix_m_tilde[j], m_tilde);
             temp2[obase_size] =
                 OPERATOR_GPU_64::add(temp2[obase_size], mult, m_tilde);
         }
 
         // sm_mrq
         Data64 m_tilde_div_2 = m_tilde.value >> 1;
-        Data64 r_m_tilde =
-            OPERATOR_GPU_64::mult(temp2[obase_size], inv_prod_q_mod_m_tilde, m_tilde);
+        Data64 r_m_tilde = OPERATOR_GPU_64::mult(
+            temp2[obase_size], inv_prod_q_mod_m_tilde, m_tilde);
         r_m_tilde = m_tilde.value - r_m_tilde;
 
 #pragma unroll
@@ -82,7 +82,8 @@ namespace heongpu
 
             temp3 = OPERATOR_GPU_64::mult(temp3, prod_q_mod_Bsk[i], obase[i]);
             temp3 = OPERATOR_GPU_64::add(temp2[i], temp3, obase[i]);
-            temp2[i] = OPERATOR_GPU_64::mult(temp3, inv_m_tilde_mod_Bsk[i], obase[i]);
+            temp2[i] =
+                OPERATOR_GPU_64::mult(temp3, inv_m_tilde_mod_Bsk[i], obase[i]);
         }
 
         int location2 = idx + ((idy * (obase_size + ibase_size)) << n_power);
@@ -124,13 +125,13 @@ namespace heongpu
         out[location + (decomp_size << (n_power + 1))] = out_2;
     }
 
-    __global__ void
-    fast_floor(Data64* in_baseq_Bsk, Data64* out1, Modulus64* ibase, Modulus64* obase,
-               Modulus64 plain_modulus, Data64* inv_punctured_prod_mod_base_array,
-               Data64* base_change_matrix_Bsk, Data64* inv_prod_q_mod_Bsk,
-               Data64* inv_punctured_prod_mod_B_array, Data64* base_change_matrix_q,
-               Data64* base_change_matrix_msk, Data64 inv_prod_B_mod_m_sk,
-               Data64* prod_B_mod_q, int n_power, int ibase_size, int obase_size)
+    __global__ void fast_floor(
+        Data64* in_baseq_Bsk, Data64* out1, Modulus64* ibase, Modulus64* obase,
+        Modulus64 plain_modulus, Data64* inv_punctured_prod_mod_base_array,
+        Data64* base_change_matrix_Bsk, Data64* inv_prod_q_mod_Bsk,
+        Data64* inv_punctured_prod_mod_B_array, Data64* base_change_matrix_q,
+        Data64* base_change_matrix_msk, Data64 inv_prod_B_mod_m_sk,
+        Data64* prod_B_mod_q, int n_power, int ibase_size, int obase_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
         int idy = blockIdx.y; // 3
@@ -148,7 +149,7 @@ namespace heongpu
         {
             reg_q[i] =
                 OPERATOR_GPU_64::mult(in_baseq_Bsk[location_q + (i << n_power)],
-                                plain_modulus.value, ibase[i]);
+                                      plain_modulus.value, ibase[i]);
             reg_q[i] = OPERATOR_GPU_64::mult(
                 reg_q[i], inv_punctured_prod_mod_base_array[i], ibase[i]);
         }
@@ -157,9 +158,9 @@ namespace heongpu
 #pragma unroll
         for (int i = 0; i < obase_size; i++)
         {
-            reg_Bsk[i] =
-                OPERATOR_GPU_64::mult(in_baseq_Bsk[location_Bsk + (i << n_power)],
-                                plain_modulus.value, obase[i]);
+            reg_Bsk[i] = OPERATOR_GPU_64::mult(
+                in_baseq_Bsk[location_Bsk + (i << n_power)],
+                plain_modulus.value, obase[i]);
         }
 
         // for Bsk
@@ -180,7 +181,8 @@ namespace heongpu
 #pragma unroll
         for (int i = 0; i < obase_size; i++)
         {
-            Data64 temp2 = OPERATOR_GPU_64::sub(obase[i].value, temp[i], obase[i]);
+            Data64 temp2 =
+                OPERATOR_GPU_64::sub(obase[i].value, temp[i], obase[i]);
             temp2 = OPERATOR_GPU_64::add(temp2, reg_Bsk[i], obase[i]);
             reg_Bsk[i] =
                 OPERATOR_GPU_64::mult(temp2, inv_prod_q_mod_Bsk[i], obase[i]);
@@ -218,29 +220,30 @@ namespace heongpu
 #pragma unroll
         for (int j = 0; j < obase_size - 1; j++)
         {
-            Data64 mult = OPERATOR_GPU_64::mult(temp3[j], base_change_matrix_msk[j],
-                                        obase[obase_size - 1]);
-            temp4[ibase_size] =
-                OPERATOR_GPU_64::add(temp4[ibase_size], mult, obase[obase_size - 1]);
+            Data64 mult = OPERATOR_GPU_64::mult(
+                temp3[j], base_change_matrix_msk[j], obase[obase_size - 1]);
+            temp4[ibase_size] = OPERATOR_GPU_64::add(temp4[ibase_size], mult,
+                                                     obase[obase_size - 1]);
         }
 
-        Data64 alpha_sk =
-            OPERATOR_GPU_64::sub(obase[obase_size - 1].value, reg_Bsk[obase_size - 1],
-                           obase[obase_size - 1]);
-        alpha_sk =
-            OPERATOR_GPU_64::add(alpha_sk, temp4[ibase_size], obase[obase_size - 1]);
+        Data64 alpha_sk = OPERATOR_GPU_64::sub(obase[obase_size - 1].value,
+                                               reg_Bsk[obase_size - 1],
+                                               obase[obase_size - 1]);
+        alpha_sk = OPERATOR_GPU_64::add(alpha_sk, temp4[ibase_size],
+                                        obase[obase_size - 1]);
         alpha_sk = OPERATOR_GPU_64::mult(alpha_sk, inv_prod_B_mod_m_sk,
-                                   obase[obase_size - 1]);
+                                         obase[obase_size - 1]);
 
         Data64 m_sk_div_2 = obase[obase_size - 1].value >> 1;
 
 #pragma unroll
         for (int i = 0; i < ibase_size; i++)
         {
-            Data64 obase_ =
-                OPERATOR_GPU_64::reduce_forced(obase[obase_size - 1].value, ibase[i]);
+            Data64 obase_ = OPERATOR_GPU_64::reduce_forced(
+                obase[obase_size - 1].value, ibase[i]);
             Data64 temp4_ = OPERATOR_GPU_64::reduce_forced(temp4[i], ibase[i]);
-            Data64 alpha_sk_ = OPERATOR_GPU_64::reduce_forced(alpha_sk, ibase[i]);
+            Data64 alpha_sk_ =
+                OPERATOR_GPU_64::reduce_forced(alpha_sk, ibase[i]);
             if (alpha_sk > m_sk_div_2)
             {
                 Data64 inner =
@@ -250,9 +253,10 @@ namespace heongpu
             }
             else
             {
-                Data64 inner =
-                    OPERATOR_GPU_64::sub(ibase[i].value, prod_B_mod_q[i], ibase[i]);
-                inner = OPERATOR_GPU_64::mult(inner, alpha_sk_, ibase[i]); // extra
+                Data64 inner = OPERATOR_GPU_64::sub(ibase[i].value,
+                                                    prod_B_mod_q[i], ibase[i]);
+                inner =
+                    OPERATOR_GPU_64::mult(inner, alpha_sk_, ibase[i]); // extra
                 temp4[i] = OPERATOR_GPU_64::add(temp4_, inner, ibase[i]);
             }
         }
@@ -302,8 +306,8 @@ namespace heongpu
         int index1 = idx + (block_y << n_power);
         int index2 = index1 + ((decomp_size << n_power) * block_z);
 
-        output[index2] =
-            OPERATOR_GPU_64::mult(cipher[index2], plain_in[index1], modulus[block_y]);
+        output[index2] = OPERATOR_GPU_64::mult(cipher[index2], plain_in[index1],
+                                               modulus[block_y]);
     }
 
     __global__ void cipherplain_multiplication_kernel(Data64* in1, Data64* in2,
@@ -327,8 +331,9 @@ namespace heongpu
     }
 
     __global__ void cipherplain_multiply_accumulate_kernel(
-        Data64* in1, Data64* in2, Data64* out, Modulus64* modulus, int iteration_count,
-        int current_decomp_count, int first_decomp_count, int n_power)
+        Data64* in1, Data64* in2, Data64* out, Modulus64* modulus,
+        int iteration_count, int current_decomp_count, int first_decomp_count,
+        int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
         int block_y = blockIdx.y; // rns base count
@@ -348,7 +353,8 @@ namespace heongpu
             Data64 ct = in1[location_ct + (i * offset_ct)];
             Data64 pt = in2[location_pt + (i * offset_pt)];
             Data64 mul_ctpt = OPERATOR_GPU_64::mult(ct, pt, modulus[block_y]);
-            sum_ctpt = OPERATOR_GPU_64::add(sum_ctpt, mul_ctpt, modulus[block_y]);
+            sum_ctpt =
+                OPERATOR_GPU_64::add(sum_ctpt, mul_ctpt, modulus[block_y]);
         }
 
         out[location_ct] = sum_ctpt;

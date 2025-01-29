@@ -22,8 +22,9 @@ namespace heongpu
         output[index] = OPERATOR_GPU_64::mult(ct_1, sk_, modulus[block_y]);
     }
 
-    __global__ void sk_multiplicationx3(Data64* ct1, Data64* sk, Modulus64* modulus,
-                                        int n_power, int decomp_mod_count)
+    __global__ void sk_multiplicationx3(Data64* ct1, Data64* sk,
+                                        Modulus64* modulus, int n_power,
+                                        int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
         int block_y = blockIdx.y; // decomp_mod_count
@@ -42,10 +43,11 @@ namespace heongpu
 
     __global__ void decryption_kernel(Data64* ct0, Data64* ct1, Data64* plain,
                                       Modulus64* modulus, Modulus64 plain_mod,
-                                      Modulus64 gamma, Data64* Qi_t, Data64* Qi_gamma,
-                                      Data64* Qi_inverse, Data64 mulq_inv_t,
-                                      Data64 mulq_inv_gamma, Data64 inv_gamma,
-                                      int n_power, int decomp_mod_count)
+                                      Modulus64 gamma, Data64* Qi_t,
+                                      Data64* Qi_gamma, Data64* Qi_inverse,
+                                      Data64 mulq_inv_t, Data64 mulq_inv_gamma,
+                                      Data64 inv_gamma, int n_power,
+                                      int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
 
@@ -57,9 +59,11 @@ namespace heongpu
         {
             int location = idx + (i << n_power);
 
-            Data64 mt = OPERATOR_GPU_64::add(ct0[location], ct1[location], modulus[i]);
+            Data64 mt =
+                OPERATOR_GPU_64::add(ct0[location], ct1[location], modulus[i]);
 
-            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
+            Data64 gamma_ =
+                OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
 
             mt = OPERATOR_GPU_64::mult(mt, plain_mod.value, modulus[i]);
 
@@ -71,7 +75,8 @@ namespace heongpu
             Data64 mt_in_gamma = OPERATOR_GPU_64::reduce_forced(mt, gamma);
 
             mt_in_t = OPERATOR_GPU_64::mult(mt_in_t, Qi_t[i], plain_mod);
-            mt_in_gamma = OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
+            mt_in_gamma =
+                OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
 
             sum_t = OPERATOR_GPU_64::add(sum_t, mt_in_t, plain_mod);
             sum_gamma = OPERATOR_GPU_64::add(sum_gamma, mt_in_gamma, gamma);
@@ -84,8 +89,10 @@ namespace heongpu
 
         if (sum_gamma > gamma_2)
         {
-            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
-            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
+            Data64 gamma_ =
+                OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
+            Data64 sum_gamma_ =
+                OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
             Data64 result = OPERATOR_GPU_64::sub(gamma_, sum_gamma_, plain_mod);
             result = OPERATOR_GPU_64::add(sum_t, result, plain_mod);
@@ -96,7 +103,8 @@ namespace heongpu
         else
         {
             Data64 sum_t_ = OPERATOR_GPU_64::reduce_forced(sum_t, plain_mod);
-            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
+            Data64 sum_gamma_ =
+                OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
             Data64 result = OPERATOR_GPU_64::sub(sum_t_, sum_gamma_, plain_mod);
             result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);
@@ -123,11 +131,13 @@ namespace heongpu
         {
             int location = idx + (i << n_power);
 
-            Data64 mt = OPERATOR_GPU_64::add(ct0[location], ct1[location], modulus[i]);
+            Data64 mt =
+                OPERATOR_GPU_64::add(ct0[location], ct1[location], modulus[i]);
 
             mt = OPERATOR_GPU_64::add(mt, ct2[location], modulus[i]);
 
-            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
+            Data64 gamma_ =
+                OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
 
             mt = OPERATOR_GPU_64::mult(mt, plain_mod.value, modulus[i]);
 
@@ -139,7 +149,8 @@ namespace heongpu
             Data64 mt_in_gamma = OPERATOR_GPU_64::reduce_forced(mt, gamma);
 
             mt_in_t = OPERATOR_GPU_64::mult(mt_in_t, Qi_t[i], plain_mod);
-            mt_in_gamma = OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
+            mt_in_gamma =
+                OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
 
             sum_t = OPERATOR_GPU_64::add(sum_t, mt_in_t, plain_mod);
             sum_gamma = OPERATOR_GPU_64::add(sum_gamma, mt_in_gamma, gamma);
@@ -152,8 +163,10 @@ namespace heongpu
 
         if (sum_gamma > gamma_2)
         {
-            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
-            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
+            Data64 gamma_ =
+                OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
+            Data64 sum_gamma_ =
+                OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
             Data64 result = OPERATOR_GPU_64::sub(gamma_, sum_gamma_, plain_mod);
             result = OPERATOR_GPU_64::add(sum_t, result, plain_mod);
@@ -164,7 +177,8 @@ namespace heongpu
         else
         {
             Data64 sum_t_ = OPERATOR_GPU_64::reduce_forced(sum_t, plain_mod);
-            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
+            Data64 sum_gamma_ =
+                OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
             Data64 result = OPERATOR_GPU_64::sub(sum_t_, sum_gamma_, plain_mod);
             result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);
@@ -173,9 +187,10 @@ namespace heongpu
         }
     }
 
-    __global__ void coeff_multadd(Data64* input1, Data64* input2, Data64* output,
-                                  Modulus64 plain_mod, Modulus64* modulus,
-                                  int n_power, int decomp_mod_count)
+    __global__ void coeff_multadd(Data64* input1, Data64* input2,
+                                  Data64* output, Modulus64 plain_mod,
+                                  Modulus64* modulus, int n_power,
+                                  int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
         int block_y = blockIdx.y; // decomp_mod_count
@@ -191,9 +206,9 @@ namespace heongpu
         output[index] = ct_0;
     }
 
-    __global__ void compose_kernel(Data64* input, Data64* output, Modulus64* modulus,
-                                   Data64* Mi_inv, Data64* Mi,
-                                   Data64* decryption_modulus,
+    __global__ void compose_kernel(Data64* input, Data64* output,
+                                   Modulus64* modulus, Data64* Mi_inv,
+                                   Data64* Mi, Data64* decryption_modulus,
                                    int coeff_modulus_count, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
@@ -331,9 +346,10 @@ namespace heongpu
         }
     }
 
-    __global__ void sk_multiplication_ckks(Data64* ciphertext, Data64* plaintext,
-                                           Data64* sk, Modulus64* modulus,
-                                           int n_power, int decomp_mod_count)
+    __global__ void sk_multiplication_ckks(Data64* ciphertext,
+                                           Data64* plaintext, Data64* sk,
+                                           Modulus64* modulus, int n_power,
+                                           int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
         int block_y = blockIdx.y; // decomp_mod_count
@@ -371,7 +387,8 @@ namespace heongpu
 
             Data64 mt = ct[location];
 
-            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
+            Data64 gamma_ =
+                OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
 
             mt = OPERATOR_GPU_64::mult(mt, plain_mod.value, modulus[i]);
 
@@ -383,7 +400,8 @@ namespace heongpu
             Data64 mt_in_gamma = OPERATOR_GPU_64::reduce_forced(mt, gamma);
 
             mt_in_t = OPERATOR_GPU_64::mult(mt_in_t, Qi_t[i], plain_mod);
-            mt_in_gamma = OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
+            mt_in_gamma =
+                OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
 
             sum_t = OPERATOR_GPU_64::add(sum_t, mt_in_t, plain_mod);
             sum_gamma = OPERATOR_GPU_64::add(sum_gamma, mt_in_gamma, gamma);
@@ -396,8 +414,10 @@ namespace heongpu
 
         if (sum_gamma > gamma_2)
         {
-            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
-            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
+            Data64 gamma_ =
+                OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
+            Data64 sum_gamma_ =
+                OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
             Data64 result = OPERATOR_GPU_64::sub(gamma_, sum_gamma_, plain_mod);
             result = OPERATOR_GPU_64::add(sum_t, result, plain_mod);
@@ -408,7 +428,8 @@ namespace heongpu
         else
         {
             Data64 sum_t_ = OPERATOR_GPU_64::reduce_forced(sum_t, plain_mod);
-            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
+            Data64 sum_gamma_ =
+                OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
             Data64 result = OPERATOR_GPU_64::sub(sum_t_, sum_gamma_, plain_mod);
             result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);

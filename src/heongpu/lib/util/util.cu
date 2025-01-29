@@ -169,7 +169,7 @@ namespace heongpu
     }
 
     std::vector<Data64> generate_proper_primes(Data64 factor, int bit_size,
-                                             size_t count)
+                                               size_t count)
     {
         std::vector<Data64> destination;
 
@@ -193,8 +193,9 @@ namespace heongpu
         return destination;
     }
 
-    std::vector<Modulus64> generate_primes(size_t poly_modulus_degree,
-                                         const std::vector<int> prime_bit_sizes)
+    std::vector<Modulus64>
+    generate_primes(size_t poly_modulus_degree,
+                    const std::vector<int> prime_bit_sizes)
     {
         std::vector<Modulus64> prime_vector_;
         std::unordered_map<int, size_t> count_table;
@@ -227,7 +228,7 @@ namespace heongpu
     }
 
     std::vector<Modulus64> generate_internal_primes(size_t poly_modulus_degree,
-                                                  const int prime_count)
+                                                    const int prime_count)
     {
         std::vector<Modulus64> all_primes;
 
@@ -265,10 +266,12 @@ namespace heongpu
         // root^(degree/2) = modulus - 1 .
         Data64 degree_over2 = degree >> 1;
 
-        return OPERATOR64::exp(root, degree_over2, modulus) == (modulus.value - 1);
+        return OPERATOR64::exp(root, degree_over2, modulus) ==
+               (modulus.value - 1);
     }
 
-    bool find_primitive_root(size_t degree, Modulus64& modulus, Data64& destination)
+    bool find_primitive_root(size_t degree, Modulus64& modulus,
+                             Data64& destination)
     {
         Data64 size_entire_group = modulus.value - 1;
 
@@ -294,7 +297,8 @@ namespace heongpu
 
             // Raise the random number to power the size of the quotient
             // to get rid of irrelevant part
-            destination = OPERATOR64::exp(destination, size_quotient_group, modulus);
+            destination =
+                OPERATOR64::exp(destination, size_quotient_group, modulus);
         } while (!is_primitive_root(destination, degree, modulus) &&
                  (attempt_counter < attempt_counter_max));
 
@@ -344,8 +348,8 @@ namespace heongpu
     }
 
     std::vector<Root64> generate_ntt_table(std::vector<Data64> psi,
-                                         std::vector<Modulus64> primes,
-                                         int n_power)
+                                           std::vector<Modulus64> primes,
+                                           int n_power)
     {
         int n_ = 1 << n_power;
         std::vector<Root64> forward_table; // bit reverse order
@@ -356,7 +360,8 @@ namespace heongpu
 
             for (int j = 1; j < n_; j++)
             {
-                Data64 exp = OPERATOR64::mult(table[(j - 1)], psi[i], primes[i]);
+                Data64 exp =
+                    OPERATOR64::mult(table[(j - 1)], psi[i], primes[i]);
                 table.push_back(exp);
             }
 
@@ -370,8 +375,8 @@ namespace heongpu
     }
 
     std::vector<Root64> generate_intt_table(std::vector<Data64> psi,
-                                          std::vector<Modulus64> primes,
-                                          int n_power)
+                                            std::vector<Modulus64> primes,
+                                            int n_power)
     {
         int n_ = 1 << n_power;
         std::vector<Root64> inverse_table; // bit reverse order
@@ -383,7 +388,8 @@ namespace heongpu
             Data64 inv_root = OPERATOR64::modinv(psi[i], primes[i]);
             for (int j = 1; j < n_; j++)
             {
-                Data64 exp = OPERATOR64::mult(table[(j - 1)], inv_root, primes[i]);
+                Data64 exp =
+                    OPERATOR64::mult(table[(j - 1)], inv_root, primes[i]);
                 table.push_back(exp);
             }
 
@@ -397,7 +403,7 @@ namespace heongpu
     }
 
     std::vector<Ninverse64> generate_n_inverse(size_t poly_modulus_degree,
-                                             std::vector<Modulus64> primes)
+                                               std::vector<Modulus64> primes)
     {
         Data64 n_ = poly_modulus_degree;
         std::vector<Ninverse64> n_inverse;

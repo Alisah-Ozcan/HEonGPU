@@ -16,8 +16,8 @@ namespace heongpu
 {
 
     __global__ void encode_kernel_bfv(Data64* message_encoded, Data64* message,
-                                      Data64* location_info, Modulus64* plain_mod,
-                                      int message_size);
+                                      Data64* location_info,
+                                      Modulus64* plain_mod, int message_size);
 
     __global__ void decode_kernel_bfv(Data64* message, Data64* message_encoded,
                                       Data64* location_info);
@@ -41,12 +41,11 @@ namespace heongpu
                                   double two_pow_64, int* reverse_order,
                                   int n_power);
 
-    __global__ void
-    encode_kernel_compose(COMPLEX* complex_message, Data64* plaintext,
-                          Modulus64* modulus, Data64* Mi_inv, Data64* Mi,
-                          Data64* upper_half_threshold, Data64* decryption_modulus,
-                          int coeff_modulus_count, double scale,
-                          double two_pow_64, int* reverse_order, int n_power);
+    __global__ void encode_kernel_compose(
+        COMPLEX* complex_message, Data64* plaintext, Modulus64* modulus,
+        Data64* Mi_inv, Data64* Mi, Data64* upper_half_threshold,
+        Data64* decryption_modulus, int coeff_modulus_count, double scale,
+        double two_pow_64, int* reverse_order, int n_power);
 
 } // namespace heongpu
 #endif // ENCODING_H

@@ -89,7 +89,8 @@ namespace heongpu
 #pragma unroll
         for (int i = 0; i < rns_mod_count; i++)
         {
-            Data64 rn_ULL = static_cast<Data64>(noise) + (flag & modulus[i].value);
+            Data64 rn_ULL =
+                static_cast<Data64>(noise) + (flag & modulus[i].value);
             int in_offset = i << n_power;
             output[idx + in_offset + out_offset] = rn_ULL;
         }

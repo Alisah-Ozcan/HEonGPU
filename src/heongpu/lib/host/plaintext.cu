@@ -89,8 +89,8 @@ namespace heongpu
                 DeviceVector<Data64>(plain_size_, options.stream_);
 
             cudaMemcpyAsync(device_locations_.data(), plain.data(),
-                            plain_size_ * sizeof(Data64), cudaMemcpyHostToDevice,
-                            options.stream_);
+                            plain_size_ * sizeof(Data64),
+                            cudaMemcpyHostToDevice, options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
@@ -146,8 +146,8 @@ namespace heongpu
                 DeviceVector<Data64>(plain_size_, options.stream_);
 
             cudaMemcpyAsync(device_locations_.data(), plain.data(),
-                            plain_size_ * sizeof(Data64), cudaMemcpyHostToDevice,
-                            options.stream_);
+                            plain_size_ * sizeof(Data64),
+                            cudaMemcpyHostToDevice, options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
@@ -172,7 +172,8 @@ namespace heongpu
             }
             else
             {
-                device_locations_ = DeviceVector<Data64>(host_locations_, stream);
+                device_locations_ =
+                    DeviceVector<Data64>(host_locations_, stream);
                 host_locations_.resize(0);
                 host_locations_.shrink_to_fit();
             }
@@ -192,9 +193,10 @@ namespace heongpu
             else
             {
                 host_locations_ = HostVector<Data64>(plain_size_);
-                cudaMemcpyAsync(
-                    host_locations_.data(), device_locations_.data(),
-                    plain_size_ * sizeof(Data64), cudaMemcpyDeviceToHost, stream);
+                cudaMemcpyAsync(host_locations_.data(),
+                                device_locations_.data(),
+                                plain_size_ * sizeof(Data64),
+                                cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 device_locations_.resize(0, stream);
@@ -231,8 +233,8 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(plain.data(), device_locations_.data(),
-                            plain_size_ * sizeof(Data64), cudaMemcpyDeviceToHost,
-                            stream);
+                            plain_size_ * sizeof(Data64),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
@@ -253,8 +255,8 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(device_locations_.data(), plain.data(),
-                            plain_size_ * sizeof(Data64), cudaMemcpyHostToDevice,
-                            options.stream_);
+                            plain_size_ * sizeof(Data64),
+                            cudaMemcpyHostToDevice, options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
@@ -274,8 +276,8 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(plain.data(), device_locations_.data(),
-                            plain_size_ * sizeof(Data64), cudaMemcpyDeviceToHost,
-                            stream);
+                            plain_size_ * sizeof(Data64),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
@@ -296,8 +298,8 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(device_locations_.data(), plain.data(),
-                            plain_size_ * sizeof(Data64), cudaMemcpyHostToDevice,
-                            options.stream_);
+                            plain_size_ * sizeof(Data64),
+                            cudaMemcpyHostToDevice, options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
@@ -360,7 +362,8 @@ namespace heongpu
             }
             else
             {
-                device_locations_ = DeviceVector<Data64>(host_locations_, stream);
+                device_locations_ =
+                    DeviceVector<Data64>(host_locations_, stream);
             }
 
             storage_type_ = storage_type::DEVICE;

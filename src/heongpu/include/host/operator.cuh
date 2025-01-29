@@ -2165,7 +2165,8 @@ namespace heongpu
 
         Modulus64 m_tilde_;
         std::shared_ptr<DeviceVector<Data64>> base_change_matrix_Bsk_;
-        std::shared_ptr<DeviceVector<Data64>> inv_punctured_prod_mod_base_array_;
+        std::shared_ptr<DeviceVector<Data64>>
+            inv_punctured_prod_mod_base_array_;
         std::shared_ptr<DeviceVector<Data64>> base_change_matrix_m_tilde_;
 
         Data64 inv_prod_q_mod_m_tilde_;
@@ -2243,7 +2244,8 @@ namespace heongpu
             base_change_matrix_D_to_B_leveled_;
         std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_B_to_D_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>> Mi_inv_D_to_B_leveled_;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
+            Mi_inv_D_to_B_leveled_;
         std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_leveled_;
         std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_D_to_B_leveled_;
         std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_B_to_D_leveled_;
@@ -2393,7 +2395,8 @@ namespace heongpu
         std::vector<int> key_indexs_;
 
         std::vector<heongpu::DeviceVector<Data64>> V_matrixs_rotated_encoded_;
-        std::vector<heongpu::DeviceVector<Data64>> V_inv_matrixs_rotated_encoded_;
+        std::vector<heongpu::DeviceVector<Data64>>
+            V_inv_matrixs_rotated_encoded_;
 
         std::vector<std::vector<int>> V_matrixs_index_;
         std::vector<std::vector<int>> V_inv_matrixs_index_;
@@ -2532,7 +2535,8 @@ namespace heongpu
             }
         }
 
-        __host__ DeviceVector<Data64> fast_single_hoisting_rotation_ckks_method_I(
+        __host__ DeviceVector<Data64>
+        fast_single_hoisting_rotation_ckks_method_I(
             Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
             Galoiskey& galois_key, const cudaStream_t stream);
 

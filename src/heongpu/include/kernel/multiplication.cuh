@@ -28,13 +28,13 @@ namespace heongpu
                     Data64* inv_punctured_prod_mod_base_array, int n_power,
                     int ibase_size, int obase_size);
 
-    __global__ void
-    fast_floor(Data64* in_baseq_Bsk, Data64* out1, Modulus64* ibase, Modulus64* obase,
-               Modulus64 plain_modulus, Data64* inv_punctured_prod_mod_base_array,
-               Data64* base_change_matrix_Bsk, Data64* inv_prod_q_mod_Bsk,
-               Data64* inv_punctured_prod_mod_B_array, Data64* base_change_matrix_q,
-               Data64* base_change_matrix_msk, Data64 inv_prod_B_mod_m_sk,
-               Data64* prod_B_mod_q, int n_power, int ibase_size, int obase_size);
+    __global__ void fast_floor(
+        Data64* in_baseq_Bsk, Data64* out1, Modulus64* ibase, Modulus64* obase,
+        Modulus64 plain_modulus, Data64* inv_punctured_prod_mod_base_array,
+        Data64* base_change_matrix_Bsk, Data64* inv_prod_q_mod_Bsk,
+        Data64* inv_punctured_prod_mod_B_array, Data64* base_change_matrix_q,
+        Data64* base_change_matrix_msk, Data64 inv_prod_B_mod_m_sk,
+        Data64* prod_B_mod_q, int n_power, int ibase_size, int obase_size);
 
     __global__ void threshold_kernel(Data64* plain_in, Data64* output,
                                      Modulus64* modulus,
@@ -52,8 +52,9 @@ namespace heongpu
                                                       int n_power);
 
     __global__ void cipherplain_multiply_accumulate_kernel(
-        Data64* in1, Data64* in2, Data64* out, Modulus64* modulus, int iteration_count,
-        int current_decomp_count, int first_decomp_count, int n_power);
+        Data64* in1, Data64* in2, Data64* out, Modulus64* modulus,
+        int iteration_count, int current_decomp_count, int first_decomp_count,
+        int n_power);
 
 } // namespace heongpu
 #endif // HE_MULTIPLICATION_H

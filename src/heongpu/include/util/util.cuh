@@ -124,14 +124,14 @@ namespace heongpu
     bool is_prime(const Data64& value);
 
     std::vector<Data64> generate_proper_primes(Data64 factor, int bit_size,
-                                             size_t count);
+                                               size_t count);
 
     std::vector<Modulus64>
     generate_primes(size_t poly_modulus_degree,
                     const std::vector<int> prime_bit_sizes);
 
     std::vector<Modulus64> generate_internal_primes(size_t poly_modulus_degree,
-                                                  const int prime_count);
+                                                    const int prime_count);
 
     bool is_primitive_root(Data64 root, size_t degree, Modulus64& modulus);
 
@@ -153,7 +153,7 @@ namespace heongpu
                         int n_power); // bit reverse order for GPU-NTT
 
     std::vector<Ninverse64> generate_n_inverse(size_t poly_modulus_degree,
-                                             std::vector<Modulus64> primes);
+                                               std::vector<Modulus64> primes);
 
     __global__ void unsigned_signed_convert(Data64* input, Data64* output,
                                             Modulus64* modulus);

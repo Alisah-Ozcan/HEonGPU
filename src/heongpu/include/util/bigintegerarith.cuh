@@ -41,8 +41,8 @@ namespace heongpu
             return result;
         }
 
-        __device__ __forceinline__ bool is_greater(Data64* number1, Data64* number2,
-                                                   int wordsize)
+        __device__ __forceinline__ bool
+        is_greater(Data64* number1, Data64* number2, int wordsize)
         {
             return compare(number1, number2, wordsize) > 0;
         }
@@ -53,8 +53,8 @@ namespace heongpu
             return compare(number1, number2, wordsize) >= 0;
         }
 
-        __device__ __forceinline__ bool is_less(Data64* number1, Data64* number2,
-                                                int wordsize)
+        __device__ __forceinline__ bool is_less(Data64* number1,
+                                                Data64* number2, int wordsize)
         {
             return compare(number1, number2, wordsize) < 0;
         }
@@ -65,8 +65,8 @@ namespace heongpu
             return compare(number1, number2, wordsize) <= 0;
         }
 
-        __device__ __forceinline__ bool is_equal(Data64* number1, Data64* number2,
-                                                 int wordsize)
+        __device__ __forceinline__ bool is_equal(Data64* number1,
+                                                 Data64* number2, int wordsize)
         {
             return compare(number1, number2, wordsize) == 0;
         }
@@ -90,8 +90,8 @@ namespace heongpu
             return carry;
         }
 
-        __device__ __forceinline__ int add_inplace(Data64* number1, Data64* number2,
-                                                   int wordsize)
+        __device__ __forceinline__ int
+        add_inplace(Data64* number1, Data64* number2, int wordsize)
         {
             int carry = 0;
 

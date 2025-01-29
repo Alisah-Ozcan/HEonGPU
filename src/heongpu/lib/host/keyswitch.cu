@@ -255,8 +255,9 @@ namespace heongpu
                 int max_depth = Q_size_ - 1;
                 for (int i = 0; i < max_depth; i++)
                 {
-                    device_location_leveled_.push_back(std::move(
-                        DeviceVector<Data64>(host_location_leveled_[i], stream)));
+                    device_location_leveled_.push_back(
+                        std::move(DeviceVector<Data64>(
+                            host_location_leveled_[i], stream)));
                     host_location_leveled_[i].resize(0);
                     host_location_leveled_[i].shrink_to_fit();
                 }
@@ -619,9 +620,10 @@ namespace heongpu
             }
 
             zero_host_location_ = HostVector<Data64>(galoiskey_size_);
-            cudaMemcpyAsync(
-                zero_host_location_.data(), zero_device_location_.data(),
-                galoiskey_size_ * sizeof(Data64), cudaMemcpyDeviceToHost, stream);
+            cudaMemcpyAsync(zero_host_location_.data(),
+                            zero_device_location_.data(),
+                            galoiskey_size_ * sizeof(Data64),
+                            cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             device_location_.clear();

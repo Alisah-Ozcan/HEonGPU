@@ -249,8 +249,8 @@ namespace heongpu
                     {
                         if (i != j)
                         {
-                            temp = OPERATOR64::mult(temp, ibase[j + index].value,
-                                               obase[k]);
+                            temp = OPERATOR64::mult(
+                                temp, ibase[j + index].value, obase[k]);
                         }
                     }
                     base_matrix.push_back(temp);
@@ -288,7 +288,8 @@ namespace heongpu
                             {
                                 Data64 base_inner =
                                     ibase[j + index].value % obase[k].value;
-                                temp = OPERATOR64::mult(temp, base_inner, obase[k]);
+                                temp = OPERATOR64::mult(temp, base_inner,
+                                                        obase[k]);
                             }
                         }
                         all_base_matrix_inner.push_back(temp);
@@ -323,7 +324,7 @@ namespace heongpu
                     if (i != j)
                     {
                         temp = OPERATOR64::mult(temp, ibase[j + index].value,
-                                           ibase[i + index]);
+                                                ibase[i + index]);
                     }
                 }
                 inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i + index]));
@@ -360,10 +361,11 @@ namespace heongpu
                             Data64 ibase_inner =
                                 ibase[j + index].value % ibase[i + index].value;
                             temp = OPERATOR64::mult(temp, ibase_inner,
-                                               ibase[i + index]);
+                                                    ibase[i + index]);
                         }
                     }
-                    inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i + index]));
+                    inv_Mi.push_back(
+                        OPERATOR64::modinv(temp, ibase[i + index]));
                 }
 
                 index = index + level_d_vector_[main_lp][l];
@@ -454,8 +456,8 @@ namespace heongpu
                 Data64 temp = 1;
                 for (int j = 0; j < I_j_[l]; j++)
                 {
-                    temp = OPERATOR64::mult(temp, ibase[j + I_location_[l]].value,
-                                       obase[i]);
+                    temp = OPERATOR64::mult(
+                        temp, ibase[j + I_location_[l]].value, obase[i]);
                 }
                 prod.push_back(temp);
             }
@@ -538,8 +540,8 @@ namespace heongpu
 
             for (int j = 1; j < n_; j++)
             {
-                Data64 exp =
-                    OPERATOR64::mult(table[(j - 1)], B_prime_psi[i], B_prime[i]);
+                Data64 exp = OPERATOR64::mult(table[(j - 1)], B_prime_psi[i],
+                                              B_prime[i]);
                 table.push_back(exp);
             }
 
@@ -564,7 +566,8 @@ namespace heongpu
             Data64 inv_root = OPERATOR64::modinv(B_prime_psi[i], B_prime[i]);
             for (int j = 1; j < n_; j++)
             {
-                Data64 exp = OPERATOR64::mult(table[(j - 1)], inv_root, B_prime[i]);
+                Data64 exp =
+                    OPERATOR64::mult(table[(j - 1)], inv_root, B_prime[i]);
                 table.push_back(exp);
             }
 
@@ -607,8 +610,8 @@ namespace heongpu
                     {
                         if (i != j)
                         {
-                            temp = OPERATOR64::mult(temp, ibase[j + index].value,
-                                               obase[k]);
+                            temp = OPERATOR64::mult(
+                                temp, ibase[j + index].value, obase[k]);
                         }
                     }
                     base_matrix.push_back(temp);
@@ -662,7 +665,7 @@ namespace heongpu
                     if (i != j)
                     {
                         temp = OPERATOR64::mult(temp, ibase[j + index].value,
-                                           ibase[i + index]);
+                                                ibase[i + index]);
                     }
                 }
                 inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i + index]));
@@ -716,8 +719,8 @@ namespace heongpu
                 Data64 temp = 1;
                 for (int j = 0; j < I_j_[l]; j++)
                 {
-                    temp = OPERATOR64::mult(temp, ibase[j + I_location_[l]].value,
-                                       obase[i]);
+                    temp = OPERATOR64::mult(
+                        temp, ibase[j + I_location_[l]].value, obase[i]);
                 }
                 prod.push_back(temp);
             }
@@ -746,7 +749,8 @@ namespace heongpu
                 { // r_prime
                     Data64 base =
                         ibase[j].value % obase[i + I_location_[l]].value;
-                    temp = OPERATOR64::mult(temp, base, obase[i + I_location_[l]]);
+                    temp =
+                        OPERATOR64::mult(temp, base, obase[i + I_location_[l]]);
                 }
                 prod.push_back(temp);
             }
@@ -782,7 +786,8 @@ namespace heongpu
                             {
                                 Data64 base_inner =
                                     ibase[j + index].value % obase[k].value;
-                                temp = OPERATOR64::mult(temp, base_inner, obase[k]);
+                                temp = OPERATOR64::mult(temp, base_inner,
+                                                        obase[k]);
                             }
                         }
                         all_base_matrix_inner.push_back(temp);
@@ -863,10 +868,11 @@ namespace heongpu
                             Data64 ibase_inner =
                                 ibase[j + index].value % ibase[i + index].value;
                             temp = OPERATOR64::mult(temp, ibase_inner,
-                                               ibase[i + index]);
+                                                    ibase[i + index]);
                         }
                     }
-                    inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i + index]));
+                    inv_Mi.push_back(
+                        OPERATOR64::modinv(temp, ibase[i + index]));
                 }
 
                 index = index + level_dtilda_vector_[main_lp][l];
@@ -970,9 +976,9 @@ namespace heongpu
                     for (int j = 0; j < r_prime_; j++)
                     { // r_prime
                         Data64 base = ibase[j].value %
-                                    obase[i + I_location_[main_lp][l]].value;
-                        temp = OPERATOR64::mult(temp, base,
-                                           obase[i + I_location_[main_lp][l]]);
+                                      obase[i + I_location_[main_lp][l]].value;
+                        temp = OPERATOR64::mult(
+                            temp, base, obase[i + I_location_[main_lp][l]]);
                     }
                     prod.push_back(temp);
                 }

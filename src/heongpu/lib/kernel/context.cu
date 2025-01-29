@@ -17,8 +17,9 @@ namespace heongpu
             {
                 // TODO: Change here for BFV as well!!!
                 Data64 temp_ = prime_vector[prime_vector.size() - 1 - i].value %
-                             prime_vector[j].value;
-                last_q_modinv.push_back(OPERATOR64::modinv(temp_, prime_vector[j]));
+                               prime_vector[j].value;
+                last_q_modinv.push_back(
+                    OPERATOR64::modinv(temp_, prime_vector[j]));
             }
         }
 
@@ -68,7 +69,7 @@ namespace heongpu
     }
 
     std::vector<Data64> Parameters::generate_Mi(std::vector<Modulus64> primes,
-                                              int size)
+                                                int size)
     {
         std::vector<Data64> result_Mi(size * size, 0ULL);
         for (int i = 0; i < size; i++)
@@ -101,8 +102,8 @@ namespace heongpu
         return result_Mi;
     }
 
-    std::vector<Data64> Parameters::generate_Mi_inv(std::vector<Modulus64> primes,
-                                                  int size)
+    std::vector<Data64>
+    Parameters::generate_Mi_inv(std::vector<Modulus64> primes, int size)
     {
         std::vector<Data64> result_Mi_inv;
         for (int i = 0; i < size; i++)
@@ -123,7 +124,7 @@ namespace heongpu
     }
 
     std::vector<Data64> Parameters::generate_M(std::vector<Modulus64> primes,
-                                             int size)
+                                               int size)
     {
         std::vector<Data64> result_M(size, 0ULL);
 
@@ -185,7 +186,7 @@ namespace heongpu
     }
 
     Data64 Parameters::generate_Q_mod_t(std::vector<Modulus64> primes,
-                                      Modulus64& plain_mod, int size)
+                                        Modulus64& plain_mod, int size)
     {
         Data64 result = 1;
         for (int i = 0; i < size; i++)
@@ -247,7 +248,8 @@ namespace heongpu
                 {
                     if (i != j)
                     {
-                        temp = OPERATOR64::mult(temp, primes[j].value, bsk_mod[k]);
+                        temp =
+                            OPERATOR64::mult(temp, primes[j].value, bsk_mod[k]);
                     }
                 }
                 base_matrix_q_Bsk.push_back(temp);
@@ -259,9 +261,8 @@ namespace heongpu
 
     // inv_punctured_prod_mod_base_array --> generate_Mi_inv
 
-    std::vector<Data64>
-    Parameters::generate_base_change_matrix_m_tilde(std::vector<Modulus64> primes,
-                                                    Modulus64 mtilda, int size)
+    std::vector<Data64> Parameters::generate_base_change_matrix_m_tilde(
+        std::vector<Modulus64> primes, Modulus64 mtilda, int size)
     {
         std::vector<Data64> base_change_matrix_m_tilde;
         for (int i = 0; i < size; i++)
@@ -313,9 +314,8 @@ namespace heongpu
         return inv_m_tilde_mod_Bsk;
     }
 
-    std::vector<Data64>
-    Parameters::generate_prod_q_mod_Bsk(std::vector<Modulus64> primes,
-                                        std::vector<Modulus64> bsk_mod, int size)
+    std::vector<Data64> Parameters::generate_prod_q_mod_Bsk(
+        std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
         std::vector<Data64> prod_q_mod_Bsk;
         for (int i = 0; i < bsk_mod.size(); i++)
@@ -384,7 +384,7 @@ namespace heongpu
                 if (i != j)
                 {
                     temp = OPERATOR64::mult(temp, bsk_mod[j].value,
-                                       bsk_mod[bsk_mod.size() - 1]);
+                                            bsk_mod[bsk_mod.size() - 1]);
                 }
             }
             base_change_matrix_msk.push_back(temp);
@@ -414,18 +414,19 @@ namespace heongpu
         return inv_punctured_prod_mod_B_array;
     }
 
-    Data64 Parameters::generate_inv_prod_B_mod_m_sk(std::vector<Modulus64> bsk_mod)
+    Data64
+    Parameters::generate_inv_prod_B_mod_m_sk(std::vector<Modulus64> bsk_mod)
     {
         Data64 inv_prod_B_mod_m_sk = 1;
         for (int i = 0; i < bsk_mod.size() - 1; i++)
         {
             inv_prod_B_mod_m_sk =
                 OPERATOR64::mult(inv_prod_B_mod_m_sk, bsk_mod[i].value,
-                            bsk_mod[bsk_mod.size() - 1]);
+                                 bsk_mod[bsk_mod.size() - 1]);
         }
 
-        inv_prod_B_mod_m_sk =
-            OPERATOR64::modinv(inv_prod_B_mod_m_sk, bsk_mod[bsk_mod.size() - 1]);
+        inv_prod_B_mod_m_sk = OPERATOR64::modinv(inv_prod_B_mod_m_sk,
+                                                 bsk_mod[bsk_mod.size() - 1]);
 
         return inv_prod_B_mod_m_sk;
     }
@@ -465,8 +466,10 @@ namespace heongpu
         return q_Bsk_merge_modulus;
     }
 
-    std::vector<Data64> Parameters::generate_q_Bsk_merge_root(
-        std::vector<Data64> primes_psi, std::vector<Data64> bsk_mod_psi, int size)
+    std::vector<Data64>
+    Parameters::generate_q_Bsk_merge_root(std::vector<Data64> primes_psi,
+                                          std::vector<Data64> bsk_mod_psi,
+                                          int size)
     {
         std::vector<Data64> q_Bsk_merge_psi;
         for (int i = 0; i < size; i++)
@@ -482,7 +485,8 @@ namespace heongpu
     }
 
     std::vector<Data64> Parameters::generate_Qi_t(std::vector<Modulus64> primes,
-                                                Modulus64& plain_mod, int size)
+                                                  Modulus64& plain_mod,
+                                                  int size)
     {
         std::vector<Data64> Qi_t;
         for (int i = 0; i < size; i++)
@@ -502,8 +506,9 @@ namespace heongpu
         return Qi_t;
     }
 
-    std::vector<Data64> Parameters::generate_Qi_gamma(std::vector<Modulus64> primes,
-                                                    Modulus64& gamma, int size)
+    std::vector<Data64>
+    Parameters::generate_Qi_gamma(std::vector<Modulus64> primes,
+                                  Modulus64& gamma, int size)
     {
         std::vector<Data64> Qi_gamma;
         for (int i = 0; i < size; i++)
@@ -547,7 +552,7 @@ namespace heongpu
     }
 
     Data64 Parameters::generate_mulq_inv_t(std::vector<Modulus64> primes,
-                                         Modulus64& plain_mod, int size)
+                                           Modulus64& plain_mod, int size)
     {
         Data64 mulq_inv_t = 1;
         for (int i = 0; i < size; i++)
@@ -563,7 +568,7 @@ namespace heongpu
     }
 
     Data64 Parameters::generate_mulq_inv_gamma(std::vector<Modulus64> primes,
-                                             Modulus64& gamma, int size)
+                                               Modulus64& gamma, int size)
     {
         Data64 mulq_inv_gamma = 1;
         for (int i = 0; i < size; i++)
@@ -578,7 +583,8 @@ namespace heongpu
         return mulq_inv_gamma;
     }
 
-    Data64 Parameters::generate_inv_gamma(Modulus64& plain_mod, Modulus64& gamma)
+    Data64 Parameters::generate_inv_gamma(Modulus64& plain_mod,
+                                          Modulus64& gamma)
     {
         Data64 mod_ = gamma.value % plain_mod.value;
         Data64 inv_gamma = OPERATOR64::modinv(mod_, plain_mod);
@@ -968,7 +974,8 @@ namespace heongpu
 
         intt_table_ = std::make_shared<DeviceVector<Root64>>(Qprime_intt_table);
 
-        n_inverse_ = std::make_shared<DeviceVector<Ninverse64>>(Qprime_n_inverse);
+        n_inverse_ =
+            std::make_shared<DeviceVector<Ninverse64>>(Qprime_n_inverse);
 
         std::vector<Data64> last_q_modinv = generate_last_q_modinv();
         std::vector<Data64> half = generate_half();
@@ -1148,8 +1155,9 @@ namespace heongpu
                 std::make_shared<DeviceVector<Data64>>(
                     inv_punctured_prod_mod_base_array);
 
-            base_change_matrix_m_tilde_ = std::make_shared<DeviceVector<Data64>>(
-                base_change_matrix_m_tilde);
+            base_change_matrix_m_tilde_ =
+                std::make_shared<DeviceVector<Data64>>(
+                    base_change_matrix_m_tilde);
 
             inv_prod_q_mod_m_tilde_ = inv_prod_q_mod_m_tilde;
 
@@ -1174,7 +1182,8 @@ namespace heongpu
 
             inv_prod_B_mod_m_sk_ = inv_prod_B_mod_m_sk;
 
-            prod_B_mod_q_ = std::make_shared<DeviceVector<Data64>>(prod_B_mod_q);
+            prod_B_mod_q_ =
+                std::make_shared<DeviceVector<Data64>>(prod_B_mod_q);
 
             q_Bsk_merge_modulus_ =
                 std::make_shared<DeviceVector<Modulus64>>(q_Bsk_merge_modulus);
@@ -1358,8 +1367,9 @@ namespace heongpu
 
                     std::vector<Data64> Mi_inv_D_to_Q_tilda_inner =
                         pool.Mi_inv_D_to_Qtilda();
-                    Mi_inv_D_to_Q_tilda_ = std::make_shared<DeviceVector<Data64>>(
-                        Mi_inv_D_to_Q_tilda_inner);
+                    Mi_inv_D_to_Q_tilda_ =
+                        std::make_shared<DeviceVector<Data64>>(
+                            Mi_inv_D_to_Q_tilda_inner);
 
                     std::vector<Data64> prod_D_to_Q_tilda_inner =
                         pool.prod_D_to_Qtilda();
@@ -1477,18 +1487,20 @@ namespace heongpu
                     r_prime = pool.r_prime_;
 
                     std::vector<Modulus64> B_prime_inner = pool.B_prime;
-                    B_prime_ =
-                        std::make_shared<DeviceVector<Modulus64>>(B_prime_inner);
+                    B_prime_ = std::make_shared<DeviceVector<Modulus64>>(
+                        B_prime_inner);
 
                     std::vector<Root64> B_prime_ntt_tables_inner =
                         pool.B_prime_ntt_tables();
-                    B_prime_ntt_tables_ = std::make_shared<DeviceVector<Root64>>(
-                        B_prime_ntt_tables_inner);
+                    B_prime_ntt_tables_ =
+                        std::make_shared<DeviceVector<Root64>>(
+                            B_prime_ntt_tables_inner);
 
                     std::vector<Root64> B_prime_intt_tables_inner =
                         pool.B_prime_intt_tables();
-                    B_prime_intt_tables_ = std::make_shared<DeviceVector<Root64>>(
-                        B_prime_intt_tables_inner);
+                    B_prime_intt_tables_ =
+                        std::make_shared<DeviceVector<Root64>>(
+                            B_prime_intt_tables_inner);
 
                     std::vector<Ninverse64> B_prime_n_inverse_inner =
                         pool.B_prime_n_inverse();
@@ -1519,12 +1531,12 @@ namespace heongpu
                         Mi_inv_B_to_D_inner);
 
                     std::vector<Data64> prod_D_to_B_inner = pool.prod_D_to_B();
-                    prod_D_to_B_ =
-                        std::make_shared<DeviceVector<Data64>>(prod_D_to_B_inner);
+                    prod_D_to_B_ = std::make_shared<DeviceVector<Data64>>(
+                        prod_D_to_B_inner);
 
                     std::vector<Data64> prod_B_to_D_inner = pool.prod_B_to_D();
-                    prod_B_to_D_ =
-                        std::make_shared<DeviceVector<Data64>>(prod_B_to_D_inner);
+                    prod_B_to_D_ = std::make_shared<DeviceVector<Data64>>(
+                        prod_B_to_D_inner);
 
                     std::vector<int> I_j_inner = pool.I_j_2();
                     I_j_ = std::make_shared<DeviceVector<int>>(I_j_inner);
@@ -1555,8 +1567,8 @@ namespace heongpu
                     r_prime_leveled = pool_ckks.r_prime_;
 
                     std::vector<Modulus64> B_prime_inner = pool_ckks.B_prime;
-                    B_prime_leveled =
-                        std::make_shared<DeviceVector<Modulus64>>(B_prime_inner);
+                    B_prime_leveled = std::make_shared<DeviceVector<Modulus64>>(
+                        B_prime_inner);
 
                     std::vector<Root64> B_prime_ntt_tables_leveled_inner =
                         pool_ckks.B_prime_ntt_tables();
@@ -1590,7 +1602,8 @@ namespace heongpu
                         pool_ckks.level_Mi_inv_B_to_D();
 
                     Mi_inv_B_to_D_leveled =
-                        std::make_shared<DeviceVector<Data64>>(Mi_inv_B_to_D_vec);
+                        std::make_shared<DeviceVector<Data64>>(
+                            Mi_inv_B_to_D_vec);
 
                     std::vector<std::vector<Data64>> prod_D_to_B_vec =
                         pool_ckks.level_prod_D_to_B();
