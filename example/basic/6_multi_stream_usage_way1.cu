@@ -10,10 +10,10 @@
 void multi_stream_function_way1(
     heongpu::Parameters& context, heongpu::HEOperator& operators,
     heongpu::Relinkey& relinkeys, heongpu::Galoiskey& galoiskeys,
-    std::vector<std::vector<Data>>& ciphertext1_in_cpu,
-    std::vector<std::vector<Data>>& ciphertext2_in_cpu,
-    std::vector<std::vector<Data>>& ciphertext3_in_cpu,
-    std::vector<std::vector<Data>>& plaintext_in_cpu,
+    std::vector<std::vector<Data64>>& ciphertext1_in_cpu,
+    std::vector<std::vector<Data64>>& ciphertext2_in_cpu,
+    std::vector<std::vector<Data64>>& ciphertext3_in_cpu,
+    std::vector<std::vector<Data64>>& plaintext_in_cpu,
     std::vector<heongpu::Ciphertext>& ciphertext_result_in_gpu, int count,
     std::vector<cudaStream_t>& s)
 {
@@ -112,10 +112,10 @@ int main(int argc, char* argv[])
     // Assume ciphertexts and plaintexts come from network(from CPU RAM)
     std::cout << "Random ciphertext generetes in CPU... " << std::endl;
     int total_size = 64;
-    std::vector<std::vector<Data>> ciphertext1_in_cpu;
-    std::vector<std::vector<Data>> ciphertext2_in_cpu;
-    std::vector<std::vector<Data>> ciphertext3_in_cpu;
-    std::vector<std::vector<Data>> plaintext_in_cpu;
+    std::vector<std::vector<Data64>> ciphertext1_in_cpu;
+    std::vector<std::vector<Data64>> ciphertext2_in_cpu;
+    std::vector<std::vector<Data64>> ciphertext3_in_cpu;
+    std::vector<std::vector<Data64>> plaintext_in_cpu;
 
     // we know ciphetext and plaintext size
     int cipher_size =

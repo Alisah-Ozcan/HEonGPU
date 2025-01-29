@@ -47,9 +47,9 @@ namespace heongpu
         /**
          * @brief Returns a pointer to the underlying secret key data.
          *
-         * @return Data* Pointer to the secret key data.
+         * @return Data64* Pointer to the secret key data.
          */
-        Data* data();
+        Data64* data();
 
         /**
          * @brief Transfers the secretkey data from the device (GPU) to the host
@@ -154,7 +154,7 @@ namespace heongpu
             location_.resize(copy.location_.size(), copy.location_.stream());
             cudaMemcpyAsync(
                 location_.data(), copy.location_.data(),
-                copy.location_.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
+                copy.location_.size() * sizeof(Data64), cudaMemcpyDeviceToDevice,
                 copy.location_.stream()); // TODO: use cudaStreamPerThread
         }
 
@@ -197,7 +197,7 @@ namespace heongpu
                                  copy.location_.stream());
                 cudaMemcpyAsync(
                     location_.data(), copy.location_.data(),
-                    copy.location_.size() * sizeof(Data),
+                    copy.location_.size() * sizeof(Data64),
                     cudaMemcpyDeviceToDevice,
                     copy.location_.stream()); // TODO: use cudaStreamPerThread
             }
@@ -232,14 +232,14 @@ namespace heongpu
         int coeff_modulus_count_;
         int n_power_;
 
-        std::shared_ptr<DeviceVector<Modulus>> modulus_;
-        std::shared_ptr<DeviceVector<Root>> ntt_table_;
+        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
+        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
 
         int hamming_weight_;
         bool in_ntt_domain_;
 
         DeviceVector<int> secretkey_; // coefficients are in {-1, 0, 1}
-        DeviceVector<Data> location_; // coefficients are RNS domain
+        DeviceVector<Data64> location_; // coefficients are RNS domain
     };
 } // namespace heongpu
 #endif // SECRETKEY_H

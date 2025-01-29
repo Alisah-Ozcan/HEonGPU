@@ -192,7 +192,7 @@ namespace heongpu
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
 
-        DeviceVector<Data> public_key_;
+        DeviceVector<Data64> public_key_;
 
         int n;
 
@@ -202,22 +202,22 @@ namespace heongpu
         int Q_size_;
         int P_size_;
 
-        std::shared_ptr<DeviceVector<Modulus>> modulus_;
-        std::shared_ptr<DeviceVector<Root>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data>> last_q_modinv_;
-        std::shared_ptr<DeviceVector<Data>> half_;
-        std::shared_ptr<DeviceVector<Data>> half_mod_;
+        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
+        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
+        std::shared_ptr<DeviceVector<Root64>> intt_table_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
+        std::shared_ptr<DeviceVector<Data64>> last_q_modinv_;
+        std::shared_ptr<DeviceVector<Data64>> half_;
+        std::shared_ptr<DeviceVector<Data64>> half_mod_;
 
-        Modulus plain_modulus_;
+        Modulus64 plain_modulus_;
 
         // BFV
-        Data Q_mod_t_;
+        Data64 Q_mod_t_;
 
-        Data upper_threshold_;
+        Data64 upper_threshold_;
 
-        std::shared_ptr<DeviceVector<Data>> coeeff_div_plainmod_;
+        std::shared_ptr<DeviceVector<Data64>> coeeff_div_plainmod_;
     };
 
 } // namespace heongpu

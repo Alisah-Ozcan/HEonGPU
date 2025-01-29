@@ -47,7 +47,7 @@ namespace heongpu
          * @param store_in_gpu A boolean value indicating whether to store the
          * key in GPU memory. Default is true.
          */
-        __host__ Relinkey(Parameters& context, HostVector<Data>& key,
+        __host__ Relinkey(Parameters& context, HostVector<Data64>& key,
                           bool store_in_gpu = true);
 
         /**
@@ -62,7 +62,7 @@ namespace heongpu
          * key in GPU memory. Default is true.
          */
         __host__ Relinkey(Parameters& context,
-                          std::vector<HostVector<Data>>& key,
+                          std::vector<HostVector<Data64>>& key,
                           bool store_in_gpu = true);
 
         /**
@@ -83,19 +83,19 @@ namespace heongpu
         /**
          * @brief Returns a pointer to the underlying relinearization key data.
          *
-         * @return Data* Pointer to the relinearization key data.
+         * @return Data64* Pointer to the relinearization key data.
          */
-        Data* data();
+        Data64* data();
 
         /**
          * @brief Returns a pointer to the specific part of the relinearization
          * key data.
          *
          * @param i Index of the key level to access.
-         * @return Data* Pointer to the specified part of the relinearization
+         * @return Data64* Pointer to the specified part of the relinearization
          * key data.
          */
-        Data* data(size_t i);
+        Data64* data(size_t i);
 
         /**
          * @brief Default constructor is deleted to ensure proper initialization
@@ -129,7 +129,7 @@ namespace heongpu
                                             copy.device_location_.stream());
                     cudaMemcpyAsync(
                         device_location_.data(), copy.device_location_.data(),
-                        copy.device_location_.size() * sizeof(Data),
+                        copy.device_location_.size() * sizeof(Data64),
                         cudaMemcpyDeviceToDevice,
                         copy.device_location_
                             .stream()); // TODO: use cudaStreamPerThread
@@ -148,7 +148,7 @@ namespace heongpu
                             device_location_leveled_[i].data(),
                             copy.device_location_leveled_[i].data(),
                             copy.device_location_leveled_[i].size() *
-                                sizeof(Data),
+                                sizeof(Data64),
                             cudaMemcpyDeviceToDevice,
                             copy.device_location_leveled_[i]
                                 .stream()); // TODO: use cudaStreamPerThread
@@ -270,7 +270,7 @@ namespace heongpu
                         cudaMemcpyAsync(
                             device_location_.data(),
                             copy.device_location_.data(),
-                            copy.device_location_.size() * sizeof(Data),
+                            copy.device_location_.size() * sizeof(Data64),
                             cudaMemcpyDeviceToDevice,
                             copy.device_location_
                                 .stream()); // TODO: use cudaStreamPerThread
@@ -289,7 +289,7 @@ namespace heongpu
                                 device_location_leveled_[i].data(),
                                 copy.device_location_leveled_[i].data(),
                                 copy.device_location_leveled_[i].size() *
-                                    sizeof(Data),
+                                    sizeof(Data64),
                                 cudaMemcpyDeviceToDevice,
                                 copy.device_location_leveled_[i]
                                     .stream()); // TODO: use
@@ -405,12 +405,12 @@ namespace heongpu
         std::vector<size_t> relinkey_size_leveled_;
 
         // store key in device (GPU)
-        DeviceVector<Data> device_location_;
-        std::vector<DeviceVector<Data>> device_location_leveled_;
+        DeviceVector<Data64> device_location_;
+        std::vector<DeviceVector<Data64>> device_location_leveled_;
 
         // store key in host (CPU)
-        HostVector<Data> host_location_;
-        std::vector<HostVector<Data>> host_location_leveled_;
+        HostVector<Data64> host_location_;
+        std::vector<HostVector<Data64>> host_location_leveled_;
     };
 
     ///////////////////////////////////
@@ -525,17 +525,17 @@ namespace heongpu
          * data.
          *
          * @param i Index of the key elvel to access.
-         * @return Data* Pointer to the specified part of the Galois key data.
+         * @return Data64* Pointer to the specified part of the Galois key data.
          */
-        Data* data(size_t i);
+        Data64* data(size_t i);
 
         /**
          * @brief Returns a pointer to the Galois key data for column
          * rotation(for BFV).
          *
-         * @return Data* Pointer to the Galois key data for column rotation.
+         * @return Data64* Pointer to the Galois key data for column rotation.
          */
-        Data* c_data();
+        Data64* c_data();
 
         /**
          * @brief Default constructor for Galoiskey.
@@ -573,7 +573,7 @@ namespace heongpu
                     device_location_[key].resize(value.size(), value.stream());
                     cudaMemcpyAsync(
                         device_location_[key].data(), value.data(),
-                        value.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
+                        value.size() * sizeof(Data64), cudaMemcpyDeviceToDevice,
                         value.stream()); // TODO: use cudaStreamPerThread
                 }
 
@@ -584,7 +584,7 @@ namespace heongpu
                 cudaMemcpyAsync(zero_device_location_.data(),
                                 copy.zero_device_location_.data(),
                                 copy.zero_device_location_.size() *
-                                    sizeof(Data),
+                                    sizeof(Data64),
                                 cudaMemcpyDeviceToDevice,
                                 copy.zero_device_location_
                                     .stream()); // TODO: use cudaStreamPerThread
@@ -689,7 +689,7 @@ namespace heongpu
                                                      value.stream());
                         cudaMemcpyAsync(
                             device_location_[key].data(), value.data(),
-                            value.size() * sizeof(Data),
+                            value.size() * sizeof(Data64),
                             cudaMemcpyDeviceToDevice,
                             value.stream()); // TODO: use cudaStreamPerThread
                     }
@@ -701,7 +701,7 @@ namespace heongpu
                     cudaMemcpyAsync(
                         zero_device_location_.data(),
                         copy.zero_device_location_.data(),
-                        copy.zero_device_location_.size() * sizeof(Data),
+                        copy.zero_device_location_.size() * sizeof(Data64),
                         cudaMemcpyDeviceToDevice,
                         copy.zero_device_location_
                             .stream()); // TODO: use cudaStreamPerThread
@@ -799,13 +799,13 @@ namespace heongpu
 
         // for rotate_rows
         std::unordered_map<int, int> galois_elt;
-        std::unordered_map<int, DeviceVector<Data>> device_location_;
-        std::unordered_map<int, HostVector<Data>> host_location_;
+        std::unordered_map<int, DeviceVector<Data64>> device_location_;
+        std::unordered_map<int, HostVector<Data64>> host_location_;
 
         // for rotate_columns
         int galois_elt_zero;
-        DeviceVector<Data> zero_device_location_;
-        HostVector<Data> zero_host_location_;
+        DeviceVector<Data64> zero_device_location_;
+        HostVector<Data64> zero_host_location_;
     };
 
     /**
@@ -890,9 +890,9 @@ namespace heongpu
         /**
          * @brief Returns a pointer to the underlying switch key data.
          *
-         * @return Data* Pointer to the switch key data.
+         * @return Data64* Pointer to the switch key data.
          */
-        Data* data();
+        Data64* data();
 
         Switchkey() = default;
         Switchkey(const Switchkey& copy) = default;
@@ -916,8 +916,8 @@ namespace heongpu
         bool store_in_gpu_;
         size_t switchkey_size_;
 
-        DeviceVector<Data> device_location_;
-        HostVector<Data> host_location_;
+        DeviceVector<Data64> device_location_;
+        HostVector<Data64> host_location_;
     };
 
 } // namespace heongpu

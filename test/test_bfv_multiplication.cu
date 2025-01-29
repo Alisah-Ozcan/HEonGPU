@@ -47,15 +47,15 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -125,15 +125,15 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -203,15 +203,15 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -282,15 +282,15 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -363,15 +363,15 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -442,15 +442,15 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -513,15 +513,15 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -584,15 +584,15 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -656,15 +656,15 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);
@@ -730,15 +730,15 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
             message2[i] = dis(gen);
         }
 
-        Modulus plaintex_modulus(plain_modulus);
+        Modulus64 plaintex_modulus(plain_modulus);
         std::vector<uint64_t> message_multiplication_result(poly_modulus_degree,
                                                             0ULL);
         for (int i = 0; i < poly_modulus_degree; i++)
         {
-            Data input1 = message1[i];
-            Data input2 = message2[i];
+            Data64 input1 = message1[i];
+            Data64 input2 = message2[i];
             message_multiplication_result[i] =
-                VALUE::mult(input1, input2, plaintex_modulus);
+                OPERATOR64::mult(input1, input2, plaintex_modulus);
         }
 
         heongpu::Plaintext P1(context);

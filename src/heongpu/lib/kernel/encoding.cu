@@ -8,8 +8,8 @@
 namespace heongpu
 {
 
-    __global__ void encode_kernel_bfv(Data* message_encoded, Data* message,
-                                      Data* location_info, Modulus* plain_mod,
+    __global__ void encode_kernel_bfv(Data64* message_encoded, Data64* message,
+                                      Data64* location_info, Modulus64* plain_mod,
                                       int message_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -22,17 +22,17 @@ namespace heongpu
             message_in =
                 (message_in < 0) ? message_in + plain_mod[0].value : message_in;
 
-            message_encoded[location] = static_cast<Data>(message_in);
+            message_encoded[location] = static_cast<Data64>(message_in);
         }
         else
         {
-            Data zero = 0;
+            Data64 zero = 0;
             message_encoded[location] = zero;
         }
     }
 
-    __global__ void decode_kernel_bfv(Data* message, Data* message_encoded,
-                                      Data* location_info)
+    __global__ void decode_kernel_bfv(Data64* message, Data64* message_encoded,
+                                      Data64* location_info)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -41,7 +41,7 @@ namespace heongpu
     }
 
     __global__ void encode_kernel_double_ckks_conversion(
-        Data* plaintext, double message, Modulus* modulus,
+        Data64* plaintext, double message, Modulus64* modulus,
         int coeff_modulus_count, double two_pow_64, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
@@ -53,7 +53,7 @@ namespace heongpu
         coeff_double = fabs(coeff_double);
 
         // Change Type
-        Data coeff[2] = {
+        Data64 coeff[2] = {
             static_cast<std::uint64_t>(fmod(coeff_double, two_pow_64)),
             static_cast<std::uint64_t>(coeff_double / two_pow_64)};
 
@@ -61,9 +61,9 @@ namespace heongpu
         {
             for (int i = 0; i < coeff_modulus_count; i++)
             {
-                Data temp = VALUE_GPU::reduce(coeff, modulus[i]);
+                Data64 temp = OPERATOR_GPU_64::reduce(coeff, modulus[i]);
                 plaintext[idx + (i << n_power)] =
-                    VALUE_GPU::sub(modulus[i].value, temp, modulus[i]);
+                    OPERATOR_GPU_64::sub(modulus[i].value, temp, modulus[i]);
             }
         }
         else
@@ -71,34 +71,34 @@ namespace heongpu
             for (int i = 0; i < coeff_modulus_count; i++)
             {
                 plaintext[idx + (i << n_power)] =
-                    VALUE_GPU::reduce(coeff, modulus[i]);
+                    OPERATOR_GPU_64::reduce(coeff, modulus[i]);
             }
         }
     }
 
-    __global__ void encode_kernel_int_ckks_conversion(Data* plaintext,
+    __global__ void encode_kernel_int_ckks_conversion(Data64* plaintext,
                                                       std::int64_t message,
-                                                      Modulus* modulus,
+                                                      Modulus64* modulus,
                                                       int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
         int block_y = blockIdx.y;
         int location = idx + (block_y << n_power);
 
-        Modulus mod = modulus[block_y];
+        Modulus64 mod = modulus[block_y];
         std::int64_t message_r = message;
 
         if (message < 0)
         {
             message_r = message_r + mod.value;
-            Data message_d = static_cast<Data>(message_r);
-            message_d = VALUE_GPU::reduce_forced(message_d, mod);
+            Data64 message_d = static_cast<Data64>(message_r);
+            message_d = OPERATOR_GPU_64::reduce_forced(message_d, mod);
             plaintext[location] = message_d;
         }
         else
         {
-            Data message_d = static_cast<Data>(message_r);
-            message_d = VALUE_GPU::reduce_forced(message_d, mod);
+            Data64 message_d = static_cast<Data64>(message_r);
+            message_d = OPERATOR_GPU_64::reduce_forced(message_d, mod);
             plaintext[location] = message_d;
         }
     }
@@ -130,8 +130,8 @@ namespace heongpu
     //
 
     __global__ void
-    encode_kernel_ckks_conversion(Data* plaintext, COMPLEX* complex_message,
-                                  Modulus* modulus, int coeff_modulus_count,
+    encode_kernel_ckks_conversion(Data64* plaintext, COMPLEX* complex_message,
+                                  Modulus64* modulus, int coeff_modulus_count,
                                   double two_pow_64, int* reverse_order,
                                   int n_power)
     {
@@ -145,7 +145,7 @@ namespace heongpu
         coeff_double = fabs(coeff_double);
 
         // Change Type
-        Data coeff[2] = {
+        Data64 coeff[2] = {
             static_cast<std::uint64_t>(fmod(coeff_double, two_pow_64)),
             static_cast<std::uint64_t>(coeff_double / two_pow_64)};
 
@@ -153,9 +153,9 @@ namespace heongpu
         {
             for (int i = 0; i < coeff_modulus_count; i++)
             {
-                Data temp = VALUE_GPU::reduce(coeff, modulus[i]);
+                Data64 temp = OPERATOR_GPU_64::reduce(coeff, modulus[i]);
                 plaintext[idx + (i << n_power)] =
-                    VALUE_GPU::sub(modulus[i].value, temp, modulus[i]);
+                    OPERATOR_GPU_64::sub(modulus[i].value, temp, modulus[i]);
             }
         }
         else
@@ -163,7 +163,7 @@ namespace heongpu
             for (int i = 0; i < coeff_modulus_count; i++)
             {
                 plaintext[idx + (i << n_power)] =
-                    VALUE_GPU::reduce(coeff, modulus[i]);
+                    OPERATOR_GPU_64::reduce(coeff, modulus[i]);
             }
         }
 
@@ -175,7 +175,7 @@ namespace heongpu
         coeff_double2 = fabs(coeff_double2);
 
         // Change Type
-        Data coeff2[2] = {
+        Data64 coeff2[2] = {
             static_cast<std::uint64_t>(fmod(coeff_double2, two_pow_64)),
             static_cast<std::uint64_t>(coeff_double2 / two_pow_64)};
 
@@ -183,9 +183,9 @@ namespace heongpu
         {
             for (int i = 0; i < coeff_modulus_count; i++)
             {
-                Data temp = VALUE_GPU::reduce(coeff2, modulus[i]);
+                Data64 temp = OPERATOR_GPU_64::reduce(coeff2, modulus[i]);
                 plaintext[idx + offset + (i << n_power)] =
-                    VALUE_GPU::sub(modulus[i].value, temp, modulus[i]);
+                    OPERATOR_GPU_64::sub(modulus[i].value, temp, modulus[i]);
             }
         }
         else
@@ -193,15 +193,15 @@ namespace heongpu
             for (int i = 0; i < coeff_modulus_count; i++)
             {
                 plaintext[idx + offset + (i << n_power)] =
-                    VALUE_GPU::reduce(coeff2, modulus[i]);
+                    OPERATOR_GPU_64::reduce(coeff2, modulus[i]);
             }
         }
     }
 
     __global__ void
-    encode_kernel_compose(COMPLEX* complex_message, Data* plaintext,
-                          Modulus* modulus, Data* Mi_inv, Data* Mi,
-                          Data* upper_half_threshold, Data* decryption_modulus,
+    encode_kernel_compose(COMPLEX* complex_message, Data64* plaintext,
+                          Modulus64* modulus, Data64* Mi_inv, Data64* Mi,
+                          Data64* upper_half_threshold, Data64* decryption_modulus,
                           int coeff_modulus_count, double scale,
                           double two_pow_64, int* reverse_order, int n_power)
     {
@@ -210,16 +210,16 @@ namespace heongpu
         double two_pow_64_reg = two_pow_64;
         int offset = 1 << (n_power - 1);
 
-        Data compose_result[50]; // TODO: Define size as global variable
-        Data big_integer_result[50]; // TODO: Define size as global variable
+        Data64 compose_result[50]; // TODO: Define size as global variable
+        Data64 big_integer_result[50]; // TODO: Define size as global variable
 
         biginteger::set_zero(compose_result, coeff_modulus_count);
 
 #pragma unroll
         for (int i = 0; i < coeff_modulus_count; i++)
         {
-            Data base = plaintext[idx + (i << n_power)];
-            Data temp = VALUE_GPU::mult(base, Mi_inv[i], modulus[i]);
+            Data64 base = plaintext[idx + (i << n_power)];
+            Data64 temp = OPERATOR_GPU_64::mult(base, Mi_inv[i], modulus[i]);
 
             biginteger::multiply(Mi + (i * coeff_modulus_count),
                                  coeff_modulus_count, temp, big_integer_result,
@@ -286,8 +286,8 @@ namespace heongpu
 #pragma unroll
         for (int i = 0; i < coeff_modulus_count; i++)
         {
-            Data base = plaintext[idx + offset + (i << n_power)];
-            Data temp = VALUE_GPU::mult(base, Mi_inv[i], modulus[i]);
+            Data64 base = plaintext[idx + offset + (i << n_power)];
+            Data64 temp = OPERATOR_GPU_64::mult(base, Mi_inv[i], modulus[i]);
 
             biginteger::multiply(Mi + (i * coeff_modulus_count),
                                  coeff_modulus_count, temp, big_integer_result,

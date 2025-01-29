@@ -955,11 +955,11 @@ namespace heongpu
         int slot_count_;
 
         // BFV
-        std::shared_ptr<DeviceVector<Modulus>> plain_modulus_;
-        std::shared_ptr<DeviceVector<Ninverse>> n_plain_inverse_;
-        std::shared_ptr<DeviceVector<Root>> plain_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root>> plain_intt_tables_;
-        std::shared_ptr<DeviceVector<Data>> encoding_location_;
+        std::shared_ptr<DeviceVector<Modulus64>> plain_modulus_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_plain_inverse_;
+        std::shared_ptr<DeviceVector<Root64>> plain_ntt_tables_;
+        std::shared_ptr<DeviceVector<Root64>> plain_intt_tables_;
+        std::shared_ptr<DeviceVector<Data64>> encoding_location_;
 
         // CKKS
         double two_pow_64;
@@ -973,15 +973,15 @@ namespace heongpu
 
         int Q_size_;
         int total_coeff_bit_count_;
-        std::shared_ptr<DeviceVector<Modulus>> modulus_;
-        std::shared_ptr<DeviceVector<Root>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse>> n_inverse_;
+        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
+        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
+        std::shared_ptr<DeviceVector<Root64>> intt_table_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
 
-        std::shared_ptr<DeviceVector<Data>> Mi_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_;
-        std::shared_ptr<DeviceVector<Data>> upper_half_threshold_;
-        std::shared_ptr<DeviceVector<Data>> decryption_modulus_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_;
+        std::shared_ptr<DeviceVector<Data64>> upper_half_threshold_;
+        std::shared_ptr<DeviceVector<Data64>> decryption_modulus_;
     };
 
 } // namespace heongpu

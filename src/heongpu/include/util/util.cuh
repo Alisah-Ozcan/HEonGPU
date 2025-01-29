@@ -111,52 +111,52 @@ namespace heongpu
         void validate(); // Validates the configuration input values
     };
 
-    Data extendedGCD(Data a, Data b, Data& x, Data& y);
-    Data modInverse(Data a, Data m);
-    int countBits(Data number);
+    Data64 extendedGCD(Data64 a, Data64 b, Data64& x, Data64& y);
+    Data64 modInverse(Data64 a, Data64 m);
+    int countBits(Data64 number);
 
     bool is_power_of_two(size_t number);
-    int calculate_bit_count(Data number);
-    int calculate_big_integer_bit_count(Data* number, int word_count);
+    int calculate_bit_count(Data64 number);
+    int calculate_big_integer_bit_count(Data64* number, int word_count);
 
-    bool miller_rabin(const Data& value, size_t num_rounds);
+    bool miller_rabin(const Data64& value, size_t num_rounds);
 
-    bool is_prime(const Data& value);
+    bool is_prime(const Data64& value);
 
-    std::vector<Data> generate_proper_primes(Data factor, int bit_size,
+    std::vector<Data64> generate_proper_primes(Data64 factor, int bit_size,
                                              size_t count);
 
-    std::vector<Modulus>
+    std::vector<Modulus64>
     generate_primes(size_t poly_modulus_degree,
                     const std::vector<int> prime_bit_sizes);
 
-    std::vector<Modulus> generate_internal_primes(size_t poly_modulus_degree,
+    std::vector<Modulus64> generate_internal_primes(size_t poly_modulus_degree,
                                                   const int prime_count);
 
-    bool is_primitive_root(Data root, size_t degree, Modulus& modulus);
+    bool is_primitive_root(Data64 root, size_t degree, Modulus64& modulus);
 
-    bool find_primitive_root(size_t degree, Modulus& modulus,
-                             Data& destination);
+    bool find_primitive_root(size_t degree, Modulus64& modulus,
+                             Data64& destination);
 
-    Data find_minimal_primitive_root(size_t degree, Modulus& modulus);
+    Data64 find_minimal_primitive_root(size_t degree, Modulus64& modulus);
 
-    std::vector<Data>
+    std::vector<Data64>
     generate_primitive_root_of_unity(size_t poly_modulus_degree,
-                                     std::vector<Modulus> primes);
+                                     std::vector<Modulus64> primes);
 
-    std::vector<Root>
-    generate_ntt_table(std::vector<Data> psi, std::vector<Modulus> primes,
+    std::vector<Root64>
+    generate_ntt_table(std::vector<Data64> psi, std::vector<Modulus64> primes,
                        int n_power); // bit reverse order for GPU-NTT
 
-    std::vector<Root>
-    generate_intt_table(std::vector<Data> psi, std::vector<Modulus> primes,
+    std::vector<Root64>
+    generate_intt_table(std::vector<Data64> psi, std::vector<Modulus64> primes,
                         int n_power); // bit reverse order for GPU-NTT
 
-    std::vector<Ninverse> generate_n_inverse(size_t poly_modulus_degree,
-                                             std::vector<Modulus> primes);
+    std::vector<Ninverse64> generate_n_inverse(size_t poly_modulus_degree,
+                                             std::vector<Modulus64> primes);
 
-    __global__ void unsigned_signed_convert(Data* input, Data* output,
-                                            Modulus* modulus);
+    __global__ void unsigned_signed_convert(Data64* input, Data64* output,
+                                            Modulus64* modulus);
 
     int find_closest_divisor(int N);
 

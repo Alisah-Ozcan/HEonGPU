@@ -9,7 +9,7 @@ namespace heongpu
 {
     // Not cryptographically secure, will be fixed later.
     __global__ void modular_uniform_random_number_generation_kernel(
-        Data* output, Modulus* modulus, int n_power, int rns_mod_count,
+        Data64* output, Modulus64* modulus, int n_power, int rns_mod_count,
         int seed, int offset)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -30,8 +30,8 @@ namespace heongpu
 
             uint64_t combined = (static_cast<uint64_t>(rn_hi) << 32) |
                                 static_cast<uint64_t>(rn_lo);
-            Data rn_ULL = static_cast<Data>(combined);
-            rn_ULL = VALUE_GPU::reduce_forced(rn_ULL, modulus[i]);
+            Data64 rn_ULL = static_cast<Data64>(combined);
+            rn_ULL = OPERATOR_GPU_64::reduce_forced(rn_ULL, modulus[i]);
 
             output[idx + in_offset + out_offset] = rn_ULL;
         }
@@ -39,7 +39,7 @@ namespace heongpu
 
     // Not cryptographically secure, will be fixed later.
     __global__ void modular_uniform_random_number_generation_kernel(
-        Data* output, Modulus* modulus, int n_power, int rns_mod_count,
+        Data64* output, Modulus64* modulus, int n_power, int rns_mod_count,
         int seed, int offset, int* mod_index)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -61,8 +61,8 @@ namespace heongpu
 
             uint64_t combined = (static_cast<uint64_t>(rn_hi) << 32) |
                                 static_cast<uint64_t>(rn_lo);
-            Data rn_ULL = static_cast<Data>(combined);
-            rn_ULL = VALUE_GPU::reduce_forced(rn_ULL, modulus[index_mod]);
+            Data64 rn_ULL = static_cast<Data64>(combined);
+            rn_ULL = OPERATOR_GPU_64::reduce_forced(rn_ULL, modulus[index_mod]);
 
             output[idx + in_offset + out_offset] = rn_ULL;
         }
@@ -70,7 +70,7 @@ namespace heongpu
 
     // Not cryptographically secure, will be fixed later.
     __global__ void modular_gaussian_random_number_generation_kernel(
-        Data* output, Modulus* modulus, int n_power, int rns_mod_count,
+        Data64* output, Modulus64* modulus, int n_power, int rns_mod_count,
         int seed, int offset)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -89,7 +89,7 @@ namespace heongpu
 #pragma unroll
         for (int i = 0; i < rns_mod_count; i++)
         {
-            Data rn_ULL = static_cast<Data>(noise) + (flag & modulus[i].value);
+            Data64 rn_ULL = static_cast<Data64>(noise) + (flag & modulus[i].value);
             int in_offset = i << n_power;
             output[idx + in_offset + out_offset] = rn_ULL;
         }
@@ -97,7 +97,7 @@ namespace heongpu
 
     // Not cryptographically secure, will be fixed later.
     __global__ void modular_gaussian_random_number_generation_kernel(
-        Data* output, Modulus* modulus, int n_power, int rns_mod_count,
+        Data64* output, Modulus64* modulus, int n_power, int rns_mod_count,
         int seed, int offset, int* mod_index)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -117,8 +117,8 @@ namespace heongpu
         for (int i = 0; i < rns_mod_count; i++)
         {
             int index_mod = mod_index[i];
-            Data rn_ULL =
-                static_cast<Data>(noise) + (flag & modulus[index_mod].value);
+            Data64 rn_ULL =
+                static_cast<Data64>(noise) + (flag & modulus[index_mod].value);
             int in_offset = i << n_power;
             output[idx + in_offset + out_offset] = rn_ULL;
         }
@@ -126,7 +126,7 @@ namespace heongpu
 
     // Not cryptographically secure, will be fixed later.
     __global__ void modular_ternary_random_number_generation_kernel(
-        Data* output, Modulus* modulus, int n_power, int rns_mod_count,
+        Data64* output, Modulus64* modulus, int n_power, int rns_mod_count,
         int seed, int offset)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -135,7 +135,7 @@ namespace heongpu
         curand_init(seed, idx, offset, &state);
 
         // TODO: make it efficient
-        Data random_number = curand(&state) & 3; // 0,1,2,3
+        Data64 random_number = curand(&state) & 3; // 0,1,2,3
         if (random_number == 3)
         {
             random_number -= 3; // 0,1,2
@@ -148,7 +148,7 @@ namespace heongpu
         for (int i = 0; i < rns_mod_count; i++)
         {
             int location = i << n_power;
-            Data result = random_number;
+            Data64 result = random_number;
             result = result + (flag & modulus[i].value) - 1;
             output[idx + location] = result;
         }
@@ -156,7 +156,7 @@ namespace heongpu
 
     // Not cryptographically secure, will be fixed later.
     __global__ void modular_ternary_random_number_generation_kernel(
-        Data* output, Modulus* modulus, int n_power, int rns_mod_count,
+        Data64* output, Modulus64* modulus, int n_power, int rns_mod_count,
         int seed, int offset, int* mod_index)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -165,7 +165,7 @@ namespace heongpu
         curand_init(seed, idx, offset, &state);
 
         // TODO: make it efficient
-        Data random_number = curand(&state) & 3; // 0,1,2,3
+        Data64 random_number = curand(&state) & 3; // 0,1,2,3
         if (random_number == 3)
         {
             random_number -= 3; // 0,1,2
@@ -179,7 +179,7 @@ namespace heongpu
         {
             int index_mod = mod_index[i];
             int location = i << n_power;
-            Data result = random_number;
+            Data64 result = random_number;
             result = result + (flag & modulus[index_mod].value) - 1;
             output[idx + location] = result;
         }

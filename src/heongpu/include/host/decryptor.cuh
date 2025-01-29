@@ -377,7 +377,7 @@ namespace heongpu
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
 
-        DeviceVector<Data> secret_key_;
+        DeviceVector<Data64> secret_key_;
 
         int n;
 
@@ -385,35 +385,35 @@ namespace heongpu
 
         int Q_size_;
 
-        std::shared_ptr<DeviceVector<Modulus>> modulus_;
+        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
 
-        std::shared_ptr<DeviceVector<Root>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse>> n_inverse_;
+        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
+        std::shared_ptr<DeviceVector<Root64>> intt_table_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
 
         // BFV
-        Modulus plain_modulus_;
+        Modulus64 plain_modulus_;
 
-        Modulus gamma_;
+        Modulus64 gamma_;
 
-        std::shared_ptr<DeviceVector<Data>> Qi_t_;
+        std::shared_ptr<DeviceVector<Data64>> Qi_t_;
 
-        std::shared_ptr<DeviceVector<Data>> Qi_gamma_;
+        std::shared_ptr<DeviceVector<Data64>> Qi_gamma_;
 
-        std::shared_ptr<DeviceVector<Data>> Qi_inverse_;
+        std::shared_ptr<DeviceVector<Data64>> Qi_inverse_;
 
-        Data mulq_inv_t_;
+        Data64 mulq_inv_t_;
 
-        Data mulq_inv_gamma_;
+        Data64 mulq_inv_gamma_;
 
-        Data inv_gamma_;
+        Data64 inv_gamma_;
 
         // Noise Budget Calculation
 
-        std::shared_ptr<DeviceVector<Data>> Mi_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_;
-        std::shared_ptr<DeviceVector<Data>> upper_half_threshold_;
-        std::shared_ptr<DeviceVector<Data>> decryption_modulus_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_;
+        std::shared_ptr<DeviceVector<Data64>> upper_half_threshold_;
+        std::shared_ptr<DeviceVector<Data64>> decryption_modulus_;
 
         int total_bit_count_;
     };

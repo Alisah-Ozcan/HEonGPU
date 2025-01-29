@@ -63,16 +63,16 @@ namespace heongpu
                                            Ciphertext& ciphertext,
                                            const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n, stream);
+        DeviceVector<Data64> output_memory(n, stream);
 
-        Data* ct0 = ciphertext.data();
-        Data* ct1 = ciphertext.data() + (Q_size_ << n_power);
+        Data64* ct0 = ciphertext.data();
+        Data64* ct1 = ciphertext.data() + (Q_size_ << n_power);
 
-        DeviceVector<Data> temp_memory(2 * n * Q_size_, stream);
-        Data* ct0_temp = temp_memory.data();
-        Data* ct1_temp = temp_memory.data() + (Q_size_ << n_power);
+        DeviceVector<Data64> temp_memory(2 * n * Q_size_, stream);
+        Data64* ct0_temp = temp_memory.data();
+        Data64* ct1_temp = temp_memory.data() + (Q_size_ << n_power);
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -96,7 +96,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -135,11 +135,11 @@ namespace heongpu
                                              Ciphertext& ciphertext,
                                              const cudaStream_t stream)
     {
-        Data* ct0 = ciphertext.data();
-        Data* ct1 = ciphertext.data() + (Q_size_ << n_power);
-        Data* ct2 = ciphertext.data() + (Q_size_ << (n_power + 1));
+        Data64* ct0 = ciphertext.data();
+        Data64* ct1 = ciphertext.data() + (Q_size_ << n_power);
+        Data64* ct2 = ciphertext.data() + (Q_size_ << (n_power + 1));
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -153,7 +153,7 @@ namespace heongpu
             ct1, secret_key_.data(), modulus_->data(), n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -175,23 +175,23 @@ namespace heongpu
     HEDecryptor::noise_budget_calculation(Ciphertext& ciphertext,
                                           const ExecutionOptions& options)
     {
-        HostVector<Data> max_norm_memory(n * Q_size_);
+        HostVector<Data64> max_norm_memory(n * Q_size_);
 
         input_storage_manager(
             ciphertext,
             [&](Ciphertext& ciphertext_)
             {
-                Data* ct0 = ciphertext.data();
-                Data* ct1 = ciphertext.data() + (Q_size_ << n_power);
+                Data64* ct0 = ciphertext.data();
+                Data64* ct1 = ciphertext.data() + (Q_size_ << n_power);
 
-                ntt_rns_configuration cfg_ntt = {
+                ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
                     .ntt_type = FORWARD,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
                     .stream = options.stream_};
 
-                DeviceVector<Data> temp_memory(n * Q_size_, options.stream_);
+                DeviceVector<Data64> temp_memory(n * Q_size_, options.stream_);
                 GPU_NTT(ct1, temp_memory.data(), ntt_table_->data(),
                         modulus_->data(), cfg_ntt, Q_size_, Q_size_);
 
@@ -201,7 +201,7 @@ namespace heongpu
                     modulus_->data(), n_power, Q_size_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                ntt_rns_configuration cfg_intt = {
+                ntt_rns_configuration<Data64> cfg_intt = {
                     .n_power = n_power,
                     .ntt_type = INVERSE,
                     .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -225,7 +225,7 @@ namespace heongpu
                     Q_size_, n_power);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                find_max_norm_kernel<<<1, 512, sizeof(Data) * 512,
+                find_max_norm_kernel<<<1, 512, sizeof(Data64) * 512,
                                        options.stream_>>>(
                     temp_memory.data(), temp_memory.data(),
                     upper_half_threshold_->data(), decryption_modulus_->data(),
@@ -234,7 +234,7 @@ namespace heongpu
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 cudaMemcpyAsync(max_norm_memory.data(), temp_memory.data(),
-                                Q_size_ * sizeof(Data), cudaMemcpyDeviceToHost,
+                                Q_size_ * sizeof(Data64), cudaMemcpyDeviceToHost,
                                 options.stream_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
             },
@@ -251,7 +251,7 @@ namespace heongpu
                                             const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - ciphertext.depth_;
-        DeviceVector<Data> output_memory(n * current_decomp_count, stream);
+        DeviceVector<Data64> output_memory(n * current_decomp_count, stream);
 
         sk_multiplication_ckks<<<dim3((n >> 8), current_decomp_count, 1), 256,
                                  0, stream>>>(
@@ -267,13 +267,13 @@ namespace heongpu
                                      Ciphertext& partial_ciphertext,
                                      const cudaStream_t stream)
     {
-        Data* ct0 = ciphertext.data();
-        Data* ct1 = ciphertext.data() + (Q_size_ << n_power);
+        Data64* ct0 = ciphertext.data();
+        Data64* ct1 = ciphertext.data() + (Q_size_ << n_power);
 
-        DeviceVector<Data> temp_memory(n * Q_size_, stream);
-        Data* ct1_temp = temp_memory.data();
+        DeviceVector<Data64> temp_memory(n * Q_size_, stream);
+        Data64* ct1_temp = temp_memory.data();
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -296,7 +296,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -304,13 +304,13 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = stream};
 
-        DeviceVector<Data> output_memory((2 * n * Q_size_), stream);
+        DeviceVector<Data64> output_memory((2 * n * Q_size_), stream);
 
         GPU_NTT(ct1_temp, output_memory.data() + (Q_size_ * n),
                 intt_table_->data(), modulus_->data(), cfg_intt, Q_size_,
                 Q_size_);
 
-        DeviceVector<Data> error_poly(Q_size_ * n, stream);
+        DeviceVector<Data64> error_poly(Q_size_ * n, stream);
         modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
                                                            256, 0, stream>>>(
             error_poly.data(), modulus_->data(), n_power, Q_size_, seed_,
@@ -339,10 +339,10 @@ namespace heongpu
     {
         int current_decomp_count = Q_size_ - ciphertext.depth_;
 
-        Data* ct0 = ciphertext.data();
-        Data* ct1 = ciphertext.data() + (current_decomp_count << n_power);
+        Data64* ct0 = ciphertext.data();
+        Data64* ct1 = ciphertext.data() + (current_decomp_count << n_power);
 
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
         sk_multiplication<<<dim3((n >> 8), current_decomp_count, 1), 256, 0,
@@ -352,7 +352,7 @@ namespace heongpu
                                       modulus_->data(), n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        DeviceVector<Data> error_poly(current_decomp_count * n, stream);
+        DeviceVector<Data64> error_poly(current_decomp_count * n, stream);
         modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
                                                            256, 0, stream>>>(
             error_poly.data(), modulus_->data(), n_power, current_decomp_count,
@@ -360,7 +360,7 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -391,21 +391,21 @@ namespace heongpu
                                     Plaintext& plaintext,
                                     const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n, stream);
+        DeviceVector<Data64> output_memory(n, stream);
 
         int cipher_count = ciphertexts.size();
 
-        DeviceVector<Data> temp_sum(Q_size_ << n_power, stream);
+        DeviceVector<Data64> temp_sum(Q_size_ << n_power, stream);
 
-        Data* ct0 = ciphertexts[0].data();
-        Data* ct1 = ciphertexts[0].data() + (Q_size_ << n_power);
+        Data64* ct0 = ciphertexts[0].data();
+        Data64* ct1 = ciphertexts[0].data() + (Q_size_ << n_power);
         addition<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
             ct0, ct1, temp_sum.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         for (int i = 1; i < cipher_count; i++)
         {
-            Data* ct1_i = ciphertexts[i].data() + (Q_size_ << n_power);
+            Data64* ct1_i = ciphertexts[i].data() + (Q_size_ << n_power);
 
             addition<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
                 ct1_i, temp_sum.data(), temp_sum.data(), modulus_->data(),
@@ -432,17 +432,17 @@ namespace heongpu
         int current_detph = ciphertexts[0].depth_;
         int current_decomp_count = Q_size_ - current_detph;
 
-        DeviceVector<Data> output_memory(n * current_decomp_count, stream);
+        DeviceVector<Data64> output_memory(n * current_decomp_count, stream);
 
-        Data* ct0 = ciphertexts[0].data();
-        Data* ct1 = ciphertexts[0].data() + (current_decomp_count << n_power);
+        Data64* ct0 = ciphertexts[0].data();
+        Data64* ct1 = ciphertexts[0].data() + (current_decomp_count << n_power);
         addition<<<dim3((n >> 8), current_decomp_count, 1), 256, 0, stream>>>(
             ct0, ct1, output_memory.data(), modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         for (int i = 1; i < cipher_count; i++)
         {
-            Data* ct1_i =
+            Data64* ct1_i =
                 ciphertexts[i].data() + (current_decomp_count << n_power);
 
             addition<<<dim3((n >> 8), current_decomp_count, 1), 256, 0,

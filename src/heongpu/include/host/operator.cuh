@@ -2152,49 +2152,49 @@ namespace heongpu
         int Q_size_;
         int P_size_;
 
-        std::shared_ptr<DeviceVector<Modulus>> modulus_;
-        std::shared_ptr<DeviceVector<Root>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data>> last_q_modinv_;
+        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
+        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
+        std::shared_ptr<DeviceVector<Root64>> intt_table_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
+        std::shared_ptr<DeviceVector<Data64>> last_q_modinv_;
 
-        std::shared_ptr<DeviceVector<Modulus>> base_Bsk_;
-        std::shared_ptr<DeviceVector<Root>> bsk_ntt_tables_; // check
-        std::shared_ptr<DeviceVector<Root>> bsk_intt_tables_; // check
-        std::shared_ptr<DeviceVector<Ninverse>> bsk_n_inverse_; // check
+        std::shared_ptr<DeviceVector<Modulus64>> base_Bsk_;
+        std::shared_ptr<DeviceVector<Root64>> bsk_ntt_tables_; // check
+        std::shared_ptr<DeviceVector<Root64>> bsk_intt_tables_; // check
+        std::shared_ptr<DeviceVector<Ninverse64>> bsk_n_inverse_; // check
 
-        Modulus m_tilde_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_Bsk_;
-        std::shared_ptr<DeviceVector<Data>> inv_punctured_prod_mod_base_array_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_m_tilde_;
+        Modulus64 m_tilde_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_Bsk_;
+        std::shared_ptr<DeviceVector<Data64>> inv_punctured_prod_mod_base_array_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_m_tilde_;
 
-        Data inv_prod_q_mod_m_tilde_;
-        std::shared_ptr<DeviceVector<Data>> inv_m_tilde_mod_Bsk_;
-        std::shared_ptr<DeviceVector<Data>> prod_q_mod_Bsk_;
-        std::shared_ptr<DeviceVector<Data>> inv_prod_q_mod_Bsk_;
+        Data64 inv_prod_q_mod_m_tilde_;
+        std::shared_ptr<DeviceVector<Data64>> inv_m_tilde_mod_Bsk_;
+        std::shared_ptr<DeviceVector<Data64>> prod_q_mod_Bsk_;
+        std::shared_ptr<DeviceVector<Data64>> inv_prod_q_mod_Bsk_;
 
-        Modulus plain_modulus_;
+        Modulus64 plain_modulus_;
 
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_q_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_msk_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_q_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_msk_;
 
-        std::shared_ptr<DeviceVector<Data>> inv_punctured_prod_mod_B_array_;
-        Data inv_prod_B_mod_m_sk_;
-        std::shared_ptr<DeviceVector<Data>> prod_B_mod_q_;
+        std::shared_ptr<DeviceVector<Data64>> inv_punctured_prod_mod_B_array_;
+        Data64 inv_prod_B_mod_m_sk_;
+        std::shared_ptr<DeviceVector<Data64>> prod_B_mod_q_;
 
-        std::shared_ptr<DeviceVector<Modulus>> q_Bsk_merge_modulus_;
-        std::shared_ptr<DeviceVector<Root>> q_Bsk_merge_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root>> q_Bsk_merge_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse>> q_Bsk_n_inverse_;
+        std::shared_ptr<DeviceVector<Modulus64>> q_Bsk_merge_modulus_;
+        std::shared_ptr<DeviceVector<Root64>> q_Bsk_merge_ntt_tables_;
+        std::shared_ptr<DeviceVector<Root64>> q_Bsk_merge_intt_tables_;
+        std::shared_ptr<DeviceVector<Ninverse64>> q_Bsk_n_inverse_;
 
-        std::shared_ptr<DeviceVector<Data>> half_p_;
-        std::shared_ptr<DeviceVector<Data>> half_mod_;
+        std::shared_ptr<DeviceVector<Data64>> half_p_;
+        std::shared_ptr<DeviceVector<Data64>> half_mod_;
 
-        Data upper_threshold_;
-        std::shared_ptr<DeviceVector<Data>> upper_halfincrement_;
+        Data64 upper_threshold_;
+        std::shared_ptr<DeviceVector<Data64>> upper_halfincrement_;
 
-        Data Q_mod_t_;
-        std::shared_ptr<DeviceVector<Data>> coeeff_div_plainmod_;
+        Data64 Q_mod_t_;
+        std::shared_ptr<DeviceVector<Data64>> coeeff_div_plainmod_;
 
         /////////
 
@@ -2202,22 +2202,22 @@ namespace heongpu
         int d_tilda;
         int r_prime;
 
-        std::shared_ptr<DeviceVector<Modulus>> B_prime_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse>> B_prime_n_inverse_;
+        std::shared_ptr<DeviceVector<Modulus64>> B_prime_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_;
+        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_;
 
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_B_to_D_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_B_to_D_;
-        std::shared_ptr<DeviceVector<Data>> prod_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> prod_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> prod_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> prod_B_to_D_;
 
         // Method2
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_D_to_Q_tilda_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_D_to_Q_tilda_;
-        std::shared_ptr<DeviceVector<Data>> prod_D_to_Q_tilda_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_D_to_Q_tilda_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_D_to_Q_tilda_;
+        std::shared_ptr<DeviceVector<Data64>> prod_D_to_Q_tilda_;
 
         std::shared_ptr<DeviceVector<int>> I_j_;
         std::shared_ptr<DeviceVector<int>> I_location_;
@@ -2234,26 +2234,26 @@ namespace heongpu
         std::shared_ptr<std::vector<int>> d_tilda_leveled_;
         int r_prime_leveled_;
 
-        std::shared_ptr<DeviceVector<Modulus>> B_prime_leveled_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_ntt_tables_leveled_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_intt_tables_leveled_;
-        std::shared_ptr<DeviceVector<Ninverse>> B_prime_n_inverse_leveled_;
+        std::shared_ptr<DeviceVector<Modulus64>> B_prime_leveled_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_leveled_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_leveled_;
+        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_leveled_;
 
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_D_to_B_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_B_to_D_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> Mi_inv_D_to_B_leveled_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_B_to_D_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> prod_D_to_B_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> prod_B_to_D_leveled_;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> Mi_inv_D_to_B_leveled_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_leveled_;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_D_to_B_leveled_;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_B_to_D_leveled_;
 
         // Method2
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_D_to_Qtilda_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             Mi_inv_D_to_Qtilda_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             prod_D_to_Qtilda_leveled_;
 
         std::shared_ptr<std::vector<DeviceVector<int>>> I_j_leveled_;
@@ -2265,11 +2265,11 @@ namespace heongpu
         /////////
 
         // Leveled Rescale
-        std::shared_ptr<DeviceVector<Data>> rescaled_last_q_modinv_;
-        std::shared_ptr<DeviceVector<Data>> rescaled_half_;
-        std::shared_ptr<DeviceVector<Data>> rescaled_half_mod_;
+        std::shared_ptr<DeviceVector<Data64>> rescaled_last_q_modinv_;
+        std::shared_ptr<DeviceVector<Data64>> rescaled_half_;
+        std::shared_ptr<DeviceVector<Data64>> rescaled_half_mod_;
 
-        std::vector<Modulus> prime_vector_; // in CPU
+        std::vector<Modulus64> prime_vector_; // in CPU
 
         // Temp(to avoid allocation time)
 
@@ -2392,8 +2392,8 @@ namespace heongpu
 
         std::vector<int> key_indexs_;
 
-        std::vector<heongpu::DeviceVector<Data>> V_matrixs_rotated_encoded_;
-        std::vector<heongpu::DeviceVector<Data>> V_inv_matrixs_rotated_encoded_;
+        std::vector<heongpu::DeviceVector<Data64>> V_matrixs_rotated_encoded_;
+        std::vector<heongpu::DeviceVector<Data64>> V_inv_matrixs_rotated_encoded_;
 
         std::vector<std::vector<int>> V_matrixs_index_;
         std::vector<std::vector<int>> V_inv_matrixs_index_;
@@ -2414,30 +2414,30 @@ namespace heongpu
         std::shared_ptr<DeviceVector<COMPLEX>> special_ifft_roots_table_;
 
         __host__ void
-        quick_ckks_encoder_vec_complex(COMPLEX* input, Data* output,
+        quick_ckks_encoder_vec_complex(COMPLEX* input, Data64* output,
                                        const double scale,
                                        bool use_all_bases = false);
 
         __host__ void
-        quick_ckks_encoder_constant_complex(COMPLEX_C input, Data* output,
+        quick_ckks_encoder_constant_complex(COMPLEX_C input, Data64* output,
                                             const double scale,
                                             bool use_all_bases = false);
 
         __host__ void
-        quick_ckks_encoder_constant_double(double input, Data* output,
+        quick_ckks_encoder_constant_double(double input, Data64* output,
                                            const double scale,
                                            bool use_all_bases = false);
 
         __host__ void
-        quick_ckks_encoder_constant_integer(std::int64_t input, Data* output,
+        quick_ckks_encoder_constant_integer(std::int64_t input, Data64* output,
                                             const double scale,
                                             bool use_all_bases = false);
 
-        __host__ std::vector<heongpu::DeviceVector<Data>>
+        __host__ std::vector<heongpu::DeviceVector<Data64>>
         encode_V_matrixs(Vandermonde& vandermonde, const double scale,
                          bool use_all_bases = false);
 
-        __host__ std::vector<heongpu::DeviceVector<Data>>
+        __host__ std::vector<heongpu::DeviceVector<Data64>>
         encode_V_inv_matrixs(Vandermonde& vandermonde, const double scale,
                              bool use_all_bases = false);
 
@@ -2445,14 +2445,14 @@ namespace heongpu
 
         __host__ Ciphertext multiply_matrix(
             Ciphertext& cipher,
-            std::vector<heongpu::DeviceVector<Data>>& matrix,
+            std::vector<heongpu::DeviceVector<Data64>>& matrix,
             std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
             Galoiskey& galois_key,
             const ExecutionOptions& options = ExecutionOptions());
 
         __host__ Ciphertext multiply_matrix_less_memory(
             Ciphertext& cipher,
-            std::vector<heongpu::DeviceVector<Data>>& matrix,
+            std::vector<heongpu::DeviceVector<Data64>>& matrix,
             std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
             std::vector<std::vector<std::vector<int>>>& real_shift,
             Galoiskey& galois_key,
@@ -2475,7 +2475,7 @@ namespace heongpu
             const ExecutionOptions& options = ExecutionOptions());
 
         // Double-hoisting BSGS matrix×vector algorithm
-        __host__ DeviceVector<Data> fast_single_hoisting_rotation_ckks(
+        __host__ DeviceVector<Data64> fast_single_hoisting_rotation_ckks(
             Ciphertext& input1, std::vector<int>& bsgs_shift, int n1,
             Galoiskey& galois_key, const cudaStream_t stream)
         {
@@ -2496,7 +2496,7 @@ namespace heongpu
                 case 1: // KEYSWITHING_METHOD_I
                     if (scheme_ == scheme_type::ckks)
                     {
-                        DeviceVector<Data> result =
+                        DeviceVector<Data64> result =
                             fast_single_hoisting_rotation_ckks_method_I(
                                 input1, bsgs_shift, n1, galois_key, stream);
                         return result;
@@ -2509,7 +2509,7 @@ namespace heongpu
                 case 2: // KEYSWITHING_METHOD_II
                     if (scheme_ == scheme_type::ckks)
                     {
-                        DeviceVector<Data> result =
+                        DeviceVector<Data64> result =
                             fast_single_hoisting_rotation_ckks_method_II(
                                 input1, bsgs_shift, n1, galois_key, stream);
                         return result;
@@ -2532,33 +2532,33 @@ namespace heongpu
             }
         }
 
-        __host__ DeviceVector<Data> fast_single_hoisting_rotation_ckks_method_I(
+        __host__ DeviceVector<Data64> fast_single_hoisting_rotation_ckks_method_I(
             Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
             Galoiskey& galois_key, const cudaStream_t stream);
 
-        __host__ DeviceVector<Data>
+        __host__ DeviceVector<Data64>
         fast_single_hoisting_rotation_ckks_method_II(
             Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
             Galoiskey& galois_key, const cudaStream_t stream);
 
         // Pre-computed encoded parameters
         // CtoS part
-        DeviceVector<Data> encoded_constant_1over2_;
-        DeviceVector<Data> encoded_complex_minus_iover2_;
+        DeviceVector<Data64> encoded_constant_1over2_;
+        DeviceVector<Data64> encoded_complex_minus_iover2_;
         // StoC part
-        DeviceVector<Data> encoded_complex_i_;
+        DeviceVector<Data64> encoded_complex_i_;
         // Scale part
-        DeviceVector<Data> encoded_complex_minus_iscale_;
+        DeviceVector<Data64> encoded_complex_minus_iscale_;
         // Exponentiate part
-        DeviceVector<Data> encoded_complex_iscaleoverr_;
+        DeviceVector<Data64> encoded_complex_iscaleoverr_;
         // Sinus taylor part
-        DeviceVector<Data> encoded_constant_1_;
-        // DeviceVector<Data> encoded_constant_1over2_; // we already have it.
-        DeviceVector<Data> encoded_constant_1over6_;
-        DeviceVector<Data> encoded_constant_1over24_;
-        DeviceVector<Data> encoded_constant_1over120_;
-        DeviceVector<Data> encoded_constant_1over720_;
-        DeviceVector<Data> encoded_constant_1over5040_;
+        DeviceVector<Data64> encoded_constant_1_;
+        // DeviceVector<Data64> encoded_constant_1over2_; // we already have it.
+        DeviceVector<Data64> encoded_constant_1over6_;
+        DeviceVector<Data64> encoded_constant_1over24_;
+        DeviceVector<Data64> encoded_constant_1over120_;
+        DeviceVector<Data64> encoded_constant_1over720_;
+        DeviceVector<Data64> encoded_constant_1over5040_;
     };
 
 } // namespace heongpu

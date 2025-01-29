@@ -27,7 +27,7 @@ namespace heongpu
             n_plain_inverse_ = context.n_plain_inverse_;
 
             // Encode - Decode Index
-            std::vector<Data> encode_index;
+            std::vector<Data64> encode_index;
 
             int m = n << 1;
             int gen = 3;
@@ -52,7 +52,7 @@ namespace heongpu
             }
 
             encoding_location_ =
-                std::make_shared<DeviceVector<Data>>(encode_index);
+                std::make_shared<DeviceVector<Data64>>(encode_index);
         }
         else
         { // for CKKS
@@ -162,11 +162,11 @@ namespace heongpu
                                         const std::vector<uint64_t>& message,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n, stream);
+        DeviceVector<Data64> output_memory(n, stream);
 
-        DeviceVector<Data> message_gpu(slot_count_, stream);
+        DeviceVector<Data64> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
-                        message.size() * sizeof(Data), cudaMemcpyHostToDevice,
+                        message.size() * sizeof(Data64), cudaMemcpyHostToDevice,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -175,7 +175,7 @@ namespace heongpu
             encoding_location_->data(), plain_modulus_->data(), message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_intt = {
+        ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -193,11 +193,11 @@ namespace heongpu
                                         const std::vector<int64_t>& message,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n, stream);
+        DeviceVector<Data64> output_memory(n, stream);
 
-        DeviceVector<Data> message_gpu(slot_count_, stream);
+        DeviceVector<Data64> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
-                        message.size() * sizeof(Data), cudaMemcpyHostToDevice,
+                        message.size() * sizeof(Data64), cudaMemcpyHostToDevice,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -206,7 +206,7 @@ namespace heongpu
             encoding_location_->data(), plain_modulus_->data(), message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_intt = {
+        ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -224,11 +224,11 @@ namespace heongpu
                                         const HostVector<uint64_t>& message,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n, stream);
+        DeviceVector<Data64> output_memory(n, stream);
 
-        DeviceVector<Data> message_gpu(slot_count_, stream);
+        DeviceVector<Data64> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
-                        message.size() * sizeof(Data), cudaMemcpyHostToDevice,
+                        message.size() * sizeof(Data64), cudaMemcpyHostToDevice,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -237,7 +237,7 @@ namespace heongpu
             encoding_location_->data(), plain_modulus_->data(), message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_intt = {
+        ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -255,11 +255,11 @@ namespace heongpu
                                         const HostVector<int64_t>& message,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n, stream);
+        DeviceVector<Data64> output_memory(n, stream);
 
-        DeviceVector<Data> message_gpu(slot_count_, stream);
+        DeviceVector<Data64> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
-                        message.size() * sizeof(Data), cudaMemcpyHostToDevice,
+                        message.size() * sizeof(Data64), cudaMemcpyHostToDevice,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -268,7 +268,7 @@ namespace heongpu
             encoding_location_->data(), plain_modulus_->data(), message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_intt = {
+        ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -286,11 +286,11 @@ namespace heongpu
                                         Plaintext& plain,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> temp_memory(slot_count_ + n, stream);
-        Data* message_gpu = temp_memory.data();
-        Data* temp_plain = message_gpu + slot_count_;
+        DeviceVector<Data64> temp_memory(slot_count_ + n, stream);
+        Data64* message_gpu = temp_memory.data();
+        Data64* temp_plain = message_gpu + slot_count_;
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -317,11 +317,11 @@ namespace heongpu
                                         Plaintext& plain,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> temp_memory(slot_count_ + n, stream);
-        Data* message_gpu = temp_memory.data();
-        Data* temp_plain = message_gpu + slot_count_;
+        DeviceVector<Data64> temp_memory(slot_count_ + n, stream);
+        Data64* message_gpu = temp_memory.data();
+        Data64* temp_plain = message_gpu + slot_count_;
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -352,11 +352,11 @@ namespace heongpu
                                         Plaintext& plain,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> temp_memory(slot_count_ + n, stream);
-        Data* message_gpu = temp_memory.data();
-        Data* temp_plain = message_gpu + slot_count_;
+        DeviceVector<Data64> temp_memory(slot_count_ + n, stream);
+        Data64* message_gpu = temp_memory.data();
+        Data64* temp_plain = message_gpu + slot_count_;
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -382,17 +382,17 @@ namespace heongpu
                                         Plaintext& plain,
                                         const cudaStream_t stream)
     {
-        DeviceVector<Data> temp_memory(slot_count_ + n, stream);
-        Data* message_gpu = temp_memory.data();
-        Data* temp_plain = message_gpu + slot_count_;
+        DeviceVector<Data64> temp_memory(slot_count_ + n, stream);
+        Data64* message_gpu = temp_memory.data();
+        Data64* temp_plain = message_gpu + slot_count_;
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
                                          .stream = stream};
-
+        
         GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
                 plain_modulus_->data(), cfg_ntt, 1, 1);
 
@@ -418,7 +418,7 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n * Q_size_, stream);
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         DeviceVector<double> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
@@ -447,7 +447,7 @@ namespace heongpu
             Q_size_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -467,7 +467,7 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n * Q_size_, stream);
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         DeviceVector<double> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
@@ -496,7 +496,7 @@ namespace heongpu
             Q_size_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -516,7 +516,7 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n * Q_size_, stream);
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
@@ -540,7 +540,7 @@ namespace heongpu
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -560,7 +560,7 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n * Q_size_, stream);
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
@@ -584,7 +584,7 @@ namespace heongpu
             two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -604,7 +604,7 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n * Q_size_, stream);
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         double value = message * scale;
 
@@ -622,7 +622,7 @@ namespace heongpu
                                          const double scale,
                                          const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n * Q_size_, stream);
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         double value = static_cast<double>(message) * scale;
 
@@ -643,9 +643,9 @@ namespace heongpu
 
         DeviceVector<double> message_gpu(slot_count_, stream);
 
-        DeviceVector<Data> temp_plain(n * current_modulus_count, stream);
+        DeviceVector<Data64> temp_plain(n * current_modulus_count, stream);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -704,9 +704,9 @@ namespace heongpu
 
         DeviceVector<double> message_gpu(slot_count_, stream);
 
-        DeviceVector<Data> temp_plain(n * current_modulus_count, stream);
+        DeviceVector<Data64> temp_plain(n * current_modulus_count, stream);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -766,9 +766,9 @@ namespace heongpu
 
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream);
 
-        DeviceVector<Data> temp_plain(n * current_modulus_count, stream);
+        DeviceVector<Data64> temp_plain(n * current_modulus_count, stream);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -822,9 +822,9 @@ namespace heongpu
 
         DeviceVector<COMPLEX> message_gpu(slot_count_, stream);
 
-        DeviceVector<Data> temp_plain(n * current_modulus_count, stream);
+        DeviceVector<Data64> temp_plain(n * current_modulus_count, stream);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,

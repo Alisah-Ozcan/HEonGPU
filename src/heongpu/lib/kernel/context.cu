@@ -8,26 +8,26 @@
 namespace heongpu
 {
 
-    std::vector<Data> Parameters::generate_last_q_modinv()
+    std::vector<Data64> Parameters::generate_last_q_modinv()
     {
-        std::vector<Data> last_q_modinv;
+        std::vector<Data64> last_q_modinv;
         for (int i = 0; i < P_size; i++)
         {
             for (int j = 0; j < (Q_prime_size - 1) - i; j++)
             {
                 // TODO: Change here for BFV as well!!!
-                Data temp_ = prime_vector[prime_vector.size() - 1 - i].value %
+                Data64 temp_ = prime_vector[prime_vector.size() - 1 - i].value %
                              prime_vector[j].value;
-                last_q_modinv.push_back(VALUE::modinv(temp_, prime_vector[j]));
+                last_q_modinv.push_back(OPERATOR64::modinv(temp_, prime_vector[j]));
             }
         }
 
         return last_q_modinv;
     }
 
-    std::vector<Data> Parameters::generate_half()
+    std::vector<Data64> Parameters::generate_half()
     {
-        std::vector<Data> half;
+        std::vector<Data64> half;
         for (int i = 0; i < P_size; i++)
         {
             half.push_back(prime_vector[prime_vector.size() - 1 - i].value >>
@@ -37,9 +37,9 @@ namespace heongpu
         return half;
     }
 
-    std::vector<Data> Parameters::generate_half_mod(std::vector<Data> half)
+    std::vector<Data64> Parameters::generate_half_mod(std::vector<Data64> half)
     {
-        std::vector<Data> half_mod;
+        std::vector<Data64> half_mod;
         for (int i = 0; i < P_size; i++)
         {
             for (int j = 0; j < (Q_prime_size - 1) - i; j++)
@@ -51,9 +51,9 @@ namespace heongpu
         return half_mod;
     }
 
-    std::vector<Data> Parameters::generate_factor()
+    std::vector<Data64> Parameters::generate_factor()
     {
-        std::vector<Data> factor;
+        std::vector<Data64> factor;
         for (int i = 0; i < P_size; i++)
         {
             for (int j = 0; j < Q_size; j++)
@@ -67,10 +67,10 @@ namespace heongpu
         return factor;
     }
 
-    std::vector<Data> Parameters::generate_Mi(std::vector<Modulus> primes,
+    std::vector<Data64> Parameters::generate_Mi(std::vector<Modulus64> primes,
                                               int size)
     {
-        std::vector<Data> result_Mi(size * size, 0ULL);
+        std::vector<Data64> result_Mi(size * size, 0ULL);
         for (int i = 0; i < size; i++)
         {
             mpz_t result;
@@ -101,31 +101,31 @@ namespace heongpu
         return result_Mi;
     }
 
-    std::vector<Data> Parameters::generate_Mi_inv(std::vector<Modulus> primes,
+    std::vector<Data64> Parameters::generate_Mi_inv(std::vector<Modulus64> primes,
                                                   int size)
     {
-        std::vector<Data> result_Mi_inv;
+        std::vector<Data64> result_Mi_inv;
         for (int i = 0; i < size; i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < size; j++)
             {
                 if (i != j)
                 {
-                    Data inner_prime = primes[j].value % primes[i].value;
-                    temp = VALUE::mult(temp, inner_prime, primes[i]);
+                    Data64 inner_prime = primes[j].value % primes[i].value;
+                    temp = OPERATOR64::mult(temp, inner_prime, primes[i]);
                 }
             }
-            result_Mi_inv.push_back(VALUE::modinv(temp, primes[i]));
+            result_Mi_inv.push_back(OPERATOR64::modinv(temp, primes[i]));
         }
 
         return result_Mi_inv;
     }
 
-    std::vector<Data> Parameters::generate_M(std::vector<Modulus> primes,
+    std::vector<Data64> Parameters::generate_M(std::vector<Modulus64> primes,
                                              int size)
     {
-        std::vector<Data> result_M(size, 0ULL);
+        std::vector<Data64> result_M(size, 0ULL);
 
         mpz_t result;
         mpz_init(result);
@@ -151,11 +151,11 @@ namespace heongpu
         return result_M;
     }
 
-    std::vector<Data>
-    Parameters::generate_upper_half_threshold(std::vector<Modulus> primes,
+    std::vector<Data64>
+    Parameters::generate_upper_half_threshold(std::vector<Modulus64> primes,
                                               int size)
     {
-        std::vector<Data> result_upper_half_threshold(size, 0ULL);
+        std::vector<Data64> result_upper_half_threshold(size, 0ULL);
 
         mpz_t result;
         mpz_init(result);
@@ -184,24 +184,24 @@ namespace heongpu
         return result_upper_half_threshold;
     }
 
-    Data Parameters::generate_Q_mod_t(std::vector<Modulus> primes,
-                                      Modulus& plain_mod, int size)
+    Data64 Parameters::generate_Q_mod_t(std::vector<Modulus64> primes,
+                                      Modulus64& plain_mod, int size)
     {
-        Data result = 1;
+        Data64 result = 1;
         for (int i = 0; i < size; i++)
         {
-            Data inner_prime = primes[i].value % plain_mod.value;
-            result = VALUE::mult(result, inner_prime, plain_mod);
+            Data64 inner_prime = primes[i].value % plain_mod.value;
+            result = OPERATOR64::mult(result, inner_prime, plain_mod);
         }
 
         return result;
     }
 
-    std::vector<Data>
-    Parameters::generate_coeff_div_plain_modulus(std::vector<Modulus> primes,
-                                                 Modulus& plain_mod, int size)
+    std::vector<Data64>
+    Parameters::generate_coeff_div_plain_modulus(std::vector<Modulus64> primes,
+                                                 Modulus64& plain_mod, int size)
     {
-        std::vector<Data> result_M(size, 0ULL);
+        std::vector<Data64> result_M(size, 0ULL);
 
         mpz_t result;
         mpz_init(result);
@@ -234,20 +234,20 @@ namespace heongpu
 
         return result_M;
     }
-    std::vector<Data> Parameters::generate_base_matrix_q_Bsk(
-        std::vector<Modulus> primes, std::vector<Modulus> bsk_mod, int size)
+    std::vector<Data64> Parameters::generate_base_matrix_q_Bsk(
+        std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
-        std::vector<Data> base_matrix_q_Bsk;
+        std::vector<Data64> base_matrix_q_Bsk;
         for (int k = 0; k < bsk_mod.size(); k++)
         {
             for (int i = 0; i < size; i++)
             {
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < size; j++)
                 {
                     if (i != j)
                     {
-                        temp = VALUE::mult(temp, primes[j].value, bsk_mod[k]);
+                        temp = OPERATOR64::mult(temp, primes[j].value, bsk_mod[k]);
                     }
                 }
                 base_matrix_q_Bsk.push_back(temp);
@@ -259,20 +259,20 @@ namespace heongpu
 
     // inv_punctured_prod_mod_base_array --> generate_Mi_inv
 
-    std::vector<Data>
-    Parameters::generate_base_change_matrix_m_tilde(std::vector<Modulus> primes,
-                                                    Modulus mtilda, int size)
+    std::vector<Data64>
+    Parameters::generate_base_change_matrix_m_tilde(std::vector<Modulus64> primes,
+                                                    Modulus64 mtilda, int size)
     {
-        std::vector<Data> base_change_matrix_m_tilde;
+        std::vector<Data64> base_change_matrix_m_tilde;
         for (int i = 0; i < size; i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < size; j++)
             {
                 if (i != j)
                 {
-                    Data base = primes[j].value % mtilda.value;
-                    temp = VALUE::mult(temp, base, mtilda);
+                    Data64 base = primes[j].value % mtilda.value;
+                    temp = OPERATOR64::mult(temp, base, mtilda);
                 }
             }
             base_change_matrix_m_tilde.push_back(temp);
@@ -281,16 +281,16 @@ namespace heongpu
         return base_change_matrix_m_tilde;
     }
 
-    Data
-    Parameters::generate_inv_prod_q_mod_m_tilde(std::vector<Modulus> primes,
-                                                Modulus mtilda, int size)
+    Data64
+    Parameters::generate_inv_prod_q_mod_m_tilde(std::vector<Modulus64> primes,
+                                                Modulus64 mtilda, int size)
     {
-        Data inv_prod_q_mod_m_tilde = 1;
+        Data64 inv_prod_q_mod_m_tilde = 1;
         for (int i = 0; i < size; i++)
         {
-            Data base = primes[i].value % mtilda.value;
+            Data64 base = primes[i].value % mtilda.value;
             inv_prod_q_mod_m_tilde =
-                VALUE::mult(inv_prod_q_mod_m_tilde, base, mtilda);
+                OPERATOR64::mult(inv_prod_q_mod_m_tilde, base, mtilda);
         }
 
         inv_prod_q_mod_m_tilde =
@@ -299,31 +299,31 @@ namespace heongpu
         return inv_prod_q_mod_m_tilde;
     }
 
-    std::vector<Data>
-    Parameters::generate_inv_m_tilde_mod_Bsk(std::vector<Modulus> bsk_mod,
-                                             Modulus mtilda)
+    std::vector<Data64>
+    Parameters::generate_inv_m_tilde_mod_Bsk(std::vector<Modulus64> bsk_mod,
+                                             Modulus64 mtilda)
     {
-        std::vector<Data> inv_m_tilde_mod_Bsk;
+        std::vector<Data64> inv_m_tilde_mod_Bsk;
         for (int i = 0; i < bsk_mod.size(); i++)
         {
             inv_m_tilde_mod_Bsk.push_back(
-                VALUE::modinv(mtilda.value, bsk_mod[i]));
+                OPERATOR64::modinv(mtilda.value, bsk_mod[i]));
         }
 
         return inv_m_tilde_mod_Bsk;
     }
 
-    std::vector<Data>
-    Parameters::generate_prod_q_mod_Bsk(std::vector<Modulus> primes,
-                                        std::vector<Modulus> bsk_mod, int size)
+    std::vector<Data64>
+    Parameters::generate_prod_q_mod_Bsk(std::vector<Modulus64> primes,
+                                        std::vector<Modulus64> bsk_mod, int size)
     {
-        std::vector<Data> prod_q_mod_Bsk;
+        std::vector<Data64> prod_q_mod_Bsk;
         for (int i = 0; i < bsk_mod.size(); i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < size; j++)
             {
-                temp = VALUE::mult(temp, primes[j].value, bsk_mod[i]);
+                temp = OPERATOR64::mult(temp, primes[j].value, bsk_mod[i]);
             }
             prod_q_mod_Bsk.push_back(temp);
         }
@@ -331,38 +331,38 @@ namespace heongpu
         return prod_q_mod_Bsk;
     }
 
-    std::vector<Data> Parameters::generate_inv_prod_q_mod_Bsk(
-        std::vector<Modulus> primes, std::vector<Modulus> bsk_mod, int size)
+    std::vector<Data64> Parameters::generate_inv_prod_q_mod_Bsk(
+        std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
-        std::vector<Data> inv_prod_q_mod_Bsk;
+        std::vector<Data64> inv_prod_q_mod_Bsk;
         for (int i = 0; i < bsk_mod.size(); i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < size; j++)
             {
-                temp = VALUE::mult(temp, primes[j].value, bsk_mod[i]);
+                temp = OPERATOR64::mult(temp, primes[j].value, bsk_mod[i]);
             }
-            inv_prod_q_mod_Bsk.push_back(VALUE::modinv(temp, bsk_mod[i]));
+            inv_prod_q_mod_Bsk.push_back(OPERATOR64::modinv(temp, bsk_mod[i]));
         }
 
         return inv_prod_q_mod_Bsk;
     }
 
-    std::vector<Data> Parameters::generate_base_matrix_Bsk_q(
-        std::vector<Modulus> primes, std::vector<Modulus> bsk_mod, int size)
+    std::vector<Data64> Parameters::generate_base_matrix_Bsk_q(
+        std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
-        std::vector<Data> base_matrix_Bsk_q;
+        std::vector<Data64> base_matrix_Bsk_q;
         for (int k = 0; k < size; k++)
         {
             for (int i = 0; i < bsk_mod.size() - 1; i++)
             {
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < bsk_mod.size() - 1; j++)
                 {
                     if (i != j)
                     {
-                        Data base = bsk_mod[j].value % primes[k].value;
-                        temp = VALUE::mult(temp, base, primes[k]);
+                        Data64 base = bsk_mod[j].value % primes[k].value;
+                        temp = OPERATOR64::mult(temp, base, primes[k]);
                     }
                 }
                 base_matrix_Bsk_q.push_back(temp);
@@ -372,18 +372,18 @@ namespace heongpu
         return base_matrix_Bsk_q;
     }
 
-    std::vector<Data>
-    Parameters::generate_base_change_matrix_msk(std::vector<Modulus> bsk_mod)
+    std::vector<Data64>
+    Parameters::generate_base_change_matrix_msk(std::vector<Modulus64> bsk_mod)
     {
-        std::vector<Data> base_change_matrix_msk;
+        std::vector<Data64> base_change_matrix_msk;
         for (int i = 0; i < bsk_mod.size() - 1; i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < bsk_mod.size() - 1; j++)
             {
                 if (i != j)
                 {
-                    temp = VALUE::mult(temp, bsk_mod[j].value,
+                    temp = OPERATOR64::mult(temp, bsk_mod[j].value,
                                        bsk_mod[bsk_mod.size() - 1]);
                 }
             }
@@ -393,55 +393,55 @@ namespace heongpu
         return base_change_matrix_msk;
     }
 
-    std::vector<Data> Parameters::generate_inv_punctured_prod_mod_B_array(
-        std::vector<Modulus> bsk_mod)
+    std::vector<Data64> Parameters::generate_inv_punctured_prod_mod_B_array(
+        std::vector<Modulus64> bsk_mod)
     {
-        std::vector<Data> inv_punctured_prod_mod_B_array;
+        std::vector<Data64> inv_punctured_prod_mod_B_array;
         for (int i = 0; i < bsk_mod.size() - 1; i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < bsk_mod.size() - 1; j++)
             {
                 if (i != j)
                 {
-                    temp = VALUE::mult(temp, bsk_mod[j].value, bsk_mod[i]);
+                    temp = OPERATOR64::mult(temp, bsk_mod[j].value, bsk_mod[i]);
                 }
             }
             inv_punctured_prod_mod_B_array.push_back(
-                VALUE::modinv(temp, bsk_mod[i]));
+                OPERATOR64::modinv(temp, bsk_mod[i]));
         }
 
         return inv_punctured_prod_mod_B_array;
     }
 
-    Data Parameters::generate_inv_prod_B_mod_m_sk(std::vector<Modulus> bsk_mod)
+    Data64 Parameters::generate_inv_prod_B_mod_m_sk(std::vector<Modulus64> bsk_mod)
     {
-        Data inv_prod_B_mod_m_sk = 1;
+        Data64 inv_prod_B_mod_m_sk = 1;
         for (int i = 0; i < bsk_mod.size() - 1; i++)
         {
             inv_prod_B_mod_m_sk =
-                VALUE::mult(inv_prod_B_mod_m_sk, bsk_mod[i].value,
+                OPERATOR64::mult(inv_prod_B_mod_m_sk, bsk_mod[i].value,
                             bsk_mod[bsk_mod.size() - 1]);
         }
 
         inv_prod_B_mod_m_sk =
-            VALUE::modinv(inv_prod_B_mod_m_sk, bsk_mod[bsk_mod.size() - 1]);
+            OPERATOR64::modinv(inv_prod_B_mod_m_sk, bsk_mod[bsk_mod.size() - 1]);
 
         return inv_prod_B_mod_m_sk;
     }
 
-    std::vector<Data>
-    Parameters::generate_prod_B_mod_q(std::vector<Modulus> primes,
-                                      std::vector<Modulus> bsk_mod, int size)
+    std::vector<Data64>
+    Parameters::generate_prod_B_mod_q(std::vector<Modulus64> primes,
+                                      std::vector<Modulus64> bsk_mod, int size)
     {
-        std::vector<Data> prod_B_mod_q;
+        std::vector<Data64> prod_B_mod_q;
         for (int i = 0; i < size; i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < bsk_mod.size() - 1; j++)
             {
-                Data base = bsk_mod[j].value % primes[i].value;
-                temp = VALUE::mult(temp, base, primes[i]);
+                Data64 base = bsk_mod[j].value % primes[i].value;
+                temp = OPERATOR64::mult(temp, base, primes[i]);
             }
             prod_B_mod_q.push_back(temp);
         }
@@ -449,10 +449,10 @@ namespace heongpu
         return prod_B_mod_q;
     }
 
-    std::vector<Modulus> Parameters::generate_q_Bsk_merge_modulus(
-        std::vector<Modulus> primes, std::vector<Modulus> bsk_mod, int size)
+    std::vector<Modulus64> Parameters::generate_q_Bsk_merge_modulus(
+        std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
-        std::vector<Modulus> q_Bsk_merge_modulus;
+        std::vector<Modulus64> q_Bsk_merge_modulus;
         for (int i = 0; i < size; i++)
         {
             q_Bsk_merge_modulus.push_back(primes[i]);
@@ -465,10 +465,10 @@ namespace heongpu
         return q_Bsk_merge_modulus;
     }
 
-    std::vector<Data> Parameters::generate_q_Bsk_merge_root(
-        std::vector<Data> primes_psi, std::vector<Data> bsk_mod_psi, int size)
+    std::vector<Data64> Parameters::generate_q_Bsk_merge_root(
+        std::vector<Data64> primes_psi, std::vector<Data64> bsk_mod_psi, int size)
     {
-        std::vector<Data> q_Bsk_merge_psi;
+        std::vector<Data64> q_Bsk_merge_psi;
         for (int i = 0; i < size; i++)
         {
             q_Bsk_merge_psi.push_back(primes_psi[i]);
@@ -481,19 +481,19 @@ namespace heongpu
         return q_Bsk_merge_psi;
     }
 
-    std::vector<Data> Parameters::generate_Qi_t(std::vector<Modulus> primes,
-                                                Modulus& plain_mod, int size)
+    std::vector<Data64> Parameters::generate_Qi_t(std::vector<Modulus64> primes,
+                                                Modulus64& plain_mod, int size)
     {
-        std::vector<Data> Qi_t;
+        std::vector<Data64> Qi_t;
         for (int i = 0; i < size; i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < size; j++)
             {
                 if (i != j)
                 {
-                    Data mod_ = primes[j].value % plain_mod.value;
-                    temp = VALUE::mult(temp, mod_, plain_mod);
+                    Data64 mod_ = primes[j].value % plain_mod.value;
+                    temp = OPERATOR64::mult(temp, mod_, plain_mod);
                 }
             }
             Qi_t.push_back(temp);
@@ -502,19 +502,19 @@ namespace heongpu
         return Qi_t;
     }
 
-    std::vector<Data> Parameters::generate_Qi_gamma(std::vector<Modulus> primes,
-                                                    Modulus& gamma, int size)
+    std::vector<Data64> Parameters::generate_Qi_gamma(std::vector<Modulus64> primes,
+                                                    Modulus64& gamma, int size)
     {
-        std::vector<Data> Qi_gamma;
+        std::vector<Data64> Qi_gamma;
         for (int i = 0; i < size; i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < size; j++)
             {
                 if (i != j)
                 {
-                    Data mod = primes[j].value % gamma.value;
-                    temp = VALUE::mult(temp, mod, gamma);
+                    Data64 mod = primes[j].value % gamma.value;
+                    temp = OPERATOR64::mult(temp, mod, gamma);
                 }
             }
             Qi_gamma.push_back(temp);
@@ -524,20 +524,20 @@ namespace heongpu
     }
 
     // use generate_Mi_inv
-    std::vector<Data>
-    Parameters::generate_Qi_inverse(std::vector<Modulus> primes, int size)
+    std::vector<Data64>
+    Parameters::generate_Qi_inverse(std::vector<Modulus64> primes, int size)
     {
-        std::vector<Data> Qi_inverse;
+        std::vector<Data64> Qi_inverse;
         for (int i = 0; i < size; i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < size; j++)
             {
                 if (i != j)
                 {
-                    Data mod_ = primes[j].value % primes[i].value;
-                    Data inv_ = VALUE::modinv(mod_, primes[i]);
-                    temp = VALUE::mult(temp, inv_, primes[i]);
+                    Data64 mod_ = primes[j].value % primes[i].value;
+                    Data64 inv_ = OPERATOR64::modinv(mod_, primes[i]);
+                    temp = OPERATOR64::mult(temp, inv_, primes[i]);
                 }
             }
             Qi_inverse.push_back(temp);
@@ -546,15 +546,15 @@ namespace heongpu
         return Qi_inverse;
     }
 
-    Data Parameters::generate_mulq_inv_t(std::vector<Modulus> primes,
-                                         Modulus& plain_mod, int size)
+    Data64 Parameters::generate_mulq_inv_t(std::vector<Modulus64> primes,
+                                         Modulus64& plain_mod, int size)
     {
-        Data mulq_inv_t = 1;
+        Data64 mulq_inv_t = 1;
         for (int i = 0; i < size; i++)
         {
-            Data mod_ = primes[i].value % plain_mod.value;
-            Data inv_ = VALUE::modinv(mod_, plain_mod);
-            mulq_inv_t = VALUE::mult(mulq_inv_t, inv_, plain_mod);
+            Data64 mod_ = primes[i].value % plain_mod.value;
+            Data64 inv_ = OPERATOR64::modinv(mod_, plain_mod);
+            mulq_inv_t = OPERATOR64::mult(mulq_inv_t, inv_, plain_mod);
         }
 
         mulq_inv_t = plain_mod.value - mulq_inv_t;
@@ -562,15 +562,15 @@ namespace heongpu
         return mulq_inv_t;
     }
 
-    Data Parameters::generate_mulq_inv_gamma(std::vector<Modulus> primes,
-                                             Modulus& gamma, int size)
+    Data64 Parameters::generate_mulq_inv_gamma(std::vector<Modulus64> primes,
+                                             Modulus64& gamma, int size)
     {
-        Data mulq_inv_gamma = 1;
+        Data64 mulq_inv_gamma = 1;
         for (int i = 0; i < size; i++)
         {
-            Data mod_ = primes[i].value % gamma.value;
-            Data inv_ = VALUE::modinv(mod_, gamma);
-            mulq_inv_gamma = VALUE::mult(mulq_inv_gamma, inv_, gamma);
+            Data64 mod_ = primes[i].value % gamma.value;
+            Data64 inv_ = OPERATOR64::modinv(mod_, gamma);
+            mulq_inv_gamma = OPERATOR64::mult(mulq_inv_gamma, inv_, gamma);
         }
 
         mulq_inv_gamma = gamma.value - mulq_inv_gamma;
@@ -578,10 +578,10 @@ namespace heongpu
         return mulq_inv_gamma;
     }
 
-    Data Parameters::generate_inv_gamma(Modulus& plain_mod, Modulus& gamma)
+    Data64 Parameters::generate_inv_gamma(Modulus64& plain_mod, Modulus64& gamma)
     {
-        Data mod_ = gamma.value % plain_mod.value;
-        Data inv_gamma = VALUE::modinv(mod_, plain_mod);
+        Data64 mod_ = gamma.value % plain_mod.value;
+        Data64 inv_gamma = OPERATOR64::modinv(mod_, plain_mod);
 
         return inv_gamma;
     }
@@ -941,7 +941,7 @@ namespace heongpu
 
     void Parameters::set_plain_modulus(const int plain_modulus)
     {
-        plain_modulus_ = Modulus(plain_modulus);
+        plain_modulus_ = Modulus64(plain_modulus);
     }
 
     void Parameters::generate()
@@ -953,86 +953,86 @@ namespace heongpu
         // For kernel stack size
         cudaDeviceSetLimit(cudaLimitStackSize, 2048);
 
-        modulus_ = std::make_shared<DeviceVector<Modulus>>(prime_vector);
+        modulus_ = std::make_shared<DeviceVector<Modulus64>>(prime_vector);
 
-        std::vector<Data> base_q_psi =
+        std::vector<Data64> base_q_psi =
             generate_primitive_root_of_unity(n, prime_vector);
-        std::vector<Root> Qprime_ntt_table =
+        std::vector<Root64> Qprime_ntt_table =
             generate_ntt_table(base_q_psi, prime_vector, n_power);
-        std::vector<Root> Qprime_intt_table =
+        std::vector<Root64> Qprime_intt_table =
             generate_intt_table(base_q_psi, prime_vector, n_power);
-        std::vector<Ninverse> Qprime_n_inverse =
+        std::vector<Ninverse64> Qprime_n_inverse =
             generate_n_inverse(n, prime_vector);
 
-        ntt_table_ = std::make_shared<DeviceVector<Root>>(Qprime_ntt_table);
+        ntt_table_ = std::make_shared<DeviceVector<Root64>>(Qprime_ntt_table);
 
-        intt_table_ = std::make_shared<DeviceVector<Root>>(Qprime_intt_table);
+        intt_table_ = std::make_shared<DeviceVector<Root64>>(Qprime_intt_table);
 
-        n_inverse_ = std::make_shared<DeviceVector<Ninverse>>(Qprime_n_inverse);
+        n_inverse_ = std::make_shared<DeviceVector<Ninverse64>>(Qprime_n_inverse);
 
-        std::vector<Data> last_q_modinv = generate_last_q_modinv();
-        std::vector<Data> half = generate_half();
-        std::vector<Data> half_mod = generate_half_mod(half);
-        std::vector<Data> factor = generate_factor();
+        std::vector<Data64> last_q_modinv = generate_last_q_modinv();
+        std::vector<Data64> half = generate_half();
+        std::vector<Data64> half_mod = generate_half_mod(half);
+        std::vector<Data64> factor = generate_factor();
 
-        last_q_modinv_ = std::make_shared<DeviceVector<Data>>(last_q_modinv);
+        last_q_modinv_ = std::make_shared<DeviceVector<Data64>>(last_q_modinv);
 
-        half_p_ = std::make_shared<DeviceVector<Data>>(half);
+        half_p_ = std::make_shared<DeviceVector<Data64>>(half);
 
-        half_mod_ = std::make_shared<DeviceVector<Data>>(half_mod);
+        half_mod_ = std::make_shared<DeviceVector<Data64>>(half_mod);
 
-        factor_ = std::make_shared<DeviceVector<Data>>(factor);
+        factor_ = std::make_shared<DeviceVector<Data64>>(factor);
 
         if (scheme_ == scheme_type::bfv)
         {
-            std::vector<Data> Mi = generate_Mi(prime_vector, Q_size);
-            std::vector<Data> Mi_inv = generate_Mi_inv(prime_vector, Q_size);
-            std::vector<Data> upper_half_threshold =
+            std::vector<Data64> Mi = generate_Mi(prime_vector, Q_size);
+            std::vector<Data64> Mi_inv = generate_Mi_inv(prime_vector, Q_size);
+            std::vector<Data64> upper_half_threshold =
                 generate_upper_half_threshold(prime_vector, Q_size);
-            std::vector<Data> decryption_modulus =
+            std::vector<Data64> decryption_modulus =
                 generate_M(prime_vector, Q_size);
 
-            Mi_ = std::make_shared<DeviceVector<Data>>(Mi);
+            Mi_ = std::make_shared<DeviceVector<Data64>>(Mi);
 
-            Mi_inv_ = std::make_shared<DeviceVector<Data>>(Mi_inv);
+            Mi_inv_ = std::make_shared<DeviceVector<Data64>>(Mi_inv);
 
             upper_half_threshold_ =
-                std::make_shared<DeviceVector<Data>>(upper_half_threshold);
+                std::make_shared<DeviceVector<Data64>>(upper_half_threshold);
 
             decryption_modulus_ =
-                std::make_shared<DeviceVector<Data>>(decryption_modulus);
+                std::make_shared<DeviceVector<Data64>>(decryption_modulus);
 
             total_bit_count_ = calculate_big_integer_bit_count(
                 decryption_modulus.data(), decryption_modulus.size());
 
-            Modulus plain_mod = plain_modulus_;
+            Modulus64 plain_mod = plain_modulus_;
 
-            Data plain_psi = find_minimal_primitive_root(2 * n, plain_mod);
+            Data64 plain_psi = find_minimal_primitive_root(2 * n, plain_mod);
 
-            std::vector<Root> plain_forward_table =
+            std::vector<Root64> plain_forward_table =
                 generate_ntt_table({plain_psi}, {plain_mod}, n_power);
-            std::vector<Root> plain_inverse_table =
+            std::vector<Root64> plain_inverse_table =
                 generate_intt_table({plain_psi}, {plain_mod}, n_power);
-            Data n_ = n;
-            std::vector<Ninverse> plain_n_inverse;
-            std::vector<Modulus> plain_mod2;
-            plain_n_inverse.push_back(VALUE::modinv(n_, plain_mod));
+            Data64 n_ = n;
+            std::vector<Ninverse64> plain_n_inverse;
+            std::vector<Modulus64> plain_mod2;
+            plain_n_inverse.push_back(OPERATOR64::modinv(n_, plain_mod));
             plain_mod2.push_back(plain_mod);
 
-            Data plain_upper_half_threshold = (plain_mod.value + 1) >> 1;
+            Data64 plain_upper_half_threshold = (plain_mod.value + 1) >> 1;
 
-            std::vector<Data> plain_upper_half_increment;
+            std::vector<Data64> plain_upper_half_increment;
             for (int i = 0; i < Q_size; i++)
             {
                 plain_upper_half_increment.push_back(prime_vector[i].value -
                                                      plain_mod.value);
             }
 
-            Modulus m_tilde((1ULL << 32));
+            Modulus64 m_tilde((1ULL << 32));
 
-            Data Q_mod_t = generate_Q_mod_t(prime_vector, plain_mod, Q_size);
+            Data64 Q_mod_t = generate_Q_mod_t(prime_vector, plain_mod, Q_size);
 
-            std::vector<Data> coeff_div_plain_modulus =
+            std::vector<Data64> coeff_div_plain_modulus =
                 generate_coeff_div_plain_modulus(prime_vector, plain_mod,
                                                  Q_size);
 
@@ -1044,179 +1044,179 @@ namespace heongpu
                 bsk_modulus++;
             }
 
-            std::vector<Modulus> base_Bsk_mod = generate_internal_primes(
+            std::vector<Modulus64> base_Bsk_mod = generate_internal_primes(
                 n,
                 bsk_modulus + 1); // extra for gamma parameter
 
-            Modulus gamma_mod = base_Bsk_mod[bsk_modulus];
+            Modulus64 gamma_mod = base_Bsk_mod[bsk_modulus];
             base_Bsk_mod.pop_back();
 
-            std::vector<Data> base_Bsk_psi =
+            std::vector<Data64> base_Bsk_psi =
                 generate_primitive_root_of_unity(n, base_Bsk_mod);
-            std::vector<Root> Bsk_ntt_table =
+            std::vector<Root64> Bsk_ntt_table =
                 generate_ntt_table(base_Bsk_psi, base_Bsk_mod, n_power);
-            std::vector<Root> Bsk_intt_table =
+            std::vector<Root64> Bsk_intt_table =
                 generate_intt_table(base_Bsk_psi, base_Bsk_mod, n_power);
-            std::vector<Ninverse> Bsk_n_inverse =
+            std::vector<Ninverse64> Bsk_n_inverse =
                 generate_n_inverse(n, base_Bsk_mod);
 
-            base_Bsk_ = std::make_shared<DeviceVector<Modulus>>(base_Bsk_mod);
+            base_Bsk_ = std::make_shared<DeviceVector<Modulus64>>(base_Bsk_mod);
 
             bsk_ntt_tables_ =
-                std::make_shared<DeviceVector<Root>>(Bsk_ntt_table);
+                std::make_shared<DeviceVector<Root64>>(Bsk_ntt_table);
 
             bsk_intt_tables_ =
-                std::make_shared<DeviceVector<Root>>(Bsk_intt_table);
+                std::make_shared<DeviceVector<Root64>>(Bsk_intt_table);
 
             bsk_n_inverse_ =
-                std::make_shared<DeviceVector<Ninverse>>(Bsk_n_inverse);
+                std::make_shared<DeviceVector<Ninverse64>>(Bsk_n_inverse);
 
-            std::vector<Data> base_matrix_q_Bsk =
+            std::vector<Data64> base_matrix_q_Bsk =
                 generate_base_matrix_q_Bsk(prime_vector, base_Bsk_mod, Q_size);
 
-            std::vector<Data> inv_punctured_prod_mod_base_array =
+            std::vector<Data64> inv_punctured_prod_mod_base_array =
                 generate_Mi_inv(prime_vector, Q_size);
 
-            std::vector<Data> base_change_matrix_m_tilde =
+            std::vector<Data64> base_change_matrix_m_tilde =
                 generate_base_change_matrix_m_tilde(prime_vector, m_tilde,
                                                     Q_size);
 
-            Data inv_prod_q_mod_m_tilde =
+            Data64 inv_prod_q_mod_m_tilde =
                 generate_inv_prod_q_mod_m_tilde(prime_vector, m_tilde, Q_size);
 
-            std::vector<Data> inv_m_tilde_mod_Bsk =
+            std::vector<Data64> inv_m_tilde_mod_Bsk =
                 generate_inv_m_tilde_mod_Bsk(base_Bsk_mod, m_tilde);
 
-            std::vector<Data> prod_q_mod_Bsk =
+            std::vector<Data64> prod_q_mod_Bsk =
                 generate_prod_q_mod_Bsk(prime_vector, base_Bsk_mod, Q_size);
 
-            std::vector<Data> inv_prod_q_mod_Bsk =
+            std::vector<Data64> inv_prod_q_mod_Bsk =
                 generate_inv_prod_q_mod_Bsk(prime_vector, base_Bsk_mod, Q_size);
 
-            std::vector<Data> base_matrix_Bsk_q =
+            std::vector<Data64> base_matrix_Bsk_q =
                 generate_base_matrix_Bsk_q(prime_vector, base_Bsk_mod, Q_size);
 
-            std::vector<Data> base_change_matrix_msk =
+            std::vector<Data64> base_change_matrix_msk =
                 generate_base_change_matrix_msk(base_Bsk_mod);
 
-            std::vector<Data> inv_punctured_prod_mod_B_array =
+            std::vector<Data64> inv_punctured_prod_mod_B_array =
                 generate_inv_punctured_prod_mod_B_array(base_Bsk_mod);
 
-            Data inv_prod_B_mod_m_sk =
+            Data64 inv_prod_B_mod_m_sk =
                 generate_inv_prod_B_mod_m_sk(base_Bsk_mod);
 
-            std::vector<Data> prod_B_mod_q =
+            std::vector<Data64> prod_B_mod_q =
                 generate_prod_B_mod_q(prime_vector, base_Bsk_mod, Q_size);
 
-            std::vector<Modulus> q_Bsk_merge_modulus =
+            std::vector<Modulus64> q_Bsk_merge_modulus =
                 generate_q_Bsk_merge_modulus(prime_vector, base_Bsk_mod,
                                              Q_size);
 
-            std::vector<Data> q_Bsk_merge_root =
+            std::vector<Data64> q_Bsk_merge_root =
                 generate_q_Bsk_merge_root(base_q_psi, base_Bsk_psi, Q_size);
 
-            std::vector<Root> q_Bsk_forward_tables = generate_ntt_table(
+            std::vector<Root64> q_Bsk_forward_tables = generate_ntt_table(
                 q_Bsk_merge_root, q_Bsk_merge_modulus, n_power);
-            std::vector<Root> q_Bsk_inverse_tables = generate_intt_table(
+            std::vector<Root64> q_Bsk_inverse_tables = generate_intt_table(
                 q_Bsk_merge_root, q_Bsk_merge_modulus, n_power);
-            std::vector<Ninverse> q_Bsk_n_inverse =
+            std::vector<Ninverse64> q_Bsk_n_inverse =
                 generate_n_inverse(n, q_Bsk_merge_modulus);
 
-            std::vector<Data> Qi_t =
+            std::vector<Data64> Qi_t =
                 generate_Qi_t(prime_vector, plain_mod, Q_size);
 
-            std::vector<Data> Qi_gamma =
+            std::vector<Data64> Qi_gamma =
                 generate_Qi_gamma(prime_vector, gamma_mod, Q_size);
 
-            std::vector<Data> Qi_inverse =
+            std::vector<Data64> Qi_inverse =
                 generate_Qi_inverse(prime_vector, Q_size);
 
-            Data mulq_inv_t =
+            Data64 mulq_inv_t =
                 generate_mulq_inv_t(prime_vector, plain_mod, Q_size);
 
-            Data mulq_inv_gamma =
+            Data64 mulq_inv_gamma =
                 generate_mulq_inv_gamma(prime_vector, gamma_mod, Q_size);
 
-            Data inv_gamma = generate_inv_gamma(plain_mod, gamma_mod);
+            Data64 inv_gamma = generate_inv_gamma(plain_mod, gamma_mod);
 
             m_tilde_ = m_tilde;
 
             base_change_matrix_Bsk_ =
-                std::make_shared<DeviceVector<Data>>(base_matrix_q_Bsk);
+                std::make_shared<DeviceVector<Data64>>(base_matrix_q_Bsk);
 
             inv_punctured_prod_mod_base_array_ =
-                std::make_shared<DeviceVector<Data>>(
+                std::make_shared<DeviceVector<Data64>>(
                     inv_punctured_prod_mod_base_array);
 
-            base_change_matrix_m_tilde_ = std::make_shared<DeviceVector<Data>>(
+            base_change_matrix_m_tilde_ = std::make_shared<DeviceVector<Data64>>(
                 base_change_matrix_m_tilde);
 
             inv_prod_q_mod_m_tilde_ = inv_prod_q_mod_m_tilde;
 
             inv_m_tilde_mod_Bsk_ =
-                std::make_shared<DeviceVector<Data>>(inv_m_tilde_mod_Bsk);
+                std::make_shared<DeviceVector<Data64>>(inv_m_tilde_mod_Bsk);
 
             prod_q_mod_Bsk_ =
-                std::make_shared<DeviceVector<Data>>(prod_q_mod_Bsk);
+                std::make_shared<DeviceVector<Data64>>(prod_q_mod_Bsk);
 
             inv_prod_q_mod_Bsk_ =
-                std::make_shared<DeviceVector<Data>>(inv_prod_q_mod_Bsk);
+                std::make_shared<DeviceVector<Data64>>(inv_prod_q_mod_Bsk);
 
             base_change_matrix_q_ =
-                std::make_shared<DeviceVector<Data>>(base_matrix_Bsk_q);
+                std::make_shared<DeviceVector<Data64>>(base_matrix_Bsk_q);
 
             base_change_matrix_msk_ =
-                std::make_shared<DeviceVector<Data>>(base_change_matrix_msk);
+                std::make_shared<DeviceVector<Data64>>(base_change_matrix_msk);
 
             inv_punctured_prod_mod_B_array_ =
-                std::make_shared<DeviceVector<Data>>(
+                std::make_shared<DeviceVector<Data64>>(
                     inv_punctured_prod_mod_B_array);
 
             inv_prod_B_mod_m_sk_ = inv_prod_B_mod_m_sk;
 
-            prod_B_mod_q_ = std::make_shared<DeviceVector<Data>>(prod_B_mod_q);
+            prod_B_mod_q_ = std::make_shared<DeviceVector<Data64>>(prod_B_mod_q);
 
             q_Bsk_merge_modulus_ =
-                std::make_shared<DeviceVector<Modulus>>(q_Bsk_merge_modulus);
+                std::make_shared<DeviceVector<Modulus64>>(q_Bsk_merge_modulus);
 
             q_Bsk_merge_ntt_tables_ =
-                std::make_shared<DeviceVector<Root>>(q_Bsk_forward_tables);
+                std::make_shared<DeviceVector<Root64>>(q_Bsk_forward_tables);
 
             q_Bsk_merge_intt_tables_ =
-                std::make_shared<DeviceVector<Root>>(q_Bsk_inverse_tables);
+                std::make_shared<DeviceVector<Root64>>(q_Bsk_inverse_tables);
 
             q_Bsk_n_inverse_ =
-                std::make_shared<DeviceVector<Ninverse>>(q_Bsk_n_inverse);
+                std::make_shared<DeviceVector<Ninverse64>>(q_Bsk_n_inverse);
 
             plain_modulus2_ =
-                std::make_shared<DeviceVector<Modulus>>(plain_mod2);
+                std::make_shared<DeviceVector<Modulus64>>(plain_mod2);
 
             n_plain_inverse_ =
-                std::make_shared<DeviceVector<Ninverse>>(plain_n_inverse);
+                std::make_shared<DeviceVector<Ninverse64>>(plain_n_inverse);
 
             plain_ntt_tables_ =
-                std::make_shared<DeviceVector<Root>>(plain_forward_table);
+                std::make_shared<DeviceVector<Root64>>(plain_forward_table);
 
             plain_intt_tables_ =
-                std::make_shared<DeviceVector<Root>>(plain_inverse_table);
+                std::make_shared<DeviceVector<Root64>>(plain_inverse_table);
 
             gamma_ = gamma_mod;
 
             coeeff_div_plainmod_ =
-                std::make_shared<DeviceVector<Data>>(coeff_div_plain_modulus);
+                std::make_shared<DeviceVector<Data64>>(coeff_div_plain_modulus);
 
             Q_mod_t_ = Q_mod_t;
 
             upper_threshold_ = plain_upper_half_threshold;
 
-            upper_halfincrement_ = std::make_shared<DeviceVector<Data>>(
+            upper_halfincrement_ = std::make_shared<DeviceVector<Data64>>(
                 plain_upper_half_increment);
 
-            Qi_t_ = std::make_shared<DeviceVector<Data>>(Qi_t);
+            Qi_t_ = std::make_shared<DeviceVector<Data64>>(Qi_t);
 
-            Qi_gamma_ = std::make_shared<DeviceVector<Data>>(Qi_gamma);
+            Qi_gamma_ = std::make_shared<DeviceVector<Data64>>(Qi_gamma);
 
-            Qi_inverse_ = std::make_shared<DeviceVector<Data>>(Qi_inverse);
+            Qi_inverse_ = std::make_shared<DeviceVector<Data64>>(Qi_inverse);
 
             mulq_inv_t_ = mulq_inv_t;
             mulq_inv_gamma_ = mulq_inv_gamma;
@@ -1225,44 +1225,44 @@ namespace heongpu
         else if (scheme_ == scheme_type::ckks)
         {
             // For Rescale parameters for all depth
-            std::vector<Data> rescale_last_q_modinv;
-            std::vector<Data> rescaled_half_mod;
-            std::vector<Data> rescaled_half;
+            std::vector<Data64> rescale_last_q_modinv;
+            std::vector<Data64> rescaled_half_mod;
+            std::vector<Data64> rescaled_half;
             for (int j = 0; j < (Q_size - 1); j++)
             {
                 int inner = (Q_size - 1) - j;
                 rescaled_half.push_back(prime_vector[inner].value >> 1);
                 for (int i = 0; i < inner; i++)
                 {
-                    Data temp_ =
+                    Data64 temp_ =
                         prime_vector[inner].value % prime_vector[i].value;
                     rescale_last_q_modinv.push_back(
-                        VALUE::modinv(temp_, prime_vector[i]));
+                        OPERATOR64::modinv(temp_, prime_vector[i]));
                     rescaled_half_mod.push_back(rescaled_half[j] %
                                                 prime_vector[i].value);
                 }
             }
 
             rescaled_last_q_modinv_ =
-                std::make_shared<DeviceVector<Data>>(rescale_last_q_modinv);
+                std::make_shared<DeviceVector<Data64>>(rescale_last_q_modinv);
 
             rescaled_half_mod_ =
-                std::make_shared<DeviceVector<Data>>(rescaled_half_mod);
+                std::make_shared<DeviceVector<Data64>>(rescaled_half_mod);
 
             rescaled_half_ =
-                std::make_shared<DeviceVector<Data>>(rescaled_half);
+                std::make_shared<DeviceVector<Data64>>(rescaled_half);
 
-            std::vector<Data> Mi;
-            std::vector<Data> Mi_inv;
-            std::vector<Data> upper_half_threshold;
-            std::vector<Data> decryption_modulus;
+            std::vector<Data64> Mi;
+            std::vector<Data64> Mi_inv;
+            std::vector<Data64> upper_half_threshold;
+            std::vector<Data64> decryption_modulus;
 
             for (int i = 0; i < Q_size; i++)
             {
                 int depth_Q_size = Q_size - i;
 
                 // Mi
-                std::vector<Data> Mi_inner =
+                std::vector<Data64> Mi_inner =
                     generate_Mi(prime_vector, depth_Q_size);
                 for (int j = 0; j < depth_Q_size * depth_Q_size; j++)
                 {
@@ -1270,7 +1270,7 @@ namespace heongpu
                 }
 
                 // Mi_inv
-                std::vector<Data> Mi_inv_inner =
+                std::vector<Data64> Mi_inv_inner =
                     generate_Mi_inv(prime_vector, depth_Q_size);
                 for (int j = 0; j < depth_Q_size; j++)
                 {
@@ -1278,7 +1278,7 @@ namespace heongpu
                 }
 
                 // upper_half_threshold
-                std::vector<Data> upper_half_threshold_inner =
+                std::vector<Data64> upper_half_threshold_inner =
                     generate_upper_half_threshold(prime_vector, depth_Q_size);
                 for (int j = 0; j < depth_Q_size; j++)
                 {
@@ -1287,7 +1287,7 @@ namespace heongpu
                 }
 
                 // decryption_modulus
-                std::vector<Data> M_inner =
+                std::vector<Data64> M_inner =
                     generate_M(prime_vector, depth_Q_size);
                 for (int j = 0; j < depth_Q_size; j++)
                 {
@@ -1295,15 +1295,15 @@ namespace heongpu
                 }
             }
 
-            Mi_ = std::make_shared<DeviceVector<Data>>(Mi);
+            Mi_ = std::make_shared<DeviceVector<Data64>>(Mi);
 
-            Mi_inv_ = std::make_shared<DeviceVector<Data>>(Mi_inv);
+            Mi_inv_ = std::make_shared<DeviceVector<Data64>>(Mi_inv);
 
             upper_half_threshold_ =
-                std::make_shared<DeviceVector<Data>>(upper_half_threshold);
+                std::make_shared<DeviceVector<Data64>>(upper_half_threshold);
 
             decryption_modulus_ =
-                std::make_shared<DeviceVector<Data>>(decryption_modulus);
+                std::make_shared<DeviceVector<Data64>>(decryption_modulus);
 
             // prime_location_leveled
             std::vector<int> prime_loc;
@@ -1350,20 +1350,20 @@ namespace heongpu
 
                     d = pool.d_;
 
-                    std::vector<Data> base_change_matrix_D_to_Q_tilda_inner =
+                    std::vector<Data64> base_change_matrix_D_to_Q_tilda_inner =
                         pool.base_change_matrix_D_to_Qtilda();
                     base_change_matrix_D_to_Q_tilda_ =
-                        std::make_shared<DeviceVector<Data>>(
+                        std::make_shared<DeviceVector<Data64>>(
                             base_change_matrix_D_to_Q_tilda_inner);
 
-                    std::vector<Data> Mi_inv_D_to_Q_tilda_inner =
+                    std::vector<Data64> Mi_inv_D_to_Q_tilda_inner =
                         pool.Mi_inv_D_to_Qtilda();
-                    Mi_inv_D_to_Q_tilda_ = std::make_shared<DeviceVector<Data>>(
+                    Mi_inv_D_to_Q_tilda_ = std::make_shared<DeviceVector<Data64>>(
                         Mi_inv_D_to_Q_tilda_inner);
 
-                    std::vector<Data> prod_D_to_Q_tilda_inner =
+                    std::vector<Data64> prod_D_to_Q_tilda_inner =
                         pool.prod_D_to_Qtilda();
-                    prod_D_to_Q_tilda_ = std::make_shared<DeviceVector<Data>>(
+                    prod_D_to_Q_tilda_ = std::make_shared<DeviceVector<Data64>>(
                         prod_D_to_Q_tilda_inner);
 
                     std::vector<int> I_j_inner = pool.I_j();
@@ -1391,14 +1391,14 @@ namespace heongpu
                     d_leveled =
                         std::make_shared<std::vector<int>>(pool_ckks.level_d_);
 
-                    std::vector<std::vector<Data>>
+                    std::vector<std::vector<Data64>>
                         base_change_matrix_D_to_Qtilda_vec =
                             pool_ckks.level_base_change_matrix_D_to_Qtilda();
 
-                    std::vector<std::vector<Data>> Mi_inv_D_to_Qtilda_vec =
+                    std::vector<std::vector<Data64>> Mi_inv_D_to_Qtilda_vec =
                         pool_ckks.level_Mi_inv_D_to_Qtilda();
 
-                    std::vector<std::vector<Data>> prod_D_to_Qtilda_vec =
+                    std::vector<std::vector<Data64>> prod_D_to_Qtilda_vec =
                         pool_ckks.level_prod_D_to_Qtilda();
 
                     std::vector<std::vector<int>> I_j_vec =
@@ -1411,11 +1411,11 @@ namespace heongpu
                         pool_ckks.level_sk_pair();
 
                     base_change_matrix_D_to_Qtilda_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data>>>();
+                        std::make_shared<std::vector<DeviceVector<Data64>>>();
                     Mi_inv_D_to_Qtilda_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data>>>();
+                        std::make_shared<std::vector<DeviceVector<Data64>>>();
                     prod_D_to_Qtilda_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data>>>();
+                        std::make_shared<std::vector<DeviceVector<Data64>>>();
                     I_j_leveled =
                         std::make_shared<std::vector<DeviceVector<int>>>();
                     I_location_leveled =
@@ -1427,12 +1427,12 @@ namespace heongpu
                          pool_lp < base_change_matrix_D_to_Qtilda_vec.size();
                          pool_lp++)
                     {
-                        DeviceVector<Data>
+                        DeviceVector<Data64>
                             base_change_matrix_D_to_Qtilda_leveled_inner(
                                 base_change_matrix_D_to_Qtilda_vec[pool_lp]);
-                        DeviceVector<Data> Mi_inv_D_to_Qtilda_leveled_inner(
+                        DeviceVector<Data64> Mi_inv_D_to_Qtilda_leveled_inner(
                             Mi_inv_D_to_Qtilda_vec[pool_lp]);
-                        DeviceVector<Data> prod_D_to_Qtilda_leveled_inner(
+                        DeviceVector<Data64> prod_D_to_Qtilda_leveled_inner(
                             prod_D_to_Qtilda_vec[pool_lp]);
 
                         base_change_matrix_D_to_Qtilda_leveled->push_back(
@@ -1476,55 +1476,55 @@ namespace heongpu
                     d_tilda = pool.d_tilda_;
                     r_prime = pool.r_prime_;
 
-                    std::vector<Modulus> B_prime_inner = pool.B_prime;
+                    std::vector<Modulus64> B_prime_inner = pool.B_prime;
                     B_prime_ =
-                        std::make_shared<DeviceVector<Modulus>>(B_prime_inner);
+                        std::make_shared<DeviceVector<Modulus64>>(B_prime_inner);
 
-                    std::vector<Root> B_prime_ntt_tables_inner =
+                    std::vector<Root64> B_prime_ntt_tables_inner =
                         pool.B_prime_ntt_tables();
-                    B_prime_ntt_tables_ = std::make_shared<DeviceVector<Root>>(
+                    B_prime_ntt_tables_ = std::make_shared<DeviceVector<Root64>>(
                         B_prime_ntt_tables_inner);
 
-                    std::vector<Root> B_prime_intt_tables_inner =
+                    std::vector<Root64> B_prime_intt_tables_inner =
                         pool.B_prime_intt_tables();
-                    B_prime_intt_tables_ = std::make_shared<DeviceVector<Root>>(
+                    B_prime_intt_tables_ = std::make_shared<DeviceVector<Root64>>(
                         B_prime_intt_tables_inner);
 
-                    std::vector<Ninverse> B_prime_n_inverse_inner =
+                    std::vector<Ninverse64> B_prime_n_inverse_inner =
                         pool.B_prime_n_inverse();
                     B_prime_n_inverse_ =
-                        std::make_shared<DeviceVector<Ninverse>>(
+                        std::make_shared<DeviceVector<Ninverse64>>(
                             B_prime_n_inverse_inner);
 
-                    std::vector<Data> base_change_matrix_D_to_B_inner =
+                    std::vector<Data64> base_change_matrix_D_to_B_inner =
                         pool.base_change_matrix_D_to_B();
                     base_change_matrix_D_to_B_ =
-                        std::make_shared<DeviceVector<Data>>(
+                        std::make_shared<DeviceVector<Data64>>(
                             base_change_matrix_D_to_B_inner);
 
-                    std::vector<Data> base_change_matrix_B_to_D_inner =
+                    std::vector<Data64> base_change_matrix_B_to_D_inner =
                         pool.base_change_matrix_B_to_D();
                     base_change_matrix_B_to_D_ =
-                        std::make_shared<DeviceVector<Data>>(
+                        std::make_shared<DeviceVector<Data64>>(
                             base_change_matrix_B_to_D_inner);
 
-                    std::vector<Data> Mi_inv_D_to_B_inner =
+                    std::vector<Data64> Mi_inv_D_to_B_inner =
                         pool.Mi_inv_D_to_B();
-                    Mi_inv_D_to_B_ = std::make_shared<DeviceVector<Data>>(
+                    Mi_inv_D_to_B_ = std::make_shared<DeviceVector<Data64>>(
                         Mi_inv_D_to_B_inner);
 
-                    std::vector<Data> Mi_inv_B_to_D_inner =
+                    std::vector<Data64> Mi_inv_B_to_D_inner =
                         pool.Mi_inv_B_to_D();
-                    Mi_inv_B_to_D_ = std::make_shared<DeviceVector<Data>>(
+                    Mi_inv_B_to_D_ = std::make_shared<DeviceVector<Data64>>(
                         Mi_inv_B_to_D_inner);
 
-                    std::vector<Data> prod_D_to_B_inner = pool.prod_D_to_B();
+                    std::vector<Data64> prod_D_to_B_inner = pool.prod_D_to_B();
                     prod_D_to_B_ =
-                        std::make_shared<DeviceVector<Data>>(prod_D_to_B_inner);
+                        std::make_shared<DeviceVector<Data64>>(prod_D_to_B_inner);
 
-                    std::vector<Data> prod_B_to_D_inner = pool.prod_B_to_D();
+                    std::vector<Data64> prod_B_to_D_inner = pool.prod_B_to_D();
                     prod_B_to_D_ =
-                        std::make_shared<DeviceVector<Data>>(prod_B_to_D_inner);
+                        std::make_shared<DeviceVector<Data64>>(prod_B_to_D_inner);
 
                     std::vector<int> I_j_inner = pool.I_j_2();
                     I_j_ = std::make_shared<DeviceVector<int>>(I_j_inner);
@@ -1554,47 +1554,47 @@ namespace heongpu
                         pool_ckks.level_d_tilda_);
                     r_prime_leveled = pool_ckks.r_prime_;
 
-                    std::vector<Modulus> B_prime_inner = pool_ckks.B_prime;
+                    std::vector<Modulus64> B_prime_inner = pool_ckks.B_prime;
                     B_prime_leveled =
-                        std::make_shared<DeviceVector<Modulus>>(B_prime_inner);
+                        std::make_shared<DeviceVector<Modulus64>>(B_prime_inner);
 
-                    std::vector<Root> B_prime_ntt_tables_leveled_inner =
+                    std::vector<Root64> B_prime_ntt_tables_leveled_inner =
                         pool_ckks.B_prime_ntt_tables();
                     B_prime_ntt_tables_leveled =
-                        std::make_shared<DeviceVector<Root>>(
+                        std::make_shared<DeviceVector<Root64>>(
                             B_prime_ntt_tables_leveled_inner);
 
-                    std::vector<Root> B_prime_intt_tables_leveled_inner =
+                    std::vector<Root64> B_prime_intt_tables_leveled_inner =
                         pool_ckks.B_prime_intt_tables();
                     B_prime_intt_tables_leveled =
-                        std::make_shared<DeviceVector<Root>>(
+                        std::make_shared<DeviceVector<Root64>>(
                             B_prime_intt_tables_leveled_inner);
 
-                    std::vector<Ninverse> B_prime_n_inverse_leveled_inner =
+                    std::vector<Ninverse64> B_prime_n_inverse_leveled_inner =
                         pool_ckks.B_prime_n_inverse();
                     B_prime_n_inverse_leveled =
-                        std::make_shared<DeviceVector<Ninverse>>(
+                        std::make_shared<DeviceVector<Ninverse64>>(
                             B_prime_n_inverse_leveled_inner);
 
-                    std::vector<std::vector<Data>>
+                    std::vector<std::vector<Data64>>
                         base_change_matrix_D_to_B_vec =
                             pool_ckks.level_base_change_matrix_D_to_B();
 
-                    std::vector<std::vector<Data>>
+                    std::vector<std::vector<Data64>>
                         base_change_matrix_B_to_D_vec =
                             pool_ckks.level_base_change_matrix_B_to_D();
 
-                    std::vector<std::vector<Data>> Mi_inv_D_to_B_vec =
+                    std::vector<std::vector<Data64>> Mi_inv_D_to_B_vec =
                         pool_ckks.level_Mi_inv_D_to_B();
-                    std::vector<Data> Mi_inv_B_to_D_vec =
+                    std::vector<Data64> Mi_inv_B_to_D_vec =
                         pool_ckks.level_Mi_inv_B_to_D();
 
                     Mi_inv_B_to_D_leveled =
-                        std::make_shared<DeviceVector<Data>>(Mi_inv_B_to_D_vec);
+                        std::make_shared<DeviceVector<Data64>>(Mi_inv_B_to_D_vec);
 
-                    std::vector<std::vector<Data>> prod_D_to_B_vec =
+                    std::vector<std::vector<Data64>> prod_D_to_B_vec =
                         pool_ckks.level_prod_D_to_B();
-                    std::vector<std::vector<Data>> prod_B_to_D_vec =
+                    std::vector<std::vector<Data64>> prod_B_to_D_vec =
                         pool_ckks.level_prod_B_to_D();
 
                     std::vector<std::vector<int>> I_j_vec =
@@ -1605,15 +1605,15 @@ namespace heongpu
                         pool_ckks.level_sk_pair();
 
                     base_change_matrix_D_to_B_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data>>>();
+                        std::make_shared<std::vector<DeviceVector<Data64>>>();
                     base_change_matrix_B_to_D_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data>>>();
+                        std::make_shared<std::vector<DeviceVector<Data64>>>();
                     Mi_inv_D_to_B_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data>>>();
+                        std::make_shared<std::vector<DeviceVector<Data64>>>();
                     prod_D_to_B_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data>>>();
+                        std::make_shared<std::vector<DeviceVector<Data64>>>();
                     prod_B_to_D_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data>>>();
+                        std::make_shared<std::vector<DeviceVector<Data64>>>();
 
                     I_j_leveled =
                         std::make_shared<std::vector<DeviceVector<int>>>();
@@ -1626,17 +1626,17 @@ namespace heongpu
                          pool_lp < base_change_matrix_D_to_B_vec.size();
                          pool_lp++)
                     {
-                        DeviceVector<Data>
+                        DeviceVector<Data64>
                             base_change_matrix_D_to_B_leveled_inner(
                                 base_change_matrix_D_to_B_vec[pool_lp]);
-                        DeviceVector<Data>
+                        DeviceVector<Data64>
                             base_change_matrix_B_to_D_leveled_inner(
                                 base_change_matrix_B_to_D_vec[pool_lp]);
-                        DeviceVector<Data> Mi_inv_D_to_B_leveled_inner(
+                        DeviceVector<Data64> Mi_inv_D_to_B_leveled_inner(
                             Mi_inv_D_to_B_vec[pool_lp]);
-                        DeviceVector<Data> prod_D_to_B_leveled_inner(
+                        DeviceVector<Data64> prod_D_to_B_leveled_inner(
                             prod_D_to_B_vec[pool_lp]);
-                        DeviceVector<Data> prod_B_to_D_leveled_inner(
+                        DeviceVector<Data64> prod_B_to_D_leveled_inner(
                             prod_B_to_D_vec[pool_lp]);
 
                         base_change_matrix_D_to_B_leveled->push_back(

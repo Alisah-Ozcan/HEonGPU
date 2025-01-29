@@ -600,11 +600,11 @@ namespace heongpu
         int Q_size_;
         int P_size_;
 
-        std::shared_ptr<DeviceVector<Modulus>> modulus_;
-        std::shared_ptr<DeviceVector<Root>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data>> factor_;
+        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
+        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
+        std::shared_ptr<DeviceVector<Root64>> intt_table_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
+        std::shared_ptr<DeviceVector<Data64>> factor_;
 
         int d_;
         int d_tilda_;
@@ -614,35 +614,35 @@ namespace heongpu
         std::shared_ptr<std::vector<int>> d_tilda_leveled_;
         int r_prime_leveled_;
 
-        std::shared_ptr<DeviceVector<Modulus>> B_prime_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse>> B_prime_n_inverse_;
+        std::shared_ptr<DeviceVector<Modulus64>> B_prime_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_;
+        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_;
 
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_B_to_D_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_B_to_D_;
-        std::shared_ptr<DeviceVector<Data>> prod_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> prod_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> prod_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> prod_B_to_D_;
 
         std::shared_ptr<DeviceVector<int>> I_j_;
         std::shared_ptr<DeviceVector<int>> I_location_;
         std::shared_ptr<DeviceVector<int>> Sk_pair_;
 
-        std::shared_ptr<DeviceVector<Modulus>> B_prime_leveled_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_ntt_tables_leveled_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_intt_tables_leveled_;
-        std::shared_ptr<DeviceVector<Ninverse>> B_prime_n_inverse_leveled_;
+        std::shared_ptr<DeviceVector<Modulus64>> B_prime_leveled_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_leveled_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_leveled_;
+        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_leveled_;
 
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_D_to_B_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_B_to_D_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> Mi_inv_D_to_B_leveled_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_B_to_D_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> prod_D_to_B_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> prod_B_to_D_leveled_;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> Mi_inv_D_to_B_leveled_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_leveled_;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_D_to_B_leveled_;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_B_to_D_leveled_;
 
         std::shared_ptr<std::vector<DeviceVector<int>>> I_j_leveled_;
         std::shared_ptr<std::vector<DeviceVector<int>>> I_location_leveled_;

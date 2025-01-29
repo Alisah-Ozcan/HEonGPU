@@ -14,51 +14,51 @@
 namespace heongpu
 {
 
-    __global__ void sk_multiplication(Data* ct1, Data* sk, Data* output,
-                                      Modulus* modulus, int n_power,
+    __global__ void sk_multiplication(Data64* ct1, Data64* sk, Data64* output,
+                                      Modulus64* modulus, int n_power,
                                       int decomp_mod_count);
 
-    __global__ void sk_multiplicationx3(Data* ct1, Data* sk, Modulus* modulus,
+    __global__ void sk_multiplicationx3(Data64* ct1, Data64* sk, Modulus64* modulus,
                                         int n_power, int decomp_mod_count);
 
-    __global__ void decryption_kernel(Data* ct0, Data* ct1, Data* plain,
-                                      Modulus* modulus, Modulus plain_mod,
-                                      Modulus gamma, Data* Qi_t, Data* Qi_gamma,
-                                      Data* Qi_inverse, Data mulq_inv_t,
-                                      Data mulq_inv_gamma, Data inv_gamma,
+    __global__ void decryption_kernel(Data64* ct0, Data64* ct1, Data64* plain,
+                                      Modulus64* modulus, Modulus64 plain_mod,
+                                      Modulus64 gamma, Data64* Qi_t, Data64* Qi_gamma,
+                                      Data64* Qi_inverse, Data64 mulq_inv_t,
+                                      Data64 mulq_inv_gamma, Data64 inv_gamma,
                                       int n_power, int decomp_mod_count);
 
-    __global__ void decryption_kernelx3(Data* ct0, Data* ct1, Data* ct2,
-                                        Data* plain, Modulus* modulus,
-                                        Modulus plain_mod, Modulus gamma,
-                                        Data* Qi_t, Data* Qi_gamma,
-                                        Data* Qi_inverse, Data mulq_inv_t,
-                                        Data mulq_inv_gamma, Data inv_gamma,
+    __global__ void decryption_kernelx3(Data64* ct0, Data64* ct1, Data64* ct2,
+                                        Data64* plain, Modulus64* modulus,
+                                        Modulus64 plain_mod, Modulus64 gamma,
+                                        Data64* Qi_t, Data64* Qi_gamma,
+                                        Data64* Qi_inverse, Data64 mulq_inv_t,
+                                        Data64 mulq_inv_gamma, Data64 inv_gamma,
                                         int n_power, int decomp_mod_count);
 
-    __global__ void coeff_multadd(Data* input1, Data* input2, Data* output,
-                                  Modulus plain_mod, Modulus* modulus,
+    __global__ void coeff_multadd(Data64* input1, Data64* input2, Data64* output,
+                                  Modulus64 plain_mod, Modulus64* modulus,
                                   int n_power, int decomp_mod_count);
 
-    __global__ void compose_kernel(Data* input, Data* output, Modulus* modulus,
-                                   Data* Mi_inv, Data* Mi,
-                                   Data* decryption_modulus,
+    __global__ void compose_kernel(Data64* input, Data64* output, Modulus64* modulus,
+                                   Data64* Mi_inv, Data64* Mi,
+                                   Data64* decryption_modulus,
                                    int coeff_modulus_count, int n_power);
 
     // TODO: make it efficient with cooperative group
-    __global__ void find_max_norm_kernel(Data* input, Data* output,
-                                         Data* upper_half_threshold,
-                                         Data* decryption_modulus,
+    __global__ void find_max_norm_kernel(Data64* input, Data64* output,
+                                         Data64* upper_half_threshold,
+                                         Data64* decryption_modulus,
                                          int coeff_modulus_count, int n_power);
 
-    __global__ void sk_multiplication_ckks(Data* ciphertext, Data* plaintext,
-                                           Data* sk, Modulus* modulus,
+    __global__ void sk_multiplication_ckks(Data64* ciphertext, Data64* plaintext,
+                                           Data64* sk, Modulus64* modulus,
                                            int n_power, int decomp_mod_count);
 
     __global__ void decryption_fusion_bfv_kernel(
-        Data* ct, Data* plain, Modulus* modulus, Modulus plain_mod,
-        Modulus gamma, Data* Qi_t, Data* Qi_gamma, Data* Qi_inverse,
-        Data mulq_inv_t, Data mulq_inv_gamma, Data inv_gamma, int n_power,
+        Data64* ct, Data64* plain, Modulus64* modulus, Modulus64 plain_mod,
+        Modulus64 gamma, Data64* Qi_t, Data64* Qi_gamma, Data64* Qi_inverse,
+        Data64 mulq_inv_t, Data64 mulq_inv_gamma, Data64 inv_gamma, int n_power,
         int decomp_mod_count);
 
 } // namespace heongpu

@@ -71,9 +71,9 @@ namespace heongpu
 
         inline int key_modulus_count() const noexcept { return Q_prime_size; }
 
-        inline Modulus plain_modulus() const noexcept { return plain_modulus_; }
+        inline Modulus64 plain_modulus() const noexcept { return plain_modulus_; }
 
-        inline std::vector<Modulus> key_modulus() const noexcept
+        inline std::vector<Modulus64> key_modulus() const noexcept
         {
             return prime_vector;
         }
@@ -106,84 +106,84 @@ namespace heongpu
 
         int total_bit_count_;
 
-        std::vector<Modulus> prime_vector;
-        std::vector<Data> base_q;
+        std::vector<Modulus64> prime_vector;
+        std::vector<Data64> base_q;
 
         std::vector<int> Qprime_mod_bit_sizes_;
         std::vector<int> Q_mod_bit_sizes_;
         std::vector<int> P_mod_bit_sizes_;
 
-        std::shared_ptr<DeviceVector<Modulus>> modulus_;
-        std::shared_ptr<DeviceVector<Root>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data>> last_q_modinv_;
-        std::shared_ptr<DeviceVector<Data>> half_p_;
-        std::shared_ptr<DeviceVector<Data>> half_mod_;
-        std::shared_ptr<DeviceVector<Data>> factor_;
+        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
+        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
+        std::shared_ptr<DeviceVector<Root64>> intt_table_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
+        std::shared_ptr<DeviceVector<Data64>> last_q_modinv_;
+        std::shared_ptr<DeviceVector<Data64>> half_p_;
+        std::shared_ptr<DeviceVector<Data64>> half_mod_;
+        std::shared_ptr<DeviceVector<Data64>> factor_;
 
         // BFV BEHZ multiplication parameters
-        std::shared_ptr<DeviceVector<Modulus>> base_Bsk_;
-        std::shared_ptr<DeviceVector<Root>> bsk_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root>> bsk_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse>> bsk_n_inverse_;
+        std::shared_ptr<DeviceVector<Modulus64>> base_Bsk_;
+        std::shared_ptr<DeviceVector<Root64>> bsk_ntt_tables_;
+        std::shared_ptr<DeviceVector<Root64>> bsk_intt_tables_;
+        std::shared_ptr<DeviceVector<Ninverse64>> bsk_n_inverse_;
 
-        Modulus m_tilde_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_Bsk_;
-        std::shared_ptr<DeviceVector<Data>> inv_punctured_prod_mod_base_array_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_m_tilde_;
+        Modulus64 m_tilde_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_Bsk_;
+        std::shared_ptr<DeviceVector<Data64>> inv_punctured_prod_mod_base_array_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_m_tilde_;
 
-        Data inv_prod_q_mod_m_tilde_;
-        std::shared_ptr<DeviceVector<Data>> inv_m_tilde_mod_Bsk_;
-        std::shared_ptr<DeviceVector<Data>> prod_q_mod_Bsk_;
-        std::shared_ptr<DeviceVector<Data>> inv_prod_q_mod_Bsk_;
+        Data64 inv_prod_q_mod_m_tilde_;
+        std::shared_ptr<DeviceVector<Data64>> inv_m_tilde_mod_Bsk_;
+        std::shared_ptr<DeviceVector<Data64>> prod_q_mod_Bsk_;
+        std::shared_ptr<DeviceVector<Data64>> inv_prod_q_mod_Bsk_;
 
-        Modulus plain_modulus_;
+        Modulus64 plain_modulus_;
 
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_q_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_msk_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_q_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_msk_;
 
-        std::shared_ptr<DeviceVector<Data>> inv_punctured_prod_mod_B_array_;
-        Data inv_prod_B_mod_m_sk_;
-        std::shared_ptr<DeviceVector<Data>> prod_B_mod_q_;
+        std::shared_ptr<DeviceVector<Data64>> inv_punctured_prod_mod_B_array_;
+        Data64 inv_prod_B_mod_m_sk_;
+        std::shared_ptr<DeviceVector<Data64>> prod_B_mod_q_;
 
-        std::shared_ptr<DeviceVector<Modulus>> q_Bsk_merge_modulus_;
-        std::shared_ptr<DeviceVector<Root>> q_Bsk_merge_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root>> q_Bsk_merge_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse>> q_Bsk_n_inverse_;
+        std::shared_ptr<DeviceVector<Modulus64>> q_Bsk_merge_modulus_;
+        std::shared_ptr<DeviceVector<Root64>> q_Bsk_merge_ntt_tables_;
+        std::shared_ptr<DeviceVector<Root64>> q_Bsk_merge_intt_tables_;
+        std::shared_ptr<DeviceVector<Ninverse64>> q_Bsk_n_inverse_;
 
         // BFV decryption parameters
-        std::shared_ptr<DeviceVector<Modulus>> plain_modulus2_;
-        std::shared_ptr<DeviceVector<Ninverse>> n_plain_inverse_;
-        std::shared_ptr<DeviceVector<Root>> plain_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root>> plain_intt_tables_;
+        std::shared_ptr<DeviceVector<Modulus64>> plain_modulus2_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_plain_inverse_;
+        std::shared_ptr<DeviceVector<Root64>> plain_ntt_tables_;
+        std::shared_ptr<DeviceVector<Root64>> plain_intt_tables_;
 
-        Modulus gamma_;
-        std::shared_ptr<DeviceVector<Data>> coeeff_div_plainmod_;
-        Data Q_mod_t_;
+        Modulus64 gamma_;
+        std::shared_ptr<DeviceVector<Data64>> coeeff_div_plainmod_;
+        Data64 Q_mod_t_;
 
-        Data upper_threshold_;
-        std::shared_ptr<DeviceVector<Data>> upper_halfincrement_;
+        Data64 upper_threshold_;
+        std::shared_ptr<DeviceVector<Data64>> upper_halfincrement_;
 
-        std::shared_ptr<DeviceVector<Data>> Qi_t_;
-        std::shared_ptr<DeviceVector<Data>> Qi_gamma_;
-        std::shared_ptr<DeviceVector<Data>> Qi_inverse_;
+        std::shared_ptr<DeviceVector<Data64>> Qi_t_;
+        std::shared_ptr<DeviceVector<Data64>> Qi_gamma_;
+        std::shared_ptr<DeviceVector<Data64>> Qi_inverse_;
 
-        Data mulq_inv_t_;
-        Data mulq_inv_gamma_;
-        Data inv_gamma_;
+        Data64 mulq_inv_t_;
+        Data64 mulq_inv_gamma_;
+        Data64 inv_gamma_;
 
         // CKKS switchkey & rescale parameters
-        std::shared_ptr<DeviceVector<Data>> rescaled_last_q_modinv_;
-        std::shared_ptr<DeviceVector<Data>> rescaled_half_;
-        std::shared_ptr<DeviceVector<Data>> rescaled_half_mod_;
+        std::shared_ptr<DeviceVector<Data64>> rescaled_last_q_modinv_;
+        std::shared_ptr<DeviceVector<Data64>> rescaled_half_;
+        std::shared_ptr<DeviceVector<Data64>> rescaled_half_mod_;
 
         // CKKS encode & decode parameters || BFV noise budget calculation
         // parameters
-        std::shared_ptr<DeviceVector<Data>> Mi_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_;
-        std::shared_ptr<DeviceVector<Data>> upper_half_threshold_;
-        std::shared_ptr<DeviceVector<Data>> decryption_modulus_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_;
+        std::shared_ptr<DeviceVector<Data64>> upper_half_threshold_;
+        std::shared_ptr<DeviceVector<Data64>> decryption_modulus_;
 
         // BFV switchkey parameters(for Method II & Method III, not Method I)
         int m;
@@ -193,21 +193,21 @@ namespace heongpu
         int d_tilda;
         int r_prime;
 
-        std::shared_ptr<DeviceVector<Modulus>> B_prime_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root>> B_prime_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse>> B_prime_n_inverse_;
+        std::shared_ptr<DeviceVector<Modulus64>> B_prime_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_;
+        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_;
 
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_B_to_D_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_B_to_D_;
-        std::shared_ptr<DeviceVector<Data>> prod_D_to_B_;
-        std::shared_ptr<DeviceVector<Data>> prod_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_;
+        std::shared_ptr<DeviceVector<Data64>> prod_D_to_B_;
+        std::shared_ptr<DeviceVector<Data64>> prod_B_to_D_;
 
-        std::shared_ptr<DeviceVector<Data>> base_change_matrix_D_to_Q_tilda_;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_D_to_Q_tilda_;
-        std::shared_ptr<DeviceVector<Data>> prod_D_to_Q_tilda_;
+        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_D_to_Q_tilda_;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_D_to_Q_tilda_;
+        std::shared_ptr<DeviceVector<Data64>> prod_D_to_Q_tilda_;
 
         std::shared_ptr<DeviceVector<int>> I_j_;
         std::shared_ptr<DeviceVector<int>> I_location_;
@@ -221,25 +221,25 @@ namespace heongpu
         std::shared_ptr<std::vector<int>> d_tilda_leveled;
         int r_prime_leveled;
 
-        std::shared_ptr<DeviceVector<Modulus>> B_prime_leveled;
-        std::shared_ptr<DeviceVector<Root>> B_prime_ntt_tables_leveled;
-        std::shared_ptr<DeviceVector<Root>> B_prime_intt_tables_leveled;
-        std::shared_ptr<DeviceVector<Ninverse>> B_prime_n_inverse_leveled;
+        std::shared_ptr<DeviceVector<Modulus64>> B_prime_leveled;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_leveled;
+        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_leveled;
+        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_leveled;
 
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_D_to_B_leveled;
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_B_to_D_leveled;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> Mi_inv_D_to_B_leveled;
-        std::shared_ptr<DeviceVector<Data>> Mi_inv_B_to_D_leveled;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> prod_D_to_B_leveled;
-        std::shared_ptr<std::vector<DeviceVector<Data>>> prod_B_to_D_leveled;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> Mi_inv_D_to_B_leveled;
+        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_leveled;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_D_to_B_leveled;
+        std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_B_to_D_leveled;
 
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             base_change_matrix_D_to_Qtilda_leveled;
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             Mi_inv_D_to_Qtilda_leveled;
-        std::shared_ptr<std::vector<DeviceVector<Data>>>
+        std::shared_ptr<std::vector<DeviceVector<Data64>>>
             prod_D_to_Qtilda_leveled;
 
         std::shared_ptr<std::vector<DeviceVector<int>>> I_j_leveled;
@@ -250,102 +250,102 @@ namespace heongpu
         std::shared_ptr<DeviceVector<int>> prime_location_leveled;
 
       private:
-        std::vector<Data> generate_last_q_modinv();
+        std::vector<Data64> generate_last_q_modinv();
 
-        std::vector<Data> generate_half();
+        std::vector<Data64> generate_half();
 
-        std::vector<Data> generate_half_mod(std::vector<Data> half);
+        std::vector<Data64> generate_half_mod(std::vector<Data64> half);
 
-        std::vector<Data> generate_factor();
+        std::vector<Data64> generate_factor();
 
         // RNS PARAMETER GENERATOR
 
-        std::vector<Data> generate_Mi(std::vector<Modulus> primes, int size);
+        std::vector<Data64> generate_Mi(std::vector<Modulus64> primes, int size);
 
-        std::vector<Data> generate_Mi_inv(std::vector<Modulus> primes,
+        std::vector<Data64> generate_Mi_inv(std::vector<Modulus64> primes,
                                           int size);
 
-        std::vector<Data> generate_M(std::vector<Modulus> primes, int size);
+        std::vector<Data64> generate_M(std::vector<Modulus64> primes, int size);
 
-        std::vector<Data>
-        generate_upper_half_threshold(std::vector<Modulus> primes, int size);
+        std::vector<Data64>
+        generate_upper_half_threshold(std::vector<Modulus64> primes, int size);
 
-        Data generate_Q_mod_t(std::vector<Modulus> primes, Modulus& plain_mod,
+        Data64 generate_Q_mod_t(std::vector<Modulus64> primes, Modulus64& plain_mod,
                               int size);
 
-        std::vector<Data>
-        generate_coeff_div_plain_modulus(std::vector<Modulus> primes,
-                                         Modulus& plain_mod, int size);
+        std::vector<Data64>
+        generate_coeff_div_plain_modulus(std::vector<Modulus64> primes,
+                                         Modulus64& plain_mod, int size);
 
         // BFV MULTIPLICATION PARAMETERS
 
-        std::vector<Data>
-        generate_base_matrix_q_Bsk(std::vector<Modulus> primes,
-                                   std::vector<Modulus> bsk_mod, int size);
+        std::vector<Data64>
+        generate_base_matrix_q_Bsk(std::vector<Modulus64> primes,
+                                   std::vector<Modulus64> bsk_mod, int size);
 
         // inv_punctured_prod_mod_base_array --> generate_Mi_inv
 
-        std::vector<Data>
-        generate_base_change_matrix_m_tilde(std::vector<Modulus> primes,
-                                            Modulus mtilda, int size);
+        std::vector<Data64>
+        generate_base_change_matrix_m_tilde(std::vector<Modulus64> primes,
+                                            Modulus64 mtilda, int size);
 
-        Data generate_inv_prod_q_mod_m_tilde(std::vector<Modulus> primes,
-                                             Modulus mtilda, int size);
+        Data64 generate_inv_prod_q_mod_m_tilde(std::vector<Modulus64> primes,
+                                             Modulus64 mtilda, int size);
 
-        std::vector<Data>
-        generate_inv_m_tilde_mod_Bsk(std::vector<Modulus> bsk_mod,
-                                     Modulus mtilda);
+        std::vector<Data64>
+        generate_inv_m_tilde_mod_Bsk(std::vector<Modulus64> bsk_mod,
+                                     Modulus64 mtilda);
 
-        std::vector<Data> generate_prod_q_mod_Bsk(std::vector<Modulus> primes,
-                                                  std::vector<Modulus> bsk_mod,
+        std::vector<Data64> generate_prod_q_mod_Bsk(std::vector<Modulus64> primes,
+                                                  std::vector<Modulus64> bsk_mod,
                                                   int size);
 
-        std::vector<Data>
-        generate_inv_prod_q_mod_Bsk(std::vector<Modulus> primes,
-                                    std::vector<Modulus> bsk_mod, int size);
+        std::vector<Data64>
+        generate_inv_prod_q_mod_Bsk(std::vector<Modulus64> primes,
+                                    std::vector<Modulus64> bsk_mod, int size);
 
-        std::vector<Data>
-        generate_base_matrix_Bsk_q(std::vector<Modulus> primes,
-                                   std::vector<Modulus> bsk_mod, int size);
+        std::vector<Data64>
+        generate_base_matrix_Bsk_q(std::vector<Modulus64> primes,
+                                   std::vector<Modulus64> bsk_mod, int size);
 
-        std::vector<Data>
-        generate_base_change_matrix_msk(std::vector<Modulus> bsk_mod);
+        std::vector<Data64>
+        generate_base_change_matrix_msk(std::vector<Modulus64> bsk_mod);
 
-        std::vector<Data>
-        generate_inv_punctured_prod_mod_B_array(std::vector<Modulus> bsk_mod);
+        std::vector<Data64>
+        generate_inv_punctured_prod_mod_B_array(std::vector<Modulus64> bsk_mod);
 
-        Data generate_inv_prod_B_mod_m_sk(std::vector<Modulus> bsk_mod);
+        Data64 generate_inv_prod_B_mod_m_sk(std::vector<Modulus64> bsk_mod);
 
-        std::vector<Data> generate_prod_B_mod_q(std::vector<Modulus> primes,
-                                                std::vector<Modulus> bsk_mod,
+        std::vector<Data64> generate_prod_B_mod_q(std::vector<Modulus64> primes,
+                                                std::vector<Modulus64> bsk_mod,
                                                 int size);
 
-        std::vector<Modulus>
-        generate_q_Bsk_merge_modulus(std::vector<Modulus> primes,
-                                     std::vector<Modulus> bsk_mod, int size);
+        std::vector<Modulus64>
+        generate_q_Bsk_merge_modulus(std::vector<Modulus64> primes,
+                                     std::vector<Modulus64> bsk_mod, int size);
 
-        std::vector<Data>
-        generate_q_Bsk_merge_root(std::vector<Data> primes_psi,
-                                  std::vector<Data> bsk_mod_psi, int size);
+        std::vector<Data64>
+        generate_q_Bsk_merge_root(std::vector<Data64> primes_psi,
+                                  std::vector<Data64> bsk_mod_psi, int size);
 
         // BFV DECRYPTION PARAMETERS
 
-        std::vector<Data> generate_Qi_t(std::vector<Modulus> primes,
-                                        Modulus& plain_mod, int size);
+        std::vector<Data64> generate_Qi_t(std::vector<Modulus64> primes,
+                                        Modulus64& plain_mod, int size);
 
-        std::vector<Data> generate_Qi_gamma(std::vector<Modulus> primes,
-                                            Modulus& gamma, int size);
+        std::vector<Data64> generate_Qi_gamma(std::vector<Modulus64> primes,
+                                            Modulus64& gamma, int size);
 
-        std::vector<Data> generate_Qi_inverse(std::vector<Modulus> primes,
+        std::vector<Data64> generate_Qi_inverse(std::vector<Modulus64> primes,
                                               int size); // use generate_Mi_inv
 
-        Data generate_mulq_inv_t(std::vector<Modulus> primes,
-                                 Modulus& plain_mod, int size);
+        Data64 generate_mulq_inv_t(std::vector<Modulus64> primes,
+                                 Modulus64& plain_mod, int size);
 
-        Data generate_mulq_inv_gamma(std::vector<Modulus> primes,
-                                     Modulus& gamma, int size);
+        Data64 generate_mulq_inv_gamma(std::vector<Modulus64> primes,
+                                     Modulus64& gamma, int size);
 
-        Data generate_inv_gamma(Modulus& plain_mod, Modulus& gamma);
+        Data64 generate_inv_gamma(Modulus64& plain_mod, Modulus64& gamma);
     };
 
 } // namespace heongpu

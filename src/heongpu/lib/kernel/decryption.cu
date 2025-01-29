@@ -7,8 +7,8 @@
 
 namespace heongpu
 {
-    __global__ void sk_multiplication(Data* ct1, Data* sk, Data* output,
-                                      Modulus* modulus, int n_power,
+    __global__ void sk_multiplication(Data64* ct1, Data64* sk, Data64* output,
+                                      Modulus64* modulus, int n_power,
                                       int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
@@ -16,13 +16,13 @@ namespace heongpu
 
         int index = idx + (block_y << n_power);
 
-        Data ct_1 = ct1[index];
-        Data sk_ = sk[index];
+        Data64 ct_1 = ct1[index];
+        Data64 sk_ = sk[index];
 
-        output[index] = VALUE_GPU::mult(ct_1, sk_, modulus[block_y]);
+        output[index] = OPERATOR_GPU_64::mult(ct_1, sk_, modulus[block_y]);
     }
 
-    __global__ void sk_multiplicationx3(Data* ct1, Data* sk, Modulus* modulus,
+    __global__ void sk_multiplicationx3(Data64* ct1, Data64* sk, Modulus64* modulus,
                                         int n_power, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
@@ -30,151 +30,151 @@ namespace heongpu
 
         int index = idx + (block_y << n_power);
 
-        Data ct_1 = ct1[index];
-        Data sk_ = sk[index];
-        ct1[index] = VALUE_GPU::mult(ct_1, sk_, modulus[block_y]);
+        Data64 ct_1 = ct1[index];
+        Data64 sk_ = sk[index];
+        ct1[index] = OPERATOR_GPU_64::mult(ct_1, sk_, modulus[block_y]);
 
-        Data ct_2 = ct1[index + (decomp_mod_count << n_power)];
-        Data sk2_ = VALUE_GPU::mult(sk_, sk_, modulus[block_y]);
+        Data64 ct_2 = ct1[index + (decomp_mod_count << n_power)];
+        Data64 sk2_ = OPERATOR_GPU_64::mult(sk_, sk_, modulus[block_y]);
         ct1[index + (decomp_mod_count << n_power)] =
-            VALUE_GPU::mult(ct_2, sk2_, modulus[block_y]);
+            OPERATOR_GPU_64::mult(ct_2, sk2_, modulus[block_y]);
     }
 
-    __global__ void decryption_kernel(Data* ct0, Data* ct1, Data* plain,
-                                      Modulus* modulus, Modulus plain_mod,
-                                      Modulus gamma, Data* Qi_t, Data* Qi_gamma,
-                                      Data* Qi_inverse, Data mulq_inv_t,
-                                      Data mulq_inv_gamma, Data inv_gamma,
+    __global__ void decryption_kernel(Data64* ct0, Data64* ct1, Data64* plain,
+                                      Modulus64* modulus, Modulus64 plain_mod,
+                                      Modulus64 gamma, Data64* Qi_t, Data64* Qi_gamma,
+                                      Data64* Qi_inverse, Data64 mulq_inv_t,
+                                      Data64 mulq_inv_gamma, Data64 inv_gamma,
                                       int n_power, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
 
-        Data sum_t = 0;
-        Data sum_gamma = 0;
+        Data64 sum_t = 0;
+        Data64 sum_gamma = 0;
 
 #pragma unroll
         for (int i = 0; i < decomp_mod_count; i++)
         {
             int location = idx + (i << n_power);
 
-            Data mt = VALUE_GPU::add(ct0[location], ct1[location], modulus[i]);
+            Data64 mt = OPERATOR_GPU_64::add(ct0[location], ct1[location], modulus[i]);
 
-            Data gamma_ = VALUE_GPU::reduce_forced(gamma.value, modulus[i]);
+            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, plain_mod.value, modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, plain_mod.value, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, gamma_, modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, gamma_, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, Qi_inverse[i], modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, Qi_inverse[i], modulus[i]);
 
-            Data mt_in_t = VALUE_GPU::reduce_forced(mt, plain_mod);
-            Data mt_in_gamma = VALUE_GPU::reduce_forced(mt, gamma);
+            Data64 mt_in_t = OPERATOR_GPU_64::reduce_forced(mt, plain_mod);
+            Data64 mt_in_gamma = OPERATOR_GPU_64::reduce_forced(mt, gamma);
 
-            mt_in_t = VALUE_GPU::mult(mt_in_t, Qi_t[i], plain_mod);
-            mt_in_gamma = VALUE_GPU::mult(mt_in_gamma, Qi_gamma[i], gamma);
+            mt_in_t = OPERATOR_GPU_64::mult(mt_in_t, Qi_t[i], plain_mod);
+            mt_in_gamma = OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
 
-            sum_t = VALUE_GPU::add(sum_t, mt_in_t, plain_mod);
-            sum_gamma = VALUE_GPU::add(sum_gamma, mt_in_gamma, gamma);
+            sum_t = OPERATOR_GPU_64::add(sum_t, mt_in_t, plain_mod);
+            sum_gamma = OPERATOR_GPU_64::add(sum_gamma, mt_in_gamma, gamma);
         }
 
-        sum_t = VALUE_GPU::mult(sum_t, mulq_inv_t, plain_mod);
-        sum_gamma = VALUE_GPU::mult(sum_gamma, mulq_inv_gamma, gamma);
+        sum_t = OPERATOR_GPU_64::mult(sum_t, mulq_inv_t, plain_mod);
+        sum_gamma = OPERATOR_GPU_64::mult(sum_gamma, mulq_inv_gamma, gamma);
 
-        Data gamma_2 = gamma.value >> 1;
+        Data64 gamma_2 = gamma.value >> 1;
 
         if (sum_gamma > gamma_2)
         {
-            Data gamma_ = VALUE_GPU::reduce_forced(gamma.value, plain_mod);
-            Data sum_gamma_ = VALUE_GPU::reduce_forced(sum_gamma, plain_mod);
+            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
+            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
-            Data result = VALUE_GPU::sub(gamma_, sum_gamma_, plain_mod);
-            result = VALUE_GPU::add(sum_t, result, plain_mod);
-            result = VALUE_GPU::mult(result, inv_gamma, plain_mod);
+            Data64 result = OPERATOR_GPU_64::sub(gamma_, sum_gamma_, plain_mod);
+            result = OPERATOR_GPU_64::add(sum_t, result, plain_mod);
+            result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);
 
             plain[idx] = result;
         }
         else
         {
-            Data sum_t_ = VALUE_GPU::reduce_forced(sum_t, plain_mod);
-            Data sum_gamma_ = VALUE_GPU::reduce_forced(sum_gamma, plain_mod);
+            Data64 sum_t_ = OPERATOR_GPU_64::reduce_forced(sum_t, plain_mod);
+            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
-            Data result = VALUE_GPU::sub(sum_t_, sum_gamma_, plain_mod);
-            result = VALUE_GPU::mult(result, inv_gamma, plain_mod);
+            Data64 result = OPERATOR_GPU_64::sub(sum_t_, sum_gamma_, plain_mod);
+            result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);
 
             plain[idx] = result;
         }
     }
 
-    __global__ void decryption_kernelx3(Data* ct0, Data* ct1, Data* ct2,
-                                        Data* plain, Modulus* modulus,
-                                        Modulus plain_mod, Modulus gamma,
-                                        Data* Qi_t, Data* Qi_gamma,
-                                        Data* Qi_inverse, Data mulq_inv_t,
-                                        Data mulq_inv_gamma, Data inv_gamma,
+    __global__ void decryption_kernelx3(Data64* ct0, Data64* ct1, Data64* ct2,
+                                        Data64* plain, Modulus64* modulus,
+                                        Modulus64 plain_mod, Modulus64 gamma,
+                                        Data64* Qi_t, Data64* Qi_gamma,
+                                        Data64* Qi_inverse, Data64 mulq_inv_t,
+                                        Data64 mulq_inv_gamma, Data64 inv_gamma,
                                         int n_power, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
 
-        Data sum_t = 0;
-        Data sum_gamma = 0;
+        Data64 sum_t = 0;
+        Data64 sum_gamma = 0;
 
 #pragma unroll
         for (int i = 0; i < decomp_mod_count; i++)
         {
             int location = idx + (i << n_power);
 
-            Data mt = VALUE_GPU::add(ct0[location], ct1[location], modulus[i]);
+            Data64 mt = OPERATOR_GPU_64::add(ct0[location], ct1[location], modulus[i]);
 
-            mt = VALUE_GPU::add(mt, ct2[location], modulus[i]);
+            mt = OPERATOR_GPU_64::add(mt, ct2[location], modulus[i]);
 
-            Data gamma_ = VALUE_GPU::reduce_forced(gamma.value, modulus[i]);
+            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, plain_mod.value, modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, plain_mod.value, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, gamma_, modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, gamma_, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, Qi_inverse[i], modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, Qi_inverse[i], modulus[i]);
 
-            Data mt_in_t = VALUE_GPU::reduce_forced(mt, plain_mod);
-            Data mt_in_gamma = VALUE_GPU::reduce_forced(mt, gamma);
+            Data64 mt_in_t = OPERATOR_GPU_64::reduce_forced(mt, plain_mod);
+            Data64 mt_in_gamma = OPERATOR_GPU_64::reduce_forced(mt, gamma);
 
-            mt_in_t = VALUE_GPU::mult(mt_in_t, Qi_t[i], plain_mod);
-            mt_in_gamma = VALUE_GPU::mult(mt_in_gamma, Qi_gamma[i], gamma);
+            mt_in_t = OPERATOR_GPU_64::mult(mt_in_t, Qi_t[i], plain_mod);
+            mt_in_gamma = OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
 
-            sum_t = VALUE_GPU::add(sum_t, mt_in_t, plain_mod);
-            sum_gamma = VALUE_GPU::add(sum_gamma, mt_in_gamma, gamma);
+            sum_t = OPERATOR_GPU_64::add(sum_t, mt_in_t, plain_mod);
+            sum_gamma = OPERATOR_GPU_64::add(sum_gamma, mt_in_gamma, gamma);
         }
 
-        sum_t = VALUE_GPU::mult(sum_t, mulq_inv_t, plain_mod);
-        sum_gamma = VALUE_GPU::mult(sum_gamma, mulq_inv_gamma, gamma);
+        sum_t = OPERATOR_GPU_64::mult(sum_t, mulq_inv_t, plain_mod);
+        sum_gamma = OPERATOR_GPU_64::mult(sum_gamma, mulq_inv_gamma, gamma);
 
-        Data gamma_2 = gamma.value >> 1;
+        Data64 gamma_2 = gamma.value >> 1;
 
         if (sum_gamma > gamma_2)
         {
-            Data gamma_ = VALUE_GPU::reduce_forced(gamma.value, plain_mod);
-            Data sum_gamma_ = VALUE_GPU::reduce_forced(sum_gamma, plain_mod);
+            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
+            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
-            Data result = VALUE_GPU::sub(gamma_, sum_gamma_, plain_mod);
-            result = VALUE_GPU::add(sum_t, result, plain_mod);
-            result = VALUE_GPU::mult(result, inv_gamma, plain_mod);
+            Data64 result = OPERATOR_GPU_64::sub(gamma_, sum_gamma_, plain_mod);
+            result = OPERATOR_GPU_64::add(sum_t, result, plain_mod);
+            result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);
 
             plain[idx] = result;
         }
         else
         {
-            Data sum_t_ = VALUE_GPU::reduce_forced(sum_t, plain_mod);
-            Data sum_gamma_ = VALUE_GPU::reduce_forced(sum_gamma, plain_mod);
+            Data64 sum_t_ = OPERATOR_GPU_64::reduce_forced(sum_t, plain_mod);
+            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
-            Data result = VALUE_GPU::sub(sum_t_, sum_gamma_, plain_mod);
-            result = VALUE_GPU::mult(result, inv_gamma, plain_mod);
+            Data64 result = OPERATOR_GPU_64::sub(sum_t_, sum_gamma_, plain_mod);
+            result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);
 
             plain[idx] = result;
         }
     }
 
-    __global__ void coeff_multadd(Data* input1, Data* input2, Data* output,
-                                  Modulus plain_mod, Modulus* modulus,
+    __global__ void coeff_multadd(Data64* input1, Data64* input2, Data64* output,
+                                  Modulus64 plain_mod, Modulus64* modulus,
                                   int n_power, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
@@ -182,32 +182,32 @@ namespace heongpu
 
         int index = idx + (block_y << n_power);
 
-        Data ct_0 = input1[index];
-        Data ct_1 = input2[index];
+        Data64 ct_0 = input1[index];
+        Data64 ct_1 = input2[index];
 
-        ct_0 = VALUE_GPU::add(ct_1, ct_0, modulus[block_y]);
-        ct_0 = VALUE_GPU::mult(ct_0, plain_mod.value, modulus[block_y]);
+        ct_0 = OPERATOR_GPU_64::add(ct_1, ct_0, modulus[block_y]);
+        ct_0 = OPERATOR_GPU_64::mult(ct_0, plain_mod.value, modulus[block_y]);
 
         output[index] = ct_0;
     }
 
-    __global__ void compose_kernel(Data* input, Data* output, Modulus* modulus,
-                                   Data* Mi_inv, Data* Mi,
-                                   Data* decryption_modulus,
+    __global__ void compose_kernel(Data64* input, Data64* output, Modulus64* modulus,
+                                   Data64* Mi_inv, Data64* Mi,
+                                   Data64* decryption_modulus,
                                    int coeff_modulus_count, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
 
-        Data compose_result[50]; // TODO: Define size as global variable
-        Data big_integer_result[50]; // TODO: Define size as global variable
+        Data64 compose_result[50]; // TODO: Define size as global variable
+        Data64 big_integer_result[50]; // TODO: Define size as global variable
 
         biginteger::set_zero(compose_result, coeff_modulus_count);
 
 #pragma unroll
         for (int i = 0; i < coeff_modulus_count; i++)
         {
-            Data base = input[idx + (i << n_power)];
-            Data temp = VALUE_GPU::mult(base, Mi_inv[i], modulus[i]);
+            Data64 base = input[idx + (i << n_power)];
+            Data64 temp = OPERATOR_GPU_64::mult(base, Mi_inv[i], modulus[i]);
 
             biginteger::multiply(Mi + (i * coeff_modulus_count),
                                  coeff_modulus_count, temp, big_integer_result,
@@ -233,20 +233,20 @@ namespace heongpu
         }
     }
 
-    __global__ void find_max_norm_kernel(Data* input, Data* output,
-                                         Data* upper_half_threshold,
-                                         Data* decryption_modulus,
+    __global__ void find_max_norm_kernel(Data64* input, Data64* output,
+                                         Data64* upper_half_threshold,
+                                         Data64* decryption_modulus,
                                          int coeff_modulus_count, int n_power)
     {
         int idx = threadIdx.x;
         int offset = blockDim.x;
         int iteration_count = (1 << n_power) / offset;
 
-        Data big_integer_input[50]; // TODO: Define size as global variable
-        Data big_integer_temp[50]; // TODO: Define size as global variable
+        Data64 big_integer_input[50]; // TODO: Define size as global variable
+        Data64 big_integer_temp[50]; // TODO: Define size as global variable
 
-        // Data *big_integer_input = (Data *)alloca(20 * sizeof(Data));
-        // Data *big_integer_temp = (Data *)alloca(20 * sizeof(Data));
+        // Data64 *big_integer_input = (Data64 *)alloca(20 * sizeof(Data64));
+        // Data64 *big_integer_temp = (Data64 *)alloca(20 * sizeof(Data64));
 
         biginteger::set_zero(big_integer_temp, coeff_modulus_count);
 
@@ -279,7 +279,7 @@ namespace heongpu
             __syncthreads();
         }
 
-        extern __shared__ Data shared_memory[]; // 1024 64-bit
+        extern __shared__ Data64 shared_memory[]; // 1024 64-bit
 
         __syncthreads();
 
@@ -331,8 +331,8 @@ namespace heongpu
         }
     }
 
-    __global__ void sk_multiplication_ckks(Data* ciphertext, Data* plaintext,
-                                           Data* sk, Modulus* modulus,
+    __global__ void sk_multiplication_ckks(Data64* ciphertext, Data64* plaintext,
+                                           Data64* sk, Modulus64* modulus,
                                            int n_power, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
@@ -340,12 +340,12 @@ namespace heongpu
 
         int index = idx + (block_y << n_power);
 
-        Data ct_0 = ciphertext[index];
-        Data ct_1 = ciphertext[index + (decomp_mod_count << n_power)];
-        Data sk_ = sk[index];
+        Data64 ct_0 = ciphertext[index];
+        Data64 ct_1 = ciphertext[index + (decomp_mod_count << n_power)];
+        Data64 sk_ = sk[index];
 
-        ct_1 = VALUE_GPU::mult(ct_1, sk_, modulus[block_y]);
-        ct_0 = VALUE_GPU::add(ct_1, ct_0, modulus[block_y]);
+        ct_1 = OPERATOR_GPU_64::mult(ct_1, sk_, modulus[block_y]);
+        ct_0 = OPERATOR_GPU_64::add(ct_1, ct_0, modulus[block_y]);
 
         plaintext[index] = ct_0;
     }
@@ -354,64 +354,64 @@ namespace heongpu
     //////////////////
 
     __global__ void decryption_fusion_bfv_kernel(
-        Data* ct, Data* plain, Modulus* modulus, Modulus plain_mod,
-        Modulus gamma, Data* Qi_t, Data* Qi_gamma, Data* Qi_inverse,
-        Data mulq_inv_t, Data mulq_inv_gamma, Data inv_gamma, int n_power,
+        Data64* ct, Data64* plain, Modulus64* modulus, Modulus64 plain_mod,
+        Modulus64 gamma, Data64* Qi_t, Data64* Qi_gamma, Data64* Qi_inverse,
+        Data64 mulq_inv_t, Data64 mulq_inv_gamma, Data64 inv_gamma, int n_power,
         int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
 
-        Data sum_t = 0;
-        Data sum_gamma = 0;
+        Data64 sum_t = 0;
+        Data64 sum_gamma = 0;
 
 #pragma unroll
         for (int i = 0; i < decomp_mod_count; i++)
         {
             int location = idx + (i << n_power);
 
-            Data mt = ct[location];
+            Data64 mt = ct[location];
 
-            Data gamma_ = VALUE_GPU::reduce_forced(gamma.value, modulus[i]);
+            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, plain_mod.value, modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, plain_mod.value, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, gamma_, modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, gamma_, modulus[i]);
 
-            mt = VALUE_GPU::mult(mt, Qi_inverse[i], modulus[i]);
+            mt = OPERATOR_GPU_64::mult(mt, Qi_inverse[i], modulus[i]);
 
-            Data mt_in_t = VALUE_GPU::reduce_forced(mt, plain_mod);
-            Data mt_in_gamma = VALUE_GPU::reduce_forced(mt, gamma);
+            Data64 mt_in_t = OPERATOR_GPU_64::reduce_forced(mt, plain_mod);
+            Data64 mt_in_gamma = OPERATOR_GPU_64::reduce_forced(mt, gamma);
 
-            mt_in_t = VALUE_GPU::mult(mt_in_t, Qi_t[i], plain_mod);
-            mt_in_gamma = VALUE_GPU::mult(mt_in_gamma, Qi_gamma[i], gamma);
+            mt_in_t = OPERATOR_GPU_64::mult(mt_in_t, Qi_t[i], plain_mod);
+            mt_in_gamma = OPERATOR_GPU_64::mult(mt_in_gamma, Qi_gamma[i], gamma);
 
-            sum_t = VALUE_GPU::add(sum_t, mt_in_t, plain_mod);
-            sum_gamma = VALUE_GPU::add(sum_gamma, mt_in_gamma, gamma);
+            sum_t = OPERATOR_GPU_64::add(sum_t, mt_in_t, plain_mod);
+            sum_gamma = OPERATOR_GPU_64::add(sum_gamma, mt_in_gamma, gamma);
         }
 
-        sum_t = VALUE_GPU::mult(sum_t, mulq_inv_t, plain_mod);
-        sum_gamma = VALUE_GPU::mult(sum_gamma, mulq_inv_gamma, gamma);
+        sum_t = OPERATOR_GPU_64::mult(sum_t, mulq_inv_t, plain_mod);
+        sum_gamma = OPERATOR_GPU_64::mult(sum_gamma, mulq_inv_gamma, gamma);
 
-        Data gamma_2 = gamma.value >> 1;
+        Data64 gamma_2 = gamma.value >> 1;
 
         if (sum_gamma > gamma_2)
         {
-            Data gamma_ = VALUE_GPU::reduce_forced(gamma.value, plain_mod);
-            Data sum_gamma_ = VALUE_GPU::reduce_forced(sum_gamma, plain_mod);
+            Data64 gamma_ = OPERATOR_GPU_64::reduce_forced(gamma.value, plain_mod);
+            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
-            Data result = VALUE_GPU::sub(gamma_, sum_gamma_, plain_mod);
-            result = VALUE_GPU::add(sum_t, result, plain_mod);
-            result = VALUE_GPU::mult(result, inv_gamma, plain_mod);
+            Data64 result = OPERATOR_GPU_64::sub(gamma_, sum_gamma_, plain_mod);
+            result = OPERATOR_GPU_64::add(sum_t, result, plain_mod);
+            result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);
 
             plain[idx] = result;
         }
         else
         {
-            Data sum_t_ = VALUE_GPU::reduce_forced(sum_t, plain_mod);
-            Data sum_gamma_ = VALUE_GPU::reduce_forced(sum_gamma, plain_mod);
+            Data64 sum_t_ = OPERATOR_GPU_64::reduce_forced(sum_t, plain_mod);
+            Data64 sum_gamma_ = OPERATOR_GPU_64::reduce_forced(sum_gamma, plain_mod);
 
-            Data result = VALUE_GPU::sub(sum_t_, sum_gamma_, plain_mod);
-            result = VALUE_GPU::mult(result, inv_gamma, plain_mod);
+            Data64 result = OPERATOR_GPU_64::sub(sum_t_, sum_gamma_, plain_mod);
+            result = OPERATOR_GPU_64::mult(result, inv_gamma, plain_mod);
 
             plain[idx] = result;
         }

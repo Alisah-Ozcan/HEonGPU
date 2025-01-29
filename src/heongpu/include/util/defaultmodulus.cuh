@@ -23,13 +23,13 @@ namespace heongpu
     namespace defaultparams
     {
 
-        const std::unordered_map<std::size_t, std::vector<Modulus>>&
+        const std::unordered_map<std::size_t, std::vector<Modulus64>>&
         get_128bit_sec_modulus();
 
-        const std::unordered_map<std::size_t, std::vector<Modulus>>&
+        const std::unordered_map<std::size_t, std::vector<Modulus64>>&
         get_192bit_sec_modulus();
 
-        const std::unordered_map<std::size_t, std::vector<Modulus>>&
+        const std::unordered_map<std::size_t, std::vector<Modulus64>>&
         get_256bit_sec_modulus();
 
     } // namespace defaultparams

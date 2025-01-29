@@ -235,7 +235,7 @@ namespace heongpu
                             output,
                             [&](Ciphertext& output_)
                             {
-                                DeviceVector<Data> output_memory(
+                                DeviceVector<Data64> output_memory(
                                     (cipher_size * n * current_decomp_count),
                                     options.stream_);
 
@@ -313,7 +313,7 @@ namespace heongpu
                             output,
                             [&](Ciphertext& output_)
                             {
-                                DeviceVector<Data> output_memory(
+                                DeviceVector<Data64> output_memory(
                                     (cipher_size * n * current_decomp_count),
                                     options.stream_);
 
@@ -368,7 +368,7 @@ namespace heongpu
                     output,
                     [&](Ciphertext& output_)
                     {
-                        DeviceVector<Data> output_memory(
+                        DeviceVector<Data64> output_memory(
                             (cipher_size * n * current_decomp_count),
                             options.stream_);
 
@@ -421,7 +421,7 @@ namespace heongpu
             throw std::invalid_argument("Invalid Plaintext size!");
         }
 
-        DeviceVector<Data> output_memory(
+        DeviceVector<Data64> output_memory(
             (cipher_size * n * current_decomp_count), stream);
 
         addition_plain_bfv_poly<<<dim3((n >> 8), current_decomp_count,
@@ -492,7 +492,7 @@ namespace heongpu
             throw std::invalid_argument("Invalid Plaintext size!");
         }
 
-        DeviceVector<Data> output_memory(
+        DeviceVector<Data64> output_memory(
             (cipher_size * n * current_decomp_count), stream);
 
         addition_plain_ckks_poly<<<dim3((n >> 8), current_decomp_count,
@@ -560,7 +560,7 @@ namespace heongpu
             throw std::invalid_argument("Invalid Plaintext size!");
         }
 
-        DeviceVector<Data> output_memory(
+        DeviceVector<Data64> output_memory(
             (cipher_size * n * current_decomp_count), stream);
 
         substraction_plain_bfv_poly<<<dim3((n >> 8), current_decomp_count,
@@ -631,7 +631,7 @@ namespace heongpu
             throw std::invalid_argument("Invalid Plaintext size!");
         }
 
-        DeviceVector<Data> output_memory(
+        DeviceVector<Data64> output_memory(
             (cipher_size * n * current_decomp_count), stream);
 
         substraction_plain_ckks_poly<<<dim3((n >> 8), current_decomp_count,
@@ -692,13 +692,13 @@ namespace heongpu
             throw std::invalid_argument("Invalid Ciphertexts size!");
         }
 
-        DeviceVector<Data> output_memory((3 * n * Q_size_), stream);
+        DeviceVector<Data64> output_memory((3 * n * Q_size_), stream);
 
-        DeviceVector<Data> temp_mul((4 * n * (bsk_mod_count_ + Q_size_)) +
+        DeviceVector<Data64> temp_mul((4 * n * (bsk_mod_count_ + Q_size_)) +
                                         (3 * n * (bsk_mod_count_ + Q_size_)),
                                     stream);
-        Data* temp1_mul = temp_mul.data();
-        Data* temp2_mul = temp1_mul + (4 * n * (bsk_mod_count_ + Q_size_));
+        Data64* temp1_mul = temp_mul.data();
+        Data64* temp2_mul = temp1_mul + (4 * n * (bsk_mod_count_ + Q_size_));
 
         fast_convertion<<<dim3((n >> 8), 4, 1), 256, 0, stream>>>(
             input1.data(), input2.data(), temp1_mul, modulus_->data(),
@@ -710,14 +710,14 @@ namespace heongpu
             bsk_mod_count_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
                                          .stream = stream};
 
-        ntt_rns_configuration cfg_intt = {
+        ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -774,7 +774,7 @@ namespace heongpu
             throw std::invalid_argument("Invalid Ciphertexts size!");
         }
 
-        DeviceVector<Data> output_memory((3 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((3 * n * current_decomp_count),
                                          stream);
 
         cross_multiplication<<<dim3((n >> 8), (current_decomp_count), 1), 256,
@@ -798,7 +798,7 @@ namespace heongpu
                                                  const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
         if (input1.in_ntt_domain_)
@@ -810,8 +810,8 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> temp_plain_mul(n * Q_size_, stream);
-            Data* temp1_plain_mul = temp_plain_mul.data();
+            DeviceVector<Data64> temp_plain_mul(n * Q_size_, stream);
+            Data64* temp1_plain_mul = temp_plain_mul.data();
 
             threshold_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
                 input2.data(), temp1_plain_mul, modulus_->data(),
@@ -819,14 +819,14 @@ namespace heongpu
                 Q_size_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+            ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                              .ntt_type = FORWARD,
                                              .reduction_poly =
                                                  ReductionPolynomial::X_N_plus,
                                              .zero_padding = false,
                                              .stream = stream};
 
-            ntt_rns_configuration cfg_intt = {.n_power = n_power,
+            ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                               .ntt_type = INVERSE,
                                               .reduction_poly =
                                                   ReductionPolynomial::X_N_plus,
@@ -863,7 +863,7 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
         cipherplain_multiplication_kernel<<<
@@ -883,17 +883,17 @@ namespace heongpu
     __host__ void HEOperator::relinearize_seal_method_inplace(
         Ciphertext& input1, Relinkey& relin_key, const cudaStream_t stream)
     {
-        DeviceVector<Data> temp_relin(
+        DeviceVector<Data64> temp_relin(
             (n * Q_size_ * Q_prime_size_) + (2 * n * Q_prime_size_), stream);
-        Data* temp1_relin = temp_relin.data();
-        Data* temp2_relin = temp1_relin + (n * Q_size_ * Q_prime_size_);
+        Data64* temp1_relin = temp_relin.data();
+        Data64* temp2_relin = temp1_relin + (n * Q_size_ * Q_prime_size_);
 
         cipher_broadcast_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
             input1.data() + (Q_size_ << (n_power + 1)), temp1_relin,
             modulus_->data(), n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -914,7 +914,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(relin_key.host_location_, stream);
+            DeviceVector<Data64> key_location(relin_key.host_location_, stream);
             multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
                                          0, stream>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
@@ -922,7 +922,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -944,13 +944,13 @@ namespace heongpu
     __host__ void HEOperator::relinearize_external_product_method_inplace(
         Ciphertext& input1, Relinkey& relin_key, const cudaStream_t stream)
     {
-        DeviceVector<Data> temp_relin_new((n * d * r_prime) +
+        DeviceVector<Data64> temp_relin_new((n * d * r_prime) +
                                               (2 * n * d_tilda * r_prime) +
                                               (2 * n * Q_prime_size_),
                                           stream);
-        Data* temp1_relin_new = temp_relin_new.data();
-        Data* temp2_relin_new = temp1_relin_new + (n * d * r_prime);
-        Data* temp3_relin_new = temp2_relin_new + (2 * n * d_tilda * r_prime);
+        Data64* temp1_relin_new = temp_relin_new.data();
+        Data64* temp2_relin_new = temp1_relin_new + (n * d * r_prime);
+        Data64* temp3_relin_new = temp2_relin_new + (2 * n * d_tilda * r_prime);
 
         base_conversion_DtoB_relin_kernel<<<dim3((n >> 8), d, 1), 256, 0,
                                             stream>>>(
@@ -961,7 +961,7 @@ namespace heongpu
             Q_size_, d_tilda, d, r_prime);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -982,7 +982,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(relin_key.host_location_, stream);
+            DeviceVector<Data64> key_location(relin_key.host_location_, stream);
             multiply_accumulate_extended_kernel<<<
                 dim3((n >> 8), r_prime, d_tilda), 256, 0, stream>>>(
                 temp1_relin_new, key_location.data(), temp2_relin_new,
@@ -990,7 +990,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {
+        ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -1021,10 +1021,10 @@ namespace heongpu
     __host__ void HEOperator::relinearize_external_product_method2_inplace(
         Ciphertext& input1, Relinkey& relin_key, const cudaStream_t stream)
     {
-        DeviceVector<Data> temp_relin(
+        DeviceVector<Data64> temp_relin(
             (n * Q_size_ * Q_prime_size_) + (2 * n * Q_prime_size_), stream);
-        Data* temp1_relin = temp_relin.data();
-        Data* temp2_relin = temp1_relin + (n * Q_size_ * Q_prime_size_);
+        Data64* temp1_relin = temp_relin.data();
+        Data64* temp2_relin = temp1_relin + (n * Q_size_ * Q_prime_size_);
 
         base_conversion_DtoQtilde_relin_kernel<<<dim3((n >> 8), d, 1), 256, 0,
                                                  stream>>>(
@@ -1035,7 +1035,7 @@ namespace heongpu
             d);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -1056,7 +1056,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(relin_key.host_location_, stream);
+            DeviceVector<Data64> key_location(relin_key.host_location_, stream);
             multiply_accumulate_method_II_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
@@ -1064,7 +1064,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -1092,7 +1092,7 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -1104,10 +1104,10 @@ namespace heongpu
                         intt_table_->data(), modulus_->data(), cfg_intt,
                         current_decomp_count, current_decomp_count);
 
-        DeviceVector<Data> temp_relin(
+        DeviceVector<Data64> temp_relin(
             (n * Q_size_ * Q_prime_size_) + (2 * n * Q_prime_size_), stream);
-        Data* temp1_relin = temp_relin.data();
-        Data* temp2_relin = temp1_relin + (n * Q_size_ * Q_prime_size_);
+        Data64* temp1_relin = temp_relin.data();
+        Data64* temp2_relin = temp1_relin + (n * Q_size_ * Q_prime_size_);
 
         cipher_broadcast_leveled_kernel<<<
             dim3((n >> 8), current_decomp_count, 1), 256, 0, stream>>>(
@@ -1117,7 +1117,7 @@ namespace heongpu
 
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -1147,7 +1147,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(relin_key.host_location_, stream);
+            DeviceVector<Data64> key_location(relin_key.host_location_, stream);
             multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
@@ -1155,7 +1155,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt2 = {
+        ntt_rns_configuration<Data64> cfg_intt2 = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -1198,7 +1198,7 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -1214,16 +1214,16 @@ namespace heongpu
             counter--;
         }
 
-        DeviceVector<Data> temp_relin_new(
+        DeviceVector<Data64> temp_relin_new(
             (n * d_leveled_->operator[](0) * r_prime_leveled_) +
                 (2 * n * d_tilda_leveled_->operator[](0) * r_prime_leveled_) +
                 (2 * n * Q_prime_size_),
             stream);
-        Data* temp1_relin_new = temp_relin_new.data();
-        Data* temp2_relin_new =
+        Data64* temp1_relin_new = temp_relin_new.data();
+        Data64* temp2_relin_new =
             temp1_relin_new +
             (n * d_leveled_->operator[](0) * r_prime_leveled_);
-        Data* temp3_relin_new =
+        Data64* temp3_relin_new =
             temp2_relin_new +
             (2 * n * d_tilda_leveled_->operator[](0) * r_prime_leveled_);
 
@@ -1255,7 +1255,7 @@ namespace heongpu
 
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -1283,7 +1283,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(
+            DeviceVector<Data64> key_location(
                 relin_key.host_location_leveled_[input1.depth_], stream);
             multiply_accumulate_extended_kernel<<<
                 dim3((n >> 8), r_prime_leveled_,
@@ -1298,7 +1298,7 @@ namespace heongpu
 
         ////////////////////////////////////////////////////////////////////
 
-        ntt_rns_configuration cfg_intt2 = {
+        ntt_rns_configuration<Data64> cfg_intt2 = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -1357,7 +1357,7 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -1377,10 +1377,10 @@ namespace heongpu
                         intt_table_->data(), modulus_->data(), cfg_intt,
                         current_decomp_count, current_decomp_count);
 
-        DeviceVector<Data> temp_relin(
+        DeviceVector<Data64> temp_relin(
             (n * Q_size_ * Q_prime_size_) + (2 * n * Q_prime_size_), stream);
-        Data* temp1_relin = temp_relin.data();
-        Data* temp2_relin = temp1_relin + (n * Q_size_ * Q_prime_size_);
+        Data64* temp1_relin = temp_relin.data();
+        Data64* temp2_relin = temp1_relin + (n * Q_size_ * Q_prime_size_);
 
         base_conversion_DtoQtilde_relin_leveled_kernel<<<
             dim3((n >> 8), d_leveled_->operator[](input1.depth_), 1), 256, 0,
@@ -1400,7 +1400,7 @@ namespace heongpu
 
         ////////////////////////////////////////////////////////////////////
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -1425,7 +1425,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(relin_key.host_location_, stream);
+            DeviceVector<Data64> key_location(relin_key.host_location_, stream);
             multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
@@ -1467,7 +1467,7 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        ntt_rns_configuration cfg_intt = {
+        ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -1475,7 +1475,7 @@ namespace heongpu
             .mod_inverse = n_inverse_->data() + (current_decomp_count - 1),
             .stream = stream};
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -1491,10 +1491,10 @@ namespace heongpu
             counter--;
         }
 
-        DeviceVector<Data> temp_rescale(
+        DeviceVector<Data64> temp_rescale(
             (2 * n * Q_prime_size_) + (2 * n * Q_prime_size_), stream);
-        Data* temp1_rescale = temp_rescale.data();
-        Data* temp2_rescale = temp1_rescale + (2 * n * Q_prime_size_);
+        Data64* temp1_rescale = temp_rescale.data();
+        Data64* temp2_rescale = temp1_rescale + (2 * n * Q_prime_size_);
 
         GPU_NTT_Poly_Ordered_Inplace(
             input1.data(),
@@ -1551,8 +1551,8 @@ namespace heongpu
         int offset1 = current_decomp_count << n_power;
         int offset2 = (current_decomp_count - 1) << n_power;
 
-        DeviceVector<Data> temp_mod_drop_(n * Q_size_, stream);
-        Data* temp_mod_drop = temp_mod_drop_.data();
+        DeviceVector<Data64> temp_mod_drop_(n * Q_size_, stream);
+        Data64* temp_mod_drop = temp_mod_drop_.data();
 
         // TODO: do with efficient way!
         global_memory_replace_kernel<<<
@@ -1578,7 +1578,7 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory(
+        DeviceVector<Data64> output_memory(
             (current_decomp_count * n * current_decomp_count), stream);
 
         global_memory_replace_offset_kernel<<<
@@ -1599,7 +1599,7 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory(n * (current_decomp_count - 1),
+        DeviceVector<Data64> output_memory(n * (current_decomp_count - 1),
                                          stream);
 
         global_memory_replace_kernel<<<
@@ -1829,23 +1829,23 @@ namespace heongpu
                                                     const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) +
                                              (n * Q_size_ * Q_prime_size_) +
                                              (2 * n * Q_prime_size_),
                                          stream);
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (n * Q_size_ * Q_prime_size_);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (n * Q_size_ * Q_prime_size_);
 
         bfv_duplicate_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0, stream>>>(
             input1.data(), temp0_rotation, temp1_rotation, modulus_->data(),
             n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -1867,7 +1867,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(
+            DeviceVector<Data64> key_location(
                 galois_key.host_location_[galois_elt], stream);
             multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
                                          0, stream>>>(
@@ -1876,7 +1876,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -1907,18 +1907,18 @@ namespace heongpu
                                                      const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) + (n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) + (n * Q_size_) +
                                              (2 * n * Q_prime_size_ * d) +
                                              (2 * n * Q_prime_size_),
                                          stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (2 * n * Q_prime_size_ * d);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (2 * n * Q_prime_size_ * d);
 
         // TODO: make it efficient
         global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0,
@@ -1935,7 +1935,7 @@ namespace heongpu
             d);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -1957,7 +1957,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(
+            DeviceVector<Data64> key_location(
                 galois_key.host_location_[galois_elt], stream);
             multiply_accumulate_method_II_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
@@ -1966,7 +1966,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -1999,20 +1999,20 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) + (2 * n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) + (2 * n * Q_size_) +
                                              (n * Q_size_ * Q_prime_size_) +
                                              (2 * n * Q_prime_size_),
                                          stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2031,7 +2031,7 @@ namespace heongpu
             first_rns_mod_count, current_rns_mod_count, current_decomp_count);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2063,7 +2063,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(
+            DeviceVector<Data64> key_location(
                 galois_key.host_location_[galois_elt], stream);
             multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
@@ -2105,24 +2105,24 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation(
+        DeviceVector<Data64> temp_rotation(
             (2 * n * Q_size_) + (2 * n * Q_size_) + (n * Q_size_) +
                 (2 * n * d_leveled_->operator[](0) * Q_prime_size_) +
                 (2 * n * Q_prime_size_),
             stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (n * Q_size_);
-        Data* temp4_rotation =
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (n * Q_size_);
+        Data64* temp4_rotation =
             temp3_rotation +
             (2 * n * d_leveled_->operator[](0) * Q_prime_size_);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2134,7 +2134,7 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2186,7 +2186,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(
+            DeviceVector<Data64> key_location(
                 galois_key.host_location_[galois_elt], stream);
             multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
@@ -2229,23 +2229,23 @@ namespace heongpu
         int galoiselt = galois_key.galois_elt_zero;
 
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) +
                                              (n * Q_size_ * Q_prime_size_) +
                                              (2 * n * Q_prime_size_),
                                          stream);
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (n * Q_size_ * Q_prime_size_);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (n * Q_size_ * Q_prime_size_);
 
         bfv_duplicate_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0, stream>>>(
             input1.data(), temp0_rotation, temp1_rotation, modulus_->data(),
             n_power, Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2267,7 +2267,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(galois_key.zero_host_location_,
+            DeviceVector<Data64> key_location(galois_key.zero_host_location_,
                                             stream);
             multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
                                          0, stream>>>(
@@ -2276,7 +2276,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2307,18 +2307,18 @@ namespace heongpu
         int galoiselt = galois_key.galois_elt_zero;
 
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) + (n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) + (n * Q_size_) +
                                              (2 * n * Q_prime_size_ * d) +
                                              (2 * n * Q_prime_size_),
                                          stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (2 * n * Q_prime_size_ * d);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (2 * n * Q_prime_size_ * d);
 
         // TODO: make it efficient
         global_memory_replace_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0,
@@ -2335,7 +2335,7 @@ namespace heongpu
             d);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2357,7 +2357,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(galois_key.zero_host_location_,
+            DeviceVector<Data64> key_location(galois_key.zero_host_location_,
                                             stream);
             multiply_accumulate_method_II_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
@@ -2366,7 +2366,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2395,16 +2395,16 @@ namespace heongpu
                                                  const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) +
                                              (n * Q_size_ * Q_prime_size_) +
                                              (2 * n * Q_prime_size_),
                                          stream);
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (n * Q_size_ * Q_prime_size_);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (n * Q_size_ * Q_prime_size_);
 
         cipher_broadcast_switchkey_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
                                             stream>>>(
@@ -2412,7 +2412,7 @@ namespace heongpu
             n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2433,7 +2433,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(switch_key.host_location_, stream);
+            DeviceVector<Data64> key_location(switch_key.host_location_, stream);
             multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
                                          0, stream>>>(
                 temp1_rotation, key_location.data(), temp2_rotation,
@@ -2441,7 +2441,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2468,18 +2468,18 @@ namespace heongpu
                                                   const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) + (n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) + (n * Q_size_) +
                                              (2 * n * Q_prime_size_ * d) +
                                              (2 * n * Q_prime_size_),
                                          stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (2 * n * Q_prime_size_ * d);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (2 * n * Q_prime_size_ * d);
 
         cipher_broadcast_switchkey_method_II_kernel<<<
             dim3((n >> 8), Q_size_, 2), 256, 0, stream>>>(
@@ -2496,7 +2496,7 @@ namespace heongpu
             d);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2517,7 +2517,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(switch_key.host_location_, stream);
+            DeviceVector<Data64> key_location(switch_key.host_location_, stream);
             multiply_accumulate_method_II_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
@@ -2525,7 +2525,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2557,20 +2557,20 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) + (2 * n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) + (2 * n * Q_size_) +
                                              (n * Q_size_ * Q_prime_size_) +
                                              (2 * n * Q_prime_size_),
                                          stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2589,7 +2589,7 @@ namespace heongpu
             current_decomp_count);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2620,7 +2620,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(switch_key.host_location_, stream);
+            DeviceVector<Data64> key_location(switch_key.host_location_, stream);
             multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
@@ -2629,7 +2629,7 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration cfg_intt2 = {
+        ntt_rns_configuration<Data64> cfg_intt2 = {
             .n_power = n_power,
             .ntt_type = INVERSE,
             .reduction_poly = ReductionPolynomial::X_N_plus,
@@ -2681,24 +2681,24 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp_rotation(
+        DeviceVector<Data64> temp_rotation(
             (2 * n * Q_size_) + (2 * n * Q_size_) + (n * Q_size_) +
                 (2 * n * d_leveled_->operator[](0) * Q_prime_size_) +
                 (2 * n * Q_prime_size_),
             stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (n * Q_size_);
-        Data* temp4_rotation =
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (n * Q_size_);
+        Data64* temp4_rotation =
             temp3_rotation +
             (2 * n * d_leveled_->operator[](0) * Q_prime_size_);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2716,7 +2716,7 @@ namespace heongpu
             n_power, current_decomp_count);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2766,7 +2766,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(switch_key.host_location_, stream);
+            DeviceVector<Data64> key_location(switch_key.host_location_, stream);
             multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp3_rotation, key_location.data(), temp4_rotation,
@@ -2820,22 +2820,22 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
         int galois_elt = conjugate_key.galois_elt_zero;
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) + (2 * n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) + (2 * n * Q_size_) +
                                              (n * Q_size_ * Q_prime_size_) +
                                              (2 * n * Q_prime_size_),
                                          stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2854,7 +2854,7 @@ namespace heongpu
             first_rns_mod_count, current_rns_mod_count, current_decomp_count);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -2886,7 +2886,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(conjugate_key.zero_host_location_,
+            DeviceVector<Data64> key_location(conjugate_key.zero_host_location_,
                                             stream);
             multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
@@ -2929,26 +2929,26 @@ namespace heongpu
         int first_decomp_count = Q_size_;
         int current_decomp_count = Q_size_ - input1.depth_;
 
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
         int galois_elt = conjugate_key.galois_elt_zero;
 
-        DeviceVector<Data> temp_rotation(
+        DeviceVector<Data64> temp_rotation(
             (2 * n * Q_size_) + (2 * n * Q_size_) + (n * Q_size_) +
                 (2 * n * d_leveled_->operator[](0) * Q_prime_size_) +
                 (2 * n * Q_prime_size_),
             stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (n * Q_size_);
-        Data* temp4_rotation =
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (n * Q_size_);
+        Data64* temp4_rotation =
             temp3_rotation +
             (2 * n * d_leveled_->operator[](0) * Q_prime_size_);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -2960,7 +2960,7 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -3012,7 +3012,7 @@ namespace heongpu
         }
         else
         {
-            DeviceVector<Data> key_location(conjugate_key.zero_host_location_,
+            DeviceVector<Data64> key_location(conjugate_key.zero_host_location_,
                                             stream);
             multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
@@ -3053,10 +3053,10 @@ namespace heongpu
                                                const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        DeviceVector<Data> temp(2 * n * Q_size_, stream);
+        DeviceVector<Data64> temp(2 * n * Q_size_, stream);
 
         negacyclic_shift_poly_coeffmod_kernel<<<dim3((n >> 8), Q_size_, 2), 256,
                                                 0, stream>>>(
@@ -3076,17 +3076,17 @@ namespace heongpu
     HEOperator::transform_to_ntt_bfv_plain(Plaintext& input1, Plaintext& output,
                                            const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory(n * Q_size_, stream);
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
-        DeviceVector<Data> temp_plain_mul(n * Q_size_, stream);
-        Data* temp1_plain_mul = temp_plain_mul.data();
+        DeviceVector<Data64> temp_plain_mul(n * Q_size_, stream);
+        Data64* temp1_plain_mul = temp_plain_mul.data();
 
         threshold_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
             input1.data(), temp1_plain_mul, modulus_->data(),
             upper_halfincrement_->data(), upper_threshold_, n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -3104,10 +3104,10 @@ namespace heongpu
         Ciphertext& input1, Ciphertext& output, const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -3125,10 +3125,10 @@ namespace heongpu
         Ciphertext& input1, Ciphertext& output, const cudaStream_t stream)
     {
         int current_decomp_count = Q_size_ - input1.depth_;
-        DeviceVector<Data> output_memory((2 * n * current_decomp_count),
+        DeviceVector<Data64> output_memory((2 * n * current_decomp_count),
                                          stream);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -3195,14 +3195,14 @@ namespace heongpu
             // Pre-computed encoded parameters
             // CtoS
             double constant_1over2 = 0.5;
-            encoded_constant_1over2_ = DeviceVector<Data>(Q_size_ << n_power);
+            encoded_constant_1over2_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_double(
                 constant_1over2, encoded_constant_1over2_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             COMPLEX_C complex_minus_iover2(0, -0.5);
             encoded_complex_minus_iover2_ =
-                DeviceVector<Data>(Q_size_ << n_power);
+                DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
                 complex_minus_iover2, encoded_complex_minus_iover2_.data(),
                 scale_boot_);
@@ -3210,7 +3210,7 @@ namespace heongpu
 
             // StoC
             COMPLEX_C complex_i(0, 1);
-            encoded_complex_i_ = DeviceVector<Data>(Q_size_ << n_power);
+            encoded_complex_i_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
                 complex_i, encoded_complex_i_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
@@ -3220,7 +3220,7 @@ namespace heongpu
                 0, -(((static_cast<double>(prime_vector_[0].value) * 0.25) /
                       (scale_boot_ * M_PI))));
             encoded_complex_minus_iscale_ =
-                DeviceVector<Data>(Q_size_ << n_power);
+                DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
                 complex_minus_iscale, encoded_complex_minus_iscale_.data(),
                 scale_boot_);
@@ -3232,7 +3232,7 @@ namespace heongpu
                      static_cast<double>(prime_vector_[0].value))) /
                        static_cast<double>(1 << taylor_number_));
             encoded_complex_iscaleoverr_ =
-                DeviceVector<Data>(Q_size_ << n_power);
+                DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
                 complex_iscaleoverr, encoded_complex_iscaleoverr_.data(),
                 scale_boot_);
@@ -3240,33 +3240,33 @@ namespace heongpu
 
             // Sinus taylor
             double constant_1 = 1.0;
-            encoded_constant_1_ = DeviceVector<Data>(Q_size_ << n_power);
+            encoded_constant_1_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_double(
                 constant_1, encoded_constant_1_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             double constant_1over6 = 1.0 / 6.0;
-            encoded_constant_1over6_ = DeviceVector<Data>(Q_size_ << n_power);
+            encoded_constant_1over6_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_double(
                 constant_1over6, encoded_constant_1over6_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             double constant_1over24 = 1.0 / 24.0;
-            encoded_constant_1over24_ = DeviceVector<Data>(Q_size_ << n_power);
+            encoded_constant_1over24_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_double(constant_1over24,
                                                encoded_constant_1over24_.data(),
                                                scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             double constant_1over120 = 1.0 / 120.0;
-            encoded_constant_1over120_ = DeviceVector<Data>(Q_size_ << n_power);
+            encoded_constant_1over120_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_double(
                 constant_1over120, encoded_constant_1over120_.data(),
                 scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             double constant_1over720 = 1.0 / 720.0;
-            encoded_constant_1over720_ = DeviceVector<Data>(Q_size_ << n_power);
+            encoded_constant_1over720_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_double(
                 constant_1over720, encoded_constant_1over720_.data(),
                 scale_boot_);
@@ -3274,7 +3274,7 @@ namespace heongpu
 
             double constant_1over5040 = 1.0 / 5040.0;
             encoded_constant_1over5040_ =
-                DeviceVector<Data>(Q_size_ << n_power);
+                DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_double(
                 constant_1over5040, encoded_constant_1over5040_.data(),
                 scale_boot_);
@@ -3308,7 +3308,7 @@ namespace heongpu
                 .set_storage_type(storage_type::DEVICE)
                 .set_initial_location(true);
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -3316,14 +3316,14 @@ namespace heongpu
                                           .mod_inverse = n_inverse_->data(),
                                           .stream = options.stream_};
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
                                          .zero_padding = false,
                                          .stream = options.stream_};
 
-        DeviceVector<Data> input_intt_poly(2 * n, options.stream_);
+        DeviceVector<Data64> input_intt_poly(2 * n, options.stream_);
         input_storage_manager(
             input1,
             [&](Ciphertext& input1_)
@@ -3423,7 +3423,7 @@ namespace heongpu
                 break;
         }
 
-        plain.device_locations_ = DeviceVector<Data>(plain.plain_size_, stream);
+        plain.device_locations_ = DeviceVector<Data64>(plain.plain_size_, stream);
 
         return plain;
     }
@@ -3453,13 +3453,13 @@ namespace heongpu
         int cipher_memory_size = 2 * (Q_size_ - cipher.depth_) * n;
 
         cipher.device_locations_ =
-            DeviceVector<Data>(cipher_memory_size, stream);
+            DeviceVector<Data64>(cipher_memory_size, stream);
 
         return cipher;
     }
 
     __host__ void HEOperator::quick_ckks_encoder_vec_complex(COMPLEX* input,
-                                                             Data* output,
+                                                             Data64* output,
                                                              const double scale,
                                                              bool use_all_bases)
     {
@@ -3481,7 +3481,7 @@ namespace heongpu
                                                reverse_order_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -3493,7 +3493,7 @@ namespace heongpu
     }
 
     __host__ void HEOperator::quick_ckks_encoder_constant_complex(
-        COMPLEX_C input, Data* output, const double scale, bool use_all_bases)
+        COMPLEX_C input, Data64* output, const double scale, bool use_all_bases)
     {
         // std::vector<COMPLEX_C> in = {input};
         std::vector<COMPLEX_C> in;
@@ -3522,7 +3522,7 @@ namespace heongpu
             reverse_order_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -3534,7 +3534,7 @@ namespace heongpu
     }
 
     __host__ void HEOperator::quick_ckks_encoder_constant_double(
-        double input, Data* output, const double scale, bool use_all_bases)
+        double input, Data64* output, const double scale, bool use_all_bases)
     {
         double value = input * scale;
 
@@ -3544,7 +3544,7 @@ namespace heongpu
     }
 
     __host__ void HEOperator::quick_ckks_encoder_constant_integer(
-        std::int64_t input, Data* output, const double scale,
+        std::int64_t input, Data64* output, const double scale,
         bool use_all_bases)
     {
         double value = static_cast<double>(input) * scale;
@@ -3554,17 +3554,17 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
-    __host__ std::vector<heongpu::DeviceVector<Data>>
+    __host__ std::vector<heongpu::DeviceVector<Data64>>
     HEOperator::encode_V_matrixs(Vandermonde& vandermonde, const double scale,
                                  bool use_all_bases)
     {
-        std::vector<heongpu::DeviceVector<Data>> result;
+        std::vector<heongpu::DeviceVector<Data64>> result;
 
         int rns_count = use_all_bases ? Q_prime_size_ : Q_size_;
 
         for (int m = 0; m < vandermonde.StoC_piece_; m++)
         {
-            heongpu::DeviceVector<Data> temp_encoded(
+            heongpu::DeviceVector<Data64> temp_encoded(
                 (vandermonde.V_matrixs_index_[m].size() * rns_count)
                 << (vandermonde.log_num_slots_ + 1));
 
@@ -3586,17 +3586,17 @@ namespace heongpu
         return result;
     }
 
-    __host__ std::vector<heongpu::DeviceVector<Data>>
+    __host__ std::vector<heongpu::DeviceVector<Data64>>
     HEOperator::encode_V_inv_matrixs(Vandermonde& vandermonde,
                                      const double scale, bool use_all_bases)
     {
-        std::vector<heongpu::DeviceVector<Data>> result;
+        std::vector<heongpu::DeviceVector<Data64>> result;
 
         int rns_count = use_all_bases ? Q_prime_size_ : Q_size_;
 
         for (int m = 0; m < vandermonde.CtoS_piece_; m++)
         {
-            heongpu::DeviceVector<Data> temp_encoded(
+            heongpu::DeviceVector<Data64> temp_encoded(
                 (vandermonde.V_inv_matrixs_index_[m].size() * rns_count)
                 << (vandermonde.log_num_slots_ + 1));
 
@@ -3620,7 +3620,7 @@ namespace heongpu
     }
 
     __host__ Ciphertext HEOperator::multiply_matrix(
-        Ciphertext& cipher, std::vector<heongpu::DeviceVector<Data>>& matrix,
+        Ciphertext& cipher, std::vector<heongpu::DeviceVector<Data64>>& matrix,
         std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
         Galoiskey& galois_key, const ExecutionOptions& options)
     {
@@ -3639,7 +3639,7 @@ namespace heongpu
             int current_level = result.depth_;
             int current_decomp_count = (Q_size_ - current_level);
 
-            DeviceVector<Data> rotated_result =
+            DeviceVector<Data64> rotated_result =
                 fast_single_hoisting_rotation_ckks(
                     result, diags_matrices_bsgs_[m][0], n1, galois_key,
                     options.stream_);
@@ -3703,7 +3703,7 @@ namespace heongpu
     }
 
     __host__ Ciphertext HEOperator::multiply_matrix_less_memory(
-        Ciphertext& cipher, std::vector<heongpu::DeviceVector<Data>>& matrix,
+        Ciphertext& cipher, std::vector<heongpu::DeviceVector<Data64>>& matrix,
         std::vector<std::vector<std::vector<int>>>& diags_matrices_bsgs_,
         std::vector<std::vector<std::vector<int>>>& real_shift,
         Galoiskey& galois_key, const ExecutionOptions& options)
@@ -3723,7 +3723,7 @@ namespace heongpu
             int current_level = result.depth_;
             int current_decomp_count = (Q_size_ - current_level);
 
-            DeviceVector<Data> rotated_result =
+            DeviceVector<Data64> rotated_result =
                 fast_single_hoisting_rotation_ckks(
                     result, diags_matrices_bsgs_[m][0], n1, galois_key,
                     options.stream_);
@@ -4073,7 +4073,7 @@ namespace heongpu
         return result;
     }
 
-    __host__ DeviceVector<Data>
+    __host__ DeviceVector<Data64>
     HEOperator::fast_single_hoisting_rotation_ckks_method_I(
         Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
         Galoiskey& galois_key, const cudaStream_t stream)
@@ -4083,21 +4083,21 @@ namespace heongpu
         int current_rns_mod_count = Q_prime_size_ - current_level;
         int current_decomp_count = Q_size_ - current_level;
 
-        DeviceVector<Data> temp_rotation((2 * n * Q_size_) + (2 * n * Q_size_) +
+        DeviceVector<Data64> temp_rotation((2 * n * Q_size_) + (2 * n * Q_size_) +
                                              (n * Q_size_ * Q_prime_size_) +
                                              (2 * n * Q_prime_size_),
                                          stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (n * Q_size_ * Q_prime_size_);
 
-        DeviceVector<Data> result((2 * current_decomp_count * n1) << n_power,
+        DeviceVector<Data64> result((2 * current_decomp_count * n1) << n_power,
                                   stream); // store n1 ciphertext
 
         // decompose and mult P
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -4116,7 +4116,7 @@ namespace heongpu
             first_rns_mod_count, current_rns_mod_count, current_decomp_count);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -4166,7 +4166,7 @@ namespace heongpu
             }
             else
             {
-                DeviceVector<Data> key_location(
+                DeviceVector<Data64> key_location(
                     galois_key.host_location_[galoiselt], stream);
                 multiply_accumulate_leveled_kernel<<<
                     dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
@@ -4201,7 +4201,7 @@ namespace heongpu
         return result;
     }
 
-    __host__ DeviceVector<Data>
+    __host__ DeviceVector<Data64>
     HEOperator::fast_single_hoisting_rotation_ckks_method_II(
         Ciphertext& first_cipher, std::vector<int>& bsgs_shift, int n1,
         Galoiskey& galois_key, const cudaStream_t stream)
@@ -4211,25 +4211,25 @@ namespace heongpu
         int current_rns_mod_count = Q_prime_size_ - current_level;
         int current_decomp_count = Q_size_ - current_level;
 
-        DeviceVector<Data> temp_rotation(
+        DeviceVector<Data64> temp_rotation(
             (2 * n * Q_size_) + (2 * n * Q_size_) + (n * Q_size_) +
                 (2 * n * d_leveled_->operator[](0) * Q_prime_size_) +
                 (2 * n * Q_prime_size_),
             stream);
 
-        Data* temp0_rotation = temp_rotation.data();
-        Data* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
-        Data* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
-        Data* temp3_rotation = temp2_rotation + (n * Q_size_);
-        Data* temp4_rotation =
+        Data64* temp0_rotation = temp_rotation.data();
+        Data64* temp1_rotation = temp0_rotation + (2 * n * Q_size_);
+        Data64* temp2_rotation = temp1_rotation + (2 * n * Q_size_);
+        Data64* temp3_rotation = temp2_rotation + (n * Q_size_);
+        Data64* temp4_rotation =
             temp3_rotation +
             (2 * n * d_leveled_->operator[](0) * Q_prime_size_);
 
-        DeviceVector<Data> result((2 * current_decomp_count * n1) << n_power,
+        DeviceVector<Data64> result((2 * current_decomp_count * n1) << n_power,
                                   stream); // store n1 ciphertext
 
         // decompose and mult P
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -4241,7 +4241,7 @@ namespace heongpu
                 modulus_->data(), cfg_intt, 2 * current_decomp_count,
                 current_decomp_count);
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -4305,7 +4305,7 @@ namespace heongpu
             }
             else
             {
-                DeviceVector<Data> key_location(
+                DeviceVector<Data64> key_location(
                     galois_key.host_location_[galoiselt], stream);
                 multiply_accumulate_leveled_method_II_kernel<<<
                     dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(

@@ -67,7 +67,7 @@ namespace heongpu
     }
 
     KeySwitchParameterGenerator::KeySwitchParameterGenerator(
-        int poly_degree, std::vector<Data> modulus, int P_size,
+        int poly_degree, std::vector<Data64> modulus, int P_size,
         scheme_type scheme, keyswitching_type method)
     {
         switch (static_cast<int>(scheme))
@@ -83,7 +83,7 @@ namespace heongpu
 
                     for (int i = 0; i < first_Qtilda_; i++)
                     {
-                        modulus_vector.push_back((Modulus) modulus[i]);
+                        modulus_vector.push_back((Modulus64) modulus[i]);
                     }
 
                     d_vector_ = d_counter(first_Q_, m);
@@ -100,7 +100,7 @@ namespace heongpu
 
                     for (int i = 0; i < first_Qtilda_; i++)
                     {
-                        modulus_vector.push_back((Modulus) modulus[i]);
+                        modulus_vector.push_back((Modulus64) modulus[i]);
                     }
 
                     d_vector_ = d_counter(first_Q_, m);
@@ -132,7 +132,7 @@ namespace heongpu
 
                     for (int i = 0; i < first_Qtilda_; i++)
                     {
-                        modulus_vector.push_back((Modulus) modulus[i]);
+                        modulus_vector.push_back((Modulus64) modulus[i]);
                     }
 
                     for (int i = 0; i < first_Q_; i++)
@@ -164,7 +164,7 @@ namespace heongpu
 
                     for (int i = 0; i < first_Qtilda_; i++)
                     {
-                        modulus_vector.push_back((Modulus) modulus[i]);
+                        modulus_vector.push_back((Modulus64) modulus[i]);
                     }
 
                     for (int i = 0; i < first_Q_; i++)
@@ -230,13 +230,13 @@ namespace heongpu
         return int((total_bit / 60) + 1.0);
     }
 
-    std::vector<Data>
+    std::vector<Data64>
     KeySwitchParameterGenerator::base_change_matrix_D_to_Qtilda()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Modulus> obase = modulus_vector;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Modulus64> obase = modulus_vector;
 
-        std::vector<Data> base_matrix;
+        std::vector<Data64> base_matrix;
         int index = 0;
         for (int l = 0; l < d_; l++)
         {
@@ -244,12 +244,12 @@ namespace heongpu
             {
                 for (int i = 0; i < d_vector_[l]; i++)
                 {
-                    Data temp = 1;
+                    Data64 temp = 1;
                     for (int j = 0; j < d_vector_[l]; j++)
                     {
                         if (i != j)
                         {
-                            temp = VALUE::mult(temp, ibase[j + index].value,
+                            temp = OPERATOR64::mult(temp, ibase[j + index].value,
                                                obase[k]);
                         }
                     }
@@ -262,18 +262,18 @@ namespace heongpu
         return base_matrix;
     }
 
-    std::vector<std::vector<Data>>
+    std::vector<std::vector<Data64>>
     KeySwitchParameterGenerator::level_base_change_matrix_D_to_Qtilda()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Modulus> obase = modulus_vector;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Modulus64> obase = modulus_vector;
 
         int elementToRemove = first_Q_ - 1;
 
-        std::vector<std::vector<Data>> all_base_matrix;
+        std::vector<std::vector<Data64>> all_base_matrix;
         for (int main_lp = 0; main_lp < level_Q_.size(); main_lp++)
         {
-            std::vector<Data> all_base_matrix_inner;
+            std::vector<Data64> all_base_matrix_inner;
             int index = 0;
             for (int l = 0; l < level_d_[main_lp]; l++)
             {
@@ -281,14 +281,14 @@ namespace heongpu
                 {
                     for (int i = 0; i < level_d_vector_[main_lp][l]; i++)
                     {
-                        Data temp = 1;
+                        Data64 temp = 1;
                         for (int j = 0; j < level_d_vector_[main_lp][l]; j++)
                         {
                             if (i != j)
                             {
-                                Data base_inner =
+                                Data64 base_inner =
                                     ibase[j + index].value % obase[k].value;
-                                temp = VALUE::mult(temp, base_inner, obase[k]);
+                                temp = OPERATOR64::mult(temp, base_inner, obase[k]);
                             }
                         }
                         all_base_matrix_inner.push_back(temp);
@@ -307,26 +307,26 @@ namespace heongpu
         return all_base_matrix;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::Mi_inv_D_to_Qtilda()
+    std::vector<Data64> KeySwitchParameterGenerator::Mi_inv_D_to_Qtilda()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Data> inv_Mi;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Data64> inv_Mi;
 
         int index = 0;
         for (int l = 0; l < d_; l++)
         {
             for (int i = 0; i < d_vector_[l]; i++)
             {
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < d_vector_[l]; j++)
                 {
                     if (i != j)
                     {
-                        temp = VALUE::mult(temp, ibase[j + index].value,
+                        temp = OPERATOR64::mult(temp, ibase[j + index].value,
                                            ibase[i + index]);
                     }
                 }
-                inv_Mi.push_back(VALUE::modinv(temp, ibase[i + index]));
+                inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i + index]));
             }
 
             index = index + d_vector_[l];
@@ -335,35 +335,35 @@ namespace heongpu
         return inv_Mi;
     }
 
-    std::vector<std::vector<Data>>
+    std::vector<std::vector<Data64>>
     KeySwitchParameterGenerator::level_Mi_inv_D_to_Qtilda()
     {
-        std::vector<Modulus> ibase = modulus_vector;
+        std::vector<Modulus64> ibase = modulus_vector;
 
         int elementToRemove = first_Q_ - 1;
 
-        std::vector<std::vector<Data>> all_inv_Mi;
+        std::vector<std::vector<Data64>> all_inv_Mi;
         for (int main_lp = 0; main_lp < level_Q_.size(); main_lp++)
         {
-            std::vector<Data> inv_Mi;
+            std::vector<Data64> inv_Mi;
 
             int index = 0;
             for (int l = 0; l < level_d_[main_lp]; l++)
             {
                 for (int i = 0; i < level_d_vector_[main_lp][l]; i++)
                 {
-                    Data temp = 1;
+                    Data64 temp = 1;
                     for (int j = 0; j < level_d_vector_[main_lp][l]; j++)
                     {
                         if (i != j)
                         {
-                            Data ibase_inner =
+                            Data64 ibase_inner =
                                 ibase[j + index].value % ibase[i + index].value;
-                            temp = VALUE::mult(temp, ibase_inner,
+                            temp = OPERATOR64::mult(temp, ibase_inner,
                                                ibase[i + index]);
                         }
                     }
-                    inv_Mi.push_back(VALUE::modinv(temp, ibase[i + index]));
+                    inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i + index]));
                 }
 
                 index = index + level_d_vector_[main_lp][l];
@@ -436,25 +436,25 @@ namespace heongpu
         return all_dtilda_location;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::prod_D_to_Qtilda()
+    std::vector<Data64> KeySwitchParameterGenerator::prod_D_to_Qtilda()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Modulus> obase = modulus_vector;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Modulus64> obase = modulus_vector;
 
         std::vector<int> I_j_ = KeySwitchParameterGenerator::I_j();
         std::vector<int> I_location_ =
             KeySwitchParameterGenerator::I_location();
 
-        std::vector<Data> prod;
+        std::vector<Data64> prod;
 
         for (int l = 0; l < d_; l++)
         {
             for (int i = 0; i < obase.size(); i++)
             {
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < I_j_[l]; j++)
                 {
-                    temp = VALUE::mult(temp, ibase[j + I_location_[l]].value,
+                    temp = OPERATOR64::mult(temp, ibase[j + I_location_[l]].value,
                                        obase[i]);
                 }
                 prod.push_back(temp);
@@ -464,35 +464,35 @@ namespace heongpu
         return prod;
     }
 
-    std::vector<std::vector<Data>>
+    std::vector<std::vector<Data64>>
     KeySwitchParameterGenerator::level_prod_D_to_Qtilda()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Modulus> obase = modulus_vector;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Modulus64> obase = modulus_vector;
 
         std::vector<std::vector<int>> I_j_ =
             KeySwitchParameterGenerator::level_I_j();
         std::vector<std::vector<int>> I_location_ =
             KeySwitchParameterGenerator::level_I_location();
 
-        std::vector<std::vector<Data>> all_prod;
+        std::vector<std::vector<Data64>> all_prod;
         int elementToRemove = first_Q_ - 1;
 
         for (int main_lp = 0; main_lp < level_Q_.size(); main_lp++)
         {
-            std::vector<Data> prod;
+            std::vector<Data64> prod;
 
             for (int l = 0; l < level_d_[main_lp]; l++)
             {
                 for (int i = 0; i < obase.size(); i++)
                 {
-                    Data temp = 1;
+                    Data64 temp = 1;
                     for (int j = 0; j < I_j_[main_lp][l]; j++)
                     {
-                        Data ibase_inner =
+                        Data64 ibase_inner =
                             ibase[j + I_location_[main_lp][l]].value %
                             obase[i].value;
-                        temp = VALUE::mult(temp, ibase_inner, obase[i]);
+                        temp = OPERATOR64::mult(temp, ibase_inner, obase[i]);
                     }
                     prod.push_back(temp);
                 }
@@ -526,20 +526,20 @@ namespace heongpu
         return all_sk_pair_new;
     }
 
-    std::vector<Root> KeySwitchParameterGenerator::B_prime_ntt_tables()
+    std::vector<Root64> KeySwitchParameterGenerator::B_prime_ntt_tables()
     {
         int lg = log2(n_);
-        std::vector<Root> forward_table; // bit reverse order
+        std::vector<Root64> forward_table; // bit reverse order
 
         for (int i = 0; i < r_prime_; i++)
         {
-            std::vector<Root> table;
+            std::vector<Root64> table;
             table.push_back(1);
 
             for (int j = 1; j < n_; j++)
             {
-                Data exp =
-                    VALUE::mult(table[(j - 1)], B_prime_psi[i], B_prime[i]);
+                Data64 exp =
+                    OPERATOR64::mult(table[(j - 1)], B_prime_psi[i], B_prime[i]);
                 table.push_back(exp);
             }
 
@@ -552,19 +552,19 @@ namespace heongpu
         return forward_table;
     }
 
-    std::vector<Root> KeySwitchParameterGenerator::B_prime_intt_tables()
+    std::vector<Root64> KeySwitchParameterGenerator::B_prime_intt_tables()
     {
         int lg = log2(n_);
-        std::vector<Root> forward_table; // bit reverse order
+        std::vector<Root64> forward_table; // bit reverse order
 
         for (int i = 0; i < r_prime_; i++)
         {
-            std::vector<Root> table;
+            std::vector<Root64> table;
             table.push_back(1);
-            Data inv_root = VALUE::modinv(B_prime_psi[i], B_prime[i]);
+            Data64 inv_root = OPERATOR64::modinv(B_prime_psi[i], B_prime[i]);
             for (int j = 1; j < n_; j++)
             {
-                Data exp = VALUE::mult(table[(j - 1)], inv_root, B_prime[i]);
+                Data64 exp = OPERATOR64::mult(table[(j - 1)], inv_root, B_prime[i]);
                 table.push_back(exp);
             }
 
@@ -577,24 +577,24 @@ namespace heongpu
         return forward_table;
     }
 
-    std::vector<Ninverse> KeySwitchParameterGenerator::B_prime_n_inverse()
+    std::vector<Ninverse64> KeySwitchParameterGenerator::B_prime_n_inverse()
     {
-        Data n_inner = n_;
-        std::vector<Ninverse> n_inverse_;
+        Data64 n_inner = n_;
+        std::vector<Ninverse64> n_inverse_;
         for (int i = 0; i < B_prime.size(); i++)
         {
-            n_inverse_.push_back(VALUE::modinv(n_inner, B_prime[i]));
+            n_inverse_.push_back(OPERATOR64::modinv(n_inner, B_prime[i]));
         }
 
         return n_inverse_;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::base_change_matrix_D_to_B()
+    std::vector<Data64> KeySwitchParameterGenerator::base_change_matrix_D_to_B()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Modulus> obase = B_prime;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Modulus64> obase = B_prime;
 
-        std::vector<Data> base_matrix;
+        std::vector<Data64> base_matrix;
         int index = 0;
         for (int l = 0; l < d_tilda_; l++)
         {
@@ -602,12 +602,12 @@ namespace heongpu
             {
                 for (int i = 0; i < dtilda_vector_[l]; i++)
                 {
-                    Data temp = 1;
+                    Data64 temp = 1;
                     for (int j = 0; j < dtilda_vector_[l]; j++)
                     {
                         if (i != j)
                         {
-                            temp = VALUE::mult(temp, ibase[j + index].value,
+                            temp = OPERATOR64::mult(temp, ibase[j + index].value,
                                                obase[k]);
                         }
                     }
@@ -620,23 +620,23 @@ namespace heongpu
         return base_matrix;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::base_change_matrix_B_to_D()
+    std::vector<Data64> KeySwitchParameterGenerator::base_change_matrix_B_to_D()
     {
-        std::vector<Modulus> ibase = B_prime;
-        std::vector<Modulus> obase = modulus_vector;
+        std::vector<Modulus64> ibase = B_prime;
+        std::vector<Modulus64> obase = modulus_vector;
 
-        std::vector<Data> base_matrix;
+        std::vector<Data64> base_matrix;
         for (int k = 0; k < obase.size(); k++)
         {
             for (int i = 0; i < ibase.size(); i++)
             {
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < ibase.size(); j++)
                 {
                     if (i != j)
                     {
-                        Data B_ = ibase[j].value % obase[k].value;
-                        temp = VALUE::mult(temp, B_, obase[k]);
+                        Data64 B_ = ibase[j].value % obase[k].value;
+                        temp = OPERATOR64::mult(temp, B_, obase[k]);
                     }
                 }
                 base_matrix.push_back(temp);
@@ -646,26 +646,26 @@ namespace heongpu
         return base_matrix;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::Mi_inv_D_to_B()
+    std::vector<Data64> KeySwitchParameterGenerator::Mi_inv_D_to_B()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Data> inv_Mi;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Data64> inv_Mi;
 
         int index = 0;
         for (int l = 0; l < d_tilda_; l++)
         {
             for (int i = 0; i < dtilda_vector_[l]; i++)
             {
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < dtilda_vector_[l]; j++)
                 {
                     if (i != j)
                     {
-                        temp = VALUE::mult(temp, ibase[j + index].value,
+                        temp = OPERATOR64::mult(temp, ibase[j + index].value,
                                            ibase[i + index]);
                     }
                 }
-                inv_Mi.push_back(VALUE::modinv(temp, ibase[i + index]));
+                inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i + index]));
             }
 
             index = index + dtilda_vector_[l];
@@ -674,49 +674,49 @@ namespace heongpu
         return inv_Mi;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::Mi_inv_B_to_D()
+    std::vector<Data64> KeySwitchParameterGenerator::Mi_inv_B_to_D()
     {
-        std::vector<Modulus> ibase = B_prime;
-        std::vector<Data> inv_Mi;
+        std::vector<Modulus64> ibase = B_prime;
+        std::vector<Data64> inv_Mi;
 
         for (int l = 0; l < d_tilda_; l++)
         {
             for (int i = 0; i < ibase.size(); i++)
             {
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < ibase.size(); j++)
                 {
                     if (i != j)
                     {
-                        temp = VALUE::mult(temp, ibase[j].value, ibase[i]);
+                        temp = OPERATOR64::mult(temp, ibase[j].value, ibase[i]);
                     }
                 }
-                inv_Mi.push_back(VALUE::modinv(temp, ibase[i]));
+                inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i]));
             }
         }
 
         return inv_Mi;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::prod_D_to_B()
+    std::vector<Data64> KeySwitchParameterGenerator::prod_D_to_B()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Modulus> obase = B_prime;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Modulus64> obase = B_prime;
 
         std::vector<int> I_j_ = KeySwitchParameterGenerator::I_j_2();
         std::vector<int> I_location_ =
             KeySwitchParameterGenerator::I_location_2();
 
-        std::vector<Data> prod;
+        std::vector<Data64> prod;
 
         for (int l = 0; l < d_tilda_; l++)
         { // dtilda
             for (int i = 0; i < r_prime_; i++)
             { // r_prime
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < I_j_[l]; j++)
                 {
-                    temp = VALUE::mult(temp, ibase[j + I_location_[l]].value,
+                    temp = OPERATOR64::mult(temp, ibase[j + I_location_[l]].value,
                                        obase[i]);
                 }
                 prod.push_back(temp);
@@ -726,27 +726,27 @@ namespace heongpu
         return prod;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::prod_B_to_D()
+    std::vector<Data64> KeySwitchParameterGenerator::prod_B_to_D()
     {
-        std::vector<Modulus> ibase = B_prime;
-        std::vector<Modulus> obase = modulus_vector;
+        std::vector<Modulus64> ibase = B_prime;
+        std::vector<Modulus64> obase = modulus_vector;
 
         std::vector<int> I_j_ = KeySwitchParameterGenerator::I_j_2();
         std::vector<int> I_location_ =
             KeySwitchParameterGenerator::I_location_2();
 
-        std::vector<Data> prod;
+        std::vector<Data64> prod;
 
         for (int l = 0; l < d_tilda_; l++)
         { // dtilda
             for (int i = 0; i < I_j_[l]; i++)
             {
-                Data temp = 1;
+                Data64 temp = 1;
                 for (int j = 0; j < r_prime_; j++)
                 { // r_prime
-                    Data base =
+                    Data64 base =
                         ibase[j].value % obase[i + I_location_[l]].value;
-                    temp = VALUE::mult(temp, base, obase[i + I_location_[l]]);
+                    temp = OPERATOR64::mult(temp, base, obase[i + I_location_[l]]);
                 }
                 prod.push_back(temp);
             }
@@ -755,18 +755,18 @@ namespace heongpu
         return prod;
     }
 
-    std::vector<std::vector<Data>>
+    std::vector<std::vector<Data64>>
     KeySwitchParameterGenerator::level_base_change_matrix_D_to_B()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Modulus> obase = B_prime;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Modulus64> obase = B_prime;
 
         int elementToRemove = first_Q_ - 1;
 
-        std::vector<std::vector<Data>> all_base_matrix;
+        std::vector<std::vector<Data64>> all_base_matrix;
         for (int main_lp = 0; main_lp < level_Q_.size(); main_lp++)
         {
-            std::vector<Data> all_base_matrix_inner;
+            std::vector<Data64> all_base_matrix_inner;
             int index = 0;
             for (int l = 0; l < level_d_tilda_[main_lp]; l++)
             {
@@ -774,15 +774,15 @@ namespace heongpu
                 {
                     for (int i = 0; i < level_dtilda_vector_[main_lp][l]; i++)
                     {
-                        Data temp = 1;
+                        Data64 temp = 1;
                         for (int j = 0; j < level_dtilda_vector_[main_lp][l];
                              j++)
                         {
                             if (i != j)
                             {
-                                Data base_inner =
+                                Data64 base_inner =
                                     ibase[j + index].value % obase[k].value;
-                                temp = VALUE::mult(temp, base_inner, obase[k]);
+                                temp = OPERATOR64::mult(temp, base_inner, obase[k]);
                             }
                         }
                         all_base_matrix_inner.push_back(temp);
@@ -800,29 +800,29 @@ namespace heongpu
         return all_base_matrix;
     }
 
-    std::vector<std::vector<Data>>
+    std::vector<std::vector<Data64>>
     KeySwitchParameterGenerator::level_base_change_matrix_B_to_D()
     {
-        std::vector<Modulus> ibase = B_prime;
-        std::vector<Modulus> obase = modulus_vector;
+        std::vector<Modulus64> ibase = B_prime;
+        std::vector<Modulus64> obase = modulus_vector;
 
         int elementToRemove = first_Q_ - 1;
 
-        std::vector<std::vector<Data>> all_base_matrix;
+        std::vector<std::vector<Data64>> all_base_matrix;
         for (int main_lp = 0; main_lp < level_Q_.size(); main_lp++)
         {
-            std::vector<Data> base_matrix;
+            std::vector<Data64> base_matrix;
             for (int k = 0; k < obase.size(); k++)
             {
                 for (int i = 0; i < ibase.size(); i++)
                 {
-                    Data temp = 1;
+                    Data64 temp = 1;
                     for (int j = 0; j < ibase.size(); j++)
                     {
                         if (i != j)
                         {
-                            Data B_ = ibase[j].value % obase[k].value;
-                            temp = VALUE::mult(temp, B_, obase[k]);
+                            Data64 B_ = ibase[j].value % obase[k].value;
+                            temp = OPERATOR64::mult(temp, B_, obase[k]);
                         }
                     }
                     base_matrix.push_back(temp);
@@ -838,35 +838,35 @@ namespace heongpu
         return all_base_matrix;
     }
 
-    std::vector<std::vector<Data>>
+    std::vector<std::vector<Data64>>
     KeySwitchParameterGenerator::level_Mi_inv_D_to_B()
     {
-        std::vector<Modulus> ibase = modulus_vector;
+        std::vector<Modulus64> ibase = modulus_vector;
 
         int elementToRemove = first_Q_ - 1;
 
-        std::vector<std::vector<Data>> all_inv_Mi;
+        std::vector<std::vector<Data64>> all_inv_Mi;
         for (int main_lp = 0; main_lp < level_Q_.size(); main_lp++)
         {
-            std::vector<Data> inv_Mi;
+            std::vector<Data64> inv_Mi;
 
             int index = 0;
             for (int l = 0; l < level_d_tilda_[main_lp]; l++)
             {
                 for (int i = 0; i < level_dtilda_vector_[main_lp][l]; i++)
                 {
-                    Data temp = 1;
+                    Data64 temp = 1;
                     for (int j = 0; j < level_dtilda_vector_[main_lp][l]; j++)
                     {
                         if (i != j)
                         {
-                            Data ibase_inner =
+                            Data64 ibase_inner =
                                 ibase[j + index].value % ibase[i + index].value;
-                            temp = VALUE::mult(temp, ibase_inner,
+                            temp = OPERATOR64::mult(temp, ibase_inner,
                                                ibase[i + index]);
                         }
                     }
-                    inv_Mi.push_back(VALUE::modinv(temp, ibase[i + index]));
+                    inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i + index]));
                 }
 
                 index = index + level_dtilda_vector_[main_lp][l];
@@ -881,53 +881,53 @@ namespace heongpu
         return all_inv_Mi;
     }
 
-    std::vector<Data> KeySwitchParameterGenerator::level_Mi_inv_B_to_D()
+    std::vector<Data64> KeySwitchParameterGenerator::level_Mi_inv_B_to_D()
     {
-        std::vector<Modulus> ibase = B_prime;
-        std::vector<Data> inv_Mi;
+        std::vector<Modulus64> ibase = B_prime;
+        std::vector<Data64> inv_Mi;
 
         for (int i = 0; i < ibase.size(); i++)
         {
-            Data temp = 1;
+            Data64 temp = 1;
             for (int j = 0; j < ibase.size(); j++)
             {
                 if (i != j)
                 {
-                    temp = VALUE::mult(temp, ibase[j].value, ibase[i]);
+                    temp = OPERATOR64::mult(temp, ibase[j].value, ibase[i]);
                 }
             }
-            inv_Mi.push_back(VALUE::modinv(temp, ibase[i]));
+            inv_Mi.push_back(OPERATOR64::modinv(temp, ibase[i]));
         }
 
         return inv_Mi;
     }
 
-    std::vector<std::vector<Data>>
+    std::vector<std::vector<Data64>>
     KeySwitchParameterGenerator::level_prod_D_to_B()
     {
-        std::vector<Modulus> ibase = modulus_vector;
-        std::vector<Modulus> obase = B_prime;
+        std::vector<Modulus64> ibase = modulus_vector;
+        std::vector<Modulus64> obase = B_prime;
 
         std::vector<std::vector<int>> I_j_ =
             KeySwitchParameterGenerator::level_I_j_2();
         std::vector<std::vector<int>> I_location_ =
             KeySwitchParameterGenerator::level_I_location_2();
 
-        std::vector<std::vector<Data>> all_prod;
+        std::vector<std::vector<Data64>> all_prod;
         int elementToRemove = first_Q_ - 1;
 
         for (int main_lp = 0; main_lp < level_Q_.size(); main_lp++)
         {
-            std::vector<Data> prod;
+            std::vector<Data64> prod;
 
             for (int l = 0; l < level_d_tilda_[main_lp]; l++)
             { // dtilda
                 for (int i = 0; i < r_prime_; i++)
                 { // r_prime
-                    Data temp = 1;
+                    Data64 temp = 1;
                     for (int j = 0; j < I_j_[main_lp][l]; j++)
                     {
-                        temp = VALUE::mult(
+                        temp = OPERATOR64::mult(
                             temp, ibase[j + I_location_[main_lp][l]].value,
                             obase[i]);
                     }
@@ -944,34 +944,34 @@ namespace heongpu
         return all_prod;
     }
 
-    std::vector<std::vector<Data>>
+    std::vector<std::vector<Data64>>
     KeySwitchParameterGenerator::level_prod_B_to_D()
     {
-        std::vector<Modulus> ibase = B_prime;
-        std::vector<Modulus> obase = modulus_vector;
+        std::vector<Modulus64> ibase = B_prime;
+        std::vector<Modulus64> obase = modulus_vector;
 
         std::vector<std::vector<int>> I_j_ =
             KeySwitchParameterGenerator::level_I_j_2();
         std::vector<std::vector<int>> I_location_ =
             KeySwitchParameterGenerator::level_I_location_2();
 
-        std::vector<std::vector<Data>> all_prod;
+        std::vector<std::vector<Data64>> all_prod;
         int elementToRemove = first_Q_ - 1;
 
         for (int main_lp = 0; main_lp < level_Q_.size(); main_lp++)
         {
-            std::vector<Data> prod;
+            std::vector<Data64> prod;
 
             for (int l = 0; l < level_d_tilda_[main_lp]; l++)
             { // dtilda
                 for (int i = 0; i < I_j_[main_lp][l]; i++)
                 {
-                    Data temp = 1;
+                    Data64 temp = 1;
                     for (int j = 0; j < r_prime_; j++)
                     { // r_prime
-                        Data base = ibase[j].value %
+                        Data64 base = ibase[j].value %
                                     obase[i + I_location_[main_lp][l]].value;
-                        temp = VALUE::mult(temp, base,
+                        temp = OPERATOR64::mult(temp, base,
                                            obase[i + I_location_[main_lp][l]]);
                     }
                     prod.push_back(temp);

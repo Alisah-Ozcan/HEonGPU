@@ -14,12 +14,12 @@ namespace heongpu
         in_ntt_domain_ = false;
     }
 
-    Data* Publickey::data()
+    Data64* Publickey::data()
     {
         return locations_.data();
     }
 
-    void Publickey::device_to_host(std::vector<Data>& public_key,
+    void Publickey::device_to_host(std::vector<Data64>& public_key,
                                    cudaStream_t stream)
     {
         if (public_key.size() < (coeff_modulus_count_ * ring_size_))
@@ -28,12 +28,12 @@ namespace heongpu
         }
 
         cudaMemcpyAsync(public_key.data(), locations_.data(),
-                        coeff_modulus_count_ * ring_size_ * sizeof(Data),
+                        coeff_modulus_count_ * ring_size_ * sizeof(Data64),
                         cudaMemcpyDeviceToHost, stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
-    void Publickey::host_to_device(std::vector<Data>& public_key,
+    void Publickey::host_to_device(std::vector<Data64>& public_key,
                                    cudaStream_t stream)
     {
         if (!(public_key.size() == (coeff_modulus_count_ * ring_size_)))
@@ -42,12 +42,12 @@ namespace heongpu
         }
 
         cudaMemcpyAsync(locations_.data(), public_key.data(),
-                        coeff_modulus_count_ * ring_size_ * sizeof(Data),
+                        coeff_modulus_count_ * ring_size_ * sizeof(Data64),
                         cudaMemcpyHostToDevice, stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
-    void Publickey::device_to_host(HostVector<Data>& public_key,
+    void Publickey::device_to_host(HostVector<Data64>& public_key,
                                    cudaStream_t stream)
     {
         if (public_key.size() < (coeff_modulus_count_ * ring_size_))
@@ -56,12 +56,12 @@ namespace heongpu
         }
 
         cudaMemcpyAsync(public_key.data(), locations_.data(),
-                        coeff_modulus_count_ * ring_size_ * sizeof(Data),
+                        coeff_modulus_count_ * ring_size_ * sizeof(Data64),
                         cudaMemcpyDeviceToHost, stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
-    void Publickey::host_to_device(HostVector<Data>& public_key,
+    void Publickey::host_to_device(HostVector<Data64>& public_key,
                                    cudaStream_t stream)
     {
         if (!(public_key.size() == coeff_modulus_count_ * ring_size_))
@@ -70,7 +70,7 @@ namespace heongpu
         }
 
         cudaMemcpyAsync(locations_.data(), public_key.data(),
-                        coeff_modulus_count_ * ring_size_ * sizeof(Data),
+                        coeff_modulus_count_ * ring_size_ * sizeof(Data64),
                         cudaMemcpyHostToDevice, stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }

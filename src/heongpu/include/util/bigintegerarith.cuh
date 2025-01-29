@@ -24,7 +24,7 @@ namespace heongpu
             return (a < b) ? a : b;
         } // TODO: Fix it
 
-        __device__ __forceinline__ int compare(Data* number1, Data* number2,
+        __device__ __forceinline__ int compare(Data64* number1, Data64* number2,
                                                int wordsize)
         {
             int result = 0;
@@ -41,38 +41,38 @@ namespace heongpu
             return result;
         }
 
-        __device__ __forceinline__ bool is_greater(Data* number1, Data* number2,
+        __device__ __forceinline__ bool is_greater(Data64* number1, Data64* number2,
                                                    int wordsize)
         {
             return compare(number1, number2, wordsize) > 0;
         }
 
         __device__ __forceinline__ bool
-        is_greater_or_equal(Data* number1, Data* number2, int wordsize)
+        is_greater_or_equal(Data64* number1, Data64* number2, int wordsize)
         {
             return compare(number1, number2, wordsize) >= 0;
         }
 
-        __device__ __forceinline__ bool is_less(Data* number1, Data* number2,
+        __device__ __forceinline__ bool is_less(Data64* number1, Data64* number2,
                                                 int wordsize)
         {
             return compare(number1, number2, wordsize) < 0;
         }
 
         __device__ __forceinline__ bool
-        is_less_or_equal(Data* number1, Data* number2, int wordsize)
+        is_less_or_equal(Data64* number1, Data64* number2, int wordsize)
         {
             return compare(number1, number2, wordsize) <= 0;
         }
 
-        __device__ __forceinline__ bool is_equal(Data* number1, Data* number2,
+        __device__ __forceinline__ bool is_equal(Data64* number1, Data64* number2,
                                                  int wordsize)
         {
             return compare(number1, number2, wordsize) == 0;
         }
 
-        __device__ __forceinline__ int add(Data* number1, Data* number2,
-                                           int wordsize, Data* result)
+        __device__ __forceinline__ int add(Data64* number1, Data64* number2,
+                                           int wordsize, Data64* result)
         {
             int carry = 0;
 
@@ -90,7 +90,7 @@ namespace heongpu
             return carry;
         }
 
-        __device__ __forceinline__ int add_inplace(Data* number1, Data* number2,
+        __device__ __forceinline__ int add_inplace(Data64* number1, Data64* number2,
                                                    int wordsize)
         {
             int carry = 0;
@@ -107,8 +107,8 @@ namespace heongpu
             return carry;
         }
 
-        __device__ __forceinline__ int sub(Data* number1, Data* number2,
-                                           int wordsize, Data* result)
+        __device__ __forceinline__ int sub(Data64* number1, Data64* number2,
+                                           int wordsize, Data64* result)
         {
             int borrow = 0;
 
@@ -125,8 +125,8 @@ namespace heongpu
             return borrow;
         }
 
-        __device__ __forceinline__ void sub2(Data* number1, Data* number2,
-                                             int wordsize, Data* result)
+        __device__ __forceinline__ void sub2(Data64* number1, Data64* number2,
+                                             int wordsize, Data64* result)
         {
             asm("sub.cc.u64 %0, %1, %2;"
                 : "=l"(result[0])
@@ -142,9 +142,9 @@ namespace heongpu
          * number2 ==> 64 bit number
          * result  ==> big integer with result_wordsize 64 bit word size
          */
-        __device__ __forceinline__ void multiply(Data* number1,
+        __device__ __forceinline__ void multiply(Data64* number1,
                                                  int number1_wordsize,
-                                                 Data number2, Data* result,
+                                                 Data64 number2, Data64* result,
                                                  int result_wordsize)
         {
             // set result as zero
@@ -179,7 +179,7 @@ namespace heongpu
                     : "l"(number1[wordsize - 1]), "l"(number2));
         }
 
-        __device__ __forceinline__ void set_zero(Data* number,
+        __device__ __forceinline__ void set_zero(Data64* number,
                                                  int number_wordsize)
         {
             // set result as zero
@@ -190,7 +190,7 @@ namespace heongpu
         }
 
         __device__ __forceinline__ void
-        set(Data* number_in, int number_wordsize, Data* number_out)
+        set(Data64* number_in, int number_wordsize, Data64* number_out)
         {
             // set result as zero
             for (int i = 0; i < number_wordsize; i++)

@@ -84,7 +84,7 @@ namespace heongpu
         }
     }
 
-    __host__ Relinkey::Relinkey(Parameters& context, HostVector<Data>& key,
+    __host__ Relinkey::Relinkey(Parameters& context, HostVector<Data64>& key,
                                 bool store_in_gpu)
     {
         scheme_ = context.scheme_;
@@ -110,7 +110,7 @@ namespace heongpu
                 {
                     throw std::invalid_argument("Invalid Key Size");
                 }
-                device_location_ = DeviceVector<Data>(key);
+                device_location_ = DeviceVector<Data64>(key);
                 break;
             }
             case 2: // KEYSWITCHING_METHOD_II
@@ -124,7 +124,7 @@ namespace heongpu
                     {
                         throw std::invalid_argument("Invalid Key Size");
                     }
-                    device_location_ = DeviceVector<Data>(key);
+                    device_location_ = DeviceVector<Data64>(key);
                 }
                 else if (scheme_ == scheme_type::ckks)
                 { // leveled
@@ -134,7 +134,7 @@ namespace heongpu
                     {
                         throw std::invalid_argument("Invalid Key Size");
                     }
-                    device_location_ = DeviceVector<Data>(key);
+                    device_location_ = DeviceVector<Data64>(key);
                 }
                 else
                 {
@@ -154,7 +154,7 @@ namespace heongpu
                     {
                         throw std::invalid_argument("Invalid Key Size");
                     }
-                    device_location_ = DeviceVector<Data>(key);
+                    device_location_ = DeviceVector<Data64>(key);
                 }
                 else if (scheme_ == scheme_type::ckks)
                 { // leveled
@@ -172,7 +172,7 @@ namespace heongpu
     }
 
     __host__ Relinkey::Relinkey(Parameters& context,
-                                std::vector<HostVector<Data>>& key,
+                                std::vector<HostVector<Data64>>& key,
                                 bool store_in_gpu)
     {
         scheme_ = context.scheme_;
@@ -227,7 +227,7 @@ namespace heongpu
                         }
 
                         device_location_leveled_.push_back(
-                            std::move(DeviceVector<Data>(key[i])));
+                            std::move(DeviceVector<Data64>(key[i])));
                     }
                 }
                 else
@@ -256,7 +256,7 @@ namespace heongpu
                 for (int i = 0; i < max_depth; i++)
                 {
                     device_location_leveled_.push_back(std::move(
-                        DeviceVector<Data>(host_location_leveled_[i], stream)));
+                        DeviceVector<Data64>(host_location_leveled_[i], stream)));
                     host_location_leveled_[i].resize(0);
                     host_location_leveled_[i].shrink_to_fit();
                 }
@@ -265,7 +265,7 @@ namespace heongpu
             }
             else
             {
-                device_location_ = DeviceVector<Data>(host_location_, stream);
+                device_location_ = DeviceVector<Data64>(host_location_, stream);
                 host_location_.resize(0);
                 host_location_.shrink_to_fit();
             }
@@ -285,11 +285,11 @@ namespace heongpu
                 for (int i = 0; i < max_depth; i++)
                 {
                     host_location_leveled_.push_back(
-                        HostVector<Data>(relinkey_size_leveled_[i]));
+                        HostVector<Data64>(relinkey_size_leveled_[i]));
 
                     cudaMemcpyAsync(host_location_leveled_[i].data(),
                                     device_location_leveled_[i].data(),
-                                    relinkey_size_leveled_[i] * sizeof(Data),
+                                    relinkey_size_leveled_[i] * sizeof(Data64),
                                     cudaMemcpyDeviceToHost, stream);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -300,9 +300,9 @@ namespace heongpu
             }
             else
             {
-                host_location_ = HostVector<Data>(relinkey_size_);
+                host_location_ = HostVector<Data64>(relinkey_size_);
                 cudaMemcpyAsync(host_location_.data(), device_location_.data(),
-                                relinkey_size_ * sizeof(Data),
+                                relinkey_size_ * sizeof(Data64),
                                 cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -317,7 +317,7 @@ namespace heongpu
         }
     }
 
-    Data* Relinkey::data()
+    Data64* Relinkey::data()
     {
         if (store_in_gpu_)
         {
@@ -328,7 +328,7 @@ namespace heongpu
             return host_location_.data();
         }
     }
-    Data* Relinkey::data(size_t i)
+    Data64* Relinkey::data(size_t i)
     {
         if (store_in_gpu_)
         {
@@ -587,11 +587,11 @@ namespace heongpu
             for (const auto& galois_ : host_location_)
             {
                 device_location_[galois_.first] =
-                    DeviceVector<Data>(galois_.second, stream);
+                    DeviceVector<Data64>(galois_.second, stream);
             }
 
             zero_device_location_ =
-                DeviceVector<Data>(zero_host_location_, stream);
+                DeviceVector<Data64>(zero_host_location_, stream);
 
             host_location_.clear();
             zero_host_location_.resize(0);
@@ -608,20 +608,20 @@ namespace heongpu
             for (auto& galois_ : device_location_)
             {
                 host_location_[galois_.first] =
-                    HostVector<Data>(galoiskey_size_);
+                    HostVector<Data64>(galoiskey_size_);
                 cudaMemcpyAsync(host_location_[galois_.first].data(),
                                 galois_.second.data(),
-                                galoiskey_size_ * sizeof(Data),
+                                galoiskey_size_ * sizeof(Data64),
                                 cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 galois_.second.resize(0, stream);
             }
 
-            zero_host_location_ = HostVector<Data>(galoiskey_size_);
+            zero_host_location_ = HostVector<Data64>(galoiskey_size_);
             cudaMemcpyAsync(
                 zero_host_location_.data(), zero_device_location_.data(),
-                galoiskey_size_ * sizeof(Data), cudaMemcpyDeviceToHost, stream);
+                galoiskey_size_ * sizeof(Data64), cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             device_location_.clear();
@@ -635,7 +635,7 @@ namespace heongpu
         }
     }
 
-    Data* Galoiskey::data(size_t i)
+    Data64* Galoiskey::data(size_t i)
     {
         if (store_in_gpu_)
         {
@@ -647,7 +647,7 @@ namespace heongpu
         }
     }
 
-    Data* Galoiskey::c_data()
+    Data64* Galoiskey::c_data()
     {
         if (store_in_gpu_)
         {
@@ -752,7 +752,7 @@ namespace heongpu
         }
         else
         {
-            device_location_ = DeviceVector<Data>(host_location_, stream);
+            device_location_ = DeviceVector<Data64>(host_location_, stream);
             host_location_.resize(0);
             host_location_.shrink_to_fit();
 
@@ -764,9 +764,9 @@ namespace heongpu
     {
         if (store_in_gpu_)
         {
-            host_location_ = HostVector<Data>(switchkey_size_);
+            host_location_ = HostVector<Data64>(switchkey_size_);
             cudaMemcpyAsync(host_location_.data(), device_location_.data(),
-                            switchkey_size_ * sizeof(Data),
+                            switchkey_size_ * sizeof(Data64),
                             cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -782,7 +782,7 @@ namespace heongpu
 
     //////////////////////////
 
-    Data* Switchkey::data()
+    Data64* Switchkey::data()
     {
         if (store_in_gpu_)
         {

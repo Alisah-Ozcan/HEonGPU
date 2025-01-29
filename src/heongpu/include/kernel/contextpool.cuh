@@ -17,7 +17,7 @@ namespace heongpu
         friend class Parameters;
 
       public:
-        KeySwitchParameterGenerator(int poly_degree, std::vector<Data> modulus,
+        KeySwitchParameterGenerator(int poly_degree, std::vector<Data64> modulus,
                                     int P_size, scheme_type scheme,
                                     keyswitching_type method);
 
@@ -25,9 +25,9 @@ namespace heongpu
         int n_;
         int m = 2;
 
-        std::vector<Modulus> modulus_vector;
-        std::vector<Modulus> B_prime;
-        std::vector<Data> B_prime_psi;
+        std::vector<Modulus64> modulus_vector;
+        std::vector<Modulus64> B_prime;
+        std::vector<Data64> B_prime_psi;
 
         int B_counter(const int n, const int m,
                       const std::vector<int> dtilda_counter);
@@ -50,12 +50,12 @@ namespace heongpu
         std::vector<std::vector<int>> level_d_vector_; // ckks
         std::vector<std::vector<int>> level_dtilda_vector_; // ckks
 
-        std::vector<Data> base_change_matrix_D_to_Qtilda(); // bfv
-        std::vector<Data> Mi_inv_D_to_Qtilda(); // bfv
+        std::vector<Data64> base_change_matrix_D_to_Qtilda(); // bfv
+        std::vector<Data64> Mi_inv_D_to_Qtilda(); // bfv
 
-        std::vector<std::vector<Data>>
+        std::vector<std::vector<Data64>>
         level_base_change_matrix_D_to_Qtilda(); // ckks
-        std::vector<std::vector<Data>> level_Mi_inv_D_to_Qtilda(); // ckks
+        std::vector<std::vector<Data64>> level_Mi_inv_D_to_Qtilda(); // ckks
 
         std::vector<int> I_j(); // bfv
         std::vector<int> I_j_2(); // bfv
@@ -69,33 +69,33 @@ namespace heongpu
         std::vector<std::vector<int>> level_I_location_2(); // ckks
         std::vector<std::vector<int>> level_sk_pair(); // ckks
 
-        std::vector<Data> prod_D_to_Qtilda(); // bfv
-        std::vector<std::vector<Data>> level_prod_D_to_Qtilda(); // ckks
+        std::vector<Data64> prod_D_to_Qtilda(); // bfv
+        std::vector<std::vector<Data64>> level_prod_D_to_Qtilda(); // ckks
 
         std::vector<int> d_counter(const int l, const int m);
         std::vector<int> d_location_counter(const std::vector<int> d_counter);
         std::vector<int> sk_pair_counter(const std::vector<int> d_counter,
                                          int Q_size);
 
-        std::vector<Root> B_prime_ntt_tables();
-        std::vector<Root> B_prime_intt_tables();
-        std::vector<Ninverse> B_prime_n_inverse();
+        std::vector<Root64> B_prime_ntt_tables();
+        std::vector<Root64> B_prime_intt_tables();
+        std::vector<Ninverse64> B_prime_n_inverse();
 
-        std::vector<Data> base_change_matrix_D_to_B();
-        std::vector<Data> base_change_matrix_B_to_D();
-        std::vector<Data> Mi_inv_D_to_B();
-        std::vector<Data> Mi_inv_B_to_D();
+        std::vector<Data64> base_change_matrix_D_to_B();
+        std::vector<Data64> base_change_matrix_B_to_D();
+        std::vector<Data64> Mi_inv_D_to_B();
+        std::vector<Data64> Mi_inv_B_to_D();
 
-        std::vector<Data> prod_D_to_B();
-        std::vector<Data> prod_B_to_D();
+        std::vector<Data64> prod_D_to_B();
+        std::vector<Data64> prod_B_to_D();
 
-        std::vector<std::vector<Data>> level_base_change_matrix_D_to_B();
-        std::vector<std::vector<Data>> level_base_change_matrix_B_to_D();
-        std::vector<std::vector<Data>> level_Mi_inv_D_to_B();
-        std::vector<Data> level_Mi_inv_B_to_D();
+        std::vector<std::vector<Data64>> level_base_change_matrix_D_to_B();
+        std::vector<std::vector<Data64>> level_base_change_matrix_B_to_D();
+        std::vector<std::vector<Data64>> level_Mi_inv_D_to_B();
+        std::vector<Data64> level_Mi_inv_B_to_D();
 
-        std::vector<std::vector<Data>> level_prod_D_to_B();
-        std::vector<std::vector<Data>> level_prod_B_to_D();
+        std::vector<std::vector<Data64>> level_prod_D_to_B();
+        std::vector<std::vector<Data64>> level_prod_B_to_D();
     };
 
 } // namespace heongpu

@@ -39,7 +39,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:include/HEonGPU-${PROJECT_VERSION}>
 )
 
-target_compile_definitions(heongpu PUBLIC BARRETT_64 FLOAT_64)
+target_compile_definitions(heongpu PUBLIC FLOAT_64)
 
 target_link_libraries(heongpu PUBLIC 
     ntt

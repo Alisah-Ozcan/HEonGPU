@@ -62,8 +62,8 @@ namespace heongpu
 
     // TODO: work it for multiple RNS prime (currently it only works for single
     // prime)
-    __global__ void mod_raise_kernel(Data* input, Data* output,
-                                     Modulus* modulus, int n_power);
+    __global__ void mod_raise_kernel(Data64* input, Data64* output,
+                                     Modulus64* modulus, int n_power);
 
 } // namespace heongpu
 

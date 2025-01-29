@@ -62,12 +62,12 @@ namespace heongpu
                                            Plaintext& plaintext,
                                            const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory((2 * n * Q_size_), stream);
+        DeviceVector<Data64> output_memory((2 * n * Q_size_), stream);
 
-        DeviceVector<Data> gpu_space(5 * Q_prime_size_ * n, stream);
-        Data* u_poly = gpu_space.data();
-        Data* error_poly = u_poly + (Q_prime_size_ * n);
-        Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
+        DeviceVector<Data64> gpu_space(5 * Q_prime_size_ * n, stream);
+        Data64* u_poly = gpu_space.data();
+        Data64* error_poly = u_poly + (Q_prime_size_ * n);
+        Data64* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
 
         modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
                                                           256, 0, stream>>>(
@@ -82,7 +82,7 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -97,7 +97,7 @@ namespace heongpu
             Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,
@@ -124,12 +124,12 @@ namespace heongpu
                                             Plaintext& plaintext,
                                             const cudaStream_t stream)
     {
-        DeviceVector<Data> output_memory((2 * n * Q_size_), stream);
+        DeviceVector<Data64> output_memory((2 * n * Q_size_), stream);
 
-        DeviceVector<Data> gpu_space(5 * Q_prime_size_ * n, stream);
-        Data* u_poly = gpu_space.data();
-        Data* error_poly = u_poly + (Q_prime_size_ * n);
-        Data* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
+        DeviceVector<Data64> gpu_space(5 * Q_prime_size_ * n, stream);
+        Data64* u_poly = gpu_space.data();
+        Data64* error_poly = u_poly + (Q_prime_size_ * n);
+        Data64* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
 
         modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
                                                           256, 0, stream>>>(
@@ -144,7 +144,7 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -159,7 +159,7 @@ namespace heongpu
             Q_prime_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_intt = {.n_power = n_power,
+        ntt_rns_configuration<Data64> cfg_intt = {.n_power = n_power,
                                           .ntt_type = INVERSE,
                                           .reduction_poly =
                                               ReductionPolynomial::X_N_plus,

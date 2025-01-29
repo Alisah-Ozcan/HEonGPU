@@ -31,8 +31,8 @@ namespace heongpu
         }
     }
 
-    __global__ void secretkey_rns_kernel(int* input, Data* output,
-                                         Modulus* modulus, int n_power,
+    __global__ void secretkey_rns_kernel(int* input, Data64* output,
+                                         Modulus64* modulus, int n_power,
                                          int rns_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -44,14 +44,14 @@ namespace heongpu
         {
             int location = i << n_power;
 
-            Data result;
+            Data64 result;
             if (sk_ < 0)
             {
                 result = modulus[i].value - 1;
             }
             else
             {
-                result = static_cast<Data>(sk_);
+                result = static_cast<Data64>(sk_);
             }
 
             output[idx + location] = result;
@@ -61,9 +61,9 @@ namespace heongpu
     /////////////////////////////////////////////////////////////////////////////////////
     // Public Key Generation
 
-    __global__ void publickey_gen_kernel(Data* public_key, Data* secret_key,
-                                         Data* error_poly, Data* a_poly,
-                                         Modulus* modulus, int n_power,
+    __global__ void publickey_gen_kernel(Data64* public_key, Data64* secret_key,
+                                         Data64* error_poly, Data64* a_poly,
+                                         Modulus64* modulus, int n_power,
                                          int rns_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -71,23 +71,23 @@ namespace heongpu
 
         int location = idx + (block_y << n_power);
 
-        Data sk = secret_key[location];
-        Data e = error_poly[location];
-        Data a = a_poly[location];
+        Data64 sk = secret_key[location];
+        Data64 e = error_poly[location];
+        Data64 a = a_poly[location];
 
-        Data temp = VALUE_GPU::mult(sk, a, modulus[block_y]);
-        temp = VALUE_GPU::add(temp, e, modulus[block_y]);
+        Data64 temp = OPERATOR_GPU_64::mult(sk, a, modulus[block_y]);
+        temp = OPERATOR_GPU_64::add(temp, e, modulus[block_y]);
 
-        Data zero = 0ULL;
-        temp = VALUE_GPU::sub(zero, temp, modulus[block_y]);
+        Data64 zero = 0ULL;
+        temp = OPERATOR_GPU_64::sub(zero, temp, modulus[block_y]);
 
         public_key[idx + (block_y << n_power)] = temp;
 
         public_key[idx + (block_y << n_power) + (rns_mod_count << n_power)] = a;
     }
 
-    __global__ void threshold_pk_addition(Data* pk1, Data* pk2, Data* pkout,
-                                          Modulus* modulus, int n_power,
+    __global__ void threshold_pk_addition(Data64* pk1, Data64* pk2, Data64* pkout,
+                                          Modulus64* modulus, int n_power,
                                           bool first)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -96,16 +96,16 @@ namespace heongpu
         int location = idx + (block_y << n_power);
         int offset = (gridDim.y << n_power);
 
-        Data pk1_0_ = pk1[location];
-        Data pk2_0_ = pk2[location];
+        Data64 pk1_0_ = pk1[location];
+        Data64 pk2_0_ = pk2[location];
 
-        Data sum_ = VALUE_GPU::add(pk1_0_, pk2_0_, modulus[block_y]);
+        Data64 sum_ = OPERATOR_GPU_64::add(pk1_0_, pk2_0_, modulus[block_y]);
 
         pkout[location] = sum_;
 
         if (first)
         {
-            Data A = pk1[location + offset];
+            Data64 A = pk1[location + offset];
             pkout[location + offset] = A;
         }
     }
@@ -113,9 +113,9 @@ namespace heongpu
     /////////////////////////////////////////////////////////////////////////////////////
     // Relinearization Key Generation
 
-    __global__ void relinkey_gen_kernel(Data* relin_key, Data* secret_key,
-                                        Data* error_poly, Data* a_poly,
-                                        Modulus* modulus, Data* factor,
+    __global__ void relinkey_gen_kernel(Data64* relin_key, Data64* secret_key,
+                                        Data64* error_poly, Data64* a_poly,
+                                        Modulus64* modulus, Data64* factor,
                                         int n_power, int rns_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -123,28 +123,28 @@ namespace heongpu
 
         int location1 = block_y << n_power;
 
-        Data sk = secret_key[idx + (block_y << n_power)];
+        Data64 sk = secret_key[idx + (block_y << n_power)];
 
 #pragma unroll
         for (int i = 0; i < rns_mod_count - 1; i++)
         {
-            Data e = error_poly[idx + (block_y << n_power) +
+            Data64 e = error_poly[idx + (block_y << n_power) +
                                 ((rns_mod_count * i) << n_power)];
-            Data a = a_poly[idx + (block_y << n_power) +
+            Data64 a = a_poly[idx + (block_y << n_power) +
                             ((rns_mod_count * i) << n_power)];
 
-            Data rk_0 = VALUE_GPU::mult(sk, a, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, e, modulus[block_y]);
-            Data zero = 0;
+            Data64 rk_0 = OPERATOR_GPU_64::mult(sk, a, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e, modulus[block_y]);
+            Data64 zero = 0;
 
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[block_y]);
 
             if (i == block_y)
             {
-                Data temp = VALUE_GPU::mult(sk, sk, modulus[block_y]);
-                temp = VALUE_GPU::mult(temp, factor[block_y], modulus[block_y]);
+                Data64 temp = OPERATOR_GPU_64::mult(sk, sk, modulus[block_y]);
+                temp = OPERATOR_GPU_64::mult(temp, factor[block_y], modulus[block_y]);
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[block_y]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, temp, modulus[block_y]);
             }
 
             relin_key[idx + location1 +
@@ -158,39 +158,39 @@ namespace heongpu
     //////////////////////// -
 
     __global__ void multi_party_relinkey_piece_method_I_stage_I_kernel(
-        Data* rk, Data* sk, Data* a, Data* u, Data* e0, Data* e1,
-        Modulus* modulus, Data* factor, int n_power, int rns_mod_count)
+        Data64* rk, Data64* sk, Data64* a, Data64* u, Data64* e0, Data64* e1,
+        Modulus64* modulus, Data64* factor, int n_power, int rns_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // rns_mod_count
 
         int location = block_y << n_power;
 
-        Data sk_ = sk[idx + (block_y << n_power)];
-        Data u_ = u[idx + (block_y << n_power)];
+        Data64 sk_ = sk[idx + (block_y << n_power)];
+        Data64 u_ = u[idx + (block_y << n_power)];
 
-        Data zero = 0ULL;
+        Data64 zero = 0ULL;
 #pragma unroll
         for (int i = 0; i < rns_mod_count - 1; i++)
         {
-            Data e_0 = e0[idx + location + ((rns_mod_count * i) << n_power)];
-            Data e_1 = e1[idx + location + ((rns_mod_count * i) << n_power)];
-            Data a_ = a[idx + location + ((rns_mod_count * i) << n_power)];
+            Data64 e_0 = e0[idx + location + ((rns_mod_count * i) << n_power)];
+            Data64 e_1 = e1[idx + location + ((rns_mod_count * i) << n_power)];
+            Data64 a_ = a[idx + location + ((rns_mod_count * i) << n_power)];
 
-            Data rk_0 = VALUE_GPU::mult(u_, a_, modulus[block_y]);
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, e_0, modulus[block_y]);
+            Data64 rk_0 = OPERATOR_GPU_64::mult(u_, a_, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e_0, modulus[block_y]);
 
             if (i == block_y)
             {
-                Data temp =
-                    VALUE_GPU::mult(sk_, factor[block_y], modulus[block_y]);
+                Data64 temp =
+                    OPERATOR_GPU_64::mult(sk_, factor[block_y], modulus[block_y]);
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[block_y]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, temp, modulus[block_y]);
             }
 
-            Data rk_1 = VALUE_GPU::mult(a_, sk_, modulus[block_y]);
-            rk_1 = VALUE_GPU::add(rk_1, e_1, modulus[block_y]);
+            Data64 rk_1 = OPERATOR_GPU_64::mult(a_, sk_, modulus[block_y]);
+            rk_1 = OPERATOR_GPU_64::add(rk_1, e_1, modulus[block_y]);
 
             rk[idx + location + ((rns_mod_count * i) << (n_power + 1))] = rk_0;
             rk[idx + location + ((rns_mod_count * i) << (n_power + 1)) +
@@ -199,8 +199,8 @@ namespace heongpu
     }
 
     __global__ void multi_party_relinkey_piece_method_II_stage_I_kernel(
-        Data* rk, Data* sk, Data* a, Data* u, Data* e0, Data* e1,
-        Modulus* modulus, Data* factor, int* Sk_pair, int n_power, int l_tilda,
+        Data64* rk, Data64* sk, Data64* a, Data64* u, Data64* e0, Data64* e1,
+        Modulus64* modulus, Data64* factor, int* Sk_pair, int n_power, int l_tilda,
         int d, int Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -209,37 +209,37 @@ namespace heongpu
         int location = block_y << n_power;
         int Sk_index = Sk_pair[block_y];
 
-        Data sk_ = sk[idx + (block_y << n_power)];
-        Data u_ = u[idx + (block_y << n_power)];
+        Data64 sk_ = sk[idx + (block_y << n_power)];
+        Data64 u_ = u[idx + (block_y << n_power)];
 
-        Data zero = 0ULL;
+        Data64 zero = 0ULL;
 #pragma unroll
         for (int i = 0; i < d; i++)
         {
-            Data e_0 = e0[idx + location + ((l_tilda * i) << n_power)];
-            Data e_1 = e1[idx + location + ((l_tilda * i) << n_power)];
-            Data a_ = a[idx + location + ((l_tilda * i) << n_power)];
+            Data64 e_0 = e0[idx + location + ((l_tilda * i) << n_power)];
+            Data64 e_1 = e1[idx + location + ((l_tilda * i) << n_power)];
+            Data64 a_ = a[idx + location + ((l_tilda * i) << n_power)];
 
-            Data rk_0 = VALUE_GPU::mult(u_, a_, modulus[block_y]);
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, e_0, modulus[block_y]);
+            Data64 rk_0 = OPERATOR_GPU_64::mult(u_, a_, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e_0, modulus[block_y]);
 
             if (i == Sk_index)
             {
-                Data temp = VALUE_GPU::mult(sk_, factor[(0 * Q_size) + block_y],
+                Data64 temp = OPERATOR_GPU_64::mult(sk_, factor[(0 * Q_size) + block_y],
                                             modulus[block_y]);
 
                 for (int j = 1; j < P_size; j++)
                 {
-                    temp = VALUE_GPU::mult(temp, factor[(j * Q_size) + block_y],
+                    temp = OPERATOR_GPU_64::mult(temp, factor[(j * Q_size) + block_y],
                                            modulus[block_y]);
                 }
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[block_y]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, temp, modulus[block_y]);
             }
 
-            Data rk_1 = VALUE_GPU::mult(a_, sk_, modulus[block_y]);
-            rk_1 = VALUE_GPU::add(rk_1, e_1, modulus[block_y]);
+            Data64 rk_1 = OPERATOR_GPU_64::mult(a_, sk_, modulus[block_y]);
+            rk_1 = OPERATOR_GPU_64::add(rk_1, e_1, modulus[block_y]);
 
             rk[idx + location + ((l_tilda * i) << (n_power + 1))] = rk_0;
             rk[idx + location + ((l_tilda * i) << (n_power + 1)) +
@@ -248,37 +248,37 @@ namespace heongpu
     }
 
     __global__ void multi_party_relinkey_piece_method_I_II_stage_II_kernel(
-        Data* rk_1, Data* rk_2, Data* sk, Data* u, Data* e0, Data* e1,
-        Modulus* modulus, int n_power, int rns_mod_count, int decomp_mod_count)
+        Data64* rk_1, Data64* rk_2, Data64* sk, Data64* u, Data64* e0, Data64* e1,
+        Modulus64* modulus, int n_power, int rns_mod_count, int decomp_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
         int block_y = blockIdx.y; // rns_mod_count
 
         int location = block_y << n_power;
 
-        Data sk_ = sk[idx + (block_y << n_power)];
-        Data u_ = u[idx + (block_y << n_power)];
+        Data64 sk_ = sk[idx + (block_y << n_power)];
+        Data64 u_ = u[idx + (block_y << n_power)];
 
 #pragma unroll
         for (int i = 0; i < decomp_mod_count; i++)
         {
-            Data e_0 = e0[idx + location + ((rns_mod_count * i) << n_power)];
-            Data e_1 = e1[idx + location + ((rns_mod_count * i) << n_power)];
+            Data64 e_0 = e0[idx + location + ((rns_mod_count * i) << n_power)];
+            Data64 e_1 = e1[idx + location + ((rns_mod_count * i) << n_power)];
 
-            Data rk_0_ =
+            Data64 rk_0_ =
                 rk_1[idx + location + ((rns_mod_count * i) << (n_power + 1))];
 
-            Data rk_1_ =
+            Data64 rk_1_ =
                 rk_1[idx + location + ((rns_mod_count * i) << (n_power + 1)) +
                      (rns_mod_count << n_power)];
 
-            rk_0_ = VALUE_GPU::mult(rk_0_, sk_, modulus[block_y]);
-            rk_0_ = VALUE_GPU::add(rk_0_, e_0, modulus[block_y]);
+            rk_0_ = OPERATOR_GPU_64::mult(rk_0_, sk_, modulus[block_y]);
+            rk_0_ = OPERATOR_GPU_64::add(rk_0_, e_0, modulus[block_y]);
 
-            // u_ = VALUE_GPU::sub(u_, sk_, modulus[block_y]);
-            Data u_s = VALUE_GPU::sub(u_, sk_, modulus[block_y]);
-            rk_1_ = VALUE_GPU::mult(rk_1_, u_s, modulus[block_y]);
-            rk_1_ = VALUE_GPU::add(rk_1_, e_1, modulus[block_y]);
+            // u_ = OPERATOR_GPU_64::sub(u_, sk_, modulus[block_y]);
+            Data64 u_s = OPERATOR_GPU_64::sub(u_, sk_, modulus[block_y]);
+            rk_1_ = OPERATOR_GPU_64::mult(rk_1_, u_s, modulus[block_y]);
+            rk_1_ = OPERATOR_GPU_64::add(rk_1_, e_1, modulus[block_y]);
 
             rk_2[idx + location + ((rns_mod_count * i) << (n_power + 1))] =
                 rk_0_;
@@ -288,7 +288,7 @@ namespace heongpu
     }
 
     __global__ void multi_party_relinkey_method_I_stage_I_kernel(
-        Data* rk1, Data* rk2, Data* rk_out, Modulus* modulus, int n_power,
+        Data64* rk1, Data64* rk2, Data64* rk_out, Modulus64* modulus, int n_power,
         int Q_prime_size, int l)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -299,16 +299,16 @@ namespace heongpu
 #pragma unroll
         for (int i = 0; i < l; i++)
         {
-            Data rk1_0 = rk1[location + ((Q_prime_size * i) << (n_power + 1))];
-            Data rk1_1 = rk1[location + ((Q_prime_size * i) << (n_power + 1)) +
+            Data64 rk1_0 = rk1[location + ((Q_prime_size * i) << (n_power + 1))];
+            Data64 rk1_1 = rk1[location + ((Q_prime_size * i) << (n_power + 1)) +
                              (Q_prime_size << n_power)];
 
-            Data rk2_0 = rk2[location + ((Q_prime_size * i) << (n_power + 1))];
-            Data rk2_1 = rk2[location + ((Q_prime_size * i) << (n_power + 1)) +
+            Data64 rk2_0 = rk2[location + ((Q_prime_size * i) << (n_power + 1))];
+            Data64 rk2_1 = rk2[location + ((Q_prime_size * i) << (n_power + 1)) +
                              (Q_prime_size << n_power)];
 
-            Data rk_0 = VALUE_GPU::add(rk1_0, rk2_0, modulus[block_y]);
-            Data rk_1 = VALUE_GPU::add(rk1_1, rk2_1, modulus[block_y]);
+            Data64 rk_0 = OPERATOR_GPU_64::add(rk1_0, rk2_0, modulus[block_y]);
+            Data64 rk_1 = OPERATOR_GPU_64::add(rk1_1, rk2_1, modulus[block_y]);
 
             rk_out[location + ((Q_prime_size * i) << (n_power + 1))] = rk_0;
             rk_out[location + ((Q_prime_size * i) << (n_power + 1)) +
@@ -317,7 +317,7 @@ namespace heongpu
     }
 
     __global__ void multi_party_relinkey_method_I_stage_I_kernel(
-        Data* rk_in, Data* rk_out, Modulus* modulus, int n_power,
+        Data64* rk_in, Data64* rk_out, Modulus64* modulus, int n_power,
         int Q_prime_size, int l, bool first)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -343,20 +343,20 @@ namespace heongpu
 #pragma unroll
             for (int i = 0; i < l; i++)
             {
-                Data rk1_0 =
+                Data64 rk1_0 =
                     rk_in[location + ((Q_prime_size * i) << (n_power + 1))];
-                Data rk1_1 =
+                Data64 rk1_1 =
                     rk_in[location + ((Q_prime_size * i) << (n_power + 1)) +
                           (Q_prime_size << n_power)];
 
-                Data rk2_0 =
+                Data64 rk2_0 =
                     rk_out[location + ((Q_prime_size * i) << (n_power + 1))];
-                Data rk2_1 =
+                Data64 rk2_1 =
                     rk_out[location + ((Q_prime_size * i) << (n_power + 1)) +
                            (Q_prime_size << n_power)];
 
-                Data rk_0 = VALUE_GPU::add(rk1_0, rk2_0, modulus[block_y]);
-                Data rk_1 = VALUE_GPU::add(rk1_1, rk2_1, modulus[block_y]);
+                Data64 rk_0 = OPERATOR_GPU_64::add(rk1_0, rk2_0, modulus[block_y]);
+                Data64 rk_1 = OPERATOR_GPU_64::add(rk1_1, rk2_1, modulus[block_y]);
 
                 rk_out[location + ((Q_prime_size * i) << (n_power + 1))] = rk_0;
                 rk_out[location + ((Q_prime_size * i) << (n_power + 1)) +
@@ -366,7 +366,7 @@ namespace heongpu
     }
 
     __global__ void multi_party_relinkey_method_I_stage_II_kernel(
-        Data* rk1, Data* rk2, Data* rk_out, Modulus* modulus, int n_power,
+        Data64* rk1, Data64* rk2, Data64* rk_out, Modulus64* modulus, int n_power,
         int Q_prime_size, int l)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -377,14 +377,14 @@ namespace heongpu
 #pragma unroll
         for (int i = 0; i < l; i++)
         {
-            Data rk1_0 = rk1[location + ((Q_prime_size * i) << (n_power + 1))];
-            Data rk1_1 = rk1[location + ((Q_prime_size * i) << (n_power + 1)) +
+            Data64 rk1_0 = rk1[location + ((Q_prime_size * i) << (n_power + 1))];
+            Data64 rk1_1 = rk1[location + ((Q_prime_size * i) << (n_power + 1)) +
                              (Q_prime_size << n_power)];
 
-            Data rk_1 = rk2[location + ((Q_prime_size * i) << (n_power + 1)) +
+            Data64 rk_1 = rk2[location + ((Q_prime_size * i) << (n_power + 1)) +
                             (Q_prime_size << n_power)];
 
-            Data rk_0 = VALUE_GPU::add(rk1_0, rk1_1, modulus[block_y]);
+            Data64 rk_0 = OPERATOR_GPU_64::add(rk1_0, rk1_1, modulus[block_y]);
 
             rk_out[location + ((Q_prime_size * i) << (n_power + 1))] = rk_0;
             rk_out[location + ((Q_prime_size * i) << (n_power + 1)) +
@@ -393,8 +393,8 @@ namespace heongpu
     }
 
     __global__ void
-    multi_party_relinkey_method_I_stage_II_kernel(Data* rk_in, Data* rk_out,
-                                                  Modulus* modulus, int n_power,
+    multi_party_relinkey_method_I_stage_II_kernel(Data64* rk_in, Data64* rk_out,
+                                                  Modulus64* modulus, int n_power,
                                                   int Q_prime_size, int l)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -405,18 +405,18 @@ namespace heongpu
 #pragma unroll
         for (int i = 0; i < l; i++)
         {
-            Data rk1_0 =
+            Data64 rk1_0 =
                 rk_in[location + ((Q_prime_size * i) << (n_power + 1))];
-            Data rk1_1 =
+            Data64 rk1_1 =
                 rk_in[location + ((Q_prime_size * i) << (n_power + 1)) +
                       (Q_prime_size << n_power)];
 
-            // Data rk_0 = VALUE_GPU::add(rk1_0, rk1_1, modulus[block_y]);
+            // Data64 rk_0 = OPERATOR_GPU_64::add(rk1_0, rk1_1, modulus[block_y]);
 
-            Data rk_0 =
+            Data64 rk_0 =
                 rk_out[location + ((Q_prime_size * i) << (n_power + 1))];
-            rk_0 = VALUE_GPU::add(rk_0, rk1_0, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, rk1_1, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, rk1_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, rk1_1, modulus[block_y]);
 
             rk_out[location + ((Q_prime_size * i) << (n_power + 1))] = rk_0;
         }
@@ -425,10 +425,10 @@ namespace heongpu
     ////////////////////////
     ////////////////////////
 
-    __global__ void relinkey_DtoB_kernel(Data* relin_key_temp, Data* relin_key,
-                                         Modulus* modulus, Modulus* B_base,
-                                         Data* base_change_matrix_D_to_B,
-                                         Data* Mi_inv_D_to_B, Data* prod_D_to_B,
+    __global__ void relinkey_DtoB_kernel(Data64* relin_key_temp, Data64* relin_key,
+                                         Modulus64* modulus, Modulus64* B_base,
+                                         Data64* base_change_matrix_D_to_B,
+                                         Data64* Mi_inv_D_to_B, Data64* prod_D_to_B,
                                          int* I_j_, int* I_location_,
                                          int n_power, int l_tilda, int d_tilda,
                                          int d, int r_prime)
@@ -446,15 +446,15 @@ namespace heongpu
         int location =
             idx + (I_location << n_power) + ((block_z * l_tilda) << n_power);
 
-        Data partial[20];
+        Data64 partial[20];
         double r = 0;
         double div;
         double mod;
 #pragma unroll
         for (int i = 0; i < I_j; i++)
         {
-            Data temp = relin_key_temp[location + (i << n_power)];
-            partial[i] = VALUE_GPU::mult(temp, Mi_inv_D_to_B[I_location + i],
+            Data64 temp = relin_key_temp[location + (i << n_power)];
+            partial[i] = OPERATOR_GPU_64::mult(temp, Mi_inv_D_to_B[I_location + i],
                                          modulus[I_location + i]);
             div = static_cast<double>(partial[i]);
             mod = static_cast<double>(modulus[I_location + i].value);
@@ -462,32 +462,32 @@ namespace heongpu
         }
 
         r = roundf(r);
-        Data r_ = static_cast<Data>(r);
+        Data64 r_ = static_cast<Data64>(r);
 
         for (int i = 0; i < r_prime; i++)
         {
-            Data temp = 0;
+            Data64 temp = 0;
 #pragma unroll
             for (int j = 0; j < I_j; j++)
             {
-                Data mult = VALUE_GPU::mult(
+                Data64 mult = OPERATOR_GPU_64::mult(
                     partial[j],
                     base_change_matrix_D_to_B[j + (i * I_j) + matrix_index],
                     B_base[i]);
-                temp = VALUE_GPU::add(temp, mult, B_base[i]);
+                temp = OPERATOR_GPU_64::add(temp, mult, B_base[i]);
             }
 
-            Data r_mul = VALUE_GPU::mult(
+            Data64 r_mul = OPERATOR_GPU_64::mult(
                 r_, prod_D_to_B[i + (block_y * r_prime)], B_base[i]);
-            r_mul = VALUE_GPU::sub(temp, r_mul, B_base[i]);
+            r_mul = OPERATOR_GPU_64::sub(temp, r_mul, B_base[i]);
             relin_key[location_out + (i << n_power)] = r_mul;
         }
     }
 
     __global__ void relinkey_DtoB_leveled_kernel(
-        Data* relin_key_temp, Data* relin_key, Modulus* modulus,
-        Modulus* B_base, Data* base_change_matrix_D_to_B, Data* Mi_inv_D_to_B,
-        Data* prod_D_to_B, int* I_j_, int* I_location_, int n_power,
+        Data64* relin_key_temp, Data64* relin_key, Modulus64* modulus,
+        Modulus64* B_base, Data64* base_change_matrix_D_to_B, Data64* Mi_inv_D_to_B,
+        Data64* prod_D_to_B, int* I_j_, int* I_location_, int n_power,
         int l_tilda, int d_tilda, int d, int r_prime, int* mod_index)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -503,15 +503,15 @@ namespace heongpu
         int location =
             idx + (I_location << n_power) + ((block_z * l_tilda) << n_power);
 
-        Data partial[20];
+        Data64 partial[20];
         double r = 0;
         double div;
         double mod;
 #pragma unroll
         for (int i = 0; i < I_j; i++)
         {
-            Data temp = relin_key_temp[location + (i << n_power)];
-            partial[i] = VALUE_GPU::mult(temp, Mi_inv_D_to_B[I_location + i],
+            Data64 temp = relin_key_temp[location + (i << n_power)];
+            partial[i] = OPERATOR_GPU_64::mult(temp, Mi_inv_D_to_B[I_location + i],
                                          modulus[mod_index[I_location + i]]);
             div = static_cast<double>(partial[i]);
             mod = static_cast<double>(modulus[mod_index[I_location + i]].value);
@@ -520,32 +520,32 @@ namespace heongpu
 
         // r = roundf(r);
         r = round(r);
-        Data r_ = static_cast<Data>(r);
+        Data64 r_ = static_cast<Data64>(r);
 
         for (int i = 0; i < r_prime; i++)
         {
-            Data temp = 0;
+            Data64 temp = 0;
 #pragma unroll
             for (int j = 0; j < I_j; j++)
             {
-                Data mult = VALUE_GPU::mult(
+                Data64 mult = OPERATOR_GPU_64::mult(
                     partial[j],
                     base_change_matrix_D_to_B[j + (i * I_j) + matrix_index],
                     B_base[i]);
-                temp = VALUE_GPU::add(temp, mult, B_base[i]);
+                temp = OPERATOR_GPU_64::add(temp, mult, B_base[i]);
             }
 
-            Data r_mul = VALUE_GPU::mult(
+            Data64 r_mul = OPERATOR_GPU_64::mult(
                 r_, prod_D_to_B[i + (block_y * r_prime)], B_base[i]);
-            r_mul = VALUE_GPU::sub(temp, r_mul, B_base[i]);
+            r_mul = OPERATOR_GPU_64::sub(temp, r_mul, B_base[i]);
             relin_key[location_out + (i << n_power)] = r_mul;
         }
     }
 
-    __global__ void relinkey_gen_II_kernel(Data* relin_key_temp,
-                                           Data* secret_key, Data* error_poly,
-                                           Data* a_poly, Modulus* modulus,
-                                           Data* factor, int* Sk_pair,
+    __global__ void relinkey_gen_II_kernel(Data64* relin_key_temp,
+                                           Data64* secret_key, Data64* error_poly,
+                                           Data64* a_poly, Modulus64* modulus,
+                                           Data64* factor, int* Sk_pair,
                                            int n_power, int l_tilda, int d,
                                            int Q_size, int P_size)
     {
@@ -555,33 +555,33 @@ namespace heongpu
         int location1 = block_y << n_power;
         int Sk_index = Sk_pair[block_y];
 
-        Data sk = secret_key[idx + (block_y << n_power)];
+        Data64 sk = secret_key[idx + (block_y << n_power)];
 
 #pragma unroll
         for (int i = 0; i < d; i++)
         {
-            Data e = error_poly[idx + (block_y << n_power) +
+            Data64 e = error_poly[idx + (block_y << n_power) +
                                 ((l_tilda * i) << n_power)];
-            Data a =
+            Data64 a =
                 a_poly[idx + (block_y << n_power) + ((l_tilda * i) << n_power)];
 
-            Data rk_0 = VALUE_GPU::mult(sk, a, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, e, modulus[block_y]);
-            Data zero = 0;
+            Data64 rk_0 = OPERATOR_GPU_64::mult(sk, a, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e, modulus[block_y]);
+            Data64 zero = 0;
 
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[block_y]);
 
             if (i == Sk_index)
             {
-                Data temp = VALUE_GPU::mult(sk, sk, modulus[block_y]);
+                Data64 temp = OPERATOR_GPU_64::mult(sk, sk, modulus[block_y]);
 
                 for (int j = 0; j < P_size; j++)
                 {
-                    temp = VALUE_GPU::mult(temp, factor[(j * Q_size) + block_y],
+                    temp = OPERATOR_GPU_64::mult(temp, factor[(j * Q_size) + block_y],
                                            modulus[block_y]);
                 }
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[block_y]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, temp, modulus[block_y]);
             }
 
             relin_key_temp[idx + location1 + ((l_tilda * i) << (n_power + 1))] =
@@ -592,8 +592,8 @@ namespace heongpu
     }
 
     __global__ void relinkey_gen_II_leveled_kernel(
-        Data* relin_key_temp, Data* secret_key, Data* error_poly, Data* a_poly,
-        Modulus* modulus, Data* factor, int* Sk_pair, int n_power, int l_tilda,
+        Data64* relin_key_temp, Data64* secret_key, Data64* error_poly, Data64* a_poly,
+        Modulus64* modulus, Data64* factor, int* Sk_pair, int n_power, int l_tilda,
         int d, int Q_size, int P_size, int* mod_index)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -604,34 +604,34 @@ namespace heongpu
         int location1 = block_y << n_power;
         int Sk_index = Sk_pair[block_y];
 
-        Data sk = secret_key[idx + (index_mod << n_power)];
+        Data64 sk = secret_key[idx + (index_mod << n_power)];
 
 #pragma unroll
         for (int i = 0; i < d; i++)
         {
-            Data e = error_poly[idx + (block_y << n_power) +
+            Data64 e = error_poly[idx + (block_y << n_power) +
                                 ((l_tilda * i) << n_power)];
-            Data a =
+            Data64 a =
                 a_poly[idx + (block_y << n_power) + ((l_tilda * i) << n_power)];
 
-            Data rk_0 = VALUE_GPU::mult(sk, a, modulus[index_mod]);
-            rk_0 = VALUE_GPU::add(rk_0, e, modulus[index_mod]);
-            Data zero = 0;
+            Data64 rk_0 = OPERATOR_GPU_64::mult(sk, a, modulus[index_mod]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e, modulus[index_mod]);
+            Data64 zero = 0;
 
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[index_mod]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[index_mod]);
 
             if (i == Sk_index)
             {
-                Data temp = VALUE_GPU::mult(sk, sk, modulus[index_mod]);
+                Data64 temp = OPERATOR_GPU_64::mult(sk, sk, modulus[index_mod]);
 
                 for (int j = 0; j < P_size; j++)
                 {
                     temp =
-                        VALUE_GPU::mult(temp, factor[(j * Q_size) + index_mod],
+                        OPERATOR_GPU_64::mult(temp, factor[(j * Q_size) + index_mod],
                                         modulus[index_mod]);
                 }
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[index_mod]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, temp, modulus[index_mod]);
             }
 
             relin_key_temp[idx + location1 + ((l_tilda * i) << (n_power + 1))] =
@@ -717,9 +717,9 @@ namespace heongpu
         return bitreverse_gpu(index_raw, n_power);
     }
 
-    __global__ void galoiskey_gen_kernel(Data* galois_key, Data* secret_key,
-                                         Data* error_poly, Data* a_poly,
-                                         Modulus* modulus, Data* factor,
+    __global__ void galoiskey_gen_kernel(Data64* galois_key, Data64* secret_key,
+                                         Data64* error_poly, Data64* a_poly,
+                                         Modulus64* modulus, Data64* factor,
                                          int galois_elt, int n_power,
                                          int rns_mod_count)
     {
@@ -731,30 +731,30 @@ namespace heongpu
 
         int permutation_location =
             permutation(idx, galois_elt, coeff_count, n_power);
-        Data sk_permutation =
+        Data64 sk_permutation =
             secret_key[(block_y << n_power) + permutation_location];
 
 #pragma unroll
         for (int i = 0; i < rns_mod_count - 1; i++)
         {
-            Data e = error_poly[idx + (block_y << n_power) +
+            Data64 e = error_poly[idx + (block_y << n_power) +
                                 ((rns_mod_count * i) << n_power)];
-            Data a = a_poly[idx + (block_y << n_power) +
+            Data64 a = a_poly[idx + (block_y << n_power) +
                             ((rns_mod_count * i) << n_power)];
 
-            Data gk_0 = VALUE_GPU::mult(sk_permutation, a, modulus[block_y]);
-            gk_0 = VALUE_GPU::add(gk_0, e, modulus[block_y]);
-            Data zero = 0;
+            Data64 gk_0 = OPERATOR_GPU_64::mult(sk_permutation, a, modulus[block_y]);
+            gk_0 = OPERATOR_GPU_64::add(gk_0, e, modulus[block_y]);
+            Data64 zero = 0;
 
-            gk_0 = VALUE_GPU::sub(zero, gk_0, modulus[block_y]);
+            gk_0 = OPERATOR_GPU_64::sub(zero, gk_0, modulus[block_y]);
 
             if (i == block_y)
             {
-                Data sk = secret_key[idx + (block_y << n_power)];
+                Data64 sk = secret_key[idx + (block_y << n_power)];
 
-                sk = VALUE_GPU::mult(sk, factor[block_y], modulus[block_y]);
+                sk = OPERATOR_GPU_64::mult(sk, factor[block_y], modulus[block_y]);
 
-                gk_0 = VALUE_GPU::add(gk_0, sk, modulus[block_y]);
+                gk_0 = OPERATOR_GPU_64::add(gk_0, sk, modulus[block_y]);
             }
 
             galois_key[idx + location1 +
@@ -766,8 +766,8 @@ namespace heongpu
     }
 
     __global__ void galoiskey_gen_II_kernel(
-        Data* galois_key_temp, Data* secret_key, Data* error_poly, Data* a_poly,
-        Modulus* modulus, Data* factor, int galois_elt, int* Sk_pair,
+        Data64* galois_key_temp, Data64* secret_key, Data64* error_poly, Data64* a_poly,
+        Modulus64* modulus, Data64* factor, int galois_elt, int* Sk_pair,
         int n_power, int l_tilda, int d, int Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -779,34 +779,34 @@ namespace heongpu
 
         int permutation_location =
             permutation(idx, galois_elt, coeff_count, n_power);
-        Data sk_permutation =
+        Data64 sk_permutation =
             secret_key[(block_y << n_power) + permutation_location];
 
 #pragma unroll
         for (int i = 0; i < d; i++)
         {
-            Data e = error_poly[idx + (block_y << n_power) +
+            Data64 e = error_poly[idx + (block_y << n_power) +
                                 ((l_tilda * i) << n_power)];
-            Data a =
+            Data64 a =
                 a_poly[idx + (block_y << n_power) + ((l_tilda * i) << n_power)];
 
-            Data rk_0 = VALUE_GPU::mult(sk_permutation, a, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, e, modulus[block_y]);
-            Data zero = 0;
+            Data64 rk_0 = OPERATOR_GPU_64::mult(sk_permutation, a, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e, modulus[block_y]);
+            Data64 zero = 0;
 
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[block_y]);
 
             if (i == Sk_index)
             {
-                Data sk = secret_key[idx + (block_y << n_power)];
+                Data64 sk = secret_key[idx + (block_y << n_power)];
 
                 for (int j = 0; j < P_size; j++)
                 {
-                    sk = VALUE_GPU::mult(sk, factor[(j * Q_size) + block_y],
+                    sk = OPERATOR_GPU_64::mult(sk, factor[(j * Q_size) + block_y],
                                          modulus[block_y]);
                 }
 
-                rk_0 = VALUE_GPU::add(rk_0, sk, modulus[block_y]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, sk, modulus[block_y]);
             }
 
             galois_key_temp[idx + location1 +
@@ -819,7 +819,7 @@ namespace heongpu
     /////////////////////
 
     __global__ void multi_party_galoiskey_gen_method_I_II_kernel(
-        Data* gk_1, Data* gk_2, Modulus* modulus, int n_power,
+        Data64* gk_1, Data64* gk_2, Modulus64* modulus, int n_power,
         int rns_mod_count, int decomp_mod_count, bool first)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -841,10 +841,10 @@ namespace heongpu
             }
             else
             {
-                Data gk_1_r = gk_1[inner_location];
-                Data gk_2_r = gk_2[inner_location];
+                Data64 gk_1_r = gk_1[inner_location];
+                Data64 gk_2_r = gk_2[inner_location];
 
-                Data sum_r = VALUE_GPU::add(gk_1_r, gk_2_r, modulus[block_y]);
+                Data64 sum_r = OPERATOR_GPU_64::add(gk_1_r, gk_2_r, modulus[block_y]);
                 gk_1[inner_location] = sum_r;
             }
         }
@@ -852,10 +852,10 @@ namespace heongpu
 
     /////////////////////
 
-    __global__ void switchkey_gen_kernel(Data* switch_key, Data* new_secret_key,
-                                         Data* old_secret_key, Data* error_poly,
-                                         Data* a_poly, Modulus* modulus,
-                                         Data* factor, int n_power,
+    __global__ void switchkey_gen_kernel(Data64* switch_key, Data64* new_secret_key,
+                                         Data64* old_secret_key, Data64* error_poly,
+                                         Data64* a_poly, Modulus64* modulus,
+                                         Data64* factor, int n_power,
                                          int rns_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -863,29 +863,29 @@ namespace heongpu
 
         int location1 = block_y << n_power;
 
-        Data new_sk = new_secret_key[idx + (block_y << n_power)];
-        Data old_sk = old_secret_key[idx + (block_y << n_power)];
+        Data64 new_sk = new_secret_key[idx + (block_y << n_power)];
+        Data64 old_sk = old_secret_key[idx + (block_y << n_power)];
 
 #pragma unroll
         for (int i = 0; i < rns_mod_count - 1; i++)
         {
-            Data e = error_poly[idx + (block_y << n_power) +
+            Data64 e = error_poly[idx + (block_y << n_power) +
                                 ((rns_mod_count * i) << n_power)];
-            Data a = a_poly[idx + (block_y << n_power) +
+            Data64 a = a_poly[idx + (block_y << n_power) +
                             ((rns_mod_count * i) << n_power)];
 
-            Data rk_0 = VALUE_GPU::mult(new_sk, a, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, e, modulus[block_y]);
-            Data zero = 0;
+            Data64 rk_0 = OPERATOR_GPU_64::mult(new_sk, a, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e, modulus[block_y]);
+            Data64 zero = 0;
 
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[block_y]);
 
             if (i == block_y)
             {
-                Data temp =
-                    VALUE_GPU::mult(old_sk, factor[block_y], modulus[block_y]);
+                Data64 temp =
+                    OPERATOR_GPU_64::mult(old_sk, factor[block_y], modulus[block_y]);
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[block_y]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, temp, modulus[block_y]);
             }
 
             switch_key[idx + location1 +
@@ -897,8 +897,8 @@ namespace heongpu
     }
 
     __global__ void switchkey_gen_II_kernel(
-        Data* switch_key, Data* new_secret_key, Data* old_secret_key,
-        Data* error_poly, Data* a_poly, Modulus* modulus, Data* factor,
+        Data64* switch_key, Data64* new_secret_key, Data64* old_secret_key,
+        Data64* error_poly, Data64* a_poly, Modulus64* modulus, Data64* factor,
         int* Sk_pair, int n_power, int l_tilda, int d, int Q_size, int P_size)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -907,34 +907,34 @@ namespace heongpu
         int location1 = block_y << n_power;
         int Sk_index = Sk_pair[block_y];
 
-        Data new_sk = new_secret_key[idx + (block_y << n_power)];
-        Data old_sk = old_secret_key[idx + (block_y << n_power)];
+        Data64 new_sk = new_secret_key[idx + (block_y << n_power)];
+        Data64 old_sk = old_secret_key[idx + (block_y << n_power)];
 
 #pragma unroll
         for (int i = 0; i < d; i++)
         {
-            Data e = error_poly[idx + (block_y << n_power) +
+            Data64 e = error_poly[idx + (block_y << n_power) +
                                 ((l_tilda * i) << n_power)];
-            Data a =
+            Data64 a =
                 a_poly[idx + (block_y << n_power) + ((l_tilda * i) << n_power)];
 
-            Data rk_0 = VALUE_GPU::mult(new_sk, a, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, e, modulus[block_y]);
-            Data zero = 0;
+            Data64 rk_0 = OPERATOR_GPU_64::mult(new_sk, a, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e, modulus[block_y]);
+            Data64 zero = 0;
 
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[block_y]);
 
             if (i == Sk_index)
             {
-                Data temp = old_sk;
+                Data64 temp = old_sk;
 
                 for (int j = 0; j < P_size; j++)
                 {
-                    temp = VALUE_GPU::mult(temp, factor[(j * Q_size) + block_y],
+                    temp = OPERATOR_GPU_64::mult(temp, factor[(j * Q_size) + block_y],
                                            modulus[block_y]);
                 }
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[block_y]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, temp, modulus[block_y]);
             }
 
             switch_key[idx + location1 + ((l_tilda * i) << (n_power + 1))] =
@@ -946,9 +946,9 @@ namespace heongpu
 
     ////////////////
 
-    __global__ void switchkey_kernel(Data* switch_key, Data* new_secret_key,
-                                     Data* old_secret_key, Data* e_a,
-                                     Modulus* modulus, Data* factor,
+    __global__ void switchkey_kernel(Data64* switch_key, Data64* new_secret_key,
+                                     Data64* old_secret_key, Data64* e_a,
+                                     Modulus64* modulus, Data64* factor,
                                      int n_power, int rns_mod_count)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
@@ -956,26 +956,26 @@ namespace heongpu
 
         int location1 = block_y << n_power;
 
-        Data new_sk = new_secret_key[idx + (block_y << n_power)];
-        Data old_sk = old_secret_key[idx + (block_y << n_power)];
-        Data e = e_a[idx + (block_y << n_power)];
-        Data a = e_a[idx + (block_y << n_power) + (rns_mod_count << n_power)];
+        Data64 new_sk = new_secret_key[idx + (block_y << n_power)];
+        Data64 old_sk = old_secret_key[idx + (block_y << n_power)];
+        Data64 e = e_a[idx + (block_y << n_power)];
+        Data64 a = e_a[idx + (block_y << n_power) + (rns_mod_count << n_power)];
 
 #pragma unroll
         for (int i = 0; i < rns_mod_count - 1; i++)
         {
-            Data rk_0 = VALUE_GPU::mult(new_sk, a, modulus[block_y]);
-            rk_0 = VALUE_GPU::add(rk_0, e, modulus[block_y]);
-            Data zero = 0;
+            Data64 rk_0 = OPERATOR_GPU_64::mult(new_sk, a, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::add(rk_0, e, modulus[block_y]);
+            Data64 zero = 0;
 
-            rk_0 = VALUE_GPU::sub(zero, rk_0, modulus[block_y]);
+            rk_0 = OPERATOR_GPU_64::sub(zero, rk_0, modulus[block_y]);
 
             if (i == block_y)
             {
-                Data temp =
-                    VALUE_GPU::mult(old_sk, factor[block_y], modulus[block_y]);
+                Data64 temp =
+                    OPERATOR_GPU_64::mult(old_sk, factor[block_y], modulus[block_y]);
 
-                rk_0 = VALUE_GPU::add(rk_0, temp, modulus[block_y]);
+                rk_0 = OPERATOR_GPU_64::add(rk_0, temp, modulus[block_y]);
             }
 
             switch_key[idx + location1 +

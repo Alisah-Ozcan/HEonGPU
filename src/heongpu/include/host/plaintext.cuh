@@ -68,7 +68,7 @@ namespace heongpu
          * Defaults to `cudaStreamDefault`.
          */
         explicit __host__
-        Plaintext(const std::vector<Data>& plain, Parameters& context,
+        Plaintext(const std::vector<Data64>& plain, Parameters& context,
                   const ExecutionOptions& options = ExecutionOptions());
 
         /**
@@ -83,7 +83,7 @@ namespace heongpu
          * Defaults to `cudaStreamDefault`.
          */
         explicit __host__
-        Plaintext(const HostVector<Data>& plain, Parameters& context,
+        Plaintext(const HostVector<Data64>& plain, Parameters& context,
                   const ExecutionOptions& options = ExecutionOptions());
 
         /**
@@ -114,9 +114,9 @@ namespace heongpu
         /**
          * @brief Returns a pointer to the underlying plaintext data.
          *
-         * @return Data* Pointer to the plaintext data.
+         * @return Data64* Pointer to the plaintext data.
          */
-        Data* data();
+        Data64* data();
 
         /**
          * @brief Transfers the plaintext data from the device (GPU) to the host
@@ -126,7 +126,7 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void get_data(std::vector<Data>& plain,
+        void get_data(std::vector<Data64>& plain,
                       cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -137,7 +137,7 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void set_data(const std::vector<Data>& plain,
+        void set_data(const std::vector<Data64>& plain,
                       const ExecutionOptions& options = ExecutionOptions());
 
         /**
@@ -148,7 +148,7 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void get_data(HostVector<Data>& plain,
+        void get_data(HostVector<Data64>& plain,
                       cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -159,7 +159,7 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void set_data(const HostVector<Data>& plain,
+        void set_data(const HostVector<Data64>& plain,
                       const ExecutionOptions& options = ExecutionOptions());
 
         /**
@@ -203,7 +203,7 @@ namespace heongpu
                                          copy.device_locations_.stream());
                 cudaMemcpyAsync(device_locations_.data(),
                                 copy.device_locations_.data(),
-                                copy.device_locations_.size() * sizeof(Data),
+                                copy.device_locations_.size() * sizeof(Data64),
                                 cudaMemcpyDeviceToDevice,
                                 copy.device_locations_
                                     .stream()); // TODO: use cudaStreamPerThread
@@ -211,7 +211,7 @@ namespace heongpu
             else
             {
                 std::memcpy(host_locations_.data(), copy.host_locations_.data(),
-                            copy.host_locations_.size() * sizeof(Data));
+                            copy.host_locations_.size() * sizeof(Data64));
             }
         }
 
@@ -244,7 +244,7 @@ namespace heongpu
                                              copy.device_locations_.stream());
                     cudaMemcpyAsync(
                         device_locations_.data(), copy.device_locations_.data(),
-                        copy.device_locations_.size() * sizeof(Data),
+                        copy.device_locations_.size() * sizeof(Data64),
                         cudaMemcpyDeviceToDevice,
                         copy.device_locations_
                             .stream()); // TODO: use cudaStreamPerThread
@@ -253,7 +253,7 @@ namespace heongpu
                 {
                     std::memcpy(host_locations_.data(),
                                 copy.host_locations_.data(),
-                                copy.host_locations_.size() * sizeof(Data));
+                                copy.host_locations_.size() * sizeof(Data64));
                 }
             }
             return *this;
@@ -288,12 +288,12 @@ namespace heongpu
         bool in_ntt_domain_;
         storage_type storage_type_;
 
-        DeviceVector<Data> device_locations_;
-        HostVector<Data> host_locations_;
+        DeviceVector<Data64> device_locations_;
+        HostVector<Data64> host_locations_;
 
         int memory_size();
         void memory_clear(cudaStream_t stream);
-        void memory_set(DeviceVector<Data>&& new_device_vector);
+        void memory_set(DeviceVector<Data64>&& new_device_vector);
 
         void copy_to_device(cudaStream_t stream);
         void remove_from_device(cudaStream_t stream);

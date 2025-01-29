@@ -36,15 +36,15 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             device_locations_ =
-                DeviceVector<Data>(plain_size_, options.stream_);
+                DeviceVector<Data64>(plain_size_, options.stream_);
         }
         else
         {
-            host_locations_ = HostVector<Data>(plain_size_);
+            host_locations_ = HostVector<Data64>(plain_size_);
         }
     }
 
-    __host__ Plaintext::Plaintext(const std::vector<Data>& plain,
+    __host__ Plaintext::Plaintext(const std::vector<Data64>& plain,
                                   Parameters& context,
                                   const ExecutionOptions& options)
     {
@@ -86,22 +86,22 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             device_locations_ =
-                DeviceVector<Data>(plain_size_, options.stream_);
+                DeviceVector<Data64>(plain_size_, options.stream_);
 
             cudaMemcpyAsync(device_locations_.data(), plain.data(),
-                            plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
+                            plain_size_ * sizeof(Data64), cudaMemcpyHostToDevice,
                             options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
-            host_locations_ = HostVector<Data>(plain_size_);
+            host_locations_ = HostVector<Data64>(plain_size_);
             std::memcpy(host_locations_.data(), plain.data(),
-                        plain.size() * sizeof(Data));
+                        plain.size() * sizeof(Data64));
         }
     }
 
-    __host__ Plaintext::Plaintext(const HostVector<Data>& plain,
+    __host__ Plaintext::Plaintext(const HostVector<Data64>& plain,
                                   Parameters& context,
                                   const ExecutionOptions& options)
     {
@@ -143,18 +143,18 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             device_locations_ =
-                DeviceVector<Data>(plain_size_, options.stream_);
+                DeviceVector<Data64>(plain_size_, options.stream_);
 
             cudaMemcpyAsync(device_locations_.data(), plain.data(),
-                            plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
+                            plain_size_ * sizeof(Data64), cudaMemcpyHostToDevice,
                             options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
-            host_locations_ = HostVector<Data>(plain_size_);
+            host_locations_ = HostVector<Data64>(plain_size_);
             std::memcpy(host_locations_.data(), plain.data(),
-                        plain.size() * sizeof(Data));
+                        plain.size() * sizeof(Data64));
         }
     }
 
@@ -172,7 +172,7 @@ namespace heongpu
             }
             else
             {
-                device_locations_ = DeviceVector<Data>(host_locations_, stream);
+                device_locations_ = DeviceVector<Data64>(host_locations_, stream);
                 host_locations_.resize(0);
                 host_locations_.shrink_to_fit();
             }
@@ -191,10 +191,10 @@ namespace heongpu
             }
             else
             {
-                host_locations_ = HostVector<Data>(plain_size_);
+                host_locations_ = HostVector<Data64>(plain_size_);
                 cudaMemcpyAsync(
                     host_locations_.data(), device_locations_.data(),
-                    plain_size_ * sizeof(Data), cudaMemcpyDeviceToHost, stream);
+                    plain_size_ * sizeof(Data64), cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 device_locations_.resize(0, stream);
@@ -209,7 +209,7 @@ namespace heongpu
         }
     }
 
-    Data* Plaintext::data()
+    Data64* Plaintext::data()
     {
         if (storage_type_ == storage_type::DEVICE)
         {
@@ -221,7 +221,7 @@ namespace heongpu
         }
     }
 
-    void Plaintext::get_data(std::vector<Data>& plain, cudaStream_t stream)
+    void Plaintext::get_data(std::vector<Data64>& plain, cudaStream_t stream)
     {
         if (plain.size() < plain_size_)
         {
@@ -231,18 +231,18 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(plain.data(), device_locations_.data(),
-                            plain_size_ * sizeof(Data), cudaMemcpyDeviceToHost,
+                            plain_size_ * sizeof(Data64), cudaMemcpyDeviceToHost,
                             stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             std::memcpy(plain.data(), host_locations_.data(),
-                        host_locations_.size() * sizeof(Data));
+                        host_locations_.size() * sizeof(Data64));
         }
     }
 
-    void Plaintext::set_data(const std::vector<Data>& plain,
+    void Plaintext::set_data(const std::vector<Data64>& plain,
                              const ExecutionOptions& options)
     {
         if (!(plain.size() == plain_size_))
@@ -253,18 +253,18 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(device_locations_.data(), plain.data(),
-                            plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
+                            plain_size_ * sizeof(Data64), cudaMemcpyHostToDevice,
                             options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             std::memcpy(host_locations_.data(), plain.data(),
-                        plain.size() * sizeof(Data));
+                        plain.size() * sizeof(Data64));
         }
     }
 
-    void Plaintext::get_data(HostVector<Data>& plain, cudaStream_t stream)
+    void Plaintext::get_data(HostVector<Data64>& plain, cudaStream_t stream)
     {
         if (plain.size() < plain_size_)
         {
@@ -274,18 +274,18 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(plain.data(), device_locations_.data(),
-                            plain_size_ * sizeof(Data), cudaMemcpyDeviceToHost,
+                            plain_size_ * sizeof(Data64), cudaMemcpyDeviceToHost,
                             stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             std::memcpy(plain.data(), host_locations_.data(),
-                        host_locations_.size() * sizeof(Data));
+                        host_locations_.size() * sizeof(Data64));
         }
     }
 
-    void Plaintext::set_data(const HostVector<Data>& plain,
+    void Plaintext::set_data(const HostVector<Data64>& plain,
                              const ExecutionOptions& options)
     {
         if (!(plain.size() == plain_size_))
@@ -296,14 +296,14 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(device_locations_.data(), plain.data(),
-                            plain_size_ * sizeof(Data), cudaMemcpyHostToDevice,
+                            plain_size_ * sizeof(Data64), cudaMemcpyHostToDevice,
                             options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             std::memcpy(host_locations_.data(), plain.data(),
-                        plain.size() * sizeof(Data));
+                        plain.size() * sizeof(Data64));
         }
     }
 
@@ -334,7 +334,7 @@ namespace heongpu
         }
     }
 
-    void Plaintext::memory_set(DeviceVector<Data>&& new_device_vector)
+    void Plaintext::memory_set(DeviceVector<Data64>&& new_device_vector)
     {
         storage_type_ = storage_type::DEVICE;
         device_locations_ = std::move(new_device_vector);
@@ -360,7 +360,7 @@ namespace heongpu
             }
             else
             {
-                device_locations_ = DeviceVector<Data>(host_locations_, stream);
+                device_locations_ = DeviceVector<Data64>(host_locations_, stream);
             }
 
             storage_type_ = storage_type::DEVICE;

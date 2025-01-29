@@ -85,7 +85,7 @@ inline void display_vector(const std::vector<T>& vec,
     std::cout.copyfmt(cout_state);
 }
 
-std::vector<Data> random_vector_generator(int size)
+std::vector<Data64> random_vector_generator(int size)
 {
     // since it just a example to show default and multi stream usage
     // correctness is not important. that is why we will use random numbers for
@@ -99,7 +99,7 @@ std::vector<Data> random_vector_generator(int size)
 
     std::uniform_int_distribution<unsigned long long> dis2(0, number);
 
-    std::vector<Data> result;
+    std::vector<Data64> result;
     for (int i = 0; i < size; i++)
     {
         result.push_back(dis2(gen));

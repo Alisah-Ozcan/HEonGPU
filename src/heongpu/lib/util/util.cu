@@ -7,7 +7,7 @@
 
 namespace heongpu
 {
-    Data extendedGCD(Data a, Data b, Data& x, Data& y)
+    Data64 extendedGCD(Data64 a, Data64 b, Data64& x, Data64& y)
     {
         if (a == 0)
         {
@@ -16,8 +16,8 @@ namespace heongpu
             return b;
         }
 
-        Data x1, y1;
-        Data gcd = extendedGCD(b % a, a, x1, y1);
+        Data64 x1, y1;
+        Data64 gcd = extendedGCD(b % a, a, x1, y1);
 
         x = y1 - (b / a) * x1;
         y = x1;
@@ -25,10 +25,10 @@ namespace heongpu
         return gcd;
     }
 
-    Data modInverse(Data a, Data m)
+    Data64 modInverse(Data64 a, Data64 m)
     {
-        Data x, y;
-        Data gcd = extendedGCD(a, m, x, y);
+        Data64 x, y;
+        Data64 gcd = extendedGCD(a, m, x, y);
 
         if (gcd != 1)
         {
@@ -38,12 +38,12 @@ namespace heongpu
         else
         {
             // Ensure the result is positive
-            Data result = (x % m + m) % m;
+            Data64 result = (x % m + m) % m;
             return result;
         }
     }
 
-    int countBits(Data input)
+    int countBits(Data64 input)
     {
         return (int) log2(input) + 1;
     }
@@ -53,12 +53,12 @@ namespace heongpu
         return (number > 0) && ((number & (number - 1)) == 0);
     }
 
-    int calculate_bit_count(Data number)
+    int calculate_bit_count(Data64 number)
     {
         return log2(number) + 1;
     }
 
-    int calculate_big_integer_bit_count(Data* number, int word_count)
+    int calculate_big_integer_bit_count(Data64* number, int word_count)
     {
         int size = word_count;
         for (int i = (word_count - 1); i > (-1); i--)
@@ -76,12 +76,12 @@ namespace heongpu
         return ((size - 1) * 64) + calculate_bit_count(number[size - 1]);
     }
 
-    bool miller_rabin(const Data& value, size_t num_rounds)
+    bool miller_rabin(const Data64& value, size_t num_rounds)
     {
-        Modulus modulus_in(value);
+        Modulus64 modulus_in(value);
 
-        Data d = value - 1;
-        Data r = 0;
+        Data64 d = value - 1;
+        Data64 r = 0;
         while (0 == (d & 0x1)) // #true while the last bit of r is zero
         {
             d >>= 1;
@@ -94,19 +94,19 @@ namespace heongpu
 
         // apply miller_rabin primality test
         std::random_device rand;
-        std::uniform_int_distribution<Data> dist(3, value - 1);
+        std::uniform_int_distribution<Data64> dist(3, value - 1);
         for (size_t i = 0; i < num_rounds; i++)
         {
-            Data a = i ? dist(rand) : 2;
-            Data x = VALUE::exp(a, d, modulus_in);
+            Data64 a = i ? dist(rand) : 2;
+            Data64 x = OPERATOR64::exp(a, d, modulus_in);
             if (x == 1 || x == value - 1)
             {
                 continue;
             }
-            Data count = 0;
+            Data64 count = 0;
             do
             {
-                x = VALUE::mult(x, x, modulus_in);
+                x = OPERATOR64::mult(x, x, modulus_in);
                 count++;
             } while (x != value - 1 && count < r - 1);
             if (x != value - 1)
@@ -117,12 +117,12 @@ namespace heongpu
         return true;
     }
 
-    bool is_prime(const Data& value)
+    bool is_prime(const Data64& value)
     {
         size_t num_rounds = 11;
 
         // First check the prime under 1000.
-        std::vector<Data> low_primes = {
+        std::vector<Data64> low_primes = {
             3ULL,   5ULL,   7ULL,   11ULL,  13ULL,  17ULL,  19ULL,  23ULL,
             29ULL,  31ULL,  37ULL,  41ULL,  43ULL,  47ULL,  53ULL,  59ULL,
             61ULL,  67ULL,  71ULL,  73ULL,  79ULL,  83ULL,  89ULL,  97ULL,
@@ -168,15 +168,15 @@ namespace heongpu
         return false;
     }
 
-    std::vector<Data> generate_proper_primes(Data factor, int bit_size,
+    std::vector<Data64> generate_proper_primes(Data64 factor, int bit_size,
                                              size_t count)
     {
-        std::vector<Data> destination;
+        std::vector<Data64> destination;
 
         // Start with (2^bit_size - 1) / factor * factor + 1
-        Data value = ((Data(0x1) << bit_size) - 1) / factor * factor + 1;
+        Data64 value = ((Data64(0x1) << bit_size) - 1) / factor * factor + 1;
 
-        Data lower_bound = Data(0x1) << (bit_size - 1);
+        Data64 lower_bound = Data64(0x1) << (bit_size - 1);
         while (count > 0 && value > lower_bound)
         {
             if (is_prime(value))
@@ -193,12 +193,12 @@ namespace heongpu
         return destination;
     }
 
-    std::vector<Modulus> generate_primes(size_t poly_modulus_degree,
+    std::vector<Modulus64> generate_primes(size_t poly_modulus_degree,
                                          const std::vector<int> prime_bit_sizes)
     {
-        std::vector<Modulus> prime_vector_;
+        std::vector<Modulus64> prime_vector_;
         std::unordered_map<int, size_t> count_table;
-        std::unordered_map<int, std::vector<Data>> prime_table;
+        std::unordered_map<int, std::vector<Data64>> prime_table;
         for (int size : prime_bit_sizes)
         {
             if ((size > MAX_USER_DEFINED_MOD_BIT_COUNT) ||
@@ -210,7 +210,7 @@ namespace heongpu
             ++count_table[size];
         }
 
-        Data factor = Data(2) * Data(poly_modulus_degree);
+        Data64 factor = Data64(2) * Data64(poly_modulus_degree);
         for (const auto& table_elt : count_table)
         {
             prime_table[table_elt.first] = generate_proper_primes(
@@ -226,10 +226,10 @@ namespace heongpu
         return prime_vector_;
     }
 
-    std::vector<Modulus> generate_internal_primes(size_t poly_modulus_degree,
+    std::vector<Modulus64> generate_internal_primes(size_t poly_modulus_degree,
                                                   const int prime_count)
     {
-        std::vector<Modulus> all_primes;
+        std::vector<Modulus64> all_primes;
 
         std::vector<int> prime_bit_sizes;
         for (int i = 0; i < prime_count; i++)
@@ -238,13 +238,13 @@ namespace heongpu
         }
 
         std::unordered_map<int, size_t> count_table;
-        std::unordered_map<int, std::vector<Data>> prime_table;
+        std::unordered_map<int, std::vector<Data64>> prime_table;
         for (int size : prime_bit_sizes)
         {
             ++count_table[size];
         }
 
-        Data factor = Data(2) * Data(poly_modulus_degree);
+        Data64 factor = Data64(2) * Data64(poly_modulus_degree);
         for (const auto& table_elt : count_table)
         {
             prime_table[table_elt.first] = generate_proper_primes(
@@ -260,19 +260,19 @@ namespace heongpu
         return all_primes;
     }
 
-    bool is_primitive_root(Data root, size_t degree, Modulus& modulus)
+    bool is_primitive_root(Data64 root, size_t degree, Modulus64& modulus)
     {
         // root^(degree/2) = modulus - 1 .
-        Data degree_over2 = degree >> 1;
+        Data64 degree_over2 = degree >> 1;
 
-        return VALUE::exp(root, degree_over2, modulus) == (modulus.value - 1);
+        return OPERATOR64::exp(root, degree_over2, modulus) == (modulus.value - 1);
     }
 
-    bool find_primitive_root(size_t degree, Modulus& modulus, Data& destination)
+    bool find_primitive_root(size_t degree, Modulus64& modulus, Data64& destination)
     {
-        Data size_entire_group = modulus.value - 1;
+        Data64 size_entire_group = modulus.value - 1;
 
-        Data size_quotient_group = size_entire_group / degree;
+        Data64 size_quotient_group = size_entire_group / degree;
 
         if (size_entire_group - size_quotient_group * degree != 0)
         {
@@ -287,31 +287,31 @@ namespace heongpu
         {
             attempt_counter++;
 
-            Data random_num =
-                (static_cast<Data>(rd()) << 32) | static_cast<Data>(rd());
-            // destination = VALUE::reduce(random_num, modulus);
+            Data64 random_num =
+                (static_cast<Data64>(rd()) << 32) | static_cast<Data64>(rd());
+            // destination = OPERATOR64::reduce(random_num, modulus);
             destination = random_num % modulus.value;
 
             // Raise the random number to power the size of the quotient
             // to get rid of irrelevant part
-            destination = VALUE::exp(destination, size_quotient_group, modulus);
+            destination = OPERATOR64::exp(destination, size_quotient_group, modulus);
         } while (!is_primitive_root(destination, degree, modulus) &&
                  (attempt_counter < attempt_counter_max));
 
         return is_primitive_root(destination, degree, modulus);
     }
 
-    Data find_minimal_primitive_root(size_t degree, Modulus& modulus)
+    Data64 find_minimal_primitive_root(size_t degree, Modulus64& modulus)
     {
-        Data root;
+        Data64 root;
         if (!find_primitive_root(degree, modulus, root))
         {
             throw std::logic_error("no sufficient root unity");
         }
 
-        Data generator_sq = VALUE::mult(root, root, modulus);
+        Data64 generator_sq = OPERATOR64::mult(root, root, modulus);
 
-        Data current_generator = root;
+        Data64 current_generator = root;
 
         for (size_t i = 0; i < degree; i += 2)
         {
@@ -321,17 +321,17 @@ namespace heongpu
             }
 
             current_generator =
-                VALUE::mult(current_generator, generator_sq, modulus);
+                OPERATOR64::mult(current_generator, generator_sq, modulus);
         }
 
         return root;
     }
 
-    std::vector<Data>
+    std::vector<Data64>
     generate_primitive_root_of_unity(size_t poly_modulus_degree,
-                                     std::vector<Modulus> primes)
+                                     std::vector<Modulus64> primes)
     {
-        std::vector<Data> root_of_unity;
+        std::vector<Data64> root_of_unity;
 
         // 2nth root of unity
         for (int i = 0; i < primes.size(); i++)
@@ -343,20 +343,20 @@ namespace heongpu
         return root_of_unity;
     }
 
-    std::vector<Root> generate_ntt_table(std::vector<Data> psi,
-                                         std::vector<Modulus> primes,
+    std::vector<Root64> generate_ntt_table(std::vector<Data64> psi,
+                                         std::vector<Modulus64> primes,
                                          int n_power)
     {
         int n_ = 1 << n_power;
-        std::vector<Root> forward_table; // bit reverse order
+        std::vector<Root64> forward_table; // bit reverse order
         for (int i = 0; i < primes.size(); i++)
         {
-            std::vector<Root> table;
+            std::vector<Root64> table;
             table.push_back(1);
 
             for (int j = 1; j < n_; j++)
             {
-                Data exp = VALUE::mult(table[(j - 1)], psi[i], primes[i]);
+                Data64 exp = OPERATOR64::mult(table[(j - 1)], psi[i], primes[i]);
                 table.push_back(exp);
             }
 
@@ -369,21 +369,21 @@ namespace heongpu
         return forward_table;
     }
 
-    std::vector<Root> generate_intt_table(std::vector<Data> psi,
-                                          std::vector<Modulus> primes,
+    std::vector<Root64> generate_intt_table(std::vector<Data64> psi,
+                                          std::vector<Modulus64> primes,
                                           int n_power)
     {
         int n_ = 1 << n_power;
-        std::vector<Root> inverse_table; // bit reverse order
+        std::vector<Root64> inverse_table; // bit reverse order
         for (int i = 0; i < primes.size(); i++)
         {
-            std::vector<Root> table;
+            std::vector<Root64> table;
             table.push_back(1);
 
-            Data inv_root = VALUE::modinv(psi[i], primes[i]);
+            Data64 inv_root = OPERATOR64::modinv(psi[i], primes[i]);
             for (int j = 1; j < n_; j++)
             {
-                Data exp = VALUE::mult(table[(j - 1)], inv_root, primes[i]);
+                Data64 exp = OPERATOR64::mult(table[(j - 1)], inv_root, primes[i]);
                 table.push_back(exp);
             }
 
@@ -396,21 +396,21 @@ namespace heongpu
         return inverse_table;
     }
 
-    std::vector<Ninverse> generate_n_inverse(size_t poly_modulus_degree,
-                                             std::vector<Modulus> primes)
+    std::vector<Ninverse64> generate_n_inverse(size_t poly_modulus_degree,
+                                             std::vector<Modulus64> primes)
     {
-        Data n_ = poly_modulus_degree;
-        std::vector<Ninverse> n_inverse;
+        Data64 n_ = poly_modulus_degree;
+        std::vector<Ninverse64> n_inverse;
         for (int i = 0; i < primes.size(); i++)
         {
-            n_inverse.push_back(VALUE::modinv(n_, primes[i]));
+            n_inverse.push_back(OPERATOR64::modinv(n_, primes[i]));
         }
 
         return n_inverse;
     }
 
-    __global__ void unsigned_signed_convert(Data* input, Data* output,
-                                            Modulus* modulus)
+    __global__ void unsigned_signed_convert(Data64* input, Data64* output,
+                                            Modulus64* modulus)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
 
@@ -420,7 +420,7 @@ namespace heongpu
                         ? input_reg - static_cast<int64_t>(modulus[0].value)
                         : input_reg;
 
-        output[idx] = static_cast<Data>(input_reg);
+        output[idx] = static_cast<Data64>(input_reg);
     }
 
     int find_closest_divisor(int N)

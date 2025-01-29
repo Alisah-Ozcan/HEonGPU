@@ -10,9 +10,9 @@ namespace heongpu
 
     __device__ int exponent_calculation(int& index, int& n)
     {
-        Data result = 1ULL;
-        Data five = 5ULL;
-        Data mod = (n << 2) - 1;
+        Data64 result = 1ULL;
+        Data64 five = 5ULL;
+        Data64 mod = (n << 2) - 1;
 
         int bits = 32 - __clz(index);
         for (int i = bits - 1; i > -1; i--)
@@ -324,8 +324,8 @@ namespace heongpu
 
     // TODO: implement it for multiple RNS prime (currently it only works for
     // single prime)
-    __global__ void mod_raise_kernel(Data* input, Data* output,
-                                     Modulus* modulus, int n_power)
+    __global__ void mod_raise_kernel(Data64* input, Data64* output,
+                                     Modulus64* modulus, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
         int idy = blockIdx.y; // rns count
@@ -335,8 +335,8 @@ namespace heongpu
         int location_output =
             idx + (idy << n_power) + ((gridDim.y * idz) << n_power);
 
-        Data input_r = input[location_input];
-        Data result = VALUE_GPU::reduce_forced(input_r, modulus[idy]);
+        Data64 input_r = input[location_input];
+        Data64 result = OPERATOR_GPU_64::reduce_forced(input_r, modulus[idy]);
 
         output[location_output] = result;
     }

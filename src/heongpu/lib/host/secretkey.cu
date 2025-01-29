@@ -34,7 +34,7 @@ namespace heongpu
         in_ntt_domain_ = false;
     }
 
-    Data* Secretkey::data()
+    Data64* Secretkey::data()
     {
         return location_.data();
     }
@@ -69,7 +69,7 @@ namespace heongpu
         if (location_.size() < coeff_modulus_count_ * ring_size_)
         {
             location_ =
-                DeviceVector<Data>(coeff_modulus_count_ * ring_size_, stream);
+                DeviceVector<Data64>(coeff_modulus_count_ * ring_size_, stream);
         }
 
         secretkey_rns_kernel<<<dim3((ring_size_ >> 8), 1, 1), 256, 0, stream>>>(
@@ -77,7 +77,7 @@ namespace heongpu
             coeff_modulus_count_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power_,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power_,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,
@@ -121,7 +121,7 @@ namespace heongpu
         if (location_.size() < coeff_modulus_count_ * ring_size_)
         {
             location_ =
-                DeviceVector<Data>(coeff_modulus_count_ * ring_size_, stream);
+                DeviceVector<Data64>(coeff_modulus_count_ * ring_size_, stream);
         }
 
         secretkey_rns_kernel<<<dim3((ring_size_ >> 8), 1, 1), 256, 0, stream>>>(
@@ -129,7 +129,7 @@ namespace heongpu
             coeff_modulus_count_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration cfg_ntt = {.n_power = n_power_,
+        ntt_rns_configuration<Data64> cfg_ntt = {.n_power = n_power_,
                                          .ntt_type = FORWARD,
                                          .reduction_poly =
                                              ReductionPolynomial::X_N_plus,

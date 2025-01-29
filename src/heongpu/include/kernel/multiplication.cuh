@@ -15,44 +15,44 @@ namespace heongpu
 {
     // Homomorphic Multiplication Kernels
 
-    __global__ void cross_multiplication(Data* in1, Data* in2, Data* out,
-                                         Modulus* modulus, int n_power,
+    __global__ void cross_multiplication(Data64* in1, Data64* in2, Data64* out,
+                                         Modulus64* modulus, int n_power,
                                          int decomp_size);
 
     __global__ void
-    fast_convertion(Data* in1, Data* in2, Data* out1, Modulus* ibase,
-                    Modulus* obase, Modulus m_tilde,
-                    Data inv_prod_q_mod_m_tilde, Data* inv_m_tilde_mod_Bsk,
-                    Data* prod_q_mod_Bsk, Data* base_change_matrix_Bsk,
-                    Data* base_change_matrix_m_tilde,
-                    Data* inv_punctured_prod_mod_base_array, int n_power,
+    fast_convertion(Data64* in1, Data64* in2, Data64* out1, Modulus64* ibase,
+                    Modulus64* obase, Modulus64 m_tilde,
+                    Data64 inv_prod_q_mod_m_tilde, Data64* inv_m_tilde_mod_Bsk,
+                    Data64* prod_q_mod_Bsk, Data64* base_change_matrix_Bsk,
+                    Data64* base_change_matrix_m_tilde,
+                    Data64* inv_punctured_prod_mod_base_array, int n_power,
                     int ibase_size, int obase_size);
 
     __global__ void
-    fast_floor(Data* in_baseq_Bsk, Data* out1, Modulus* ibase, Modulus* obase,
-               Modulus plain_modulus, Data* inv_punctured_prod_mod_base_array,
-               Data* base_change_matrix_Bsk, Data* inv_prod_q_mod_Bsk,
-               Data* inv_punctured_prod_mod_B_array, Data* base_change_matrix_q,
-               Data* base_change_matrix_msk, Data inv_prod_B_mod_m_sk,
-               Data* prod_B_mod_q, int n_power, int ibase_size, int obase_size);
+    fast_floor(Data64* in_baseq_Bsk, Data64* out1, Modulus64* ibase, Modulus64* obase,
+               Modulus64 plain_modulus, Data64* inv_punctured_prod_mod_base_array,
+               Data64* base_change_matrix_Bsk, Data64* inv_prod_q_mod_Bsk,
+               Data64* inv_punctured_prod_mod_B_array, Data64* base_change_matrix_q,
+               Data64* base_change_matrix_msk, Data64 inv_prod_B_mod_m_sk,
+               Data64* prod_B_mod_q, int n_power, int ibase_size, int obase_size);
 
-    __global__ void threshold_kernel(Data* plain_in, Data* output,
-                                     Modulus* modulus,
-                                     Data* plain_upper_half_increment,
-                                     Data plain_upper_half_threshold,
+    __global__ void threshold_kernel(Data64* plain_in, Data64* output,
+                                     Modulus64* modulus,
+                                     Data64* plain_upper_half_increment,
+                                     Data64 plain_upper_half_threshold,
                                      int n_power, int decomp_size);
 
-    __global__ void cipherplain_kernel(Data* cipher, Data* plain_in,
-                                       Data* output, Modulus* modulus,
+    __global__ void cipherplain_kernel(Data64* cipher, Data64* plain_in,
+                                       Data64* output, Modulus64* modulus,
                                        int n_power, int decomp_size);
 
-    __global__ void cipherplain_multiplication_kernel(Data* in1, Data* in2,
-                                                      Data* out,
-                                                      Modulus* modulus,
+    __global__ void cipherplain_multiplication_kernel(Data64* in1, Data64* in2,
+                                                      Data64* out,
+                                                      Modulus64* modulus,
                                                       int n_power);
 
     __global__ void cipherplain_multiply_accumulate_kernel(
-        Data* in1, Data* in2, Data* out, Modulus* modulus, int iteration_count,
+        Data64* in1, Data64* in2, Data64* out, Modulus64* modulus, int iteration_count,
         int current_decomp_count, int first_decomp_count, int n_power);
 
 } // namespace heongpu

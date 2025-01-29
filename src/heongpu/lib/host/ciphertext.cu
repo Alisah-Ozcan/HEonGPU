@@ -35,15 +35,15 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             device_locations_ =
-                DeviceVector<Data>(cipher_memory_size, options.stream_);
+                DeviceVector<Data64>(cipher_memory_size, options.stream_);
         }
         else
         {
-            host_locations_ = HostVector<Data>(cipher_memory_size);
+            host_locations_ = HostVector<Data64>(cipher_memory_size);
         }
     }
 
-    __host__ Ciphertext::Ciphertext(const std::vector<Data>& cipher,
+    __host__ Ciphertext::Ciphertext(const std::vector<Data64>& cipher,
                                     Parameters& context,
                                     const ExecutionOptions& options)
     {
@@ -75,22 +75,22 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             device_locations_ =
-                DeviceVector<Data>(cipher_memory_size, options.stream_);
+                DeviceVector<Data64>(cipher_memory_size, options.stream_);
 
             cudaMemcpyAsync(device_locations_.data(), cipher.data(),
-                            cipher_memory_size * sizeof(Data),
+                            cipher_memory_size * sizeof(Data64),
                             cudaMemcpyHostToDevice, options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
-            host_locations_ = HostVector<Data>(cipher_memory_size);
+            host_locations_ = HostVector<Data64>(cipher_memory_size);
             std::memcpy(host_locations_.data(), cipher.data(),
-                        cipher.size() * sizeof(Data));
+                        cipher.size() * sizeof(Data64));
         }
     }
 
-    __host__ Ciphertext::Ciphertext(const HostVector<Data>& cipher,
+    __host__ Ciphertext::Ciphertext(const HostVector<Data64>& cipher,
                                     Parameters& context,
                                     const ExecutionOptions& options)
     {
@@ -122,10 +122,10 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             device_locations_ =
-                DeviceVector<Data>(cipher_memory_size, options.stream_);
+                DeviceVector<Data64>(cipher_memory_size, options.stream_);
 
             cudaMemcpyAsync(device_locations_.data(), cipher.data(),
-                            cipher_memory_size * sizeof(Data),
+                            cipher_memory_size * sizeof(Data64),
                             cudaMemcpyHostToDevice, options.stream_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
@@ -149,7 +149,7 @@ namespace heongpu
             }
             else
             {
-                device_locations_ = DeviceVector<Data>(host_locations_, stream);
+                device_locations_ = DeviceVector<Data64>(host_locations_, stream);
                 host_locations_.resize(0);
                 host_locations_.shrink_to_fit();
             }
@@ -170,10 +170,10 @@ namespace heongpu
             {
                 int cipher_memory_size =
                     cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_;
-                host_locations_ = HostVector<Data>(cipher_memory_size);
+                host_locations_ = HostVector<Data64>(cipher_memory_size);
                 cudaMemcpyAsync(host_locations_.data(),
                                 device_locations_.data(),
-                                cipher_memory_size * sizeof(Data),
+                                cipher_memory_size * sizeof(Data64),
                                 cudaMemcpyDeviceToHost, stream);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -189,7 +189,7 @@ namespace heongpu
         }
     }
 
-    Data* Ciphertext::data()
+    Data64* Ciphertext::data()
     {
         if (storage_type_ == storage_type::DEVICE)
         {
@@ -201,7 +201,7 @@ namespace heongpu
         }
     }
 
-    void Ciphertext::get_data(std::vector<Data>& cipher, cudaStream_t stream)
+    void Ciphertext::get_data(std::vector<Data64>& cipher, cudaStream_t stream)
     {
         int cipher_memory_size =
             cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_;
@@ -214,18 +214,18 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(cipher.data(), device_locations_.data(),
-                            cipher_memory_size * sizeof(Data),
+                            cipher_memory_size * sizeof(Data64),
                             cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             std::memcpy(cipher.data(), host_locations_.data(),
-                        host_locations_.size() * sizeof(Data));
+                        host_locations_.size() * sizeof(Data64));
         }
     }
 
-    void Ciphertext::get_data(HostVector<Data>& cipher, cudaStream_t stream)
+    void Ciphertext::get_data(HostVector<Data64>& cipher, cudaStream_t stream)
     {
         int cipher_memory_size =
             cipher_size_ * (coeff_modulus_count_ - depth_) * ring_size_;
@@ -238,14 +238,14 @@ namespace heongpu
         if (storage_type_ == storage_type::DEVICE)
         {
             cudaMemcpyAsync(cipher.data(), device_locations_.data(),
-                            cipher_memory_size * sizeof(Data),
+                            cipher_memory_size * sizeof(Data64),
                             cudaMemcpyDeviceToHost, stream);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             std::memcpy(cipher.data(), host_locations_.data(),
-                        host_locations_.size() * sizeof(Data));
+                        host_locations_.size() * sizeof(Data64));
         }
     }
 
@@ -276,7 +276,7 @@ namespace heongpu
         }
     }
 
-    void Ciphertext::memory_set(DeviceVector<Data>&& new_device_vector)
+    void Ciphertext::memory_set(DeviceVector<Data64>&& new_device_vector)
     {
         storage_type_ = storage_type::DEVICE;
         device_locations_ = std::move(new_device_vector);
@@ -302,7 +302,7 @@ namespace heongpu
             }
             else
             {
-                device_locations_ = DeviceVector<Data>(host_locations_, stream);
+                device_locations_ = DeviceVector<Data64>(host_locations_, stream);
             }
 
             storage_type_ = storage_type::DEVICE;

@@ -36,9 +36,9 @@ namespace heongpu
         /**
          * @brief Returns a pointer to the underlying public key data.
          *
-         * @return Data* Pointer to the public key data.
+         * @return Data64* Pointer to the public key data.
          */
-        Data* data();
+        Data64* data();
 
         /**
          * @brief Transfers the publickey data from the device (GPU) to the host
@@ -48,7 +48,7 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void device_to_host(std::vector<Data>& public_key,
+        void device_to_host(std::vector<Data64>& public_key,
                             cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -59,7 +59,7 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void host_to_device(std::vector<Data>& public_key,
+        void host_to_device(std::vector<Data64>& public_key,
                             cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -70,7 +70,7 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void device_to_host(HostVector<Data>& public_key,
+        void device_to_host(HostVector<Data64>& public_key,
                             cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -81,7 +81,7 @@ namespace heongpu
          * @param stream The CUDA stream to be used for asynchronous operations.
          * Defaults to `cudaStreamDefault`.
          */
-        void host_to_device(HostVector<Data>& public_key,
+        void host_to_device(HostVector<Data64>& public_key,
                             cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -149,7 +149,7 @@ namespace heongpu
             locations_.resize(copy.locations_.size(), copy.locations_.stream());
             cudaMemcpyAsync(
                 locations_.data(), copy.locations_.data(),
-                copy.locations_.size() * sizeof(Data), cudaMemcpyDeviceToDevice,
+                copy.locations_.size() * sizeof(Data64), cudaMemcpyDeviceToDevice,
                 copy.locations_.stream()); // TODO: use cudaStreamPerThread
         }
 
@@ -192,7 +192,7 @@ namespace heongpu
                                   copy.locations_.stream());
                 cudaMemcpyAsync(
                     locations_.data(), copy.locations_.data(),
-                    copy.locations_.size() * sizeof(Data),
+                    copy.locations_.size() * sizeof(Data64),
                     cudaMemcpyDeviceToDevice,
                     copy.locations_.stream()); // TODO: use cudaStreamPerThread
             }
@@ -227,7 +227,7 @@ namespace heongpu
         int coeff_modulus_count_;
         bool in_ntt_domain_;
 
-        DeviceVector<Data> locations_;
+        DeviceVector<Data64> locations_;
     };
 
     /**
