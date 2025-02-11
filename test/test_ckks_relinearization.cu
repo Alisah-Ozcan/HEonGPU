@@ -59,7 +59,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -132,7 +132,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -206,7 +206,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -281,7 +281,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -358,7 +358,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -435,7 +435,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -508,7 +508,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -582,7 +582,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -657,7 +657,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -734,7 +734,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         std::random_device rd;
         std::mt19937 gen(rd());

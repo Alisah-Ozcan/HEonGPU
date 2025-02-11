@@ -54,6 +54,9 @@ namespace heongpu
         void set_coeff_modulus(const std::vector<int>& log_Q_bases_bit_sizes,
                                const std::vector<int>& log_P_bases_bit_sizes);
 
+        void set_custom_coeff_modulus(const std::vector<Data64>& log_Q_bases,
+                                      const std::vector<Data64>& log_P_bases);
+
         void set_default_coeff_modulus(int P_modulus_size);
 
         void set_plain_modulus(const int plain_modulus);

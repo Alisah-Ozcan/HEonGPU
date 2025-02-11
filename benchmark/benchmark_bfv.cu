@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         heongpu::HostVector<uint64_t> message(poly_modulus_degrees[i], 2);
 

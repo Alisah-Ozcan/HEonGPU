@@ -429,6 +429,16 @@ namespace heongpu
         output[idx] = static_cast<Data64>(input_reg);
     }
 
+    __global__ void fill_device_vector(Data64* vector, Data64 number, int size)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
+
+        if (idx < size)
+        {
+            vector[idx] = number;
+        }
+    }
+
     int find_closest_divisor(int N)
     {
         double target = std::sqrt(N);
@@ -526,9 +536,9 @@ namespace heongpu
         {
             throw std::out_of_range("StoC_piece must be in range [2, 5]");
         }
-        if (taylor_number_ < 11 || taylor_number_ > 15)
+        if (taylor_number_ < 6 || taylor_number_ > 15)
         {
-            throw std::out_of_range("taylor_number must be in range [11, 15]");
+            throw std::out_of_range("taylor_number must be in range [6, 15]");
         }
     }
 

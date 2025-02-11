@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     // Initialize 2 different Decryptor with respect to different secretkeys.
     heongpu::HEDecryptor decryptor_key1(context, secret_key);
     heongpu::HEDecryptor decryptor_key2(context, secret_key2);
-    heongpu::HEOperator operators(context);
+    heongpu::HEArithmeticOperator operators(context, encoder);
 
     // Generate simple matrix in CPU.
     const int slot_count = poly_modulus_degree / 2;

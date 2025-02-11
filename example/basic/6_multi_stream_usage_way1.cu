@@ -8,7 +8,7 @@
 #include <omp.h>
 
 void multi_stream_function_way1(
-    heongpu::Parameters& context, heongpu::HEOperator& operators,
+    heongpu::Parameters& context, heongpu::HEArithmeticOperator& operators,
     heongpu::Relinkey& relinkeys, heongpu::Galoiskey& galoiskeys,
     std::vector<std::vector<Data64>>& ciphertext1_in_cpu,
     std::vector<std::vector<Data64>>& ciphertext2_in_cpu,
@@ -107,7 +107,8 @@ int main(int argc, char* argv[])
     heongpu::Galoiskey galois_key(context);
     keygen.generate_galois_key(galois_key, secret_key);
 
-    heongpu::HEOperator operators(context);
+    heongpu::HEEncoder encoder(context);
+    heongpu::HEArithmeticOperator operators(context, encoder);
 
     // Assume ciphertexts and plaintexts come from network(from CPU RAM)
     std::cout << "Random ciphertext generetes in CPU... " << std::endl;

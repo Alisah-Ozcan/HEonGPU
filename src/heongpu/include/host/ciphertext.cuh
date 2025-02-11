@@ -15,6 +15,8 @@ namespace heongpu
         friend class HEEncryptor;
         friend class HEDecryptor;
         friend class HEOperator;
+        friend class HEArithmeticOperator;
+        friend class HELogicOperator;
 
         template <typename T, typename F>
         friend void input_storage_manager(T& object, F function,

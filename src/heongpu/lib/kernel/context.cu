@@ -835,6 +835,117 @@ namespace heongpu
         }
     }
 
+    void
+    Parameters::set_custom_coeff_modulus(const std::vector<Data64>& log_Q_bases,
+                                         const std::vector<Data64>& log_P_bases)
+    {
+        if (!context_generated)
+        {
+            std::vector<int> log_Q_bases_bit_sizes;
+            for (int i = 0; i < log_Q_bases.size(); i++)
+            {
+                log_Q_bases_bit_sizes.push_back(countBits(log_Q_bases[i]));
+            }
+
+            std::vector<int> log_P_bases_bit_sizes;
+            for (int i = 0; i < log_P_bases.size(); i++)
+            {
+                log_P_bases_bit_sizes.push_back(countBits(log_P_bases[i]));
+            }
+
+            if ((log_P_bases_bit_sizes.size() > 1) &&
+                (keyswitching_type_ ==
+                 keyswitching_type::KEYSWITCHING_METHOD_I))
+            {
+                throw std::logic_error("log_P_bases_bit_sizes cannot be higher "
+                                       "than 1 for KEYSWITCHING_METHOD_I!");
+            }
+
+            if (!check_coeffs(log_Q_bases_bit_sizes, log_P_bases_bit_sizes))
+            {
+                throw std::logic_error(
+                    "invalid parameters, P should be bigger than Q pairs!");
+            }
+
+            // Q' = Q x P
+            Qprime_mod_bit_sizes_ = log_Q_bases_bit_sizes;
+            Qprime_mod_bit_sizes_.insert(Qprime_mod_bit_sizes_.end(),
+                                         log_P_bases_bit_sizes.begin(),
+                                         log_P_bases_bit_sizes.end());
+
+            Q_mod_bit_sizes_ = log_Q_bases_bit_sizes;
+            P_mod_bit_sizes_ = log_P_bases_bit_sizes;
+
+            total_coeff_bit_count = 0; // TODO: calculate it with prod
+            for (int i = 0; i < Qprime_mod_bit_sizes_.size(); i++)
+            {
+                total_coeff_bit_count =
+                    total_coeff_bit_count + Qprime_mod_bit_sizes_[i];
+            }
+
+            int max_coeff_bit_count = 0;
+            switch (sec_level_)
+            {
+                case sec_level_type::none:
+                    break;
+                case sec_level_type::sec128:
+                    max_coeff_bit_count = heongpu_128bit_std_parms(n);
+                    break;
+                case sec_level_type::sec192:
+                    max_coeff_bit_count = heongpu_192bit_std_parms(n);
+                    break;
+                case sec_level_type::sec256:
+                    max_coeff_bit_count = heongpu_256bit_std_parms(n);
+                    break;
+                default:
+                    throw std::runtime_error("invalid security level");
+                    break;
+            }
+
+            if ((max_coeff_bit_count < total_coeff_bit_count) &&
+                (sec_level_ != sec_level_type::none))
+            {
+                throw std::runtime_error(
+                    "parameters do not align with the security recommendations "
+                    "provided by the lattice-estimator");
+            }
+
+            // Q' bases size
+            Q_prime_size = Qprime_mod_bit_sizes_.size();
+            coeff_modulus = Q_prime_size; // not required
+
+            // Q bases size
+            Q_size = log_Q_bases_bit_sizes.size();
+
+            // P bases size
+            P_size = Q_prime_size - Q_size;
+
+            for (int i = 0; i < log_Q_bases.size(); i++)
+            {
+                Modulus64 mod_in(log_Q_bases[i]);
+                prime_vector.push_back(mod_in);
+            }
+
+            for (int i = 0; i < log_P_bases.size(); i++)
+            {
+                Modulus64 mod_in(log_P_bases[i]);
+                prime_vector.push_back(mod_in);
+            }
+
+            for (int i = 0; i < prime_vector.size(); i++)
+            {
+                base_q.push_back(prime_vector[i].value);
+            }
+
+            coeff_modulus_specified = true;
+        }
+        else
+        {
+            throw std::logic_error("coeff_modulus cannot be changed after the "
+                                   "context is generated!");
+        }
+    }
+
     void Parameters::set_default_coeff_modulus(int P_modulus_size)
     {
         if (scheme_ != scheme_type::bfv)

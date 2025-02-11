@@ -6,7 +6,10 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_LOCATION}/examples/bootstrapping)
 
 set(EXECUTABLES
-    1_ckks_bootstrapping 1_ckks_bootstrapping.cu
+    1_ckks_regular_bootstrapping 1_ckks_regular_bootstrapping.cu
+    2_ckks_slim_bootstrapping 2_ckks_slim_bootstrapping.cu
+    3_ckks_bit_bootstrapping 3_ckks_bit_bootstrapping.cu
+    4_ckks_gate_bootstrapping 4_ckks_gate_bootstrapping.cu
 )
 
 function(add_example exe source)

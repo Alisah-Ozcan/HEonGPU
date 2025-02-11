@@ -30,6 +30,8 @@ namespace heongpu
     class HEEncoder
     {
         friend class HEOperator;
+        friend class HEArithmeticOperator;
+        friend class HELogicOperator;
 
       public:
         /**

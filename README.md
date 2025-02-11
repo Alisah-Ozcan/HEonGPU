@@ -1,8 +1,46 @@
 # 🚀 **HEonGPU** - A GPU Based Homomorphic Encryption Library
 
-### 🚨 **New Feature: [CKKS Bootstrapping](example/bootstrapping/README.md)**
+### 🚨 **New Feature: Logic Operation and [3 More CKKS Bootstrapping Types](example/bootstrapping/README.md)**
 
-HEonGPU now includes support for `CKKS` Bootstrapping, enabling efficient evaluation of deep computational circuits with high precision and security. On an NVIDIA RTX 4090, it performs `CKKS` Bootstrapping for 
+HEonGPU now provides comprehensive support for logic operations across both the `BFV` and `CKKS` encryption schemes. In addition, the latest update introduces three new `CKKS` Bootstrapping types; two of which leverage `Bit` Bootstrapping and `Gate` Bootstrapping techniques, while the third employs `Slim` Bootstrapping, a method that is significantly more efficient than `Regular` Bootstrapping.  These enhancements not only broaden HEonGPU’s functionality but also significantly improve its performance in managing noise and enabling efficient, secure computations on GPU platforms.
+
+The Logic Operations supported: 
+- NOT, AND, NAND, OR, NOR, XOR, XNOR
+
+3 More CKKS Bootstrapping Types:
+- `Slim` Bootstrapping (supports only Real Numbers)
+- `Bit` Bootstrapping (supports only Binary Numbers)
+- `Gate` Bootstrapping (supports only Binary Numbers)
+  - AND, NAND, OR, NOR, XOR, XNOR
+
+<div align="center">
+
+### Execution times of the HEonGPU Bootstrapping Operations (on RTX 4090)
+
+| Bootstrapping Type   | N    | Slot Count| LKM | Remaining Level | Total Time | Amortized Time |
+|:--------------------:|:----:|:----:|:---:|:---------------:|:----------:|:--------------:|
+| **Slim Bootstrapping**    | 2^16 | 2^15 | ON  | 0 Level        | 99.12 ms   | 3.02 µs        |
+|                      | 2^16 | 2^15 | ON  | 2 Level        | 114.13 ms  | 3.48 µs        |
+|                      | 2^16 | 2^15 | ON  | 4 Level        | 164.20 ms  | 5.01 µs        |
+| **Bit Bootstrapping**     | 2^15 | 2^14 | OFF | 0 Level        | 33.74 ms   | 2.06 µs        |
+|                      | 2^15 | 2^14 | OFF | 2 Level        | 39.36 ms   | 2.40 µs        |
+|                      | 2^15 | 2^14 | OFF | 4 Level        | 46.54 ms   | 2.84 µs        |
+|                      | 2^15 | 2^14 | OFF | 6 Level        | 55.66 ms   | 3.40 µs        |
+|                      | 2^16 | 2^15 | OFF | 0 Level        | 86.69 ms   | 2.73 µs        |
+|                      | 2^16 | 2^15 | OFF | 2 Level        | 100.72 ms  | 3.07 µs        |
+|                      | 2^16 | 2^15 | OFF | 4 Level        | 115.88 ms  | 3.53 µs        |
+| **Gate Bootstrapping***    | 2^15 | 2^14 | OFF | 0 Level        | 27.03 ms   | 1.64 µs        |
+|                      | 2^16 | 2^15 | OFF | 0 Level        | 70.73 ms   | 2.16 µs        |
+</div>
+**LKM**: Less Key Mode is a bootstrapping optimization in HEonGPU. Its purpose is to reduce the required amount of Galois keys by 30% while sacrificing 15–20% performance. This is useful in cases where GPU memory is insufficient.
+
+*: For all gates
+
+
+
+### 🚨 **New Feature: [CKKS Regular Bootstrapping](example/bootstrapping/README.md)**
+
+HEonGPU now includes support for `CKKS Regular` Bootstrapping, enabling efficient evaluation of deep computational circuits with high precision and security. On an NVIDIA RTX 4090, it performs `CKKS` Regular Bootstrapping for 
 N=65536 in under 170 ms.
 
 ### 🚨 **New Feature: [Multiparty Computation (MPC) Support](example/mpc/README.md)**
@@ -19,6 +57,24 @@ The goal of HEonGPU is to provide:
 - An optimized multi-stream architecture that ensures efficient memory management and concurrent execution of encrypted computations on the GPU.
 
 For more information about HEonGPU: https://eprint.iacr.org/2024/1543
+
+### Current HEonGPU Capabilities and Schemes
+
+<div align="center">
+
+| Capability / Scheme          | HEonGPU   |
+|:----------------------------:|:---------:|
+| BFV                          | ✓         |
+| CKKS                         | ✓         |
+| BGV                          | Soon      |
+| TFHE                         | Very Soon |
+| CKKS Regular Bootstrapping   | ✓         |
+| CKKS Slim Bootstrapping      | ✓         |
+| CKKS Bit Bootstrapping       | ✓         |
+| CKKS Gate Bootstrapping      | ✓         |
+| Multiparty Computation (MPC) | ✓         |
+
+</div>
 
 ## Installation
 
@@ -42,12 +98,16 @@ HEonGPU automatically handle third-party dependencies like GPU-NTT, GPU-FFT, RMM
 
 To build and install HEonGPU, follow the steps below. This includes configuring the project using CMake, compiling the source code, and installing the library on your system.
 
-| GPU Architecture        | Compute Capability (CMAKE_CUDA_ARCHITECTURES Value)                        |
-|----------------|---------------------------------|
+<div align="center">
+
+| GPU Architecture | Compute Capability (CMAKE_CUDA_ARCHITECTURES Value) |
+|:----------------:|:---------------------------------------------------:|
 | Volta  | 70, 72 |
 | Turing | 75 |
 | Ampere | 80, 86 |
 | Ada	 | 89, 90 |
+
+</div>
 
 ```bash
 $ cmake -S . -D CMAKE_CUDA_ARCHITECTURES=89 -B build
@@ -188,8 +248,10 @@ operators.add(input1, input2, output, options);
 
 - All case:
 
+<div align="center">
+
 | `set_storage_type` | `set_initial_location` | Input Locations (Before)            | Input Locations (After)             | Output Location After Computation |
-|---------------------|------------------------|--------------------------------------|--------------------------------------|------------------------------------|
+|:------------------:|:----------------------:|:-----------------------------------:|:-----------------------------------:|:---------------------------------:|
 | `DEVICE`           | `true`                | `input1: HOST, input2: HOST`        | `input1: HOST, input2: HOST`        | `DEVICE`                             |
 | `DEVICE`           | `false`               | `input1: HOST, input2: HOST`        | `input1: DEVICE, input2: DEVICE`    | `DEVICE`                             |
 | `DEVICE`           | `true`                | `input1: HOST, input2: DEVICE`      | `input1: HOST, input2: DEVICE`      | `DEVICE`                             |
@@ -203,6 +265,7 @@ operators.add(input1, input2, output, options);
 | `HOST`             | `true`                | `input1: DEVICE, input2: DEVICE`    | `input1: DEVICE, input2: DEVICE`    | `HOST`                               |
 | `HOST`             | `false`               | `input1: DEVICE, input2: DEVICE`    | `input1: DEVICE, input2: DEVICE`    | `HOST`                               |
 
+</div>
 
 ## Using HEonGPU in a downstream CMake project
 

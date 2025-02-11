@@ -75,33 +75,36 @@ int main(int argc, char* argv[])
     heongpu::HEEncoder encoder(context);
     heongpu::HEEncryptor encryptor(context, public_key);
     heongpu::HEDecryptor decryptor(context, secret_key);
-    heongpu::HEArithmeticOperator operators(context, encoder);
+    heongpu::HELogicOperator operators(context, encoder);
 
     // Generate simple matrix in CPU.
     const int row_size = poly_modulus_degree / 2;
     std::cout << "Plaintext matrix row size: " << row_size << std::endl;
-    std::vector<uint64_t> message(poly_modulus_degree, 8ULL); // In CPU
+    std::vector<uint64_t> message(poly_modulus_degree, 1ULL); // In CPU
     message[0] = 1ULL;
-    message[1] = 12ULL;
-    message[2] = 23ULL;
-    message[3] = 31ULL;
-    message[row_size] = 7ULL;
-    message[row_size + 1] = 54ULL;
-    message[row_size + 2] = 6ULL;
-    message[row_size + 3] = 100ULL;
+    message[1] = 1ULL;
+    message[2] = 0ULL;
+    message[3] = 1ULL;
+    message[row_size] = 1ULL;
+    message[row_size + 1] = 0ULL;
+    message[row_size + 2] = 0ULL;
+    message[row_size + 3] = 0ULL;
 
     // Alternative: HostVector use use pinned memory and memory pool, provide
     // faster data transfer between CPU and GPU.(and vice versa)
-    // heongpu::HostVector<uint64_t> message(poly_modulus_degree, 8ULL); // In
-    // CPU, message[0] = 1ULL; message[1] = 12ULL; message[2] = 23ULL;
-    // message[3] = 31ULL;
-    // message[row_size] = 7ULL;
-    // message[row_size + 1] = 54ULL;
-    // message[row_size + 2] = 6ULL;
-    // message[row_size + 3] = 100ULL;
+    // heongpu::HostVector<uint64_t> message(poly_modulus_degree, 1ULL); // In
+    // CPU,
+    // message[0] = 1ULL;
+    // message[1] = 1ULL;
+    // message[2] = 0ULL;
+    // message[3] = 1ULL;
+    // message[row_size] = 1ULL;
+    // message[row_size + 1] = 0ULL;
+    // message[row_size + 2] = 0ULL;
+    // message[row_size + 3] = 0ULL;
 
-    //  [1,  12,  23,  31,  8,  8, ...,  8]
-    //  [7,  54,  6,  100,  8,  8, ...,  8]
+    //  [1,  1,  0,  1,  1,  1, ...,  1]
+    //  [1,  0,  0,  0,  1,  1, ...,  1]
 
     std::cout << "Message plaintext matrix:" << std::endl;
     display_matrix(message, row_size);
@@ -125,33 +128,32 @@ int main(int argc, char* argv[])
     std::cout << "Initial noise budget in C1: "
               << decryptor.remainder_noise_budget(C1) << " bits" << std::endl;
 
-    std::cout << "Square message homomorphically." << std::endl;
-    operators.multiply_inplace(C1, C1);
-    std::cout << "Remove non-linear part of ciphertext." << std::endl;
-    operators.relinearize_inplace(C1, relin_key);
+    std::cout << "AND message homomorphically." << std::endl;
+    heongpu::Ciphertext C2(context);
+    operators.AND(C1, C1, C2, relin_key);
 
     std::cout << "Noise budget in C1 after multiplication: "
-              << decryptor.remainder_noise_budget(C1) << " bits" << std::endl;
+              << decryptor.remainder_noise_budget(C2) << " bits" << std::endl;
 
     std::cout << "Decrypt and decode result." << std::endl;
     heongpu::Plaintext P2(context);
-    decryptor.decrypt(P2, C1);
+    decryptor.decrypt(P2, C2);
 
     std::cout << "Decode plaintext ing GPU and Transfer data from GPU to CPU."
               << std::endl;
     std::vector<uint64_t> check1;
     encoder.decode(check1, P2);
 
-    //  [1,  144,   529, 961,   64, 64, ...,  64]
-    //  [49, 2916, 36,  10000, 64, 64, ...,  64]
+    //  [1,  1,  0,  1,  1,  1, ...,  1]
+    //  [1,  0,  0,  0,  1,  1, ...,  1]
 
     std::cout << "Check result:" << std::endl;
     display_matrix(check1, row_size);
 
-    std::vector<uint64_t> message2(poly_modulus_degree, 3ULL); // In CPU
+    std::vector<uint64_t> message2(poly_modulus_degree, 1ULL); // In CPU
 
-    //  [3,  3,  3,  3,  3,  3, ...,  3]
-    //  [3,  3,  3,  3,  3,  3, ...,  3]
+    //  [0,  0,  0,  0,  0,  0, ...,  0]
+    //  [0,  0,  0,  0,  0,  0, ...,  0]
 
     std::cout << "Message2 plaintext matrix." << std::endl;
     display_matrix(message2, row_size);
@@ -159,17 +161,8 @@ int main(int argc, char* argv[])
     heongpu::Plaintext P3(context);
     encoder.encode(P3, message2);
 
-    heongpu::Ciphertext C2(context);
-    std::cout << "Mutiply ciphertext with plaintext." << std::endl;
-    operators.multiply_plain(C1, P3, C2);
-
-    // Alternative way -> select sec_level_type as sec128(default), sec192,
-    // operators.transform_to_ntt_inplace(P3); // transform plaintext to ntt
-    // domain, this way increase the plaintext size operators.multiply_plain(C1,
-    // P3, C2); // faster than regular one
-
-    std::cout << "Add ciphertext to itself." << std::endl;
-    operators.add_inplace(C2, C2);
+    std::cout << "XNOR ciphertext with plaintext." << std::endl;
+    operators.XNOR_inplace(C2, P3);
 
     std::cout << "Noise budget in C2 after multiplication: "
               << decryptor.remainder_noise_budget(C2) << " bits" << std::endl;
@@ -181,8 +174,8 @@ int main(int argc, char* argv[])
     std::vector<uint64_t> check2;
     encoder.decode(check2, P4);
 
-    //  [6,   864,   3174, 5766,  384, 384, ...,  384]
-    //  [294, 17496, 216,  60000, 384, 384, ...,  384]
+    //  [0,  0,  1,  0,  0,  0, ...,  0]
+    //  [0,  1,  1,  1,  0,  0, ...,  0]
 
     std::cout << "Check result2:" << std::endl;
     display_matrix(check2, row_size);

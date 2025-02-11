@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEOperator operators(context);
+        heongpu::HEArithmeticOperator operators(context, encoder);
 
         const int row_size = poly_modulus_degrees[i] / 2;
         heongpu::HostVector<double> message(row_size, 1);

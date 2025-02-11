@@ -77,28 +77,28 @@ int main(int argc, char* argv[])
     heongpu::HEEncoder encoder(context);
     heongpu::HEEncryptor encryptor(context, public_key);
     heongpu::HEDecryptor decryptor(context, secret_key);
-    heongpu::HEArithmeticOperator operators(context, encoder);
+    heongpu::HELogicOperator operators(context, encoder, scale);
 
     // Generate simple matrix in CPU.
     const int slot_count = poly_modulus_degree / 2;
     std::cout << "Plaintext vector size: " << slot_count << std::endl;
-    std::vector<double> message(slot_count, 3);
-    message[0] = 10;
-    message[1] = 20;
-    message[2] = 30;
-    message[3] = 40;
-    message[4] = 0.5;
+    std::vector<double> message(slot_count, 1.0);
+    message[0] = 1.0;
+    message[1] = 1.0;
+    message[2] = 0.0;
+    message[3] = 1.0;
+    message[4] = 0.0;
 
     // Alternative: HostVector use use pinned memory and memory pool, provide
     // faster data transfer between CPU and GPU.(and vice versa)
     // heongpu::HostVector<double> message(slot_count, 3);
-    // message[0] = 10;
-    // message[1] = 20;
-    // message[2] = 30;
-    // message[3] = 40;
-    // message[4] = 0.5;
+    // message[0] = 1.0;
+    // message[1] = 1.0;
+    // message[2] = 0.0;
+    // message[3] = 1.0;
+    // message[4] = 0.0;
 
-    //  [10,  20,  30,  40,  0.5,  3, ...,  3]
+    //  [1,  1,  0,  1,  0,  1, ...,  1]
 
     std::cout << "Message plaintext vector:" << std::endl;
     display_vector(message);
@@ -119,17 +119,13 @@ int main(int argc, char* argv[])
     heongpu::Ciphertext C1(context);
     encryptor.encrypt(C1, P1);
 
-    std::cout << "Square message homomorphically." << std::endl;
-    operators.multiply_inplace(C1, C1);
-    std::cout << "Remove non-linear part of ciphertext." << std::endl;
-    operators.relinearize_inplace(C1, relin_key);
-    std::cout << "Divede ciphertext to last modulus and reduce noise."
-              << std::endl;
-    operators.rescale_inplace(C1);
+    std::cout << "AND message homomorphically." << std::endl;
+    heongpu::Ciphertext C2(context);
+    operators.AND(C1, C1, C2, relin_key);
 
     std::cout << "Decrypt result." << std::endl;
     heongpu::Plaintext P2(context);
-    decryptor.decrypt(P2, C1);
+    decryptor.decrypt(P2, C2);
 
     std::cout << "Decode Plaintext and Transfer data from GPU to CPU."
               << std::endl;
@@ -137,14 +133,14 @@ int main(int argc, char* argv[])
     encoder.decode(check1, P2);
 
     //  Approximately:
-    //  [100,  400, 900, 1600, 0.25, 9, ...,  9]
+    //  [1,  1,  0,  1,  0,  1, ...,  1]
 
     std::cout << "Check result:" << std::endl;
     display_vector(check1);
 
-    std::vector<double> message2(slot_count, 0.25); // In CPU
+    std::vector<double> message2(slot_count, 1.0); // In CPU
 
-    //  [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, ..., 0.5]
+    //  [1,  1,  1,  1,  1,  1, ...,  1]
 
     std::cout << "Message2 plaintext vector." << std::endl;
     display_vector(message2);
@@ -156,13 +152,8 @@ int main(int argc, char* argv[])
     operators.mod_drop_inplace(
         P3); // for now, do it manually for each levels you need to go.
 
-    heongpu::Ciphertext C2(context);
-    std::cout << "Mutiply ciphertext with plaintext." << std::endl;
-    operators.multiply_plain(C1, P3, C2);
-    std::cout << "Add ciphertext to itself." << std::endl;
-    operators.add_inplace(C2, C2);
-
-    operators.rescale_inplace(C2);
+    std::cout << "XNOR ciphertext with plaintext." << std::endl;
+    operators.XNOR_inplace(C2, P3);
 
     std::cout << "Decrypt result." << std::endl;
     heongpu::Plaintext P4(context);
@@ -171,7 +162,7 @@ int main(int argc, char* argv[])
     std::vector<double> check2;
     encoder.decode(check2, P4);
 
-    //  [50, 200, 450, 800, 4.5, 4.5, ..., 4.5]
+    //  [1,  1,  0,  1,  0,  1, ...,  1]
 
     std::cout << "Check result2:" << std::endl;
     display_vector(check2);

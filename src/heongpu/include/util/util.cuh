@@ -111,6 +111,15 @@ namespace heongpu
         void validate(); // Validates the configuration input values
     };
 
+    enum class logic_bootstrapping_type : std::uint8_t
+    {
+        NONE = 0x0,
+        BIT_BOOTSTRAPPING = 0x1, // scale = q0 / 2. More detail:
+                                 // https://eprint.iacr.org/2024/767.pdf
+        GATE_BOOTSTRAPPING = 0x2, // scale = q0 / 3. More detail:
+                                  // https://eprint.iacr.org/2024/767.pdf
+    };
+
     Data64 extendedGCD(Data64 a, Data64 b, Data64& x, Data64& y);
     Data64 modInverse(Data64 a, Data64 m);
     int countBits(Data64 number);
@@ -157,6 +166,8 @@ namespace heongpu
 
     __global__ void unsigned_signed_convert(Data64* input, Data64* output,
                                             Modulus64* modulus);
+
+    __global__ void fill_device_vector(Data64* vector, Data64 number, int size);
 
     int find_closest_divisor(int N);
 

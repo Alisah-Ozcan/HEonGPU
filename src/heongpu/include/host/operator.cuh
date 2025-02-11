@@ -32,15 +32,16 @@ namespace heongpu
      */
     class HEOperator
     {
-      public:
+      protected:
         /**
          * @brief Construct a new HEOperator object with the given parameters.
          *
          * @param context Reference to the Parameters object that sets the
          * encryption parameters for the operator.
          */
-        __host__ HEOperator(Parameters& context);
+        __host__ HEOperator(Parameters& context, HEEncoder& encoder);
 
+      public:
         /**
          * @brief Adds two ciphertexts and stores the result in the output.
          *
@@ -1276,9 +1277,6 @@ namespace heongpu
                 options, (&input1 == &output));
         }
 
-        ///////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////
-
         /**
          * @brief Performs conjugation on the ciphertext and stores the result
          * in the output.
@@ -1382,9 +1380,6 @@ namespace heongpu
                 },
                 options, (&input1 == &output));
         }
-
-        ///////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////
 
         /**
          * @brief Rescales a ciphertext in-place, modifying the input
@@ -1933,7 +1928,8 @@ namespace heongpu
         HEOperator& operator=(const HEOperator& assign) = default;
         HEOperator& operator=(HEOperator&& assign) = default;
 
-      private:
+        // private:
+      protected:
         __host__ void add_plain_bfv(Ciphertext& input1, Plaintext& input2,
                                     Ciphertext& output,
                                     const cudaStream_t stream);
@@ -2138,7 +2134,8 @@ namespace heongpu
                                                     Ciphertext& output,
                                                     const cudaStream_t stream);
 
-      private:
+        // private:
+      protected:
         scheme_type scheme_;
 
         int n;
@@ -2281,31 +2278,27 @@ namespace heongpu
         int* new_prime_locations;
         int* new_input_locations;
 
-      public:
-        __host__ void
-        generate_bootstrapping_parameters(HEEncoder& encoder,
-                                          const double scale,
-                                          const BootstrappingConfig& config);
-
-        __host__ Ciphertext bootstrapping(
-            Ciphertext& input1, Galoiskey& galois_key, Relinkey& relin_key,
-            const ExecutionOptions& options = ExecutionOptions());
-
-        __host__ std::vector<int> bootstrapping_key_indexs()
-        {
-            return key_indexs_;
-        }
-
-      private:
+        // private:
+      protected:
         __host__ Plaintext
         operator_plaintext(cudaStream_t stream = cudaStreamDefault);
+
+        // Just for copy parameters, not memory!
+        __host__ Plaintext operator_from_plaintext(
+            Plaintext& input, cudaStream_t stream = cudaStreamDefault);
 
         __host__ Ciphertext operator_ciphertext(
             double scale, cudaStream_t stream = cudaStreamDefault);
 
+        // Just for copy parameters, not memory!
+        __host__ Ciphertext operator_from_ciphertext(
+            Ciphertext& input, cudaStream_t stream = cudaStreamDefault);
+
         class Vandermonde
         {
             friend class HEOperator;
+            friend class HEArithmeticOperator;
+            friend class HELogicOperator;
 
           public:
             __host__ Vandermonde(const int poly_degree, const int CtoS_piece,
@@ -2411,8 +2404,16 @@ namespace heongpu
 
         int slot_count_;
         int log_slot_count_;
-        double two_pow_64_;
 
+        // BFV
+        std::shared_ptr<DeviceVector<Modulus64>>
+            plain_modulus_pointer_; // we already have it
+        std::shared_ptr<DeviceVector<Ninverse64>> n_plain_inverse_;
+        std::shared_ptr<DeviceVector<Root64>> plain_intt_tables_;
+        std::shared_ptr<DeviceVector<Data64>> encoding_location_;
+
+        // CKKS
+        double two_pow_64_;
         std::shared_ptr<DeviceVector<int>> reverse_order_;
         std::shared_ptr<DeviceVector<COMPLEX>> special_ifft_roots_table_;
 
@@ -2465,8 +2466,16 @@ namespace heongpu
         coeff_to_slot(Ciphertext& cipher, Galoiskey& galois_key,
                       const ExecutionOptions& options = ExecutionOptions());
 
+        __host__ Ciphertext solo_coeff_to_slot(
+            Ciphertext& cipher, Galoiskey& galois_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
         __host__ Ciphertext slot_to_coeff(
             Ciphertext& cipher0, Ciphertext& cipher1, Galoiskey& galois_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ Ciphertext solo_slot_to_coeff(
+            Ciphertext& cipher, Galoiskey& galois_key,
             const ExecutionOptions& options = ExecutionOptions());
 
         __host__ Ciphertext
@@ -2563,6 +2572,1525 @@ namespace heongpu
         DeviceVector<Data64> encoded_constant_1over120_;
         DeviceVector<Data64> encoded_constant_1over720_;
         DeviceVector<Data64> encoded_constant_1over5040_;
+    };
+
+    /**
+     * @brief HEArithmeticOperator performs arithmetic operations on
+     * ciphertexts.
+     */
+    class HEArithmeticOperator : public HEOperator
+    {
+      public:
+        /**
+         * @brief Constructs a new HEArithmeticOperator object.
+         *
+         * @param context Encryption parameters.
+         * @param encoder Encoder for arithmetic operations.
+         */
+        HEArithmeticOperator(Parameters& context, HEEncoder& encoder);
+
+        /**
+         * @brief Generates bootstrapping parameters.
+         *
+         * @param scale Scaling factor.
+         * @param config Bootstrapping configuration.
+         */
+        __host__ void
+        generate_bootstrapping_params(const double scale,
+                                      const BootstrappingConfig& config);
+
+        __host__ std::vector<int> bootstrapping_key_indexs()
+        {
+            if (!boot_context_generated_)
+            {
+                throw std::invalid_argument(
+                    "Bootstrapping key indexs can not be returned before "
+                    "generating Bootstrapping parameters!");
+            }
+
+            return key_indexs_;
+        }
+
+        /**
+         * @brief Performs regular bootstrapping on a ciphertext.(For more
+         * detail please check README.md)
+         *
+         * @param input1 Input ciphertext.
+         * @param galois_key Galois key.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped ciphertext.
+         */
+        __host__ Ciphertext regular_bootstrapping(
+            Ciphertext& input1, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        /**
+         * @brief Performs slim bootstrapping on a ciphertext.(For more detail
+         * please check README.md)
+         *
+         * @param input1 Input ciphertext.
+         * @param galois_key Galois key.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped ciphertext.
+         */
+        __host__ Ciphertext slim_bootstrapping(
+            Ciphertext& input1, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+    };
+
+    /**
+     * @brief HELogicOperator performs homomorphic logical operations on
+     * ciphertexts.
+     */
+    class HELogicOperator : private HEOperator
+    {
+      public:
+        /**
+         * @brief Constructs a new HELogicOperator object.
+         *
+         * @param context Encryption parameters.
+         * @param encoder Encoder for homomorphic operations.
+         */
+        HELogicOperator(Parameters& context, HEEncoder& encoder,
+                        double scale = 0);
+
+        /**
+         * @brief Performs logical NOT on ciphertext.
+         *
+         * @param input1 First input ciphertext.
+         * @param output Output ciphertext.
+         * @param options Execution options.
+         */
+        __host__ void NOT(Ciphertext& input1, Ciphertext& output,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    output_storage_manager(
+                        output,
+                        [&](Ciphertext& output_)
+                        { one_minus_cipher(input1_, output_, options_inner); },
+                        options);
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical NOT on ciphertext.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param options Execution options.
+         */
+        __host__ void
+        NOT_inplace(Ciphertext& input1,
+                    const ExecutionOptions& options = ExecutionOptions())
+        {
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                { one_minus_cipher_inplace(input1_, options_inner); },
+                options, true);
+        }
+
+        /**
+         * @brief Performs logical AND on two ciphertexts.
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param output Output ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void AND(Ciphertext& input1, Ciphertext& input2,
+                          Ciphertext& output, Relinkey& relin_key,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            // TODO: Make it efficient
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Ciphertext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply(input1_, input2_, output_,
+                                                     options_inner);
+                                            relinearize_inplace(output_,
+                                                                relin_key,
+                                                                options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply(input1_, input2_, output_,
+                                                     options_inner);
+                                            relinearize_inplace(output_,
+                                                                relin_key,
+                                                                options_inner);
+                                            rescale_inplace(output_,
+                                                            options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, (&input2 == &output));
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical AND on two ciphertexts.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Second input ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void
+        AND_inplace(Ciphertext& input1, Ciphertext& input2, Relinkey& relin_key,
+                    const ExecutionOptions& options = ExecutionOptions())
+        {
+            AND(input1, input2, input1, relin_key, options);
+        }
+
+        /**
+         * @brief Performs logical AND on a ciphertext and a plaintext.
+         *
+         * @param input1 Input ciphertext.
+         * @param input2 Input plaintext.
+         * @param output Output ciphertext.
+         * @param options Execution options.
+         */
+        __host__ void AND(Ciphertext& input1, Plaintext& input2,
+                          Ciphertext& output,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply_plain(input1_, input2_,
+                                                           output_,
+                                                           options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply_plain(input1_, input2_,
+                                                           output_,
+                                                           options_inner);
+                                            rescale_inplace(output_,
+                                                            options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical AND on a ciphertext and a plaintext.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Input plaintext.
+         * @param options Execution options.
+         */
+        __host__ void
+        AND_inplace(Ciphertext& input1, Plaintext& input2,
+                    const ExecutionOptions& options = ExecutionOptions())
+        {
+            AND(input1, input2, input1, options);
+        }
+
+        /**
+         * @brief Performs logical OR on two ciphertexts.
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param output Output ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void OR(Ciphertext& input1, Ciphertext& input2,
+                         Ciphertext& output, Relinkey& relin_key,
+                         const ExecutionOptions& options = ExecutionOptions())
+        {
+            // TODO: Make it efficient
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            Ciphertext inner_input1 =
+                operator_from_ciphertext(input1, options.stream_);
+            Ciphertext inner_input2 =
+                operator_from_ciphertext(input1, options.stream_);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Ciphertext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply(input1_, input2_,
+                                                     inner_input1,
+                                                     options_inner);
+                                            relinearize_inplace(inner_input1,
+                                                                relin_key,
+                                                                options_inner);
+
+                                            add(input1_, input2_, inner_input2,
+                                                options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply(input1_, input2_,
+                                                     inner_input1,
+                                                     options_inner);
+                                            relinearize_inplace(inner_input1,
+                                                                relin_key,
+                                                                options_inner);
+                                            rescale_inplace(inner_input1,
+                                                            options_inner);
+
+                                            add(input1_, input2_, inner_input2,
+                                                options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, (&input2 == &output));
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical OR on two ciphertexts.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Second input ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void
+        OR_inplace(Ciphertext& input1, Ciphertext& input2, Relinkey& relin_key,
+                   const ExecutionOptions& options = ExecutionOptions())
+        {
+            OR(input1, input2, input1, relin_key, options);
+        }
+
+        /**
+         * @brief Performs logical OR on a ciphertext and a plaintext.
+         *
+         * @param input1 Input ciphertext.
+         * @param input2 Input plaintext.
+         * @param output Output ciphertext.
+         * @param options Execution options.
+         */
+        __host__ void OR(Ciphertext& input1, Plaintext& input2,
+                         Ciphertext& output,
+                         const ExecutionOptions& options = ExecutionOptions())
+        {
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            Ciphertext inner_input1 =
+                operator_from_ciphertext(input1, options.stream_);
+            Ciphertext inner_input2 =
+                operator_from_ciphertext(input1, options.stream_);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply_plain(input1_, input2_,
+                                                           inner_input1,
+                                                           options_inner);
+
+                                            add_plain(input1_, input2_,
+                                                      inner_input2,
+                                                      options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply_plain(input1_, input2_,
+                                                           inner_input1,
+                                                           options_inner);
+                                            rescale_inplace(inner_input1,
+                                                            options_inner);
+
+                                            add_plain(input1_, input2_,
+                                                      inner_input2,
+                                                      options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical OR on a ciphertext and a plaintext.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Input plaintext.
+         * @param options Execution options.
+         */
+        __host__ void
+        OR_inplace(Ciphertext& input1, Plaintext& input2,
+                   const ExecutionOptions& options = ExecutionOptions())
+        {
+            OR(input1, input2, input1, options);
+        }
+
+        /**
+         * @brief Performs logical XOR on two ciphertexts.
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param output Output ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void XOR(Ciphertext& input1, Ciphertext& input2,
+                          Ciphertext& output, Relinkey& relin_key,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            // TODO: Make it efficient
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            Ciphertext inner_input1 =
+                operator_from_ciphertext(input1, options.stream_);
+            Ciphertext inner_input2 =
+                operator_from_ciphertext(input1, options.stream_);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Ciphertext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply(input1_, input2_,
+                                                     inner_input1,
+                                                     options_inner);
+                                            relinearize_inplace(inner_input1,
+                                                                relin_key,
+                                                                options_inner);
+                                            add(inner_input1, inner_input1,
+                                                inner_input1, options_inner);
+
+                                            add(input1_, input2_, inner_input2,
+                                                options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply(input1_, input2_,
+                                                     inner_input1,
+                                                     options_inner);
+                                            relinearize_inplace(inner_input1,
+                                                                relin_key,
+                                                                options_inner);
+                                            rescale_inplace(inner_input1,
+                                                            options_inner);
+                                            add(inner_input1, inner_input1,
+                                                inner_input1, options_inner);
+
+                                            add(input1_, input2_, inner_input2,
+                                                options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, (&input2 == &output));
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical XOR on two ciphertexts.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Second input ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void
+        XOR_inplace(Ciphertext& input1, Ciphertext& input2, Relinkey& relin_key,
+                    const ExecutionOptions& options = ExecutionOptions())
+        {
+            XOR(input1, input2, input1, relin_key, options);
+        }
+
+        /**
+         * @brief Performs logical XOR on a ciphertext and a plaintext.
+         *
+         * @param input1 Input ciphertext.
+         * @param input2 Input plaintext.
+         * @param output Output ciphertext.
+         * @param options Execution options.
+         */
+        __host__ void XOR(Ciphertext& input1, Plaintext& input2,
+                          Ciphertext& output,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            Ciphertext inner_input1 =
+                operator_from_ciphertext(input1, options.stream_);
+            Ciphertext inner_input2 =
+                operator_from_ciphertext(input1, options.stream_);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply_plain(input1_, input2_,
+                                                           inner_input1,
+                                                           options_inner);
+                                            add(inner_input1, inner_input1,
+                                                inner_input1, options_inner);
+
+                                            add_plain(input1_, input2_,
+                                                      inner_input2,
+                                                      options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply_plain(input1_, input2_,
+                                                           inner_input1,
+                                                           options_inner);
+                                            rescale_inplace(inner_input1,
+                                                            options_inner);
+                                            add(inner_input1, inner_input1,
+                                                inner_input1, options_inner);
+
+                                            add_plain(input1_, input2_,
+                                                      inner_input2,
+                                                      options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical XOR on a ciphertext and a plaintext.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Input plaintext.
+         * @param options Execution options.
+         */
+        __host__ void
+        XOR_inplace(Ciphertext& input1, Plaintext& input2,
+                    const ExecutionOptions& options = ExecutionOptions())
+        {
+            XOR(input1, input2, input1, options);
+        }
+
+        /**
+         * @brief Performs logical NAND on two ciphertexts.
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param output Output ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void NAND(Ciphertext& input1, Ciphertext& input2,
+                           Ciphertext& output, Relinkey& relin_key,
+                           const ExecutionOptions& options = ExecutionOptions())
+        {
+            // TODO: Make it efficient
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Ciphertext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply(input1_, input2_, output_,
+                                                     options_inner);
+                                            relinearize_inplace(output_,
+                                                                relin_key,
+                                                                options_inner);
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply(input1_, input2_, output_,
+                                                     options_inner);
+                                            relinearize_inplace(output_,
+                                                                relin_key,
+                                                                options_inner);
+                                            rescale_inplace(output_,
+                                                            options_inner);
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, (&input2 == &output));
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical NAND on two ciphertexts.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Second input ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void
+        NAND_inplace(Ciphertext& input1, Ciphertext& input2,
+                     Relinkey& relin_key,
+                     const ExecutionOptions& options = ExecutionOptions())
+        {
+            NAND(input1, input2, input1, relin_key, options);
+        }
+
+        /**
+         * @brief Performs logical NAND on a ciphertext and a plaintext.
+         *
+         * @param input1 Input ciphertext.
+         * @param input2 Input plaintext.
+         * @param output Output ciphertext.
+         * @param options Execution options.
+         */
+        __host__ void NAND(Ciphertext& input1, Plaintext& input2,
+                           Ciphertext& output,
+                           const ExecutionOptions& options = ExecutionOptions())
+        {
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply_plain(input1_, input2_,
+                                                           output_,
+                                                           options_inner);
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply_plain(input1_, input2_,
+                                                           output_,
+                                                           options_inner);
+                                            rescale_inplace(output_,
+                                                            options_inner);
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical NAND on a ciphertext and a
+         * plaintext.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Input plaintext.
+         * @param options Execution options.
+         */
+        __host__ void
+        NAND_inplace(Ciphertext& input1, Plaintext& input2,
+                     const ExecutionOptions& options = ExecutionOptions())
+        {
+            NAND(input1, input2, input1, options);
+        }
+
+        /**
+         * @brief Performs logical NOR on two ciphertexts.
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param output Output ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void NOR(Ciphertext& input1, Ciphertext& input2,
+                          Ciphertext& output, Relinkey& relin_key,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            // TODO: Make it efficient
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            Ciphertext inner_input1 =
+                operator_from_ciphertext(input1, options.stream_);
+            Ciphertext inner_input2 =
+                operator_from_ciphertext(input1, options.stream_);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Ciphertext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply(input1_, input2_,
+                                                     inner_input1,
+                                                     options_inner);
+                                            relinearize_inplace(inner_input1,
+                                                                relin_key,
+                                                                options_inner);
+
+                                            add(input1_, input2_, inner_input2,
+                                                options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply(input1_, input2_,
+                                                     inner_input1,
+                                                     options_inner);
+                                            relinearize_inplace(inner_input1,
+                                                                relin_key,
+                                                                options_inner);
+                                            rescale_inplace(inner_input1,
+                                                            options_inner);
+
+                                            add(input1_, input2_, inner_input2,
+                                                options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, (&input2 == &output));
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical NOR on two ciphertexts.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Second input ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void
+        NOR_inplace(Ciphertext& input1, Ciphertext& input2, Relinkey& relin_key,
+                    const ExecutionOptions& options = ExecutionOptions())
+        {
+            NOR(input1, input2, input1, relin_key, options);
+        }
+
+        /**
+         * @brief Performs logical NOR on a ciphertext and a plaintext.
+         *
+         * @param input1 Input ciphertext.
+         * @param input2 Input plaintext.
+         * @param output Output ciphertext.
+         * @param options Execution options.
+         */
+        __host__ void NOR(Ciphertext& input1, Plaintext& input2,
+                          Ciphertext& output,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            Ciphertext inner_input1 =
+                operator_from_ciphertext(input1, options.stream_);
+            Ciphertext inner_input2 =
+                operator_from_ciphertext(input1, options.stream_);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply_plain(input1_, input2_,
+                                                           inner_input1,
+                                                           options_inner);
+
+                                            add_plain(input1_, input2_,
+                                                      inner_input2,
+                                                      options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply_plain(input1_, input2_,
+                                                           inner_input1,
+                                                           options_inner);
+                                            rescale_inplace(inner_input1,
+                                                            options_inner);
+
+                                            add_plain(input1_, input2_,
+                                                      inner_input2,
+                                                      options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical NOR on a ciphertext and a plaintext.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Input plaintext.
+         * @param options Execution options.
+         */
+        __host__ void
+        NOR_inplace(Ciphertext& input1, Plaintext& input2,
+                    const ExecutionOptions& options = ExecutionOptions())
+        {
+            NOR(input1, input2, input1, options);
+        }
+
+        /**
+         * @brief Performs logical XNOR on two ciphertexts.
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param output Output ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void XNOR(Ciphertext& input1, Ciphertext& input2,
+                           Ciphertext& output, Relinkey& relin_key,
+                           const ExecutionOptions& options = ExecutionOptions())
+        {
+            // TODO: Make it efficient
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            Ciphertext inner_input1 =
+                operator_from_ciphertext(input1, options.stream_);
+            Ciphertext inner_input2 =
+                operator_from_ciphertext(input1, options.stream_);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Ciphertext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply(input1_, input2_,
+                                                     inner_input1,
+                                                     options_inner);
+                                            relinearize_inplace(inner_input1,
+                                                                relin_key,
+                                                                options_inner);
+                                            add(inner_input1, inner_input1,
+                                                inner_input1, options_inner);
+
+                                            add(input1_, input2_, inner_input2,
+                                                options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply(input1_, input2_,
+                                                     inner_input1,
+                                                     options_inner);
+                                            relinearize_inplace(inner_input1,
+                                                                relin_key,
+                                                                options_inner);
+                                            rescale_inplace(inner_input1,
+                                                            options_inner);
+                                            add(inner_input1, inner_input1,
+                                                inner_input1, options_inner);
+
+                                            add(input1_, input2_, inner_input2,
+                                                options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, (&input2 == &output));
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical XNOR on two ciphertexts.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Second input ciphertext.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         */
+        __host__ void
+        XNOR_inplace(Ciphertext& input1, Ciphertext& input2,
+                     Relinkey& relin_key,
+                     const ExecutionOptions& options = ExecutionOptions())
+        {
+            XNOR(input1, input2, input1, relin_key, options);
+        }
+
+        /**
+         * @brief Performs logical XNOR on a ciphertext and a plaintext.
+         *
+         * @param input1 Input ciphertext.
+         * @param input2 Input plaintext.
+         * @param output Output ciphertext.
+         * @param options Execution options.
+         */
+        __host__ void XNOR(Ciphertext& input1, Plaintext& input2,
+                           Ciphertext& output,
+                           const ExecutionOptions& options = ExecutionOptions())
+        {
+            // TODO: Make it efficient
+            ExecutionOptions options_inner =
+                ExecutionOptions()
+                    .set_stream(options.stream_)
+                    .set_storage_type(storage_type::DEVICE)
+                    .set_initial_location(true);
+
+            Ciphertext inner_input1 =
+                operator_from_ciphertext(input1, options.stream_);
+            Ciphertext inner_input2 =
+                operator_from_ciphertext(input1, options.stream_);
+
+            input_storage_manager(
+                input1,
+                [&](Ciphertext& input1_)
+                {
+                    input_storage_manager(
+                        input2,
+                        [&](Plaintext& input2_)
+                        {
+                            output_storage_manager(
+                                output,
+                                [&](Ciphertext& output_)
+                                {
+                                    switch (static_cast<int>(scheme_))
+                                    {
+                                        case 1: // BFV
+                                            multiply_plain(input1_, input2_,
+                                                           inner_input1,
+                                                           options_inner);
+                                            add(inner_input1, inner_input1,
+                                                inner_input1, options_inner);
+
+                                            add_plain(input1_, input2_,
+                                                      inner_input2,
+                                                      options_inner);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 2: // CKKS
+                                            multiply_plain(input1_, input2_,
+                                                           inner_input1,
+                                                           options_inner);
+                                            rescale_inplace(inner_input1,
+                                                            options_inner);
+                                            add(inner_input1, inner_input1,
+                                                inner_input1, options_inner);
+
+                                            add_plain(input1_, input2_,
+                                                      inner_input2,
+                                                      options_inner);
+
+                                            mod_drop_inplace(inner_input2);
+
+                                            sub(inner_input2, inner_input1,
+                                                output_, options_inner);
+
+                                            one_minus_cipher_inplace(
+                                                output_, options_inner);
+                                            break;
+                                        case 3: // BGV
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                        default:
+                                            throw std::invalid_argument(
+                                                "Invalid Scheme Type");
+                                            break;
+                                    }
+                                },
+                                options);
+                        },
+                        options, false);
+                },
+                options, (&input1 == &output));
+        }
+
+        /**
+         * @brief Performs in-place logical XNOR on a ciphertext and a
+         * plaintext.
+         *
+         * @param input1 Ciphertext updated with result.
+         * @param input2 Input plaintext.
+         * @param options Execution options.
+         */
+        __host__ void
+        XNOR_inplace(Ciphertext& input1, Plaintext& input2,
+                     const ExecutionOptions& options = ExecutionOptions())
+        {
+            XNOR(input1, input2, input1, options);
+        }
+
+        /**
+         * @brief Generates bootstrapping parameters.
+         *
+         * @param scale Scaling factor.
+         * @param config Bootstrapping configuration.
+         */
+        __host__ void generate_bootstrapping_params(
+            const double scale, const BootstrappingConfig& config,
+            const logic_bootstrapping_type& boot_type);
+
+        /**
+         * @brief Retrieves galois key indexes required for bootstrapping.
+         *
+         * @return std::vector<int> Bootstrapping key indexes.
+         * @throws std::invalid_argument if parameters are not generated.
+         */
+        __host__ std::vector<int> bootstrapping_key_indexs()
+        {
+            if (!boot_context_generated_)
+            {
+                throw std::invalid_argument(
+                    "Bootstrapping key indexs can not be returned before "
+                    "generating Bootstrapping parameters!");
+            }
+
+            return key_indexs_;
+        }
+
+        /**
+         * @brief Performs bit-level bootstrapping on a ciphertext.(For more
+         * detail please check README.md)
+         *
+         * @param input1 Input ciphertext.
+         * @param galois_key Galois key for rotations.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped ciphertext.
+         */
+        __host__ Ciphertext bit_bootstrapping(
+            Ciphertext& input1, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        /**
+         * @brief Bootstrapped logical AND gate.(For more detail please check
+         * README.md)
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param galois_key Galois key for rotations.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped result.
+         */
+        __host__ Ciphertext
+        AND_bootstrapping(Ciphertext& input1, Ciphertext& input2,
+                          Galoiskey& galois_key, Relinkey& relin_key,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            return gate_bootstrapping(logic_gate::AND, input1, input2,
+                                      galois_key, relin_key, options);
+        }
+
+        /**
+         * @brief Bootstrapped logical OR gate.(For more detail please check
+         * README.md)
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param galois_key Galois key for rotations.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped result.
+         */
+        __host__ Ciphertext
+        OR_bootstrapping(Ciphertext& input1, Ciphertext& input2,
+                         Galoiskey& galois_key, Relinkey& relin_key,
+                         const ExecutionOptions& options = ExecutionOptions())
+        {
+            return gate_bootstrapping(logic_gate::OR, input1, input2,
+                                      galois_key, relin_key, options);
+        }
+
+        /**
+         * @brief Bootstrapped logical XOR gate.(For more detail please check
+         * README.md)
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param galois_key Galois key for rotations.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped result.
+         */
+        __host__ Ciphertext
+        XOR_bootstrapping(Ciphertext& input1, Ciphertext& input2,
+                          Galoiskey& galois_key, Relinkey& relin_key,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            return gate_bootstrapping(logic_gate::XOR, input1, input2,
+                                      galois_key, relin_key, options);
+        }
+
+        /**
+         * @brief Bootstrapped logical NAND gate.(For more detail please check
+         * README.md)
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param galois_key Galois key for rotations.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped result.
+         */
+        __host__ Ciphertext
+        NAND_bootstrapping(Ciphertext& input1, Ciphertext& input2,
+                           Galoiskey& galois_key, Relinkey& relin_key,
+                           const ExecutionOptions& options = ExecutionOptions())
+        {
+            return gate_bootstrapping(logic_gate::NAND, input1, input2,
+                                      galois_key, relin_key, options);
+        }
+
+        /**
+         * @brief Bootstrapped logical NOR gate.(For more detail please check
+         * README.md)
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param galois_key Galois key for rotations.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped result.
+         */
+        __host__ Ciphertext
+        NOR_bootstrapping(Ciphertext& input1, Ciphertext& input2,
+                          Galoiskey& galois_key, Relinkey& relin_key,
+                          const ExecutionOptions& options = ExecutionOptions())
+        {
+            return gate_bootstrapping(logic_gate::NOR, input1, input2,
+                                      galois_key, relin_key, options);
+        }
+
+        /**
+         * @brief Bootstrapped logical XNOR gate.(For more detail please check
+         * README.md)
+         *
+         * @param input1 First input ciphertext.
+         * @param input2 Second input ciphertext.
+         * @param galois_key Galois key for rotations.
+         * @param relin_key Relinearization key.
+         * @param options Execution options.
+         * @return Ciphertext Bootstrapped result.
+         */
+        __host__ Ciphertext
+        XNOR_bootstrapping(Ciphertext& input1, Ciphertext& input2,
+                           Galoiskey& galois_key, Relinkey& relin_key,
+                           const ExecutionOptions& options = ExecutionOptions())
+        {
+            return gate_bootstrapping(logic_gate::XNOR, input1, input2,
+                                      galois_key, relin_key, options);
+        }
+
+        using HEOperator::apply_galois;
+        using HEOperator::apply_galois_inplace;
+        using HEOperator::keyswitch;
+        using HEOperator::mod_drop;
+        using HEOperator::mod_drop_inplace;
+        using HEOperator::rotate_rows;
+        using HEOperator::rotate_rows_inplace;
+
+      private:
+        enum class logic_gate
+        {
+            AND,
+            OR,
+            XOR,
+            NAND,
+            NOR,
+            XNOR
+        };
+
+        __host__ Ciphertext gate_bootstrapping(
+            logic_gate gate_type, Ciphertext& input1, Ciphertext& input2,
+            Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ Ciphertext AND_approximation(
+            Ciphertext& cipher, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ Ciphertext OR_approximation(
+            Ciphertext& cipher, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ Ciphertext XOR_approximation(
+            Ciphertext& cipher, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ Ciphertext NAND_approximation(
+            Ciphertext& cipher, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ Ciphertext NOR_approximation(
+            Ciphertext& cipher, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ Ciphertext XNOR_approximation(
+            Ciphertext& cipher, Galoiskey& galois_key, Relinkey& relin_key,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ void
+        one_minus_cipher(Ciphertext& input1, Ciphertext& output,
+                         const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ void one_minus_cipher_inplace(
+            Ciphertext& input1,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        // Encoded One
+        DeviceVector<Data64> encoded_constant_one_;
+
+        // Bit bootstrapping
+        DeviceVector<Data64> encoded_constant_minus_1over4_;
+
+        // Gate bootstrapping
+        DeviceVector<Data64> encoded_constant_1over3_;
+        DeviceVector<Data64> encoded_constant_2over3_;
+        DeviceVector<Data64> encoded_complex_minus_2over6j_;
+        DeviceVector<Data64> encoded_constant_minus_2over6_;
+        DeviceVector<Data64> encoded_complex_2over6j_;
+        DeviceVector<Data64> encoded_constant_2over6_;
+        // DeviceVector<Data64> we have -> encoded_complex_minus_iscale_
+        DeviceVector<Data64> encoded_constant_pioversome_;
+        DeviceVector<Data64> encoded_constant_minus_pioversome_;
     };
 
 } // namespace heongpu

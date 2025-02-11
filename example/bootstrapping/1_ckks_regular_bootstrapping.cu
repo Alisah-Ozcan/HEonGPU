@@ -49,7 +49,8 @@ int main(int argc, char* argv[])
     heongpu::HEEncoder encoder(context);
     heongpu::HEEncryptor encryptor(context, public_key);
     heongpu::HEDecryptor decryptor(context, secret_key);
-    heongpu::HEOperator operators(context);
+    // heongpu::HEOperator operators(context);
+    heongpu::HEArithmeticOperator operators(context, encoder);
 
     // Generate simple vector in CPU.
     const int slot_count = poly_modulus_degree / 2;
@@ -70,11 +71,12 @@ int main(int argc, char* argv[])
     // Check README.md for more detail information
     // CtoS_piece_ = [2,5]
     // StoC_piece_ = [2,5]
-    // taylor_number_ = [11,15]
+    // taylor_number_ = [6,15]
     // less_key_mode_ = true or false
-    heongpu::BootstrappingConfig boot_config(3, 3, 11, true);
+    int StoC_piece = 3;
+    heongpu::BootstrappingConfig boot_config(3, StoC_piece, 11, true);
     // Generates all bootstrapping parameters before bootstrapping
-    operators.generate_bootstrapping_parameters(encoder, scale, boot_config);
+    operators.generate_bootstrapping_params(scale, boot_config);
 
     std::vector<int> key_index = operators.bootstrapping_key_indexs();
     std::cout << "Total galois key needed for CKKS bootstrapping: "
@@ -88,7 +90,7 @@ int main(int argc, char* argv[])
     keygen.generate_galois_key(galois_key, secret_key);
 
     // Drop all level until one level remain
-    for (int i = 0; i < 30; i++)
+    for (int i = 0; i < 31 - 1; i++)
     {
         operators.mod_drop_inplace(C1);
     }
@@ -97,7 +99,7 @@ int main(int argc, char* argv[])
 
     // Bootstapping Operation
     heongpu::Ciphertext cipher_boot =
-        operators.bootstrapping(C1, galois_key, relin_key);
+        operators.regular_bootstrapping(C1, galois_key, relin_key);
 
     std::cout << "Depth after bootstrapping: " << cipher_boot.depth()
               << std::endl;

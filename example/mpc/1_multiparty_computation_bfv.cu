@@ -243,7 +243,7 @@ int main(int argc, char* argv[])
     ///////////////// Server Setup (Stage 3) //////////////////
     ///////////////////////////////////////////////////////////
 
-    heongpu::HEOperator operators(context);
+    heongpu::HEArithmeticOperator operators(context, encoder_charlie);
 
     heongpu::Ciphertext cipher_mult(context);
     operators.multiply(ciphertext_alice, ciphertext_bob, cipher_mult);

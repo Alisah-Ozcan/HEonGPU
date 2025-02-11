@@ -4,7 +4,7 @@ The basic example directory in the HEonGPU repository contains sample programs t
 
 ## Overview
 
-- [1_basic_bfv.cu](1_basic_bfv.cu): Demonstrates basic operations on encrypted integers using the BFV scheme, including encryption, evaluation, and decryption.
+- [1_basic_bfv.cu](1_basic_bfv.cu): Demonstrates basic arithmetic operations on encrypted integers using the BFV scheme, including encryption, evaluation, and decryption.
 
 - [2_basic_ckks.cu](2_basic_ckks.cu): Introduces the CKKS scheme for approximate arithmetic on real and complex numbers, showing encoding, encryption, evaluation, and decryption.
 
@@ -17,3 +17,7 @@ The basic example directory in the HEonGPU repository contains sample programs t
 - [6_multi_stream_usage_way1.cu](6_multi_stream_usage_way1.cu): Uses OpenMP to assign a CUDA stream to each CPU thread, demonstrating a multi-stream approach for executing parallel encrypted operations efficiently.
 
 - [7_multi_stream_usage_way2.cu](7_multi_stream_usage_way2.cu): Implements a basic encrypted operation using multiple CUDA streams, where each stream is invoked by a single CPU thread. This example highlights an alternative method to leverage multi-stream functionality for concurrent GPU processing.
+
+- [8_basic_bfv_logic.cu](8_basic_bfv_logic.cu): Demonstrates basic logic operations on encrypted binarys using the BFV scheme, including encryption, evaluation, and decryption.
+
+- [9_basic_ckks_logic.cu](9_basic_ckks_logic.cu): Demonstrates basic logic operations on encrypted binarys using the CKKS scheme, including encryption, evaluation, and decryption.
