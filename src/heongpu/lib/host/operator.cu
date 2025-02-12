@@ -652,7 +652,7 @@ namespace heongpu
         substraction_plain_ckks_poly<<<dim3((n >> 8), current_decomp_count,
                                             cipher_size),
                                        256, 0, stream>>>(
-            input1.data(), input2.data(), output.data(), modulus_->data(),
+            input1.data(), input2.data(), output_memory.data(), modulus_->data(),
             n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
