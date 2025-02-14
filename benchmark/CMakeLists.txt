@@ -13,7 +13,6 @@ set(EXECUTABLES
 function(add_benchmark exe source)
     add_executable(${exe} ${source})
     target_link_libraries(${exe} PRIVATE heongpu CUDA::cudart)
-    target_compile_definitions(${exe} PRIVATE FLOAT_64)
     set_target_properties(${exe} PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
         POSITION_INDEPENDENT_CODE ON

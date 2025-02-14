@@ -37,7 +37,6 @@ set(EXECUTABLES
 function(add_test exe source)
     add_executable(${exe} ${source})
     target_link_libraries(${exe} PRIVATE heongpu CUDA::cudart gtest_main)
-    target_compile_definitions(${exe} PRIVATE FLOAT_64)
     set_target_properties(${exe} PROPERTIES
         CUDA_SEPARABLE_COMPILATION OFF
         POSITION_INDEPENDENT_CODE ON

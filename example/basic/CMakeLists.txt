@@ -22,7 +22,6 @@ function(add_example exe source)
     target_link_libraries(${exe} PRIVATE heongpu CUDA::cudart OpenMP::OpenMP_CXX)
     target_compile_options(${exe} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-fopenmp>)
     target_link_libraries(${exe} PRIVATE -lgomp)
-    target_compile_definitions(${exe} PRIVATE FLOAT_64)
     set_target_properties(${exe} PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
         POSITION_INDEPENDENT_CODE ON

@@ -32,7 +32,7 @@ The Logic Operations supported:
 | **Gate Bootstrapping***    | 2^15 | 2^14 | OFF | 0 Level        | 27.03 ms   | 1.64 µs        |
 |                      | 2^16 | 2^15 | OFF | 0 Level        | 70.73 ms   | 2.16 µs        |
 </div>
-**LKM**: Less Key Mode is a bootstrapping optimization in HEonGPU. Its purpose is to reduce the required amount of Galois keys by 30% while sacrificing 15–20% performance. This is useful in cases where GPU memory is insufficient.
+LKM: Less Key Mode is a bootstrapping optimization in HEonGPU. Its purpose is to reduce the required amount of Galois keys by 30% while sacrificing 15–20% performance. This is useful in cases where GPU memory is insufficient.
 
 *: For all gates
 
@@ -279,8 +279,6 @@ find_package(HEonGPU)
 # ...
 target_link_libraries(<your-target> (PRIVATE|PUBLIC|INTERFACE) HEonGPU::heongpu CUDA::cudart)
 # ...
-add_compile_definitions(FLOAT_64)
-target_compile_definitions(<your-target> PRIVATE FLOAT_64)
 set_target_properties(<your-target> PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 # ...
 ```

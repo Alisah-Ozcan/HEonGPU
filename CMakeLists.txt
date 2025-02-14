@@ -55,7 +55,6 @@ install(
     DESTINATION "${HEonGPU_CONFIG_INSTALL_DIR}")
 
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
-add_compile_definitions(FLOAT_64)
 
 add_subdirectory(thirdparty)
 add_subdirectory(src)
