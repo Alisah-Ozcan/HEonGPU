@@ -199,34 +199,34 @@ int main(int argc, char* argv[])
             << "=================== Benchmark BFV with poly_modulus_degrees: "
             << poly_modulus_degrees[i] << " ===================" << std::endl;
         std::cout << "Average encode timing: " << (time_encode / repeat_count)
-                  << " us" << std::endl;
+                  << " ms" << std::endl;
         std::cout << "Average encryption timing: "
-                  << (time_encryption / repeat_count) << " us" << std::endl;
+                  << (time_encryption / repeat_count) << " ms" << std::endl;
         std::cout << "Average addition timing: "
-                  << (time_addition / repeat_count) << " us" << std::endl;
+                  << (time_addition / repeat_count) << " ms" << std::endl;
         std::cout << "Average subtraction timing: "
-                  << (time_subtraction / repeat_count) << " us" << std::endl;
+                  << (time_subtraction / repeat_count) << " ms" << std::endl;
         std::cout << "Average multiplication timing: "
-                  << (time_multiplication / repeat_count) << " us" << std::endl;
+                  << (time_multiplication / repeat_count) << " ms" << std::endl;
         std::cout << "Average relinearization timing: "
-                  << (time_relinearization / repeat_count) << " us"
+                  << (time_relinearization / repeat_count) << " ms"
                   << std::endl;
         std::cout << "Average plain addition timing: "
-                  << (time_plainaddition / repeat_count) << " us" << std::endl;
+                  << (time_plainaddition / repeat_count) << " ms" << std::endl;
         std::cout << "Average plain subtraction timing: "
-                  << (time_plainsubtraction / repeat_count) << " us"
+                  << (time_plainsubtraction / repeat_count) << " ms"
                   << std::endl;
         std::cout << "Average plain multiplication timing: "
-                  << (time_plainmultiplication / repeat_count) << " us"
+                  << (time_plainmultiplication / repeat_count) << " ms"
                   << std::endl;
         std::cout << "Average rotate row timing: "
-                  << (time_rotaterow / repeat_count) << " us" << std::endl;
+                  << (time_rotaterow / repeat_count) << " ms" << std::endl;
         std::cout << "Average rescale timing: " << (time_rescale / repeat_count)
-                  << " us" << std::endl;
+                  << " ms" << std::endl;
         std::cout << "Average decryption timing: "
-                  << (time_decryption / repeat_count) << " us" << std::endl;
+                  << (time_decryption / repeat_count) << " ms" << std::endl;
         std::cout << "Average decode timing: " << (time_decode / repeat_count)
-                  << " us" << std::endl;
+                  << " ms" << std::endl;
         std::cout << std::endl << std::endl;
     }
 
