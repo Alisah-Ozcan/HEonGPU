@@ -83,7 +83,7 @@ namespace heongpu
         }
 
         // for complex forced // TODO: make it better way.
-        explicit DeviceVector(const std::vector<COMPLEX_C>& ref, size_t d_size,
+        explicit DeviceVector(const std::vector<Complex64>& ref, size_t d_size,
                               cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())
@@ -93,7 +93,7 @@ namespace heongpu
                             cudaMemcpyHostToDevice, stream);
         }
 
-        explicit DeviceVector(const HostVector<COMPLEX_C>& ref, size_t d_size,
+        explicit DeviceVector(const HostVector<Complex64>& ref, size_t d_size,
                               cudaStream_t stream = cudaStreamDefault,
                               Source memory_resource =
                                   MemoryPool::instance().get_device_resource())

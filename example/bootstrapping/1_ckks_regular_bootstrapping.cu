@@ -54,10 +54,10 @@ int main(int argc, char* argv[])
 
     // Generate simple vector in CPU.
     const int slot_count = poly_modulus_degree / 2;
-    std::vector<COMPLEX_C> message;
+    std::vector<Complex64> message;
     for (int i = 0; i < slot_count; i++)
     {
-        message.push_back(COMPLEX_C(0.2, 0.4));
+        message.push_back(Complex64(0.2, 0.4));
     }
 
     //  Transfer that vector from CPU to GPU and Encode that simple vector in
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 
     heongpu::Plaintext P_res1(context);
     decryptor.decrypt(P_res1, cipher_boot);
-    std::vector<COMPLEX_C> decrypted_1;
+    std::vector<Complex64> decrypted_1;
     encoder.decode(decrypted_1, P_res1);
 
     // for(int j = 0; j < slot_count; j++){

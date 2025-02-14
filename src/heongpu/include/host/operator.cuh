@@ -2362,11 +2362,12 @@ namespace heongpu
             std::vector<std::vector<int>> V_matrixs_index_;
             std::vector<std::vector<int>> V_inv_matrixs_index_;
 
-            std::vector<heongpu::DeviceVector<COMPLEX>> V_matrixs_;
-            std::vector<heongpu::DeviceVector<COMPLEX>> V_inv_matrixs_;
+            std::vector<heongpu::DeviceVector<Complex64>> V_matrixs_;
+            std::vector<heongpu::DeviceVector<Complex64>> V_inv_matrixs_;
 
-            std::vector<heongpu::DeviceVector<COMPLEX>> V_matrixs_rotated_;
-            std::vector<heongpu::DeviceVector<COMPLEX>> V_inv_matrixs_rotated_;
+            std::vector<heongpu::DeviceVector<Complex64>> V_matrixs_rotated_;
+            std::vector<heongpu::DeviceVector<Complex64>>
+                V_inv_matrixs_rotated_;
 
             std::vector<std::vector<std::vector<int>>> diags_matrices_bsgs_;
             std::vector<std::vector<std::vector<int>>> diags_matrices_inv_bsgs_;
@@ -2415,15 +2416,15 @@ namespace heongpu
         // CKKS
         double two_pow_64_;
         std::shared_ptr<DeviceVector<int>> reverse_order_;
-        std::shared_ptr<DeviceVector<COMPLEX>> special_ifft_roots_table_;
+        std::shared_ptr<DeviceVector<Complex64>> special_ifft_roots_table_;
 
         __host__ void
-        quick_ckks_encoder_vec_complex(COMPLEX* input, Data64* output,
+        quick_ckks_encoder_vec_complex(Complex64* input, Data64* output,
                                        const double scale,
                                        bool use_all_bases = false);
 
         __host__ void
-        quick_ckks_encoder_constant_complex(COMPLEX_C input, Data64* output,
+        quick_ckks_encoder_constant_complex(Complex64 input, Data64* output,
                                             const double scale,
                                             bool use_all_bases = false);
 

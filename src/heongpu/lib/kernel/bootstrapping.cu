@@ -49,7 +49,7 @@ namespace heongpu
         return total - (3 * index);
     }
 
-    __global__ void E_diagonal_generate_kernel(COMPLEX* output, int n_power)
+    __global__ void E_diagonal_generate_kernel(Complex64* output, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
         int block_y = blockIdx.y; // matrix index
@@ -61,23 +61,23 @@ namespace heongpu
 
         int index1 = idx & ((v_size << 1) - 1);
         int index2 = index1 >> (n_power - logk);
-        COMPLEX W1(1.0, 0.0);
-        COMPLEX W2(0.0, 0.0);
-        COMPLEX W3(0.0, 0.0);
+        Complex64 W1(1.0, 0.0);
+        Complex64 W2(0.0, 0.0);
+        Complex64 W3(0.0, 0.0);
 
         if (block_y == 0)
         {
             double angle = M_PI / (v_size << 2);
-            COMPLEX omega_4n(cos(angle), sin(angle));
+            Complex64 omega_4n(cos(angle), sin(angle));
             int expo = exponent_calculation(index1, n);
 
-            COMPLEX W = omega_4n.exp(expo);
-            COMPLEX W_neg = W; // W.negate();
+            Complex64 W = omega_4n.exp(expo);
+            Complex64 W_neg = W; // W.negate();
 
             if (index2 == 1)
             {
                 W1 = W_neg;
-                W2 = COMPLEX(1.0, 0.0);
+                W2 = Complex64(1.0, 0.0);
             }
             else
             {
@@ -90,16 +90,16 @@ namespace heongpu
         else
         {
             double angle = M_PI / (v_size << 2);
-            COMPLEX omega_4n(cos(angle), sin(angle));
+            Complex64 omega_4n(cos(angle), sin(angle));
             int expo = exponent_calculation(index1, n);
 
-            COMPLEX W = omega_4n.exp(expo);
-            COMPLEX W_neg = W; // W.negate();
+            Complex64 W = omega_4n.exp(expo);
+            Complex64 W_neg = W; // W.negate();
 
             if (index2 == 1)
             {
                 W1 = W_neg;
-                W3 = COMPLEX(1.0, 0.0);
+                W3 = Complex64(1.0, 0.0);
             }
             else
             {
@@ -112,7 +112,7 @@ namespace heongpu
         }
     }
 
-    __global__ void E_diagonal_inverse_generate_kernel(COMPLEX* output,
+    __global__ void E_diagonal_inverse_generate_kernel(Complex64* output,
                                                        int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -125,20 +125,20 @@ namespace heongpu
 
         int index1 = idx & ((v_size << 1) - 1);
         int index2 = index1 >> (n_power - logk);
-        COMPLEX W1(0.5, 0.0);
-        COMPLEX W2(0.5, 0.0);
-        COMPLEX W3(0.0, 0.0);
+        Complex64 W1(0.5, 0.0);
+        Complex64 W2(0.5, 0.0);
+        Complex64 W3(0.0, 0.0);
 
         if (block_y == 0)
         {
             if (index2 == 1)
             {
                 double angle = M_PI / (v_size << 2);
-                COMPLEX omega_4n(cos(angle), sin(angle));
+                Complex64 omega_4n(cos(angle), sin(angle));
                 int expo = exponent_calculation(index1, n);
                 W1 = omega_4n.inverse();
                 W1 = W1.exp(expo);
-                W1 = W1 / COMPLEX(2.0, 0.0);
+                W1 = W1 / Complex64(2.0, 0.0);
                 W2 = W1.negate();
             }
 
@@ -150,12 +150,12 @@ namespace heongpu
             if (index2 == 1)
             {
                 double angle = M_PI / (v_size << 2);
-                COMPLEX omega_4n(cos(angle), sin(angle));
+                Complex64 omega_4n(cos(angle), sin(angle));
                 int expo = exponent_calculation(index1, n);
                 W1 = omega_4n.inverse();
                 W1 = W1.exp(expo);
-                W1 = W1 / COMPLEX(2.0, 0.0);
-                W2 = COMPLEX(0.0, 0.0);
+                W1 = W1 / Complex64(2.0, 0.0);
+                W2 = Complex64(0.0, 0.0);
                 W3 = W1.negate();
             }
 
@@ -166,7 +166,7 @@ namespace heongpu
     }
 
     __global__ void E_diagonal_inverse_matrix_mult_single_kernel(
-        COMPLEX* input, COMPLEX* output, bool last, int n_power)
+        Complex64* input, Complex64* output, bool last, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -187,7 +187,7 @@ namespace heongpu
     }
 
     __global__ void E_diagonal_matrix_mult_kernel(
-        COMPLEX* input, COMPLEX* output, COMPLEX* temp, int* diag_index,
+        Complex64* input, Complex64* output, Complex64* temp, int* diag_index,
         int* input_index, int* output_index, int iteration_count,
         int R_matrix_counter, int output_index_counter, int mul_index,
         bool first1, bool first2, int n_power)
@@ -206,16 +206,16 @@ namespace heongpu
             for (int i = 0; i < iter_R_m; i++)
             {
                 int diag_index_ = diag_index[R_matrix_counter_];
-                COMPLEX R_m = input[idx + (i << n_power)];
+                Complex64 R_m = input[idx + (i << n_power)];
                 for (int j = 0; j < L_matrix_size; j++)
                 {
-                    COMPLEX L_m =
+                    Complex64 L_m =
                         rotated_access(input + ((L_matrix_loc_ + j) << n_power),
                                        diag_index_, idx, n_power);
 
                     int output_location = output_index[output_index_counter_];
 
-                    COMPLEX res = output[(output_location << n_power) + idx];
+                    Complex64 res = output[(output_location << n_power) + idx];
                     res = res + (L_m * R_m);
                     output[(output_location << n_power) + idx] = res;
 
@@ -229,18 +229,18 @@ namespace heongpu
             for (int i = 0; i < iter_R_m; i++)
             {
                 int diag_index_ = diag_index[R_matrix_counter_];
-                COMPLEX R_m =
+                Complex64 R_m =
                     temp[idx +
                          (input_index[R_matrix_counter_ - offset] << n_power)];
                 for (int j = 0; j < L_matrix_size; j++)
                 {
-                    COMPLEX L_m =
+                    Complex64 L_m =
                         rotated_access(input + ((L_matrix_loc_ + j) << n_power),
                                        diag_index_, idx, n_power);
 
                     int output_location = output_index[output_index_counter_];
 
-                    COMPLEX res = output[(output_location << n_power) + idx];
+                    Complex64 res = output[(output_location << n_power) + idx];
                     res = res + (L_m * R_m);
                     output[(output_location << n_power) + idx] = res;
 
@@ -252,7 +252,7 @@ namespace heongpu
     }
 
     __global__ void E_diagonal_inverse_matrix_mult_kernel(
-        COMPLEX* input, COMPLEX* output, COMPLEX* temp, int* diag_index,
+        Complex64* input, Complex64* output, Complex64* temp, int* diag_index,
         int* input_index, int* output_index, int iteration_count,
         int R_matrix_counter, int output_index_counter, int mul_index,
         bool first, bool last, int n_power)
@@ -270,15 +270,15 @@ namespace heongpu
             for (int i = 0; i < iter_R_m; i++)
             {
                 int diag_index_ = diag_index[R_matrix_counter_];
-                COMPLEX R_m = input[idx + (i << n_power)];
+                Complex64 R_m = input[idx + (i << n_power)];
                 for (int j = 0; j < L_matrix_size; j++)
                 {
-                    COMPLEX L_m =
+                    Complex64 L_m =
                         rotated_access(input + ((L_matrix_loc_ + j) << n_power),
                                        diag_index_, idx, n_power);
 
                     int output_location = output_index[output_index_counter_];
-                    COMPLEX res = output[(output_location << n_power) + idx];
+                    Complex64 res = output[(output_location << n_power) + idx];
                     res = res + (L_m * R_m);
                     output[(output_location << n_power) + idx] = res;
 
@@ -292,16 +292,16 @@ namespace heongpu
             for (int i = 0; i < iter_R_m; i++)
             {
                 int diag_index_ = diag_index[R_matrix_counter_];
-                COMPLEX R_m =
+                Complex64 R_m =
                     temp[idx + (input_index[R_matrix_counter_ - 3] << n_power)];
                 for (int j = 0; j < L_matrix_size; j++)
                 {
-                    COMPLEX L_m =
+                    Complex64 L_m =
                         rotated_access(input + ((L_matrix_loc_ + j) << n_power),
                                        diag_index_, idx, n_power);
 
                     int output_location = output_index[output_index_counter_];
-                    COMPLEX res = output[(output_location << n_power) + idx];
+                    Complex64 res = output[(output_location << n_power) + idx];
                     res = res + (L_m * R_m);
                     output[(output_location << n_power) + idx] = res;
 
@@ -312,12 +312,12 @@ namespace heongpu
         }
     }
 
-    __global__ void vector_rotate_kernel(COMPLEX* input, COMPLEX* output,
+    __global__ void vector_rotate_kernel(Complex64* input, Complex64* output,
                                          int rotate_index, int n_power)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-        COMPLEX rotated = rotated_access(input, rotate_index, idx, n_power);
+        Complex64 rotated = rotated_access(input, rotate_index, idx, n_power);
 
         output[idx] = rotated;
     }

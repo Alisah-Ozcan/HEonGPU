@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 
     heongpu::Plaintext P_res1(context);
     decryptor.decrypt(P_res1, cipher_boot);
-    std::vector<COMPLEX_C> decrypted_1;
+    std::vector<Complex64> decrypted_1;
     encoder.decode(decrypted_1, P_res1);
 
     // for(int j = 0; j < slot_count; j++){

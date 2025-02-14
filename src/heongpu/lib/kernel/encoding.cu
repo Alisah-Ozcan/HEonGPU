@@ -107,21 +107,21 @@ namespace heongpu
     //////////////////////////////
     //////////////////////////////
 
-    __global__ void double_to_complex_kernel(double* input, COMPLEX* output)
+    __global__ void double_to_complex_kernel(double* input, Complex64* output)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
         double in = input[idx];
 
-        COMPLEX c_in(in, 0.0);
+        Complex64 c_in(in, 0.0);
         output[idx] = c_in;
     }
 
-    __global__ void complex_to_double_kernel(COMPLEX* input, double* output)
+    __global__ void complex_to_double_kernel(Complex64* input, double* output)
     {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-        COMPLEX in = input[idx];
+        Complex64 in = input[idx];
 
         double d_in = in.real();
         output[idx] = d_in;
@@ -130,7 +130,7 @@ namespace heongpu
     //
 
     __global__ void
-    encode_kernel_ckks_conversion(Data64* plaintext, COMPLEX* complex_message,
+    encode_kernel_ckks_conversion(Data64* plaintext, Complex64* complex_message,
                                   Modulus64* modulus, int coeff_modulus_count,
                                   double two_pow_64, int* reverse_order,
                                   int n_power)
@@ -138,7 +138,7 @@ namespace heongpu
         int idx = blockIdx.x * blockDim.x + threadIdx.x; // slot_count
 
         int order = reverse_order[idx];
-        COMPLEX partial_message = complex_message[order];
+        Complex64 partial_message = complex_message[order];
 
         double coeff_double = round(partial_message.real());
         bool is_negative = signbit(coeff_double);
@@ -199,7 +199,7 @@ namespace heongpu
     }
 
     __global__ void encode_kernel_compose(
-        COMPLEX* complex_message, Data64* plaintext, Modulus64* modulus,
+        Complex64* complex_message, Data64* plaintext, Modulus64* modulus,
         Data64* Mi_inv, Data64* Mi, Data64* upper_half_threshold,
         Data64* decryption_modulus, int coeff_modulus_count, double scale,
         double two_pow_64, int* reverse_order, int n_power)
@@ -345,7 +345,7 @@ namespace heongpu
             }
         }
 
-        COMPLEX result_c(result_real, result_imag);
+        Complex64 result_c(result_real, result_imag);
 
         int order = reverse_order[idx];
         complex_message[order] = result_c;

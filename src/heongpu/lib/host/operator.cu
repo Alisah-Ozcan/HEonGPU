@@ -652,8 +652,8 @@ namespace heongpu
         substraction_plain_ckks_poly<<<dim3((n >> 8), current_decomp_count,
                                             cipher_size),
                                        256, 0, stream>>>(
-            input1.data(), input2.data(), output_memory.data(), modulus_->data(),
-            n_power);
+            input1.data(), input2.data(), output_memory.data(),
+            modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         output.cipher_size_ = cipher_size;
@@ -3243,7 +3243,7 @@ namespace heongpu
         return cipher;
     }
 
-    __host__ void HEOperator::quick_ckks_encoder_vec_complex(COMPLEX* input,
+    __host__ void HEOperator::quick_ckks_encoder_vec_complex(Complex64* input,
                                                              Data64* output,
                                                              const double scale,
                                                              bool use_all_bases)
@@ -3252,10 +3252,11 @@ namespace heongpu
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
-                                           .ntt_type = fft::type::INVERSE,
-                                           .mod_inverse = COMPLEX(fix, 0.0),
-                                           .stream = 0};
+        fft::fft_configuration<Float64> cfg_ifft = {
+            .n_power = log_slot_count_,
+            .fft_type = fft::type::INVERSE,
+            .mod_inverse = Complex64(fix, 0.0),
+            .stream = 0};
 
         fft::GPU_Special_FFT(input, special_ifft_roots_table_->data(), cfg_ifft,
                              1);
@@ -3278,25 +3279,26 @@ namespace heongpu
     }
 
     __host__ void HEOperator::quick_ckks_encoder_constant_complex(
-        COMPLEX_C input, Data64* output, const double scale, bool use_all_bases)
+        Complex64 input, Data64* output, const double scale, bool use_all_bases)
     {
-        // std::vector<COMPLEX_C> in = {input};
-        std::vector<COMPLEX_C> in;
+        // std::vector<Complex64> in = {input};
+        std::vector<Complex64> in;
         for (int i = 0; i < slot_count_; i++)
         {
             in.push_back(input);
         }
-        DeviceVector<COMPLEX> message_gpu(slot_count_);
-        cudaMemcpy(message_gpu.data(), in.data(), in.size() * sizeof(COMPLEX),
+        DeviceVector<Complex64> message_gpu(slot_count_);
+        cudaMemcpy(message_gpu.data(), in.data(), in.size() * sizeof(Complex64),
                    cudaMemcpyHostToDevice);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        fft::fft_configuration cfg_ifft = {.n_power = log_slot_count_,
-                                           .ntt_type = fft::type::INVERSE,
-                                           .mod_inverse = COMPLEX(fix, 0.0),
-                                           .stream = 0};
+        fft::fft_configuration<Float64> cfg_ifft = {
+            .n_power = log_slot_count_,
+            .fft_type = fft::type::INVERSE,
+            .mod_inverse = Complex64(fix, 0.0),
+            .stream = 0};
 
         fft::GPU_Special_FFT(message_gpu.data(),
                              special_ifft_roots_table_->data(), cfg_ifft, 1);
@@ -4583,8 +4585,8 @@ namespace heongpu
         int bloksize = (num_slots_ <= 1024) ? num_slots_ : 1024;
         int blokcount = (num_slots_ + (1023)) / 1024;
 
-        heongpu::DeviceVector<COMPLEX> V_logn_diagnal(((3 * log_num_slots_) - 1)
-                                                      << log_num_slots_);
+        heongpu::DeviceVector<Complex64> V_logn_diagnal(
+            ((3 * log_num_slots_) - 1) << log_num_slots_);
         E_diagonal_generate_kernel<<<dim3(blokcount, log_num_slots_, 1),
                                      bloksize>>>(V_logn_diagnal.data(),
                                                  log_num_slots_);
@@ -4599,9 +4601,9 @@ namespace heongpu
             heongpu::DeviceVector<int> output_index_gpu(
                 E_splitted_output_index_gpu_[i]);
 
-            heongpu::DeviceVector<COMPLEX> V_mul((V_matrixs_index_[i].size())
-                                                 << log_num_slots_);
-            cudaMemset(V_mul.data(), 0, V_mul.size() * sizeof(COMPLEX));
+            heongpu::DeviceVector<Complex64> V_mul((V_matrixs_index_[i].size())
+                                                   << log_num_slots_);
+            cudaMemset(V_mul.data(), 0, V_mul.size() * sizeof(Complex64));
 
             int input_loc;
             if (i == 0)
@@ -4618,10 +4620,10 @@ namespace heongpu
 
             for (int j = 0; j < (E_splitted_[i] - 1); j++)
             {
-                heongpu::DeviceVector<COMPLEX> temp_result(
+                heongpu::DeviceVector<Complex64> temp_result(
                     (V_matrixs_index_[i].size()) << log_num_slots_);
                 cudaMemset(temp_result.data(), 0,
-                           temp_result.size() * sizeof(COMPLEX));
+                           temp_result.size() * sizeof(Complex64));
 
                 bool first_check1 = (i == 0) ? true : false;
                 bool first_check2 = (j == 0) ? true : false;
@@ -4649,7 +4651,7 @@ namespace heongpu
         int bloksize = (num_slots_ <= 1024) ? num_slots_ : 1024;
         int blokcount = (num_slots_ + (1023)) / 1024;
 
-        heongpu::DeviceVector<COMPLEX> V_inv_logn_diagnal(
+        heongpu::DeviceVector<Complex64> V_inv_logn_diagnal(
             ((3 * log_num_slots_) - 1) << log_num_slots_);
         E_diagonal_inverse_generate_kernel<<<dim3(blokcount, log_num_slots_, 1),
                                              bloksize>>>(
@@ -4665,9 +4667,9 @@ namespace heongpu
             heongpu::DeviceVector<int> output_index_gpu(
                 E_inv_splitted_output_index_gpu_[i]);
 
-            heongpu::DeviceVector<COMPLEX> V_mul(
+            heongpu::DeviceVector<Complex64> V_mul(
                 (V_inv_matrixs_index_[i].size()) << log_num_slots_);
-            cudaMemset(V_mul.data(), 0, V_mul.size() * sizeof(COMPLEX));
+            cudaMemset(V_mul.data(), 0, V_mul.size() * sizeof(Complex64));
 
             int input_loc = (3 * matrix_counter) << log_num_slots_;
             int R_matrix_counter = 0;
@@ -4675,10 +4677,10 @@ namespace heongpu
 
             for (int j = 0; j < (E_inv_splitted_[i] - 1); j++)
             {
-                heongpu::DeviceVector<COMPLEX> temp_result(
+                heongpu::DeviceVector<Complex64> temp_result(
                     (V_inv_matrixs_index_[i].size()) << log_num_slots_);
                 cudaMemset(temp_result.data(), 0,
-                           temp_result.size() * sizeof(COMPLEX));
+                           temp_result.size() * sizeof(Complex64));
                 bool first_check = (j == 0) ? true : false;
                 bool last_check = ((i == (CtoS_piece_ - 1)) &&
                                    (j == (E_inv_splitted_[i] - 2)))
@@ -4789,7 +4791,7 @@ namespace heongpu
 
         for (int m = 0; m < StoC_piece_; m++)
         {
-            heongpu::DeviceVector<COMPLEX> temp_rotated(
+            heongpu::DeviceVector<Complex64> temp_rotated(
                 (V_matrixs_index_[m].size()) << log_num_slots_);
 
             int counter = 0;
@@ -4820,7 +4822,7 @@ namespace heongpu
 
         for (int m = 0; m < CtoS_piece_; m++)
         {
-            heongpu::DeviceVector<COMPLEX> temp_rotated(
+            heongpu::DeviceVector<Complex64> temp_rotated(
                 (V_inv_matrixs_index_[m].size()) << log_num_slots_);
 
             int counter = 0;
@@ -4953,7 +4955,7 @@ namespace heongpu
                 constant_1over2, encoded_constant_1over2_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            COMPLEX_C complex_minus_iover2(0, -0.5);
+            Complex64 complex_minus_iover2(0.0, -0.5);
             encoded_complex_minus_iover2_ =
                 DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
@@ -4962,16 +4964,16 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             // StoC
-            COMPLEX_C complex_i(0, 1);
+            Complex64 complex_i(0, 1);
             encoded_complex_i_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
                 complex_i, encoded_complex_i_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             // Scale part
-            COMPLEX_C complex_minus_iscale(
-                0, -(((static_cast<double>(prime_vector_[0].value) * 0.25) /
-                      (scale_boot_ * M_PI))));
+            Complex64 complex_minus_iscale(
+                0.0, -(((static_cast<double>(prime_vector_[0].value) * 0.25) /
+                        (scale_boot_ * M_PI))));
             encoded_complex_minus_iscale_ =
                 DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
@@ -4980,10 +4982,10 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             // Exponentiate
-            COMPLEX_C complex_iscaleoverr(
-                0, (((2 * M_PI * scale_boot_) /
-                     static_cast<double>(prime_vector_[0].value))) /
-                       static_cast<double>(1 << taylor_number_));
+            Complex64 complex_iscaleoverr(
+                0.0, (((2 * M_PI * scale_boot_) /
+                       static_cast<double>(prime_vector_[0].value))) /
+                         static_cast<double>(1 << taylor_number_));
             encoded_complex_iscaleoverr_ =
                 DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
@@ -5392,7 +5394,7 @@ namespace heongpu
                 constant_1over2, encoded_constant_1over2_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            COMPLEX_C complex_minus_iover2(0, -0.5);
+            Complex64 complex_minus_iover2(0.0, -0.5);
             encoded_complex_minus_iover2_ =
                 DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
@@ -5401,16 +5403,16 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             // StoC
-            COMPLEX_C complex_i(0, 1);
+            Complex64 complex_i(0.0, 1.0);
             encoded_complex_i_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
                 complex_i, encoded_complex_i_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             // Scale part
-            COMPLEX_C complex_minus_iscale(
-                0, -(((static_cast<double>(prime_vector_[0].value) * 0.25) /
-                      (scale_boot_ * M_PI))));
+            Complex64 complex_minus_iscale(
+                0.0, -(((static_cast<double>(prime_vector_[0].value) * 0.25) /
+                        (scale_boot_ * M_PI))));
             encoded_complex_minus_iscale_ =
                 DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
@@ -5419,10 +5421,10 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
             // Exponentiate
-            COMPLEX_C complex_iscaleoverr(
-                0, (((2 * M_PI * scale_boot_) /
-                     static_cast<double>(prime_vector_[0].value))) /
-                       static_cast<double>(1 << taylor_number_));
+            Complex64 complex_iscaleoverr(
+                0.0, (((2 * M_PI * scale_boot_) /
+                       static_cast<double>(prime_vector_[0].value))) /
+                         static_cast<double>(1 << taylor_number_));
             encoded_complex_iscaleoverr_ =
                 DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
@@ -5497,7 +5499,7 @@ namespace heongpu
                 constant_2over3_, encoded_constant_2over3_.data(), scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            COMPLEX_C complex_minus_2over6j_(0, (1.0 / 3.0));
+            Complex64 complex_minus_2over6j_(0.0, (1.0 / 3.0));
             encoded_complex_minus_2over6j_ =
                 DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
@@ -5513,7 +5515,7 @@ namespace heongpu
                 scale_boot_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            COMPLEX_C complex_2over6j_(0, (-1.0 / 3.0));
+            Complex64 complex_2over6j_(0.0, (-1.0 / 3.0));
             encoded_complex_2over6j_ = DeviceVector<Data64>(Q_size_ << n_power);
             quick_ckks_encoder_constant_complex(
                 complex_2over6j_, encoded_complex_2over6j_.data(), scale_boot_);

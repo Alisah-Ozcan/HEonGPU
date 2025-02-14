@@ -31,18 +31,18 @@ namespace heongpu
                                                       Modulus64* modulus,
                                                       int n_power);
 
-    __global__ void double_to_complex_kernel(double* input, COMPLEX* output);
+    __global__ void double_to_complex_kernel(double* input, Complex64* output);
 
-    __global__ void complex_to_double_kernel(COMPLEX* input, double* output);
+    __global__ void complex_to_double_kernel(Complex64* input, double* output);
 
     __global__ void
-    encode_kernel_ckks_conversion(Data64* plaintext, COMPLEX* complex_message,
+    encode_kernel_ckks_conversion(Data64* plaintext, Complex64* complex_message,
                                   Modulus64* modulus, int coeff_modulus_count,
                                   double two_pow_64, int* reverse_order,
                                   int n_power);
 
     __global__ void encode_kernel_compose(
-        COMPLEX* complex_message, Data64* plaintext, Modulus64* modulus,
+        Complex64* complex_message, Data64* plaintext, Modulus64* modulus,
         Data64* Mi_inv, Data64* Mi, Data64* upper_half_threshold,
         Data64* decryption_modulus, int coeff_modulus_count, double scale,
         double two_pow_64, int* reverse_order, int n_power);

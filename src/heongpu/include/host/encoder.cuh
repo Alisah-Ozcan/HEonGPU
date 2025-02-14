@@ -357,13 +357,13 @@ namespace heongpu
          *
          * @param plain Plaintext object where the result of the encoding will
          * be stored.
-         * @param message Vector of COMPLEX_C representing the message to be
+         * @param message Vector of Complex64 representing the message to be
          * encoded.
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
         __host__ void
-        encode(Plaintext& plain, const std::vector<COMPLEX_C>& message,
+        encode(Plaintext& plain, const std::vector<Complex64>& message,
                double scale,
                const ExecutionOptions& options = ExecutionOptions())
         {
@@ -415,13 +415,13 @@ namespace heongpu
          *
          * @param plain Plaintext object where the result of the encoding will
          * be stored.
-         * @param message HostVector of COMPLEX_C representing the message to be
+         * @param message HostVector of Complex64 representing the message to be
          * encoded.
          * @param scale parameter defining encoding precision(for CKKS), default
          * is 0.
          */
         __host__ void
-        encode(Plaintext& plain, const HostVector<COMPLEX_C>& message,
+        encode(Plaintext& plain, const HostVector<Complex64>& message,
                double scale,
                const ExecutionOptions& options = ExecutionOptions())
         {
@@ -793,7 +793,7 @@ namespace heongpu
          * @param plain Plaintext object to be decoded.
          */
         __host__ void
-        decode(std::vector<COMPLEX_C>& message, Plaintext& plain,
+        decode(std::vector<Complex64>& message, Plaintext& plain,
                const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
@@ -827,7 +827,7 @@ namespace heongpu
          * @param plain Plaintext object to be decoded.
          */
         __host__ void
-        decode(HostVector<COMPLEX_C>& message, Plaintext& plain,
+        decode(HostVector<Complex64>& message, Plaintext& plain,
                const ExecutionOptions& options = ExecutionOptions())
         {
             switch (static_cast<int>(scheme_))
@@ -911,12 +911,12 @@ namespace heongpu
         //
 
         __host__ void encode_ckks(Plaintext& plain,
-                                  const std::vector<COMPLEX_C>& message,
+                                  const std::vector<Complex64>& message,
                                   const double scale,
                                   const cudaStream_t stream);
 
         __host__ void encode_ckks(Plaintext& plain,
-                                  const HostVector<COMPLEX_C>& message,
+                                  const HostVector<Complex64>& message,
                                   const double scale,
                                   const cudaStream_t stream);
 
@@ -940,10 +940,10 @@ namespace heongpu
 
         //
 
-        __host__ void decode_ckks(std::vector<COMPLEX_C>& message,
+        __host__ void decode_ckks(std::vector<Complex64>& message,
                                   Plaintext& plain, const cudaStream_t stream);
 
-        __host__ void decode_ckks(HostVector<COMPLEX_C>& message,
+        __host__ void decode_ckks(HostVector<Complex64>& message,
                                   Plaintext& plain, const cudaStream_t stream);
 
         //////////////////////////////
@@ -967,10 +967,10 @@ namespace heongpu
         double two_pow_64;
         int log_slot_count_;
         int fft_length;
-        COMPLEX_C special_root;
+        Complex64 special_root;
 
-        std::shared_ptr<DeviceVector<COMPLEX>> special_fft_roots_table_;
-        std::shared_ptr<DeviceVector<COMPLEX>> special_ifft_roots_table_;
+        std::shared_ptr<DeviceVector<Complex64>> special_fft_roots_table_;
+        std::shared_ptr<DeviceVector<Complex64>> special_ifft_roots_table_;
         std::shared_ptr<DeviceVector<int>> reverse_order;
 
         int Q_size_;

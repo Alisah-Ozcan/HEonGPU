@@ -37,27 +37,27 @@ namespace heongpu
 
     __device__ int matrix_reverse_location(int& index);
 
-    __global__ void E_diagonal_generate_kernel(COMPLEX* output, int n_power);
+    __global__ void E_diagonal_generate_kernel(Complex64* output, int n_power);
 
-    __global__ void E_diagonal_inverse_generate_kernel(COMPLEX* output,
+    __global__ void E_diagonal_inverse_generate_kernel(Complex64* output,
                                                        int n_power);
 
     __global__ void E_diagonal_inverse_matrix_mult_single_kernel(
-        COMPLEX* input, COMPLEX* output, bool last, int n_power);
+        Complex64* input, Complex64* output, bool last, int n_power);
 
     __global__ void E_diagonal_matrix_mult_kernel(
-        COMPLEX* input, COMPLEX* output, COMPLEX* temp, int* diag_index,
+        Complex64* input, Complex64* output, Complex64* temp, int* diag_index,
         int* input_index, int* output_index, int iteration_count,
         int R_matrix_counter, int output_index_counter, int mul_index,
         bool first1, bool first2, int n_power);
 
     __global__ void E_diagonal_inverse_matrix_mult_kernel(
-        COMPLEX* input, COMPLEX* output, COMPLEX* temp, int* diag_index,
+        Complex64* input, Complex64* output, Complex64* temp, int* diag_index,
         int* input_index, int* output_index, int iteration_count,
         int R_matrix_counter, int output_index_counter, int mul_index,
         bool first, bool last, int n_power);
 
-    __global__ void vector_rotate_kernel(COMPLEX* input, COMPLEX* output,
+    __global__ void vector_rotate_kernel(Complex64* input, Complex64* output,
                                          int rotate_index, int n_power);
 
     // TODO: work it for multiple RNS prime (currently it only works for single
