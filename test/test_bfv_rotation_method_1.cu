@@ -29,55 +29,61 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::vector<int> shift_key_index = {-5, -3, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
+            std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
+            for (int i = 0; i < poly_modulus_degree; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            size_t row_size = poly_modulus_degree / 2;
+            std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
+                                                          0ULL);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+                message_rotation_result[i + row_size] =
+                    message1[index + row_size];
+            }
+
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<uint64_t> gpu_rotation_result;
+            encoder.decode(gpu_rotation_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(std::equal(message_rotation_result.begin(),
+                                 message_rotation_result.end(),
+                                 gpu_rotation_result.begin()),
+                      true);
         }
-
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
-        }
-
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
-                  true);
     }
 
     {
@@ -99,55 +105,61 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::vector<int> shift_key_index = {-5, -3, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
+            std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
+            for (int i = 0; i < poly_modulus_degree; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            size_t row_size = poly_modulus_degree / 2;
+            std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
+                                                          0ULL);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+                message_rotation_result[i + row_size] =
+                    message1[index + row_size];
+            }
+
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<uint64_t> gpu_rotation_result;
+            encoder.decode(gpu_rotation_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(std::equal(message_rotation_result.begin(),
+                                 message_rotation_result.end(),
+                                 gpu_rotation_result.begin()),
+                      true);
         }
-
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
-        }
-
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
-                  true);
     }
 
     {
@@ -169,55 +181,61 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::vector<int> shift_key_index = {-5, -3, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
+            std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
+            for (int i = 0; i < poly_modulus_degree; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            size_t row_size = poly_modulus_degree / 2;
+            std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
+                                                          0ULL);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+                message_rotation_result[i + row_size] =
+                    message1[index + row_size];
+            }
+
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<uint64_t> gpu_rotation_result;
+            encoder.decode(gpu_rotation_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(std::equal(message_rotation_result.begin(),
+                                 message_rotation_result.end(),
+                                 gpu_rotation_result.begin()),
+                      true);
         }
-
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
-        }
-
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
-                  true);
     }
 
     {
@@ -240,55 +258,61 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::vector<int> shift_key_index = {-5, -3, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
+            std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
+            for (int i = 0; i < poly_modulus_degree; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            size_t row_size = poly_modulus_degree / 2;
+            std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
+                                                          0ULL);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+                message_rotation_result[i + row_size] =
+                    message1[index + row_size];
+            }
+
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<uint64_t> gpu_rotation_result;
+            encoder.decode(gpu_rotation_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(std::equal(message_rotation_result.begin(),
+                                 message_rotation_result.end(),
+                                 gpu_rotation_result.begin()),
+                      true);
         }
-
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
-        }
-
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
-                  true);
     }
 
     {
@@ -323,55 +347,61 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {31};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
-        std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
-        for (int i = 0; i < poly_modulus_degree; i++)
+        std::vector<int> shift_key_index = {-5, -3, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<uint64_t> dis(0, plain_modulus - 1);
+            std::vector<uint64_t> message1(poly_modulus_degree, 0ULL);
+            for (int i = 0; i < poly_modulus_degree; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            size_t row_size = poly_modulus_degree / 2;
+            std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
+                                                          0ULL);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+                message_rotation_result[i + row_size] =
+                    message1[index + row_size];
+            }
+
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<uint64_t> gpu_rotation_result;
+            encoder.decode(gpu_rotation_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(std::equal(message_rotation_result.begin(),
+                                 message_rotation_result.end(),
+                                 gpu_rotation_result.begin()),
+                      true);
         }
-
-        int shift_count = 31;
-        size_t row_size = poly_modulus_degree / 2;
-        std::vector<uint64_t> message_rotation_result(poly_modulus_degree,
-                                                      0ULL);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-            message_rotation_result[i + row_size] =
-                message1[((i + shift_count) % row_size) + row_size];
-        }
-
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<uint64_t> gpu_rotation_result;
-        encoder.decode(gpu_rotation_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(std::equal(message_rotation_result.begin(),
-                             message_rotation_result.end(),
-                             gpu_rotation_result.begin()),
-                  true);
     }
 }
 

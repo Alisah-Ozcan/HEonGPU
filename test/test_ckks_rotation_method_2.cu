@@ -53,66 +53,73 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {12};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(0.0, 1.0);
-        const int row_size = poly_modulus_degree / 2;
-        std::vector<double> message1(row_size, 0);
-        for (int i = 0; i < row_size; i++)
+        std::vector<int> shift_key_index = {-5, -2, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+            const int row_size = poly_modulus_degree / 2;
+            std::vector<double> message1(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            std::vector<double> message_rotation_result(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+            }
+
+            double scale = pow(2.0, 30);
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1, scale);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<double> gpu_result;
+            encoder.decode(gpu_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                            static_cast<double>(1e-1)),
+                      true);
+
+            // Leveled Test
+            operators.mod_drop_inplace(C1);
+            heongpu::Plaintext P4(context);
+            decryptor.decrypt(P4, C1);
+
+            std::vector<double> gpu_result2;
+            encoder.decode(gpu_result2, P4);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result,
+                                            gpu_result2,
+                                            static_cast<double>(1e-1)),
+                      true);
         }
-
-        int shift_count = 12;
-        std::vector<double> message_rotation_result(row_size, 0);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-        }
-
-        double scale = pow(2.0, 30);
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1, scale);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<double> gpu_result;
-        encoder.decode(gpu_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
-                                        static_cast<double>(1e-1)),
-                  true);
-
-        // Leveled Test
-        operators.mod_drop_inplace(C1);
-        heongpu::Plaintext P4(context);
-        decryptor.decrypt(P4, C1);
-
-        std::vector<double> gpu_result2;
-        encoder.decode(gpu_result2, P4);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
-                                        static_cast<double>(1e-1)),
-                  true);
     }
 
     {
@@ -132,66 +139,73 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {12};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(0.0, 1.0);
-        const int row_size = poly_modulus_degree / 2;
-        std::vector<double> message1(row_size, 0);
-        for (int i = 0; i < row_size; i++)
+        std::vector<int> shift_key_index = {-5, -2, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+            const int row_size = poly_modulus_degree / 2;
+            std::vector<double> message1(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            std::vector<double> message_rotation_result(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+            }
+
+            double scale = pow(2.0, 30);
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1, scale);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<double> gpu_result;
+            encoder.decode(gpu_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                            static_cast<double>(1e-1)),
+                      true);
+
+            // Leveled Test
+            operators.mod_drop_inplace(C1);
+            heongpu::Plaintext P4(context);
+            decryptor.decrypt(P4, C1);
+
+            std::vector<double> gpu_result2;
+            encoder.decode(gpu_result2, P4);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result,
+                                            gpu_result2,
+                                            static_cast<double>(1e-1)),
+                      true);
         }
-
-        int shift_count = 12;
-        std::vector<double> message_rotation_result(row_size, 0);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-        }
-
-        double scale = pow(2.0, 30);
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1, scale);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<double> gpu_result;
-        encoder.decode(gpu_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
-                                        static_cast<double>(1e-1)),
-                  true);
-
-        // Leveled Test
-        operators.mod_drop_inplace(C1);
-        heongpu::Plaintext P4(context);
-        decryptor.decrypt(P4, C1);
-
-        std::vector<double> gpu_result2;
-        encoder.decode(gpu_result2, P4);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
-                                        static_cast<double>(1e-1)),
-                  true);
     }
 
     {
@@ -212,66 +226,73 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {12};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(0.0, 1.0);
-        const int row_size = poly_modulus_degree / 2;
-        std::vector<double> message1(row_size, 0);
-        for (int i = 0; i < row_size; i++)
+        std::vector<int> shift_key_index = {-5, -2, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+            const int row_size = poly_modulus_degree / 2;
+            std::vector<double> message1(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            std::vector<double> message_rotation_result(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+            }
+
+            double scale = pow(2.0, 30);
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1, scale);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<double> gpu_result;
+            encoder.decode(gpu_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                            static_cast<double>(1e-1)),
+                      true);
+
+            // Leveled Test
+            operators.mod_drop_inplace(C1);
+            heongpu::Plaintext P4(context);
+            decryptor.decrypt(P4, C1);
+
+            std::vector<double> gpu_result2;
+            encoder.decode(gpu_result2, P4);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result,
+                                            gpu_result2,
+                                            static_cast<double>(1e-1)),
+                      true);
         }
-
-        int shift_count = 12;
-        std::vector<double> message_rotation_result(row_size, 0);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-        }
-
-        double scale = pow(2.0, 35);
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1, scale);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<double> gpu_result;
-        encoder.decode(gpu_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
-                                        static_cast<double>(1e-1)),
-                  true);
-
-        // Leveled Test
-        operators.mod_drop_inplace(C1);
-        heongpu::Plaintext P4(context);
-        decryptor.decrypt(P4, C1);
-
-        std::vector<double> gpu_result2;
-        encoder.decode(gpu_result2, P4);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
-                                        static_cast<double>(1e-1)),
-                  true);
     }
 
     {
@@ -293,66 +314,73 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {12};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(0.0, 1.0);
-        const int row_size = poly_modulus_degree / 2;
-        std::vector<double> message1(row_size, 0);
-        for (int i = 0; i < row_size; i++)
+        std::vector<int> shift_key_index = {-5, -2, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+            const int row_size = poly_modulus_degree / 2;
+            std::vector<double> message1(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            std::vector<double> message_rotation_result(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+            }
+
+            double scale = pow(2.0, 30);
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1, scale);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<double> gpu_result;
+            encoder.decode(gpu_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                            static_cast<double>(1e-1)),
+                      true);
+
+            // Leveled Test
+            operators.mod_drop_inplace(C1);
+            heongpu::Plaintext P4(context);
+            decryptor.decrypt(P4, C1);
+
+            std::vector<double> gpu_result2;
+            encoder.decode(gpu_result2, P4);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result,
+                                            gpu_result2,
+                                            static_cast<double>(1e-1)),
+                      true);
         }
-
-        int shift_count = 12;
-        std::vector<double> message_rotation_result(row_size, 0);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-        }
-
-        double scale = pow(2.0, 40);
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1, scale);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<double> gpu_result;
-        encoder.decode(gpu_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
-                                        static_cast<double>(1e-1)),
-                  true);
-
-        // Leveled Test
-        operators.mod_drop_inplace(C1);
-        heongpu::Plaintext P4(context);
-        decryptor.decrypt(P4, C1);
-
-        std::vector<double> gpu_result2;
-        encoder.decode(gpu_result2, P4);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
-                                        static_cast<double>(1e-1)),
-                  true);
     }
 
     {
@@ -386,66 +414,73 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
         heongpu::Publickey public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        std::vector<int> shift_key = {12};
-        heongpu::Galoiskey galois_key(context, shift_key);
-        keygen.generate_galois_key(galois_key, secret_key);
-
         heongpu::HEEncoder encoder(context);
         heongpu::HEEncryptor encryptor(context, public_key);
         heongpu::HEDecryptor decryptor(context, secret_key);
         heongpu::HEArithmeticOperator operators(context, encoder);
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(0.0, 1.0);
-        const int row_size = poly_modulus_degree / 2;
-        std::vector<double> message1(row_size, 0);
-        for (int i = 0; i < row_size; i++)
+        std::vector<int> shift_key_index = {-5, -2, 31};
+        heongpu::Galoiskey galois_key(context, shift_key_index);
+        keygen.generate_galois_key(galois_key, secret_key);
+
+        for (size_t j = 0; j < shift_key_index.size(); j++)
         {
-            message1[i] = dis(gen);
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+            const int row_size = poly_modulus_degree / 2;
+            std::vector<double> message1(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                message1[i] = dis(gen);
+            }
+
+            int shift_count = shift_key_index[j];
+            std::vector<double> message_rotation_result(row_size, 0);
+            for (int i = 0; i < row_size; i++)
+            {
+                int index = ((i + shift_count) < 0)
+                                ? ((i + shift_count) + row_size)
+                                : ((i + shift_count) % row_size);
+                message_rotation_result[i] = message1[index];
+            }
+
+            double scale = pow(2.0, 30);
+            heongpu::Plaintext P1(context);
+            encoder.encode(P1, message1, scale);
+
+            heongpu::Ciphertext C1(context);
+            encryptor.encrypt(C1, P1);
+
+            operators.rotate_rows(C1, C1, galois_key, shift_count);
+
+            heongpu::Plaintext P3(context);
+            decryptor.decrypt(P3, C1);
+
+            std::vector<double> gpu_result;
+            encoder.decode(gpu_result, P3);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
+                                            static_cast<double>(1e-1)),
+                      true);
+
+            // Leveled Test
+            operators.mod_drop_inplace(C1);
+            heongpu::Plaintext P4(context);
+            decryptor.decrypt(P4, C1);
+
+            std::vector<double> gpu_result2;
+            encoder.decode(gpu_result2, P4);
+
+            cudaDeviceSynchronize();
+
+            EXPECT_EQ(fix_point_array_check(message_rotation_result,
+                                            gpu_result2,
+                                            static_cast<double>(1e-1)),
+                      true);
         }
-
-        int shift_count = 12;
-        std::vector<double> message_rotation_result(row_size, 0);
-        for (int i = 0; i < row_size; i++)
-        {
-            message_rotation_result[i] = message1[(i + shift_count) % row_size];
-        }
-
-        double scale = pow(2.0, 45);
-        heongpu::Plaintext P1(context);
-        encoder.encode(P1, message1, scale);
-
-        heongpu::Ciphertext C1(context);
-        encryptor.encrypt(C1, P1);
-
-        operators.rotate_rows(C1, C1, galois_key, shift_count);
-
-        heongpu::Plaintext P3(context);
-        decryptor.decrypt(P3, C1);
-
-        std::vector<double> gpu_result;
-        encoder.decode(gpu_result, P3);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result,
-                                        static_cast<double>(1e-1)),
-                  true);
-
-        // Leveled Test
-        operators.mod_drop_inplace(C1);
-        heongpu::Plaintext P4(context);
-        decryptor.decrypt(P4, C1);
-
-        std::vector<double> gpu_result2;
-        encoder.decode(gpu_result2, P4);
-
-        cudaDeviceSynchronize();
-
-        EXPECT_EQ(fix_point_array_check(message_rotation_result, gpu_result2,
-                                        static_cast<double>(1e-1)),
-                  true);
     }
 }
 
