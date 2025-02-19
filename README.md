@@ -1,6 +1,6 @@
 # 🚀 **HEonGPU** - A GPU Based Homomorphic Encryption Library
 
-### 🚨 **New Application: Private Information Retrieval[PIRonGPU](https://github.com/Alisah-Ozcan/PIRonGPU)**
+### 🚨 **New Application: Private Information Retrieval on GPU ([PIRonGPU](https://github.com/Alisah-Ozcan/PIRonGPU))**
 
 [PIRonGPU](https://github.com/Alisah-Ozcan/PIRonGPU) is a high-performance library that enhances secure data retrieval through Private Information Retrieval (PIR) on GPUs. By modifying the  [SealPIR](https://github.com/microsoft/SealPIR) protocol with **HEonGPU**, it achieves rapid, confidential querying, offering an efficient and scalable solution for privacy-sensitive applications.
 
