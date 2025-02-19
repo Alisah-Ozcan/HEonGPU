@@ -1,5 +1,9 @@
 # 🚀 **HEonGPU** - A GPU Based Homomorphic Encryption Library
 
+### 🚨 **New Application: Private Information Retrieval[PIRonGPU](https://github.com/Alisah-Ozcan/PIRonGPU)**
+
+[PIRonGPU](https://github.com/Alisah-Ozcan/PIRonGPU) is a high-performance library that enhances secure data retrieval through Private Information Retrieval (PIR) on GPUs. By modifying the  [SealPIR](https://github.com/microsoft/SealPIR) protocol with **HEonGPU**, it achieves rapid, confidential querying, offering an efficient and scalable solution for privacy-sensitive applications.
+
 ### 🚨 **New Feature: Logic Operation and [3 More CKKS Bootstrapping Types](example/bootstrapping/README.md)**
 
 HEonGPU now provides comprehensive support for logic operations across both the `BFV` and `CKKS` encryption schemes. In addition, the latest update introduces three new `CKKS` Bootstrapping types; two of which leverage `Bit` Bootstrapping and `Gate` Bootstrapping techniques, while the third employs `Slim` Bootstrapping, a method that is significantly more efficient than `Regular` Bootstrapping.  These enhancements not only broaden HEonGPU’s functionality but also significantly improve its performance in managing noise and enabling efficient, secure computations on GPU platforms.
