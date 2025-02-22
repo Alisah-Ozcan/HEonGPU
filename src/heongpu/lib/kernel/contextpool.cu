@@ -547,7 +547,7 @@ namespace heongpu
 
             for (int j = 0; j < n_; j++) // take bit reverse order
             {
-                forward_table.push_back(table[bitreverse(j, lg)]);
+                forward_table.push_back(table[gpuntt::bitreverse(j, lg)]);
             }
         }
 
@@ -573,7 +573,7 @@ namespace heongpu
 
             for (int j = 0; j < n_; j++) // take bit reverse order
             {
-                forward_table.push_back(table[bitreverse(j, lg)]);
+                forward_table.push_back(table[gpuntt::bitreverse(j, lg)]);
             }
         }
 

@@ -72,16 +72,16 @@ namespace heongpu
         Data64* ct0_temp = temp_memory.data();
         Data64* ct1_temp = temp_memory.data() + (Q_size_ << n_power);
 
-        ntt_rns_configuration<Data64> cfg_ntt = {
+        gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
-            .ntt_type = FORWARD,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .ntt_type = gpuntt::FORWARD,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
         if (!ciphertext.in_ntt_domain_)
         {
-            GPU_NTT(ct1, ct1_temp, ntt_table_->data(), modulus_->data(),
-                    cfg_ntt, Q_size_, Q_size_);
+            gpuntt::GPU_NTT(ct1, ct1_temp, ntt_table_->data(), modulus_->data(),
+                            cfg_ntt, Q_size_, Q_size_);
 
             sk_multiplication<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
                 ct1_temp, secret_key_.data(), ct1_temp, modulus_->data(),
@@ -96,10 +96,10 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration<Data64> cfg_intt = {
+        gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
-            .ntt_type = INVERSE,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .ntt_type = gpuntt::INVERSE,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .mod_inverse = n_inverse_->data(),
             .stream = stream};
@@ -107,18 +107,20 @@ namespace heongpu
         if (ciphertext.in_ntt_domain_)
         {
             // TODO: merge these NTTs
-            GPU_NTT(ct0, ct0_temp, intt_table_->data(), modulus_->data(),
-                    cfg_intt, Q_size_, Q_size_);
+            gpuntt::GPU_NTT(ct0, ct0_temp, intt_table_->data(),
+                            modulus_->data(), cfg_intt, Q_size_, Q_size_);
 
-            GPU_NTT_Inplace(ct1_temp, intt_table_->data(), modulus_->data(),
-                            cfg_intt, Q_size_, Q_size_);
+            gpuntt::GPU_NTT_Inplace(ct1_temp, intt_table_->data(),
+                                    modulus_->data(), cfg_intt, Q_size_,
+                                    Q_size_);
 
             ct0 = ct0_temp;
         }
         else
         {
-            GPU_NTT_Inplace(ct1_temp, intt_table_->data(), modulus_->data(),
-                            cfg_intt, Q_size_, Q_size_);
+            gpuntt::GPU_NTT_Inplace(ct1_temp, intt_table_->data(),
+                                    modulus_->data(), cfg_intt, Q_size_,
+                                    Q_size_);
         }
 
         decryption_kernel<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
@@ -139,30 +141,30 @@ namespace heongpu
         Data64* ct1 = ciphertext.data() + (Q_size_ << n_power);
         Data64* ct2 = ciphertext.data() + (Q_size_ << (n_power + 1));
 
-        ntt_rns_configuration<Data64> cfg_ntt = {
+        gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
-            .ntt_type = FORWARD,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .ntt_type = gpuntt::FORWARD,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
 
-        GPU_NTT_Inplace(ct1, ntt_table_->data(), modulus_->data(), cfg_ntt,
-                        2 * Q_size_, Q_size_);
+        gpuntt::GPU_NTT_Inplace(ct1, ntt_table_->data(), modulus_->data(),
+                                cfg_ntt, 2 * Q_size_, Q_size_);
 
         sk_multiplicationx3<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
             ct1, secret_key_.data(), modulus_->data(), n_power, Q_size_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        ntt_rns_configuration<Data64> cfg_intt = {
+        gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
-            .ntt_type = INVERSE,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .ntt_type = gpuntt::INVERSE,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .mod_inverse = n_inverse_->data(),
             .stream = stream};
 
-        GPU_NTT_Inplace(ct1, intt_table_->data(), modulus_->data(), cfg_intt,
-                        2 * Q_size_, Q_size_);
+        gpuntt::GPU_NTT_Inplace(ct1, intt_table_->data(), modulus_->data(),
+                                cfg_intt, 2 * Q_size_, Q_size_);
 
         decryption_kernelx3<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             ct0, ct1, ct2, plaintext.data(), modulus_->data(), plain_modulus_,
@@ -184,16 +186,16 @@ namespace heongpu
                 Data64* ct0 = ciphertext.data();
                 Data64* ct1 = ciphertext.data() + (Q_size_ << n_power);
 
-                ntt_rns_configuration<Data64> cfg_ntt = {
+                gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
-                    .ntt_type = FORWARD,
-                    .reduction_poly = ReductionPolynomial::X_N_plus,
+                    .ntt_type = gpuntt::FORWARD,
+                    .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
                     .stream = options.stream_};
 
                 DeviceVector<Data64> temp_memory(n * Q_size_, options.stream_);
-                GPU_NTT(ct1, temp_memory.data(), ntt_table_->data(),
-                        modulus_->data(), cfg_ntt, Q_size_, Q_size_);
+                gpuntt::GPU_NTT(ct1, temp_memory.data(), ntt_table_->data(),
+                                modulus_->data(), cfg_ntt, Q_size_, Q_size_);
 
                 sk_multiplication<<<dim3((n >> 8), Q_size_, 1), 256, 0,
                                     options.stream_>>>(
@@ -201,16 +203,17 @@ namespace heongpu
                     modulus_->data(), n_power, Q_size_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                ntt_rns_configuration<Data64> cfg_intt = {
+                gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
                     .n_power = n_power,
-                    .ntt_type = INVERSE,
-                    .reduction_poly = ReductionPolynomial::X_N_plus,
+                    .ntt_type = gpuntt::INVERSE,
+                    .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
                     .mod_inverse = n_inverse_->data(),
                     .stream = options.stream_};
 
-                GPU_NTT_Inplace(temp_memory.data(), intt_table_->data(),
-                                modulus_->data(), cfg_intt, Q_size_, Q_size_);
+                gpuntt::GPU_NTT_Inplace(temp_memory.data(), intt_table_->data(),
+                                        modulus_->data(), cfg_intt, Q_size_,
+                                        Q_size_);
 
                 coeff_multadd<<<dim3((n >> 8), Q_size_, 1), 256, 0,
                                 options.stream_>>>(
@@ -273,16 +276,16 @@ namespace heongpu
         DeviceVector<Data64> temp_memory(n * Q_size_, stream);
         Data64* ct1_temp = temp_memory.data();
 
-        ntt_rns_configuration<Data64> cfg_ntt = {
+        gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
-            .ntt_type = FORWARD,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .ntt_type = gpuntt::FORWARD,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
         if (!ciphertext.in_ntt_domain_)
         {
-            GPU_NTT(ct1, ct1_temp, ntt_table_->data(), modulus_->data(),
-                    cfg_ntt, Q_size_, Q_size_);
+            gpuntt::GPU_NTT(ct1, ct1_temp, ntt_table_->data(), modulus_->data(),
+                            cfg_ntt, Q_size_, Q_size_);
 
             sk_multiplication<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
                 ct1_temp, sk.data(), ct1_temp, modulus_->data(), n_power,
@@ -296,19 +299,19 @@ namespace heongpu
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
-        ntt_rns_configuration<Data64> cfg_intt = {
+        gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
-            .ntt_type = INVERSE,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .ntt_type = gpuntt::INVERSE,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .mod_inverse = n_inverse_->data(),
             .stream = stream};
 
         DeviceVector<Data64> output_memory((2 * n * Q_size_), stream);
 
-        GPU_NTT(ct1_temp, output_memory.data() + (Q_size_ * n),
-                intt_table_->data(), modulus_->data(), cfg_intt, Q_size_,
-                Q_size_);
+        gpuntt::GPU_NTT(ct1_temp, output_memory.data() + (Q_size_ * n),
+                        intt_table_->data(), modulus_->data(), cfg_intt,
+                        Q_size_, Q_size_);
 
         DeviceVector<Data64> error_poly(Q_size_ * n, stream);
         modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
@@ -360,15 +363,16 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
         offset_++;
 
-        ntt_rns_configuration<Data64> cfg_ntt = {
+        gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
-            .ntt_type = FORWARD,
-            .reduction_poly = ReductionPolynomial::X_N_plus,
+            .ntt_type = gpuntt::FORWARD,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
 
-        GPU_NTT_Inplace(error_poly.data(), ntt_table_->data(), modulus_->data(),
-                        cfg_ntt, current_decomp_count, current_decomp_count);
+        gpuntt::GPU_NTT_Inplace(error_poly.data(), ntt_table_->data(),
+                                modulus_->data(), cfg_ntt, current_decomp_count,
+                                current_decomp_count);
 
         // TODO: Optimize it!
         addition<<<dim3((n >> 8), current_decomp_count, 1), 256, 0, stream>>>(

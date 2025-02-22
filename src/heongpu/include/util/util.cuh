@@ -19,27 +19,30 @@
 #include <set>
 #include "storagemanager.cuh"
 
-class CudaException_ : public std::exception
+namespace heongpu
 {
-  public:
-    CudaException_(const std::string& file, int line, cudaError_t error)
-        : file_(file), line_(line), error_(error)
-    {
-    }
 
-    const char* what() const noexcept override
+    class CudaException : public std::exception
     {
-        return m_error_string.c_str();
-    }
+      public:
+        CudaException(const std::string& file, int line, cudaError_t error)
+            : file_(file), line_(line), error_(error)
+        {
+        }
 
-  private:
-    std::string file_;
-    int line_;
-    cudaError_t error_;
-    std::string m_error_string = "CUDA Error in " + file_ + " at line " +
-                                 std::to_string(line_) + ": " +
-                                 cudaGetErrorString(error_);
-};
+        const char* what() const noexcept override
+        {
+            return m_error_string.c_str();
+        }
+
+      private:
+        std::string file_;
+        int line_;
+        cudaError_t error_;
+        std::string m_error_string = "CUDA Error in " + file_ + " at line " +
+                                     std::to_string(line_) + ": " +
+                                     cudaGetErrorString(error_);
+    };
 
 #define HEONGPU_CUDA_CHECK(err)                                                \
     do                                                                         \
@@ -47,13 +50,9 @@ class CudaException_ : public std::exception
         cudaError_t error = err;                                               \
         if (error != cudaSuccess)                                              \
         {                                                                      \
-            throw CudaException_(__FILE__, __LINE__, error);                   \
+            throw CudaException(__FILE__, __LINE__, error);                    \
         }                                                                      \
     } while (0)
-
-namespace heongpu
-{
-    //////////////////////////////////////////////////////////////////////////////////
 
     // Describes the type of encryption scheme to be used.
     enum class scheme_type : std::uint8_t
