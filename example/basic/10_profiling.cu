@@ -67,11 +67,14 @@ int main(int argc, char* argv[])
     }
     double scale = pow(2.0, 36);
     // Print parameters for verification
-    for (int i = 0; i < num_contexts; i++)
-    {
-        std::cout << "Context " << i << " initialized with parameters:" << std::endl;
-        contexts[i].print_parameters();
-    }
+    // for (int i = 0; i < num_contexts; i++)
+    // {
+    //     std::cout << "Context " << i << " initialized with parameters:" << std::endl;
+    //     contexts[i].print_parameters();
+    // }
+
+    std::cout << "\t\t multiply \t rescale \t modswitch" << std::endl;
+    
     std::vector<int> levels = {1, 5, 10, 15};
     for (int level : levels)
     {
@@ -79,6 +82,7 @@ int main(int argc, char* argv[])
         std::vector<double> multiplication_times;
         std::vector<double> rescale_times;
         std::vector<double> modswitch_times;
+
         for (int i = 0; i < num_contexts; i++)
         {
             // Encode and encrypt the number 4
@@ -91,7 +95,7 @@ int main(int argc, char* argv[])
 
             // Modulus switching to the required level
             
-            while (15-C1.depth() > level){
+            while (14-C1.depth() > level){
                 //std::cout << "Depth is " << C1.depth() <<std::endl;
                 operators[i].mod_drop_inplace(C1);
             }
@@ -100,12 +104,11 @@ int main(int argc, char* argv[])
             auto start = std::chrono::high_resolution_clock::now();
             operators[i].multiply_inplace(C1, C1);
             auto end = std::chrono::high_resolution_clock::now();
-            //operators[i].rescale_inplace(C1);
             // Print timing result
             std::chrono::duration<double> duration = end - start;
             double duration1 = std::chrono::duration<double>(end - start).count();
             multiplication_times.push_back(duration1);
-
+            operators[i].relinearize_inplace(C1, relin_keys[i]);
             start = std::chrono::high_resolution_clock::now();
             operators[i].rescale_inplace(C1);
             end = std::chrono::high_resolution_clock::now();
@@ -120,11 +123,15 @@ int main(int argc, char* argv[])
         double mean_multiplication_time = std::accumulate(multiplication_times.begin(), multiplication_times.end(), 0.0) / num_contexts;
         double mean_rescale_time = std::accumulate(rescale_times.begin(), rescale_times.end(), 0.0) / num_contexts;
         double mean_modswitch_time = std::accumulate(modswitch_times.begin(), modswitch_times.end(), 0.0) / num_contexts;
+        
+        std::cout << "Level " << level << " \t " << mean_multiplication_time <<"\t" << mean_rescale_time<< "\t" << mean_modswitch_time << std::endl;
 
-        std::cout << "Mean multiplication time at level " << level << ": " << mean_multiplication_time << " seconds" << std::endl;
-        std::cout << "Mean rescale time at level " << level << ": " << mean_rescale_time << " seconds" << std::endl;
-        std::cout << "Mean modswitch time at level " << level << ": " << mean_modswitch_time << " seconds" << std::endl;
+        //std::cout << "Mean multiplication time at level " << level << ": " << mean_multiplication_time << " seconds" << std::endl;
+        //std::cout << "Mean rescale time at level " << level << ": " << mean_rescale_time << " seconds" << std::endl;
+        //std::cout << "Mean modswitch time at level " << level << ": " << mean_modswitch_time << " seconds" << std::endl;
     }
+
+    
 
     return 0;
 }
