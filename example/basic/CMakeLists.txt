@@ -15,6 +15,7 @@ set(EXECUTABLES
     7_multi_stream_usage_way2 7_multi_stream_usage_way2.cu
     8_basic_bfv_logic 8_basic_bfv_logic.cu
     9_basic_ckks_logic 9_basic_ckks_logic.cu
+    10_profiling 10_profiling.cu
 )
 
 function(add_example exe source)
