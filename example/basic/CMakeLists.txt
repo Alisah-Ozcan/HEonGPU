@@ -16,6 +16,7 @@ set(EXECUTABLES
     8_basic_bfv_logic 8_basic_bfv_logic.cu
     9_basic_ckks_logic 9_basic_ckks_logic.cu
     10_profiling 10_profiling.cu
+    11_bootstrap_prof 11_bootstrap_prof.cu
 )
 
 function(add_example exe source)

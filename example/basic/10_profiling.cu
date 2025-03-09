@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     decryptors.reserve(num_contexts);
     operators.reserve(num_contexts);
 
-    size_t poly_modulus_degree = 32768;
+    size_t poly_modulus_degree = 4096;
 
     // Initialize multiple contexts and associated objects
     for (int i = 0; i < num_contexts; i++)
@@ -39,7 +39,10 @@ int main(int argc, char* argv[])
             heongpu::sec_level_type::none);
 
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({60, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36}, {60, 60});
+        context.set_coeff_modulus({60, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
+                                    50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
+                                    50, 50, 50, 50, 50, 50, 50, 50, 50},
+                                    {60, 60, 60});
         context.generate();
 
         // Move context into vector
@@ -47,7 +50,7 @@ int main(int argc, char* argv[])
 
         // Generate keys
         heongpu::HEKeyGenerator keygen(contexts[i]);
-        heongpu::Secretkey secret_key(contexts[i]);
+        heongpu::Secretkey secret_key(contexts[i], 16);
         keygen.generate_secret_key(secret_key);
         secret_keys.push_back(std::move(secret_key));
 
@@ -65,7 +68,7 @@ int main(int argc, char* argv[])
         decryptors.emplace_back(contexts[i], secret_keys[i]);
         operators.emplace_back(contexts[i], encoders[i]);
     }
-    double scale = pow(2.0, 36);
+    double scale = pow(2.0, 50);
     // Print parameters for verification
     // for (int i = 0; i < num_contexts; i++)
     // {
@@ -82,7 +85,6 @@ int main(int argc, char* argv[])
         std::vector<double> multiplication_times;
         std::vector<double> rescale_times;
         std::vector<double> modswitch_times;
-
         for (int i = 0; i < num_contexts; i++)
         {
             // Encode and encrypt the number 4
@@ -95,7 +97,7 @@ int main(int argc, char* argv[])
 
             // Modulus switching to the required level
             
-            while (14-C1.depth() > level){
+            while (31-1-1-C1.depth() > level){
                 //std::cout << "Depth is " << C1.depth() <<std::endl;
                 operators[i].mod_drop_inplace(C1);
             }
@@ -119,6 +121,7 @@ int main(int argc, char* argv[])
             end = std::chrono::high_resolution_clock::now();
             modswitch_times.push_back(std::chrono::duration<double>(end - start).count());
             //std::cout << "Context " << i << " Level " << level << " multiplication time: " << duration.count() << " seconds" << std::endl;
+            
         }
         double mean_multiplication_time = std::accumulate(multiplication_times.begin(), multiplication_times.end(), 0.0) / num_contexts;
         double mean_rescale_time = std::accumulate(rescale_times.begin(), rescale_times.end(), 0.0) / num_contexts;
