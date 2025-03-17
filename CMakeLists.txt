@@ -56,6 +56,10 @@ install(
 
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
 
+set(RNGonGPU_USE_INTERNAL_GPUNTT
+    OFF CACHE BOOL
+    "Force using global GPU-NTT (thirdparty/GPU-NTT) instead of RNGonGPU's internal" FORCE)
+
 add_subdirectory(thirdparty)
 add_subdirectory(src)
 
