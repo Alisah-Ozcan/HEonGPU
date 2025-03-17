@@ -43,6 +43,7 @@ target_include_directories(
 target_link_libraries(heongpu PUBLIC 
     ntt
     fft
+    rngongpu
     gmp
     rmm
     CUDA::curand
