@@ -314,12 +314,8 @@ namespace heongpu
                         Q_size_, Q_size_);
 
         DeviceVector<Data64> error_poly(Q_size_ * n, stream);
-        modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                           256, 0, stream>>>(
-            error_poly.data(), modulus_->data(), n_power, Q_size_, seed_,
-            offset_);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
-        offset_++;
+
+        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly.data(), modulus_->data(), n_power, Q_size_, 1, stream);
 
         // TODO: Optimize it!
         addition<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
@@ -356,12 +352,8 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         DeviceVector<Data64> error_poly(current_decomp_count * n, stream);
-        modular_gaussian_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                           256, 0, stream>>>(
-            error_poly.data(), modulus_->data(), n_power, current_decomp_count,
-            seed_, offset_);
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
-        offset_++;
+
+        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly.data(), modulus_->data(), n_power, current_decomp_count, 1, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
