@@ -23,10 +23,7 @@ int main(int argc, char* argv[])
     context.generate();
     context.print_parameters();
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    int common_seed = gen();
-    std::cout << "Common seed: " << common_seed << std::endl;
+    heongpu::RNGSeed common_seed; // automatically generate itself
 
     std::vector<int> shift_value = {1};
 
@@ -170,7 +167,7 @@ int main(int argc, char* argv[])
     participant_relin_keys_stage2.push_back(relin_key_bob_stage2);
     participant_relin_keys_stage2.push_back(relin_key_charlie_stage2);
 
-    heongpu::Relinkey common_relin_key(context, common_seed);
+    heongpu::Relinkey common_relin_key(context);
     keygen_server.generate_multi_party_relin_key(participant_relin_keys_stage2,
                                                  common_relin_key_stage1,
                                                  common_relin_key);

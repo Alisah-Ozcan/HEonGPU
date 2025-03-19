@@ -245,17 +245,17 @@ namespace heongpu
         friend class HEKeyGenerator;
 
       public:
-        __host__ MultipartyPublickey(Parameters& context, const int seed);
+        __host__ MultipartyPublickey(Parameters& context, const RNGSeed seed);
 
         /**
          * @brief Retrieves the seed value used for key generation.
          *
          * @return int The seed value.
          */
-        inline int seed() const noexcept { return seed_; }
+        inline RNGSeed seed() const noexcept { return seed_; }
 
       private:
-        int seed_;
+        RNGSeed seed_;
     };
 
 } // namespace heongpu

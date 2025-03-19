@@ -9,7 +9,6 @@
 #include "common.cuh"
 #include "cuda_runtime.h"
 #include "ntt.cuh"
-#include "random.cuh"
 #include "switchkey.cuh"
 #include "keygeneration.cuh"
 #include "keyswitch.cuh"
@@ -591,6 +590,8 @@ namespace heongpu
         scheme_type scheme;
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
+
+        RNGSeed new_seed_;
 
         int n;
 

@@ -1062,7 +1062,7 @@ namespace heongpu
     }
 
     void Parameters::generate()
-    {   
+    {
         // Memory pool initialization
         MemoryPool::instance().initialize();
         MemoryPool::instance().use_memory_pool(true);
@@ -1071,12 +1071,14 @@ namespace heongpu
         // DRNG initialization
         std::vector<unsigned char> generated_entropy(16); // for 128 bit
         if (1 != RAND_bytes(generated_entropy.data(), generated_entropy.size()))
-            throw std::runtime_error("RAND_bytes failed");        
+            throw std::runtime_error("RAND_bytes failed");
         std::vector<unsigned char> generated_nonce(8); // for 128 bit
         if (1 != RAND_bytes(generated_entropy.data(), generated_entropy.size()))
             throw std::runtime_error("RAND_bytes failed");
         std::vector<unsigned char> personalization_string = {};
-        RandomNumberGenerator::instance().initialize(generated_entropy, generated_nonce, personalization_string, rngongpu::SecurityLevel::AES128, false);
+        RandomNumberGenerator::instance().initialize(
+            generated_entropy, generated_nonce, personalization_string,
+            rngongpu::SecurityLevel::AES128, false);
         cudaDeviceSynchronize();
 
         // For kernel stack size

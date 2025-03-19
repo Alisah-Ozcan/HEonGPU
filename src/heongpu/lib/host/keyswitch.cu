@@ -345,7 +345,7 @@ namespace heongpu
     ///////////////////////////////////////////////////////////////////////////
 
     __host__ MultipartyRelinkey::MultipartyRelinkey(Parameters& context,
-                                                    const int seed,
+                                                    const RNGSeed seed,
                                                     bool store_in_gpu)
         : Relinkey(context, store_in_gpu), seed_(seed)
     {
@@ -665,24 +665,22 @@ namespace heongpu
     ////////////////////////////////////////
 
     __host__ MultipartyGaloiskey::MultipartyGaloiskey(Parameters& context,
-                                                      const int seed,
+                                                      const RNGSeed seed,
                                                       bool store_in_gpu)
         : Galoiskey(context, store_in_gpu), seed_(seed)
     {
     }
 
-    __host__
-    MultipartyGaloiskey::MultipartyGaloiskey(Parameters& context,
-                                             std::vector<int>& shift_vec,
-                                             const int seed, bool store_in_gpu)
+    __host__ MultipartyGaloiskey::MultipartyGaloiskey(
+        Parameters& context, std::vector<int>& shift_vec, const RNGSeed seed,
+        bool store_in_gpu)
         : Galoiskey(context, shift_vec, store_in_gpu), seed_(seed)
     {
     }
 
-    __host__
-    MultipartyGaloiskey::MultipartyGaloiskey(Parameters& context,
-                                             std::vector<uint32_t>& galois_elts,
-                                             const int seed, bool store_in_gpu)
+    __host__ MultipartyGaloiskey::MultipartyGaloiskey(
+        Parameters& context, std::vector<uint32_t>& galois_elts,
+        const RNGSeed seed, bool store_in_gpu)
         : Galoiskey(context, galois_elts, store_in_gpu), seed_(seed)
     {
     }

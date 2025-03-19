@@ -7,7 +7,7 @@
 #define CONTEXT_H
 
 #include "memorypool.cuh"
-#include "new_random.cuh"
+#include "random.cuh"
 #include "devicevector.cuh"
 #include "hostvector.cuh"
 #include "common.cuh"

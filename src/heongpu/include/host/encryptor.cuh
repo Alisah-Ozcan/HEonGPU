@@ -18,7 +18,6 @@
 #include "encryption.cuh"
 #include "ntt.cuh"
 #include "context.cuh"
-#include "random.cuh"
 
 #include "publickey.cuh"
 #include "ciphertext.cuh"

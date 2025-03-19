@@ -315,7 +315,10 @@ namespace heongpu
 
         DeviceVector<Data64> error_poly(Q_size_ * n, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly.data(), modulus_->data(), n_power, Q_size_, 1, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly.data(), modulus_->data(), n_power,
+                Q_size_, 1, stream);
 
         // TODO: Optimize it!
         addition<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
@@ -353,7 +356,10 @@ namespace heongpu
 
         DeviceVector<Data64> error_poly(current_decomp_count * n, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly.data(), modulus_->data(), n_power, current_decomp_count, 1, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly.data(), modulus_->data(), n_power,
+                current_decomp_count, 1, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,

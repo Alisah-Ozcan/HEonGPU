@@ -429,18 +429,18 @@ namespace heongpu
         friend class HEKeyGenerator;
 
       public:
-        __host__ MultipartyRelinkey(Parameters& context, const int seed,
+        __host__ MultipartyRelinkey(Parameters& context, const RNGSeed seed,
                                     bool store_in_gpu = true);
 
         /**
          * @brief Retrieves the seed value used for key generation.
          *
-         * @return int The seed value.
+         * @return RNGSeed The seed value.
          */
-        inline int seed() const noexcept { return seed_; }
+        inline RNGSeed seed() const noexcept { return seed_; }
 
       private:
-        int seed_;
+        RNGSeed seed_;
     };
 
     ///////////////////////////////////
@@ -822,26 +822,28 @@ namespace heongpu
         friend class HEKeyGenerator;
 
       public:
-        __host__ MultipartyGaloiskey(Parameters& context, const int seed,
+        __host__ MultipartyGaloiskey(Parameters& context, const RNGSeed seed,
                                      bool store_in_gpu = true);
 
         __host__ MultipartyGaloiskey(Parameters& context,
                                      std::vector<int>& shift_vec,
-                                     const int seed, bool store_in_gpu = true);
+                                     const RNGSeed seed,
+                                     bool store_in_gpu = true);
 
         __host__ MultipartyGaloiskey(Parameters& context,
                                      std::vector<uint32_t>& galois_elts,
-                                     const int seed, bool store_in_gpu = true);
+                                     const RNGSeed seed,
+                                     bool store_in_gpu = true);
 
         /**
          * @brief Retrieves the seed value used for key generation.
          *
          * @return int The seed value.
          */
-        inline int seed() const noexcept { return seed_; }
+        inline RNGSeed seed() const noexcept { return seed_; }
 
       private:
-        int seed_;
+        RNGSeed seed_;
     };
 
     /**

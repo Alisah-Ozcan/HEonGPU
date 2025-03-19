@@ -20,18 +20,53 @@
 
 namespace heongpu
 {
+    struct RNGSeed
+    {
+        std::vector<unsigned char> key_;
+        std::vector<unsigned char> nonce_;
+        std::vector<unsigned char> personalization_string_;
+
+        RNGSeed()
+        {
+            key_ = std::vector<unsigned char>(16); // for 128 bit
+            if (1 != RAND_bytes(key_.data(), key_.size()))
+                throw std::runtime_error("RAND_bytes failed");
+            nonce_ = std::vector<unsigned char>(8); // for 128 bit
+            if (1 != RAND_bytes(nonce_.data(), nonce_.size()))
+                throw std::runtime_error("RAND_bytes failed");
+        }
+
+        RNGSeed(const std::vector<unsigned char>& key,
+                const std::vector<unsigned char>& nonce,
+                const std::vector<unsigned char>& personalization_string)
+            : key_(key), nonce_(nonce),
+              personalization_string_(personalization_string)
+        {
+            if (key_.size() < 16)
+            {
+                throw std::invalid_argument("Invalid key size!");
+            }
+        }
+    };
+
     class RandomNumberGenerator
     {
-    public:
+      public:
         static RandomNumberGenerator& instance();
 
-        void initialize(const std::vector<unsigned char>& key,
-            const std::vector<unsigned char>& nonce,
-            const std::vector<unsigned char>& personalization_string,
-            rngongpu::SecurityLevel security_level,
-            bool prediction_resistance_enabled);
+        void
+        initialize(const std::vector<unsigned char>& key,
+                   const std::vector<unsigned char>& nonce,
+                   const std::vector<unsigned char>& personalization_string,
+                   rngongpu::SecurityLevel security_level,
+                   bool prediction_resistance_enabled);
 
         ~RandomNumberGenerator();
+
+        void set(const std::vector<unsigned char>& entropy_input,
+                 const std::vector<unsigned char>& nonce,
+                 const std::vector<unsigned char>& personalization_string,
+                 cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Generates modular uniform random numbers according to given
@@ -180,7 +215,8 @@ namespace heongpu
          */
         __host__ void modular_uniform_random_number_generation(
             Data64* pointer, Modulus64* modulus, Data64 log_size, int mod_count,
-            int* mod_index, int repeat_count, cudaStream_t stream = cudaStreamDefault);
+            int* mod_index, int repeat_count,
+            cudaStream_t stream = cudaStreamDefault);
 
         /**
          * @brief Generates modular uniform random numbers according to given
@@ -284,8 +320,8 @@ namespace heongpu
          * x repeat_count
          */
         __host__ void modular_gaussian_random_number_generation(
-            Float64 std_dev, Data64* pointer, Modulus64* modulus, Data64 log_size,
-            int mod_count, int repeat_count,
+            Float64 std_dev, Data64* pointer, Modulus64* modulus,
+            Data64 log_size, int mod_count, int repeat_count,
             cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -336,8 +372,8 @@ namespace heongpu
          * x repeat_count
          */
         __host__ void modular_gaussian_random_number_generation(
-            Float64 std_dev, Data64* pointer, Modulus64* modulus, Data64 log_size,
-            int mod_count, int repeat_count,
+            Float64 std_dev, Data64* pointer, Modulus64* modulus,
+            Data64 log_size, int mod_count, int repeat_count,
             std::vector<unsigned char>& entropy_input,
             std::vector<unsigned char> additional_input,
             cudaStream_t stream = cudaStreamDefault);
@@ -390,8 +426,8 @@ namespace heongpu
          * x repeat_count
          */
         __host__ void modular_gaussian_random_number_generation(
-            Float64 std_dev, Data64* pointer, Modulus64* modulus, Data64 log_size,
-            int mod_count, int* mod_index, int repeat_count,
+            Float64 std_dev, Data64* pointer, Modulus64* modulus,
+            Data64 log_size, int mod_count, int* mod_index, int repeat_count,
             cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -450,8 +486,8 @@ namespace heongpu
          * x repeat_count
          */
         __host__ void modular_gaussian_random_number_generation(
-            Float64 std_dev, Data64* pointer, Modulus64* modulus, Data64 log_size,
-            int mod_count, int* mod_index, int repeat_count,
+            Float64 std_dev, Data64* pointer, Modulus64* modulus,
+            Data64 log_size, int mod_count, int* mod_index, int repeat_count,
             std::vector<unsigned char>& entropy_input,
             std::vector<unsigned char> additional_input,
             cudaStream_t stream = cudaStreamDefault);
@@ -664,7 +700,7 @@ namespace heongpu
             std::vector<unsigned char> additional_input,
             cudaStream_t stream = cudaStreamDefault);
 
-    private:
+      private:
         RandomNumberGenerator();
         RandomNumberGenerator(const RandomNumberGenerator&) = delete;
         RandomNumberGenerator& operator=(const RandomNumberGenerator&) = delete;

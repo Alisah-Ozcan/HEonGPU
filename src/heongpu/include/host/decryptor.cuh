@@ -11,7 +11,6 @@
 #include "decryption.cuh"
 #include "ntt.cuh"
 #include "context.cuh"
-#include "random.cuh"
 #include "addition.cuh"
 #include "switchkey.cuh"
 #include "secretkey.cuh"

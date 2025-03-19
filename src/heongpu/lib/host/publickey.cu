@@ -76,7 +76,7 @@ namespace heongpu
     }
 
     __host__ MultipartyPublickey::MultipartyPublickey(Parameters& context,
-                                                      int seed)
+                                                      RNGSeed seed)
         : Publickey(context), seed_(seed)
     {
     }

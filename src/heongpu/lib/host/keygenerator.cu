@@ -16,6 +16,8 @@ namespace heongpu
         seed_ = gen();
         offset_ = gen();
 
+        new_seed_ = RNGSeed();
+
         n = context.n;
         n_power = context.n_power;
 
@@ -129,9 +131,14 @@ namespace heongpu
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * n);
 
-        RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+        RandomNumberGenerator::instance()
+            .modular_uniform_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, 1, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, 1, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -168,20 +175,28 @@ namespace heongpu
             pk.locations_ = DeviceVector<Data64>(2 * Q_prime_size_ * n, stream);
         }
 
-        int common_seed = pk.seed();
+        RNGSeed common_seed = pk.seed();
 
         DeviceVector<Data64> errors_a(2 * Q_prime_size_ * n, stream);
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * n);
 
-        // TODO: change it with DRBG
-        modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256, 0, stream>>>(
-            a_poly, modulus_->data(), n_power, Q_prime_size_, common_seed,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(
+            common_seed.key_, common_seed.nonce_,
+            common_seed.personalization_string_, stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, 1, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+        RNGSeed gen_seed;
+        RandomNumberGenerator::instance().set(gen_seed.key_, gen_seed.nonce_,
+                                              gen_seed.personalization_string_,
+                                              stream);
+
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, 1, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -254,9 +269,15 @@ namespace heongpu
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * Q_size_ * n);
 
-        RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+        RandomNumberGenerator::instance()
+            .modular_uniform_random_number_generation(a_poly, modulus_->data(),
+                                                      n_power, Q_prime_size_,
+                                                      Q_size_, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, Q_size_, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -304,7 +325,7 @@ namespace heongpu
                 "Secretkey size is not valid || Secretkey is not generated!");
         }
 
-        int common_seed = rk.seed();
+        RNGSeed common_seed = rk.seed();
 
         DeviceVector<Data64> random_values(
             Q_prime_size_ * ((3 * Q_size_) + 1) * n, stream);
@@ -313,20 +334,35 @@ namespace heongpu
         Data64* u = e1 + (Q_prime_size_ * Q_size_ * n);
         Data64* common_a = u + (Q_prime_size_ * n);
 
-        // TODO: change it with DRBG
-        modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
-            common_a, modulus_->data(), n_power, Q_prime_size_, common_seed,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(
+            common_seed.key_, common_seed.nonce_,
+            common_seed.personalization_string_, stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                common_a, modulus_->data(), n_power, Q_prime_size_, Q_size_,
+                stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_, 2 * Q_size_, stream);
+        RNGSeed gen_seed1;
+        RandomNumberGenerator::instance().set(gen_seed1.key_, gen_seed1.nonce_,
+                                              gen_seed1.personalization_string_,
+                                              stream);
 
-        modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256, 0, stream>>>(
-            u, modulus_->data(), n_power, Q_prime_size_, seed_,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_,
+                2 * Q_size_, stream);
+
+        RandomNumberGenerator::instance().set(new_seed_.key_, new_seed_.nonce_,
+                                              new_seed_.personalization_string_,
+                                              stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                u, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+
+        RNGSeed gen_seed2;
+        RandomNumberGenerator::instance().set(gen_seed2.key_, gen_seed2.nonce_,
+                                              gen_seed2.personalization_string_,
+                                              stream);
 
         //
 
@@ -410,13 +446,22 @@ namespace heongpu
         Data64* e1 = e0 + (Q_prime_size_ * Q_size_ * n);
         Data64* u = e1 + (Q_prime_size_ * Q_size_ * n);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_, 2, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_, 2,
+                stream);
 
-        modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256, 0, stream>>>(
-            u, modulus_->data(), n_power, Q_prime_size_, seed_,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(new_seed_.key_, new_seed_.nonce_,
+                                              new_seed_.personalization_string_,
+                                              stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                u, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+
+        RNGSeed gen_seed;
+        RandomNumberGenerator::instance().set(gen_seed.key_, gen_seed.nonce_,
+                                              gen_seed.personalization_string_,
+                                              stream);
 
         //
 
@@ -484,7 +529,7 @@ namespace heongpu
                 "Secretkey size is not valid || Secretkey is not generated!");
         }
 
-        int common_seed = rk.seed();
+        RNGSeed common_seed = rk.seed();
 
         DeviceVector<Data64> random_values(Q_prime_size_ * ((3 * d_) + 1) * n,
                                            stream);
@@ -493,20 +538,34 @@ namespace heongpu
         Data64* u = e1 + (Q_prime_size_ * d_ * n);
         Data64* common_a = u + (Q_prime_size_ * n);
 
-        // TODO: change it with DRBG
-        modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), d_, 1),
-                                                          256, 0, stream>>>(
-            common_a, modulus_->data(), n_power, Q_prime_size_, common_seed,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(
+            common_seed.key_, common_seed.nonce_,
+            common_seed.personalization_string_, stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                common_a, modulus_->data(), n_power, Q_prime_size_, d_, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_, 2 * d_, stream);
+        RNGSeed gen_seed1;
+        RandomNumberGenerator::instance().set(gen_seed1.key_, gen_seed1.nonce_,
+                                              gen_seed1.personalization_string_,
+                                              stream);
 
-        modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256, 0, stream>>>(
-            u, modulus_->data(), n_power, Q_prime_size_, seed_,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_,
+                2 * d_, stream);
+
+        RandomNumberGenerator::instance().set(new_seed_.key_, new_seed_.nonce_,
+                                              new_seed_.personalization_string_,
+                                              stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                u, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+
+        RNGSeed gen_seed2;
+        RandomNumberGenerator::instance().set(gen_seed2.key_, gen_seed2.nonce_,
+                                              gen_seed2.personalization_string_,
+                                              stream);
 
         //
 
@@ -591,13 +650,22 @@ namespace heongpu
         Data64* e1 = e0 + (Q_prime_size_ * d_ * n);
         Data64* u = e1 + (Q_prime_size_ * d_ * n);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_, 2, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_, 2,
+                stream);
 
-        modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256, 0, stream>>>(
-            u, modulus_->data(), n_power, Q_prime_size_, seed_,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(new_seed_.key_, new_seed_.nonce_,
+                                              new_seed_.personalization_string_,
+                                              stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                u, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+
+        RNGSeed gen_seed;
+        RandomNumberGenerator::instance().set(gen_seed.key_, gen_seed.nonce_,
+                                              gen_seed.personalization_string_,
+                                              stream);
 
         //
 
@@ -665,7 +733,7 @@ namespace heongpu
                 "Secretkey size is not valid || Secretkey is not generated!");
         }
 
-        int common_seed = rk.seed();
+        RNGSeed common_seed = rk.seed();
 
         DeviceVector<Data64> random_values(
             Q_prime_size_ * ((3 * d_leveled_->operator[](0)) + 1) * n, stream);
@@ -674,20 +742,35 @@ namespace heongpu
         Data64* u = e1 + (Q_prime_size_ * d_leveled_->operator[](0) * n);
         Data64* common_a = u + (Q_prime_size_ * n);
 
-        // TODO: change it with DRBG
-        modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
-            common_a, modulus_->data(), n_power, Q_prime_size_, common_seed,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(
+            common_seed.key_, common_seed.nonce_,
+            common_seed.personalization_string_, stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                common_a, modulus_->data(), n_power, Q_prime_size_,
+                d_leveled_->operator[](0), stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_, 2 * d_leveled_->operator[](0), stream);
+        RNGSeed gen_seed1;
+        RandomNumberGenerator::instance().set(gen_seed1.key_, gen_seed1.nonce_,
+                                              gen_seed1.personalization_string_,
+                                              stream);
 
-        modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256, 0, stream>>>(
-            u, modulus_->data(), n_power, Q_prime_size_, seed_,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_,
+                2 * d_leveled_->operator[](0), stream);
+
+        RandomNumberGenerator::instance().set(new_seed_.key_, new_seed_.nonce_,
+                                              new_seed_.personalization_string_,
+                                              stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                u, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+
+        RNGSeed gen_seed2;
+        RandomNumberGenerator::instance().set(gen_seed2.key_, gen_seed2.nonce_,
+                                              gen_seed2.personalization_string_,
+                                              stream);
 
         //
 
@@ -775,13 +858,22 @@ namespace heongpu
         Data64* u = e1 + (Q_prime_size_ * d_leveled_->operator[](0) * n);
 
         // LOOOOKKKK !!!!!
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_, 2 * d_leveled_->operator[](0), stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, e0, modulus_->data(), n_power, Q_prime_size_,
+                2 * d_leveled_->operator[](0), stream);
 
-        modular_ternary_random_number_generation_kernel<<<dim3((n >> 8), 1, 1),
-                                                          256, 0, stream>>>(
-            u, modulus_->data(), n_power, Q_prime_size_, seed_,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(new_seed_.key_, new_seed_.nonce_,
+                                              new_seed_.personalization_string_,
+                                              stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                u, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+
+        RNGSeed gen_seed;
+        RandomNumberGenerator::instance().set(gen_seed.key_, gen_seed.nonce_,
+                                              gen_seed.personalization_string_,
+                                              stream);
 
         //
 
@@ -1035,9 +1127,14 @@ namespace heongpu
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
-        RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+        RandomNumberGenerator::instance()
+            .modular_uniform_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, d_, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -1083,9 +1180,14 @@ namespace heongpu
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
-        RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+        RandomNumberGenerator::instance()
+            .modular_uniform_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, d_, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -1162,9 +1264,15 @@ namespace heongpu
         Data64* a_poly =
             error_poly + (Q_prime_size_ * d_leveled_->operator[](0) * n);
 
-        RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+        RandomNumberGenerator::instance()
+            .modular_uniform_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_,
+                d_leveled_->operator[](0), stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, d_leveled_->operator[](0), stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -1232,9 +1340,16 @@ namespace heongpu
 
             int depth_mod_size = Q_prime_size_ - i;
 
-            RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, depth_mod_size, prime_location_leveled_->data() + location, d, stream);
+            RandomNumberGenerator::instance()
+                .modular_uniform_random_number_generation(
+                    a_poly, modulus_->data(), n_power, depth_mod_size,
+                    prime_location_leveled_->data() + location, d, stream);
 
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, depth_mod_size, prime_location_leveled_->data() + location, d, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    depth_mod_size, prime_location_leveled_->data() + location,
+                    d, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -1331,9 +1446,15 @@ namespace heongpu
             // Positive Row Shift
             for (auto& galois : gk.galois_elt)
             {
-                RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_uniform_random_number_generation(
+                        a_poly, modulus_->data(), n_power, Q_prime_size_,
+                        Q_size_, stream);
 
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, Q_size_, stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -1360,9 +1481,15 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+            RandomNumberGenerator::instance()
+                .modular_uniform_random_number_generation(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_,
+                    stream);
 
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, Q_size_, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -1417,9 +1544,15 @@ namespace heongpu
         {
             for (auto& galois_ : gk.custom_galois_elt)
             {
-                RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_uniform_random_number_generation(
+                        a_poly, modulus_->data(), n_power, Q_prime_size_,
+                        Q_size_, stream);
 
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, Q_size_, stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -1446,9 +1579,15 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+            RandomNumberGenerator::instance()
+                .modular_uniform_random_number_generation(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_,
+                    stream);
 
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, Q_size_, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -1513,9 +1652,15 @@ namespace heongpu
             // Positive Row Shift
             for (auto& galois : gk.galois_elt)
             {
-                RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
-                
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_uniform_random_number_generation(
+                        a_poly, modulus_->data(), n_power, Q_prime_size_, d_,
+                        stream);
+
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, d_, stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -1543,9 +1688,15 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+            RandomNumberGenerator::instance()
+                .modular_uniform_random_number_generation(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_, d_,
+                    stream);
 
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, d_, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -1600,9 +1751,15 @@ namespace heongpu
         {
             for (auto& galois_ : gk.custom_galois_elt)
             {
-                RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_uniform_random_number_generation(
+                        a_poly, modulus_->data(), n_power, Q_prime_size_, d_,
+                        stream);
 
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, d_, stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -1630,9 +1787,15 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+            RandomNumberGenerator::instance()
+                .modular_uniform_random_number_generation(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_, d_,
+                    stream);
 
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, d_, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -1699,9 +1862,15 @@ namespace heongpu
             // Positive Row Shift
             for (auto& galois : gk.galois_elt)
             {
-                RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+                RandomNumberGenerator::instance()
+                    .modular_uniform_random_number_generation(
+                        a_poly, modulus_->data(), n_power, Q_prime_size_,
+                        d_leveled_->operator[](0), stream);
 
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, d_leveled_->operator[](0), stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -1729,9 +1898,15 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+            RandomNumberGenerator::instance()
+                .modular_uniform_random_number_generation(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_,
+                    d_leveled_->operator[](0), stream);
 
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, d_leveled_->operator[](0), stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -1786,9 +1961,15 @@ namespace heongpu
         {
             for (auto& galois_ : gk.custom_galois_elt)
             {
-                RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+                RandomNumberGenerator::instance()
+                    .modular_uniform_random_number_generation(
+                        a_poly, modulus_->data(), n_power, Q_prime_size_,
+                        d_leveled_->operator[](0), stream);
 
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, d_leveled_->operator[](0), stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -1816,9 +1997,15 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+            RandomNumberGenerator::instance()
+                .modular_uniform_random_number_generation(
+                    a_poly, modulus_->data(), n_power, Q_prime_size_,
+                    d_leveled_->operator[](0), stream);
 
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, d_leveled_->operator[](0), stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -1882,25 +2069,34 @@ namespace heongpu
                 "Secretkey size is not valid || Secretkey is not generated!");
         }
 
-        int common_seed = gk.seed();
+        RNGSeed common_seed = gk.seed();
 
         DeviceVector<Data64> errors_a(2 * Q_prime_size_ * Q_size_ * n, stream);
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * Q_size_ * n);
 
-        // TODO: change it with DRBG
-        modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(
-            a_poly, modulus_->data(), n_power, Q_prime_size_, common_seed,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(
+            common_seed.key_, common_seed.nonce_,
+            common_seed.personalization_string_, stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(a_poly, modulus_->data(),
+                                                      n_power, Q_prime_size_,
+                                                      Q_size_, stream);
+
+        RNGSeed gen_seed1;
+        RandomNumberGenerator::instance().set(gen_seed1.key_, gen_seed1.nonce_,
+                                              gen_seed1.personalization_string_,
+                                              stream);
 
         if (!gk.customized)
         {
             // Positive Row Shift
             for (auto& galois : gk.galois_elt)
             {
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, Q_size_, stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -1927,7 +2123,10 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, Q_size_, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -1982,7 +2181,10 @@ namespace heongpu
         {
             for (auto& galois_ : gk.custom_galois_elt)
             {
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, Q_size_, stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -2009,7 +2211,10 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, Q_size_, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -2072,25 +2277,33 @@ namespace heongpu
                 "Secretkey size is not valid || Secretkey is not generated!");
         }
 
-        int common_seed = gk.seed();
+        RNGSeed common_seed = gk.seed();
 
         DeviceVector<Data64> errors_a(2 * Q_prime_size_ * d_ * n, stream);
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
-        // TODO: change it with DRBG
-        modular_uniform_random_number_generation_kernel<<<dim3((n >> 8), d_, 1),
-                                                          256, 0, stream>>>(
-            a_poly, modulus_->data(), n_power, Q_prime_size_, common_seed,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(
+            common_seed.key_, common_seed.nonce_,
+            common_seed.personalization_string_, stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+
+        RNGSeed gen_seed1;
+        RandomNumberGenerator::instance().set(gen_seed1.key_, gen_seed1.nonce_,
+                                              gen_seed1.personalization_string_,
+                                              stream);
 
         if (!gk.customized)
         {
             // Positive Row Shift
             for (auto& galois : gk.galois_elt)
             {
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, d_, stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -2118,7 +2331,10 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, d_, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -2173,7 +2389,10 @@ namespace heongpu
         {
             for (auto& galois_ : gk.custom_galois_elt)
             {
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, d_, stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -2201,7 +2420,10 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, d_, stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -2264,7 +2486,7 @@ namespace heongpu
                 "Secretkey size is not valid || Secretkey is not generated!");
         }
 
-        int common_seed = gk.seed();
+        RNGSeed common_seed = gk.seed();
 
         DeviceVector<Data64> errors_a(
             2 * Q_prime_size_ * d_leveled_->operator[](0) * n, stream);
@@ -2272,19 +2494,28 @@ namespace heongpu
         Data64* a_poly =
             error_poly + (Q_prime_size_ * d_leveled_->operator[](0) * n);
 
-        // TODO: change it with DRBG
-        modular_uniform_random_number_generation_kernel<<<
-            dim3((n >> 8), d_leveled_->operator[](0), 1), 256, 0, stream>>>(
-            a_poly, modulus_->data(), n_power, Q_prime_size_, common_seed,
-            0); // offset should be zero
-        HEONGPU_CUDA_CHECK(cudaGetLastError());
+        RandomNumberGenerator::instance().set(
+            common_seed.key_, common_seed.nonce_,
+            common_seed.personalization_string_, stream);
+        RandomNumberGenerator::instance()
+            .modular_ternary_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_,
+                d_leveled_->operator[](0), stream);
+
+        RNGSeed gen_seed1;
+        RandomNumberGenerator::instance().set(gen_seed1.key_, gen_seed1.nonce_,
+                                              gen_seed1.personalization_string_,
+                                              stream);
 
         if (!gk.customized)
         {
             // Positive Row Shift
             for (auto& galois : gk.galois_elt)
             {
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, d_leveled_->operator[](0), stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -2312,7 +2543,10 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, d_leveled_->operator[](0), stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -2368,7 +2602,10 @@ namespace heongpu
         {
             for (auto& galois_ : gk.custom_galois_elt)
             {
-                RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+                RandomNumberGenerator::instance()
+                    .modular_gaussian_random_number_generation(
+                        error_std_dev, error_poly, modulus_->data(), n_power,
+                        Q_prime_size_, d_leveled_->operator[](0), stream);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -2396,7 +2633,10 @@ namespace heongpu
             }
 
             // Columns Rotate
-            RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+            RandomNumberGenerator::instance()
+                .modular_gaussian_random_number_generation(
+                    error_std_dev, error_poly, modulus_->data(), n_power,
+                    Q_prime_size_, d_leveled_->operator[](0), stream);
 
             gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                 .n_power = n_power,
@@ -2637,9 +2877,15 @@ namespace heongpu
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * Q_size_ * n);
 
-        RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+        RandomNumberGenerator::instance()
+            .modular_uniform_random_number_generation(a_poly, modulus_->data(),
+                                                      n_power, Q_prime_size_,
+                                                      Q_size_, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, Q_size_, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, Q_size_, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -2687,9 +2933,14 @@ namespace heongpu
         Data64* error_poly = errors_a.data();
         Data64* a_poly = error_poly + (Q_prime_size_ * d_ * n);
 
-        RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+        RandomNumberGenerator::instance()
+            .modular_uniform_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_, stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, d_, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -2739,9 +2990,15 @@ namespace heongpu
         Data64* a_poly =
             error_poly + (Q_prime_size_ * d_leveled_->operator[](0) * n);
 
-        RandomNumberGenerator::instance().modular_uniform_random_number_generation(a_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+        RandomNumberGenerator::instance()
+            .modular_uniform_random_number_generation(
+                a_poly, modulus_->data(), n_power, Q_prime_size_,
+                d_leveled_->operator[](0), stream);
 
-        RandomNumberGenerator::instance().modular_gaussian_random_number_generation(error_std_dev, error_poly, modulus_->data(), n_power, Q_prime_size_, d_leveled_->operator[](0), stream);
+        RandomNumberGenerator::instance()
+            .modular_gaussian_random_number_generation(
+                error_std_dev, error_poly, modulus_->data(), n_power,
+                Q_prime_size_, d_leveled_->operator[](0), stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
