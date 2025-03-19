@@ -1,5 +1,9 @@
 # 🚀 **HEonGPU** - A GPU Based Homomorphic Encryption Library
 
+### 🚨 **New Feature: Integration [RNGonGPU](https://github.com/Alisah-Ozcan/RNGonGPU)**
+
+[RNGonGPU](https://github.com/Alisah-Ozcan/RNGonGPU) has been successfully integrated into HEonGPU. [RNGonGPU](https://github.com/Alisah-Ozcan/RNGonGPU) features a secure Deterministic Random Bit Generator (DRBG) designed according to NIST [Recommendation for Random Number Generation Using Deterministic Random Bit Generators](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf). This integration enhances GPU-based random number generation, ensuring both high performance and robust security.
+
 ### 🚨 **New Application: Private Information Retrieval on GPU ([PIRonGPU](https://github.com/Alisah-Ozcan/PIRonGPU))**
 
 [PIRonGPU](https://github.com/Alisah-Ozcan/PIRonGPU) is a high-performance library that enhances secure data retrieval through Private Information Retrieval (PIR) on GPUs. By modifying the  [SealPIR](https://github.com/microsoft/SealPIR) protocol with **HEonGPU**, it achieves rapid, confidential querying, offering an efficient and scalable solution for privacy-sensitive applications.
