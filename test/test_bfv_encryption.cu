@@ -1,4 +1,4 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -12,25 +12,26 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
     {
         size_t poly_modulus_degree = 4096;
         int plain_modulus = 1032193;
-        heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+        heongpu::HEContext<heongpu::Scheme::BFV> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({36, 36}, {37});
+        context.set_coeff_modulus_bit_sizes({36, 36}, {37});
         context.set_plain_modulus(plain_modulus);
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::BFV> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::BFV> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::BFV> encryptor(context,
+                                                             public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::BFV> decryptor(context,
+                                                             secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -41,13 +42,13 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P1(context);
         encoder.encode(P1, message);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::BFV> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<uint64_t> gpu_result;
@@ -63,25 +64,26 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
     {
         size_t poly_modulus_degree = 8192;
         int plain_modulus = 1032193;
-        heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+        heongpu::HEContext<heongpu::Scheme::BFV> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({54, 54, 54}, {55});
+        context.set_coeff_modulus_bit_sizes({54, 54, 54}, {55});
         context.set_plain_modulus(plain_modulus);
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::BFV> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::BFV> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::BFV> encryptor(context,
+                                                             public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::BFV> decryptor(context,
+                                                             secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -92,13 +94,13 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P1(context);
         encoder.encode(P1, message);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::BFV> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<uint64_t> gpu_result;
@@ -114,25 +116,26 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
     {
         size_t poly_modulus_degree = 16384;
         int plain_modulus = 786433;
-        heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+        heongpu::HEContext<heongpu::Scheme::BFV> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({54, 54, 54, 54, 55, 55, 55}, {55});
+        context.set_coeff_modulus_bit_sizes({54, 54, 54, 54, 55, 55, 55}, {55});
         context.set_plain_modulus(plain_modulus);
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::BFV> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::BFV> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::BFV> encryptor(context,
+                                                             public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::BFV> decryptor(context,
+                                                             secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -143,13 +146,13 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P1(context);
         encoder.encode(P1, message);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::BFV> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<uint64_t> gpu_result;
@@ -165,26 +168,27 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
     {
         size_t poly_modulus_degree = 32768;
         int plain_modulus = 786433;
-        heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+        heongpu::HEContext<heongpu::Scheme::BFV> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus(
+        context.set_coeff_modulus_bit_sizes(
             {58, 58, 58, 58, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59}, {59});
         context.set_plain_modulus(plain_modulus);
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::BFV> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::BFV> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::BFV> encryptor(context,
+                                                             public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::BFV> decryptor(context,
+                                                             secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -195,13 +199,13 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P1(context);
         encoder.encode(P1, message);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::BFV> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<uint64_t> gpu_result;
@@ -217,28 +221,29 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
     {
         size_t poly_modulus_degree = 65536;
         int plain_modulus = 786433;
-        heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+        heongpu::HEContext<heongpu::Scheme::BFV> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({58, 58, 58, 58, 58, 58, 58, 58, 58, 59,
-                                   59, 59, 59, 59, 59, 59, 59, 59, 59, 59,
-                                   59, 59, 59, 59, 59, 59, 59, 59, 59},
-                                  {59});
+        context.set_coeff_modulus_bit_sizes(
+            {58, 58, 58, 58, 58, 58, 58, 58, 58, 59, 59, 59, 59, 59, 59,
+             59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59},
+            {59});
         context.set_plain_modulus(plain_modulus);
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::BFV> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::BFV> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::BFV> encryptor(context,
+                                                             public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::BFV> decryptor(context,
+                                                             secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -249,13 +254,13 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P1(context);
         encoder.encode(P1, message);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::BFV> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::BFV> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<uint64_t> gpu_result;

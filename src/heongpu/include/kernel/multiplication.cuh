@@ -1,15 +1,14 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef HE_MULTIPLICATION_H
-#define HE_MULTIPLICATION_H
+#ifndef HEONGPU_MULTIPLICATION_H
+#define HEONGPU_MULTIPLICATION_H
 
-#include "common.cuh"
 #include "cuda_runtime.h"
-#include "ntt.cuh"
-#include "context.cuh"
+#include "modular_arith.cuh"
+#include "defines.h"
 
 namespace heongpu
 {
@@ -57,4 +56,4 @@ namespace heongpu
         int n_power);
 
 } // namespace heongpu
-#endif // HE_MULTIPLICATION_H
+#endif // HEONGPU_MULTIPLICATION_H

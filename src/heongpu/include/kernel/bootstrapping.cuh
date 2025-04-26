@@ -1,13 +1,14 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef HE_BOOTSTRAPPING_H
-#define HE_BOOTSTRAPPING_H
+#ifndef HEONGPU_BOOTSTRAPPING_H
+#define HEONGPU_BOOTSTRAPPING_H
 
 #include <curand_kernel.h>
-#include "context.cuh"
+#include "modular_arith.cuh"
+#include "complex.cuh"
 
 namespace heongpu
 {
@@ -67,4 +68,4 @@ namespace heongpu
 
 } // namespace heongpu
 
-#endif // HE_BOOTSTRAPPING_H
+#endif // HEONGPU_BOOTSTRAPPING_H

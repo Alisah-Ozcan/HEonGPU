@@ -1,13 +1,14 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef PRIMEPOOL_H
-#define PRIMEPOOL_H
+#ifndef HEONGPU_PRIMEPOOL_H
+#define HEONGPU_PRIMEPOOL_H
 
 #include "nttparameters.cuh"
 #include "util.cuh"
+#include "schemes.h"
 
 namespace heongpu
 {
@@ -15,6 +16,7 @@ namespace heongpu
     class KeySwitchParameterGenerator
     {
         friend class Parameters;
+        template <Scheme S> friend class HEContext;
 
       public:
         KeySwitchParameterGenerator(int poly_degree,
@@ -100,4 +102,4 @@ namespace heongpu
     };
 
 } // namespace heongpu
-#endif // PRIMEPOOL_H
+#endif // HEONGPU_PRIMEPOOL_H

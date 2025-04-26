@@ -1,5 +1,38 @@
 # 🚀 **HEonGPU** - A GPU Based Homomorphic Encryption Library
 
+HEonGPU is a high-performance library designed to optimize Fully Homomorphic Encryption (FHE) operations on GPUs. By leveraging the parallel processing power of GPUs, it significantly reduces the computational load of FHE through concurrent execution of complex operations. Its multi-stream architecture enables efficient parallel processing and minimizes the overhead of data transfers between the CPU and GPU. These features make HEonGPU ideal for large-scale encrypted computations, offering reduced latency and improved performance.
+
+The goal of HEonGPU is to provide:
+- A high-performance framework for executing FHE schemes, specifically `BFV` and `CKKS`, by leveraging the parallel processing capabilities of CUDA.
+- A user-friendly C++ interface that requires no prior knowledge of GPU programming, with all CUDA kernels encapsulated in easy-to-use classes.
+- An optimized multi-stream architecture that ensures efficient memory management and concurrent execution of encrypted computations on the GPU.
+
+For more information about HEonGPU: https://eprint.iacr.org/2024/1543
+
+### Current HEonGPU Capabilities and Schemes
+
+<div align="center">
+
+| Capability / Scheme          | HEonGPU   |
+|:----------------------------:|:---------:|
+| BFV                          | ✓         |
+| CKKS                         | ✓         |
+| BGV                          | Soon      |
+| TFHE                         | Very Soon |
+| CKKS Regular Bootstrapping   | ✓         |
+| CKKS Slim Bootstrapping      | ✓         |
+| CKKS Bit Bootstrapping       | ✓         |
+| CKKS Gate Bootstrapping      | ✓         |
+| Multiparty Computation (MPC) | ✓         |
+
+</div>
+
+## News
+
+### 🚨 **New Feature: Serialization Module**
+
+The new serializer module has been successfully integrated into HEonGPU. It provides high-performance serialization and deserialization of homomorphic encryption objects (Context, Secretkey, Publickey, Relinkey, Galoiskey, Plaintext, Ciphertext, etc.) in raw binary or optional [Zlib-compressed](https://zlib.net/) formats. This enhancement enables blazing-fast disk I/O, seamless client-server transfers, and up to a 60% reduction in storage and bandwidth.
+
 ### 🚨 **New Feature: Integration [RNGonGPU](https://github.com/Alisah-Ozcan/RNGonGPU)**
 
 [RNGonGPU](https://github.com/Alisah-Ozcan/RNGonGPU) has been successfully integrated into HEonGPU. [RNGonGPU](https://github.com/Alisah-Ozcan/RNGonGPU) features a secure Deterministic Random Bit Generator (DRBG) designed according to NIST [Recommendation for Random Number Generation Using Deterministic Random Bit Generators](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf). This integration enhances GPU-based random number generation, ensuring both high performance and robust security.
@@ -66,23 +99,7 @@ The goal of HEonGPU is to provide:
 
 For more information about HEonGPU: https://eprint.iacr.org/2024/1543
 
-### Current HEonGPU Capabilities and Schemes
 
-<div align="center">
-
-| Capability / Scheme          | HEonGPU   |
-|:----------------------------:|:---------:|
-| BFV                          | ✓         |
-| CKKS                         | ✓         |
-| BGV                          | Soon      |
-| TFHE                         | Very Soon |
-| CKKS Regular Bootstrapping   | ✓         |
-| CKKS Slim Bootstrapping      | ✓         |
-| CKKS Bit Bootstrapping       | ✓         |
-| CKKS Gate Bootstrapping      | ✓         |
-| Multiparty Computation (MPC) | ✓         |
-
-</div>
 
 ## Installation
 
@@ -92,10 +109,13 @@ For more information about HEonGPU: https://eprint.iacr.org/2024/1543
 - [GCC](https://gcc.gnu.org/)
 - [GMP](https://gmplib.org/)
 - [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) >=11.4
+- [OpenSSL](https://www.openssl.org/) >= 1.1.0
+- [ZLIB](https://zlib.net/)
 
 ### Third-Party Dependencies
 - [GPU-NTT](https://github.com/Alisah-Ozcan/GPU-NTT)
 - [GPU-FFT](https://github.com/Alisah-Ozcan/GPU-FFT)
+- [RNGonGPU](https://github.com/Alisah-Ozcan/RNGonGPU)
 - [RMM](https://github.com/rapidsai/rmm)
 - [Thrust](https://github.com/NVIDIA/thrust)
 - [GoogleTest](https://github.com/google/googletest)
@@ -134,6 +154,12 @@ $ cmake --build ./build/
 $ ./build/bin/test/<...>
 $ Example: ./build/bin/test/bfv_addition_testcases
 ```
+Or:
+```bash
+$ cmake -S . -D HEonGPU_BUILD_TESTS=ON -D CMAKE_CUDA_ARCHITECTURES=89 -B build
+$ cmake --build ./build/
+$ cmake --build build --target test
+```
 
 To run benchmarks:
 
@@ -163,38 +189,38 @@ $ Example: ./build/bin/examples/1_basic_bfv
 #include "heongpu.cuh"
 
 int main() {
-    heongpu::Parameters context(heongpu::scheme_type::bfv,
+    heongpu::HEContext<heongpu::Scheme::BFV> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     size_t poly_modulus_degree = 8192;
     context.set_poly_modulus_degree(poly_modulus_degree);
-    context.set_default_coeff_modulus(1);
+    context.set_coeff_modulus_default_values(1);
     int plain_modulus = 1032193;
     context.set_plain_modulus(plain_modulus);
     context.generate();
 
-    heongpu::HEKeyGenerator keygen(context);
-    heongpu::Secretkey secret_key(context);
+    heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen(context);
+    heongpu::Secretkey<heongpu::Scheme::BFV> secret_key(context);
     keygen.generate_secret_key(secret_key);
 
-    heongpu::Publickey public_key(context);
+    heongpu::Publickey<heongpu::Scheme::BFV> public_key(context);
     keygen.generate_public_key(public_key, secret_key);
 
-    heongpu::HEEncoder encoder(context);
-    heongpu::HEEncryptor encryptor(context, public_key);
-    heongpu::HEDecryptor decryptor(context, secret_key);
-    heongpu::HEOperator operators(context);
+    heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
+    heongpu::HEEncryptor<heongpu::Scheme::BFV> encryptor(context, public_key);
+    heongpu::HEDecryptor<heongpu::Scheme::BFV> decryptor(context, secret_key);
+    heongpu::HEOperator<heongpu::Scheme::BFV> operators(context);
 
     std::vector<uint64_t> message(poly_modulus_degree, 8ULL);
-    heongpu::Plaintext P1(context);
+    heongpu::Plaintext<heongpu::Scheme::BFV> P1(context);
     encoder.encode(P1, message);
 
-    heongpu::Ciphertext C1(context);
+    heongpu::Ciphertext<heongpu::Scheme::BFV> C1(context);
     encryptor.encrypt(C1, P1);
 
     operators.add_inplace(C1, C1);
 
-    heongpu::Plaintext P2(context);
+    heongpu::Plaintext<heongpu::Scheme::BFV> P2(context);
     decryptor.decrypt(P2, C1);
 
     std::vector<uint64_t> result;

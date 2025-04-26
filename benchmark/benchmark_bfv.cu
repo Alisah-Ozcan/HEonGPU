@@ -1,4 +1,4 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -8,6 +8,8 @@
 #include <string>
 #include <iomanip>
 #include <omp.h>
+
+constexpr auto Scheme = heongpu::Scheme::BFV;
 
 int main(int argc, char* argv[])
 {
@@ -21,32 +23,31 @@ int main(int argc, char* argv[])
 
     for (int i = 0; i < poly_modulus_degrees.size(); i++)
     {
-        heongpu::Parameters context(
-            heongpu::scheme_type::bfv,
+        heongpu::HEContext<Scheme> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
         context.set_poly_modulus_degree(poly_modulus_degrees[i]);
-        context.set_default_coeff_modulus(1);
+        context.set_coeff_modulus_default_values(1);
         context.set_plain_modulus(plain_modulus[i]);
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<Scheme> keygen(context);
+        heongpu::Secretkey<Scheme> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<Scheme> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::Relinkey relin_key(context);
+        heongpu::Relinkey<Scheme> relin_key(context);
         keygen.generate_relin_key(relin_key, secret_key);
 
         std::vector<int> custom_key_index = {1};
-        heongpu::Galoiskey galois_key(context, custom_key_index);
+        heongpu::Galoiskey<Scheme> galois_key(context, custom_key_index);
         keygen.generate_galois_key(galois_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
-        heongpu::HEArithmeticOperator operators(context, encoder);
+        heongpu::HEEncoder<Scheme> encoder(context);
+        heongpu::HEEncryptor<Scheme> encryptor(context, public_key);
+        heongpu::HEDecryptor<Scheme> decryptor(context, secret_key);
+        heongpu::HEArithmeticOperator<Scheme> operators(context, encoder);
 
         heongpu::HostVector<uint64_t> message(poly_modulus_degrees[i], 2);
 
@@ -71,7 +72,7 @@ int main(int argc, char* argv[])
 
         for (int j = 0; j < repeat_count; j++)
         {
-            heongpu::Plaintext P1(context);
+            heongpu::Plaintext<Scheme> P1(context);
 
             cudaEventRecord(start_time);
             encoder.encode(P1, message);
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
             cudaEventElapsedTime(&time, start_time, stop_time);
             time_encode += time;
 
-            heongpu::Ciphertext C1(context);
+            heongpu::Ciphertext<Scheme> C1(context);
 
             cudaEventRecord(start_time);
             encryptor.encrypt(C1, P1);
@@ -89,7 +90,7 @@ int main(int argc, char* argv[])
             cudaEventElapsedTime(&time, start_time, stop_time);
             time_encryption += time;
 
-            heongpu::Ciphertext C2(context);
+            heongpu::Ciphertext<Scheme> C2(context);
 
             cudaEventRecord(start_time);
             operators.add(C1, C1, C2);
@@ -133,7 +134,7 @@ int main(int argc, char* argv[])
             cudaEventElapsedTime(&time, start_time, stop_time);
             time_rotatecolumn += time;
 
-            heongpu::Ciphertext C3(context);
+            heongpu::Ciphertext<Scheme> C3(context);
             encryptor.encrypt(C3, P1);
 
             cudaEventRecord(start_time);
@@ -150,7 +151,7 @@ int main(int argc, char* argv[])
             cudaEventElapsedTime(&time, start_time, stop_time);
             time_plainsubtraction += time;
 
-            heongpu::Ciphertext C4(context);
+            heongpu::Ciphertext<Scheme> C4(context);
             encryptor.encrypt(C4, P1);
 
             cudaEventRecord(start_time);
@@ -160,7 +161,7 @@ int main(int argc, char* argv[])
             cudaEventElapsedTime(&time, start_time, stop_time);
             time_plainmultiplication += time;
 
-            heongpu::Plaintext P2(context);
+            heongpu::Plaintext<Scheme> P2(context);
 
             cudaEventRecord(start_time);
             decryptor.decrypt(P2, C4);

@@ -1,15 +1,15 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef KEYGENERATION_H
-#define KEYGENERATION_H
+#ifndef HEONGPU_KEYGENERATION_H
+#define HEONGPU_KEYGENERATION_H
 
 #include "common.cuh"
+#include <curand_kernel.h>
 #include "cuda_runtime.h"
-#include "ntt.cuh"
-#include "context.cuh"
+#include "modular_arith.cuh"
 
 namespace heongpu
 {
@@ -134,4 +134,4 @@ namespace heongpu
                                      int n_power, int rns_mod_count);
 
 } // namespace heongpu
-#endif // KEYGENERATION_H
+#endif // HEONGPU_KEYGENERATION_H

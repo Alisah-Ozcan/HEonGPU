@@ -1,10 +1,10 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef HEONGPU_UTIL_H
+#define HEONGPU_UTIL_H
 
 #include "common.cuh"
 #include "nttparameters.cuh"
@@ -18,10 +18,10 @@
 #include <stdexcept>
 #include <set>
 #include "storagemanager.cuh"
+#include <gmp.h>
 
 namespace heongpu
 {
-
     class CudaException : public std::exception
     {
       public:
@@ -54,47 +54,8 @@ namespace heongpu
         }                                                                      \
     } while (0)
 
-    // Describes the type of encryption scheme to be used.
-    enum class scheme_type : std::uint8_t
-    {
-        // No scheme set; cannot be used for encryption
-        none = 0x0,
-
-        // Brakerski/Fan-Vercauteren scheme
-        bfv = 0x1,
-
-        // Cheon-Kim-Kim-Song scheme
-        ckks = 0x2,
-
-        // Brakerski-Gentry-Vaikuntanathan scheme
-        bgv = 0x3
-    };
-
-    enum class sec_level_type : std::uint8_t
-    {
-        // No security level specified.
-        none = 0x0,
-
-        // 128 bits security level specified according to lattice-estimator:
-        // https://github.com/malb/lattice-estimator.
-        sec128 = 0x1,
-
-        // 192 bits security level specified according to lattice-estimator:
-        // https://github.com/malb/lattice-estimator.
-        sec192 = 0x2,
-
-        // 256 bits security level specified according to lattice-estimator:
-        // https://github.com/malb/lattice-estimator.
-        sec256 = 0x3
-    };
-
-    enum class keyswitching_type : std::uint8_t
-    {
-        NONE = 0x0,
-        KEYSWITCHING_METHOD_I = 0x1, // SEALMETHOD = 0x1,
-        KEYSWITCHING_METHOD_II = 0x2, // EXTERNALPRODUCT = 0x2,
-        KEYSWITCHING_METHOD_III = 0x3, // EXTERNALPRODUCT_2 = 0x3
-    };
+    bool coefficient_validator(const std::vector<int>& log_Q_bases_bit_sizes,
+                               const std::vector<int>& log_P_bases_bit_sizes);
 
     struct BootstrappingConfig
     {
@@ -110,18 +71,9 @@ namespace heongpu
         void validate(); // Validates the configuration input values
     };
 
-    enum class logic_bootstrapping_type : std::uint8_t
-    {
-        NONE = 0x0,
-        BIT_BOOTSTRAPPING = 0x1, // scale = q0 / 2. More detail:
-                                 // https://eprint.iacr.org/2024/767.pdf
-        GATE_BOOTSTRAPPING = 0x2, // scale = q0 / 3. More detail:
-                                  // https://eprint.iacr.org/2024/767.pdf
-    };
-
     Data64 extendedGCD(Data64 a, Data64 b, Data64& x, Data64& y);
     Data64 modInverse(Data64 a, Data64 m);
-    int countBits(Data64 number);
+    int calculate_bit_size(Data64 number);
 
     bool is_power_of_two(size_t number);
     int calculate_bit_count(Data64 number);
@@ -177,5 +129,36 @@ namespace heongpu
 
     std::vector<int> unique_sort(const std::vector<int>& input);
 
+    std::vector<Data64>
+    calculate_last_q_modinv(const std::vector<Modulus64>& prime_vector,
+                            const int Q_prime_size, const int P_size);
+
+    std::vector<Data64>
+    calculate_half(const std::vector<Modulus64>& prime_vector,
+                   const int P_size);
+
+    std::vector<Data64>
+    calculate_half_mod(const std::vector<Modulus64>& prime_vector,
+                       const std::vector<Data64>& half, const int Q_prime_size,
+                       const int P_size);
+
+    std::vector<Data64>
+    calculate_factor(const std::vector<Modulus64>& prime_vector,
+                     const int Q_size, const int P_size);
+
+    std::vector<Data64> calculate_Mi(const std::vector<Modulus64>& prime_vector,
+                                     const int size);
+
+    std::vector<Data64>
+    calculate_Mi_inv(const std::vector<Modulus64>& prime_vector,
+                     const int size);
+
+    std::vector<Data64> calculate_M(const std::vector<Modulus64>& prime_vector,
+                                    const int size);
+
+    std::vector<Data64>
+    calculate_upper_half_threshold(const std::vector<Modulus64>& prime_vector,
+                                   const int size);
+
 } // namespace heongpu
-#endif // UTIL_H
+#endif // HEONGPU_UTIL_H

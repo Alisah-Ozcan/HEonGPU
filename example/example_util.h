@@ -1,4 +1,4 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -85,21 +85,21 @@ inline void display_vector(const std::vector<T>& vec,
     std::cout.copyfmt(cout_state);
 }
 
-std::vector<Data64> random_vector_generator(int size)
+std::vector<uint64_t> random_vector_generator(int size)
 {
     // since it just a example to show default and multi stream usage
     // correctness is not important. that is why we will use random numbers for
-    // both ciphertext and plaintext
+    // plaintext
     std::random_device rd;
     std::mt19937 gen(rd());
-    unsigned long long minNumber = (unsigned long long) 1 << 40;
-    unsigned long long maxNumber = ((unsigned long long) 1 << 40) - 1;
+    unsigned long long minNumber = (unsigned long long) 1 << 20;
+    unsigned long long maxNumber = ((unsigned long long) 1 << 20) - 1;
     std::uniform_int_distribution<unsigned long long> dis(minNumber, maxNumber);
     unsigned long long number = dis(gen);
 
     std::uniform_int_distribution<unsigned long long> dis2(0, number);
 
-    std::vector<Data64> result;
+    std::vector<uint64_t> result;
     for (int i = 0; i < size; i++)
     {
         result.push_back(dis2(gen));

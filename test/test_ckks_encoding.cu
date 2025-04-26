@@ -1,4 +1,4 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -38,15 +38,14 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
     cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({40, 30, 30}, {40});
+        context.set_coeff_modulus_bit_sizes({40, 30, 30}, {40});
         context.generate();
 
-        heongpu::HEEncoder encoder(context);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -58,7 +57,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 30);
         encoder.encode(P1, message, scale);
 
@@ -69,7 +68,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         double number = static_cast<double>(dis(gen));
         encoder.encode(P2, number, scale);
 
@@ -83,15 +82,14 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
     {
         size_t poly_modulus_degree = 8192;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({40, 30, 30, 30, 30}, {40});
+        context.set_coeff_modulus_bit_sizes({40, 30, 30, 30, 30}, {40});
         context.generate();
 
-        heongpu::HEEncoder encoder(context);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -103,7 +101,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 30);
         encoder.encode(P1, message, scale);
 
@@ -114,7 +112,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         double number = static_cast<double>(dis(gen));
         encoder.encode(P2, number, scale);
 
@@ -128,16 +126,15 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
     {
         size_t poly_modulus_degree = 16384;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus(
+        context.set_coeff_modulus_bit_sizes(
             {45, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35}, {45});
         context.generate();
 
-        heongpu::HEEncoder encoder(context);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -149,7 +146,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 30);
         encoder.encode(P1, message, scale);
 
@@ -160,7 +157,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         double number = static_cast<double>(dis(gen));
         encoder.encode(P2, number, scale);
 
@@ -174,17 +171,17 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
     {
         size_t poly_modulus_degree = 32768;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({59, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
-                                   40, 40, 40, 40, 40, 40, 40, 40},
-                                  {59});
+        context.set_coeff_modulus_bit_sizes({59, 40, 40, 40, 40, 40, 40, 40, 40,
+                                             40, 40, 40, 40, 40, 40, 40, 40, 40,
+                                             40},
+                                            {59});
         context.generate();
 
-        heongpu::HEEncoder encoder(context);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -196,7 +193,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 40);
         encoder.encode(P1, message, scale);
 
@@ -207,7 +204,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         double number = static_cast<double>(dis(gen));
         encoder.encode(P2, number, scale);
 
@@ -221,19 +218,18 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
     {
         size_t poly_modulus_degree = 65536;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({59, 45, 45, 45, 45, 45, 45, 45, 45, 45,
-                                   45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
-                                   45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
-                                   45, 45, 45, 45, 45, 45, 45},
-                                  {59});
+        context.set_coeff_modulus_bit_sizes(
+            {59, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
+             45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
+             45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45},
+            {59});
         context.generate();
 
-        heongpu::HEEncoder encoder(context);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -245,7 +241,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 45);
         encoder.encode(P1, message, scale);
 
@@ -256,7 +252,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         double number = static_cast<double>(dis(gen));
         encoder.encode(P2, number, scale);
 

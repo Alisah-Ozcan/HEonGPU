@@ -1,10 +1,10 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef MEMORY_POOL_H
-#define MEMORY_POOL_H
+#ifndef HEONGPU_MEMORY_POOL_H
+#define HEONGPU_MEMORY_POOL_H
 
 #include <mutex>
 #include <memory>
@@ -123,4 +123,4 @@ template <typename T> struct rmm_pinned_allocator
     HostStatsAdaptor* pool_;
 };
 
-#endif // MEMORY_POOL_H
+#endif // HEONGPU_MEMORY_POOL_H

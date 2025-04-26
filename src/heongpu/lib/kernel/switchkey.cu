@@ -1,4 +1,4 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -639,8 +639,6 @@ namespace heongpu
         output[idx + (block_y << n_power) +
                (((current_decomp_count) << n_power) * block_z)] = input_;
     }
-
-    ////////////////////////////////////////////////////////////////////////////
 
     __global__ void base_conversion_DtoB_relin_kernel(
         Data64* ciphertext, Data64* output, Modulus64* modulus,
@@ -1284,8 +1282,6 @@ namespace heongpu
                    ((gridDim.y << n_power) * block_z)] = result_value;
     }
 
-    /////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////
     // Optimized Hoisting-Rotations
 
     __global__ void ckks_duplicate_kernel(Data64* cipher, Data64* output,

@@ -1,12 +1,12 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef BIGINTEGER_ARITHMATIC_H
-#define BIGINTEGER_ARITHMATIC_H
+#ifndef HEONGPU_BIGINTEGER_ARITHMATIC_H
+#define HEONGPU_BIGINTEGER_ARITHMATIC_H
 
-#include "context.cuh"
+#include "modular_arith.cuh"
 
 namespace heongpu
 {
@@ -203,4 +203,4 @@ namespace heongpu
 
 } // namespace heongpu
 
-#endif // BIGINTEGER_ARITHMATIC_H
+#endif // HEONGPU_BIGINTEGER_ARITHMATIC_H

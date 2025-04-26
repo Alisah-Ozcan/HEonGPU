@@ -1,4 +1,4 @@
-# Copyright 2024 Alişah Özcan
+# Copyright 2024-2025 Alişah Özcan
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 # Developer: Alişah Özcan
@@ -15,6 +15,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(CUDAToolkit REQUIRED)
 find_package(Thrust REQUIRED)
 find_package(OpenMP REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES 75)
@@ -70,6 +72,7 @@ add_subdirectory(src)
 option(HEonGPU_BUILD_TESTS "Build HEonGPU Tests" OFF)
 message(STATUS "HEonGPU_BUILD_TESTS: ${HEonGPU_BUILD_TESTS}")
 if(HEonGPU_BUILD_TESTS)
+    enable_testing()
     add_subdirectory(test)
 endif()
 

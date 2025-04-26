@@ -1,4 +1,4 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -7,6 +7,53 @@
 
 namespace heongpu
 {
+    bool coefficient_validator(const std::vector<int>& log_Q_bases_bit_sizes,
+                               const std::vector<int>& log_P_bases_bit_sizes)
+    {
+        int P_size = log_P_bases_bit_sizes.size();
+
+        int total_P_modulus = 0; // TODO: calculate it with prod
+        for (int i = 0; i < P_size; i++)
+        {
+            total_P_modulus = total_P_modulus + log_P_bases_bit_sizes[i];
+        }
+
+        int Q_size = log_Q_bases_bit_sizes.size();
+
+        int remainder = Q_size % P_size;
+        int quotient = Q_size / P_size;
+
+        int counter = 0;
+        for (int i = 0; i < quotient; i++)
+        {
+            int pair_sum = 0;
+            for (int j = 0; j < P_size; j++)
+            {
+                pair_sum = pair_sum + log_Q_bases_bit_sizes[counter];
+                counter++;
+            }
+
+            if (pair_sum > total_P_modulus)
+            {
+                return false;
+            }
+        }
+
+        int pair_sum = 0;
+        for (int j = 0; j < remainder; j++)
+        {
+            pair_sum = pair_sum + log_Q_bases_bit_sizes[counter];
+            counter++;
+        }
+
+        if (pair_sum > total_P_modulus)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     Data64 extendedGCD(Data64 a, Data64 b, Data64& x, Data64& y)
     {
         if (a == 0)
@@ -43,7 +90,7 @@ namespace heongpu
         }
     }
 
-    int countBits(Data64 input)
+    int calculate_bit_size(Data64 input)
     {
         return (int) log2(input) + 1;
     }
@@ -541,5 +588,200 @@ namespace heongpu
             throw std::out_of_range("taylor_number must be in range [6, 15]");
         }
     }
+
+    //////////////////////////
+    //////////////////////////
+
+    std::vector<Data64>
+    calculate_last_q_modinv(const std::vector<Modulus64>& prime_vector,
+                            const int Q_prime_size, const int P_size)
+    {
+        std::vector<Data64> last_q_modinv;
+        for (int i = 0; i < P_size; i++)
+        {
+            for (int j = 0; j < (Q_prime_size - 1) - i; j++)
+            {
+                // TODO: Change here for BFV as well!!!
+                Data64 temp_ = prime_vector[prime_vector.size() - 1 - i].value %
+                               prime_vector[j].value;
+                last_q_modinv.push_back(
+                    OPERATOR64::modinv(temp_, prime_vector[j]));
+            }
+        }
+
+        return last_q_modinv;
+    }
+
+    std::vector<Data64>
+    calculate_half(const std::vector<Modulus64>& prime_vector, const int P_size)
+    {
+        std::vector<Data64> half;
+        for (int i = 0; i < P_size; i++)
+        {
+            half.push_back(prime_vector[prime_vector.size() - 1 - i].value >>
+                           1);
+        }
+
+        return half;
+    }
+
+    std::vector<Data64>
+    calculate_half_mod(const std::vector<Modulus64>& prime_vector,
+                       const std::vector<Data64>& half, const int Q_prime_size,
+                       const int P_size)
+    {
+        std::vector<Data64> half_mod;
+        for (int i = 0; i < P_size; i++)
+        {
+            for (int j = 0; j < (Q_prime_size - 1) - i; j++)
+            {
+                half_mod.push_back(half[i] % prime_vector[j].value);
+            }
+        }
+
+        return half_mod;
+    }
+
+    std::vector<Data64>
+    calculate_factor(const std::vector<Modulus64>& prime_vector,
+                     const int Q_size, const int P_size)
+    {
+        std::vector<Data64> factor;
+        for (int i = 0; i < P_size; i++)
+        {
+            for (int j = 0; j < Q_size; j++)
+            {
+                factor.push_back(
+                    prime_vector[prime_vector.size() - 1 - i].value %
+                    prime_vector[j].value);
+            }
+        }
+
+        return factor;
+    }
+
+    //////////////////////////
+    //////////////////////////
+
+    std::vector<Data64> calculate_Mi(const std::vector<Modulus64>& prime_vector,
+                                     const int size)
+    {
+        std::vector<Data64> result_Mi(size * size, 0ULL);
+        for (int i = 0; i < size; i++)
+        {
+            mpz_t result;
+            mpz_init(result);
+            mpz_set_ui(result, 1);
+
+            for (int j = 0; j < size; j++)
+            {
+                if (i != j)
+                {
+                    mpz_mul_ui(result, result, prime_vector[j].value);
+                }
+            }
+
+            size_t mul_size;
+            uint64_t* ptr = reinterpret_cast<uint64_t*>(mpz_export(
+                NULL, &mul_size, -1, sizeof(uint64_t), 0, 0, result));
+
+            for (int j = 0; j < mul_size; j++)
+            {
+                result_Mi[(size * i) + j] = ptr[j];
+            }
+
+            mpz_clear(result);
+            free(ptr);
+        }
+
+        return result_Mi;
+    }
+
+    std::vector<Data64>
+    calculate_Mi_inv(const std::vector<Modulus64>& prime_vector, const int size)
+    {
+        std::vector<Data64> result_Mi_inv;
+        for (int i = 0; i < size; i++)
+        {
+            Data64 temp = 1;
+            for (int j = 0; j < size; j++)
+            {
+                if (i != j)
+                {
+                    Data64 inner_prime =
+                        prime_vector[j].value % prime_vector[i].value;
+                    temp = OPERATOR64::mult(temp, inner_prime, prime_vector[i]);
+                }
+            }
+            result_Mi_inv.push_back(OPERATOR64::modinv(temp, prime_vector[i]));
+        }
+
+        return result_Mi_inv;
+    }
+
+    std::vector<Data64> calculate_M(const std::vector<Modulus64>& prime_vector,
+                                    const int size)
+    {
+        std::vector<Data64> result_M(size, 0ULL);
+
+        mpz_t result;
+        mpz_init(result);
+        mpz_set_ui(result, 1);
+
+        for (int i = 0; i < size; i++)
+        {
+            mpz_mul_ui(result, result, prime_vector[i].value);
+        }
+
+        size_t mul_size;
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(
+            mpz_export(NULL, &mul_size, -1, sizeof(uint64_t), 0, 0, result));
+
+        for (int j = 0; j < mul_size; j++)
+        {
+            result_M[j] = ptr[j];
+        }
+
+        mpz_clear(result);
+        free(ptr);
+
+        return result_M;
+    }
+
+    std::vector<Data64>
+    calculate_upper_half_threshold(const std::vector<Modulus64>& prime_vector,
+                                   const int size)
+    {
+        std::vector<Data64> result_upper_half_threshold(size, 0ULL);
+
+        mpz_t result;
+        mpz_init(result);
+        mpz_set_ui(result, 1);
+
+        for (int i = 0; i < size; i++)
+        {
+            mpz_mul_ui(result, result, prime_vector[i].value);
+        }
+
+        mpz_add_ui(result, result, 1);
+        mpz_div_2exp(result, result, 1);
+
+        size_t mul_size;
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(
+            mpz_export(NULL, &mul_size, -1, sizeof(uint64_t), 0, 0, result));
+
+        for (int j = 0; j < mul_size; j++)
+        {
+            result_upper_half_threshold[j] = ptr[j];
+        }
+
+        mpz_clear(result);
+        free(ptr);
+
+        return result_upper_half_threshold;
+    }
+
+    //////////////////////////
+    //////////////////////////
 
 } // namespace heongpu

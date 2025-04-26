@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef RANDOM_GENERATOR_CLASS_H
-#define RANDOM_GENERATOR_CLASS_H
+#ifndef HEONGPU_RANDOM_GENERATOR_CLASS_H
+#define HEONGPU_RANDOM_GENERATOR_CLASS_H
 
 #include <mutex>
 #include <memory>
@@ -711,4 +711,4 @@ namespace heongpu
     };
 
 } // namespace heongpu
-#endif // RANDOM_GENERATOR_CLASS_H
+#endif // HEONGPU_RANDOM_GENERATOR_CLASS_H

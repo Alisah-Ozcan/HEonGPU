@@ -1,4 +1,4 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -11,8 +11,7 @@ int main(int argc, char* argv[])
     cudaSetDevice(0); // Use it for memory pool
 
     // Initialize encryption parameters for the CKKS scheme.
-    heongpu::Parameters context(
-        heongpu::scheme_type::ckks,
+    heongpu::HEContext<heongpu::Scheme::CKKS> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
         heongpu::sec_level_type::none);
     size_t poly_modulus_degree = 4096;
@@ -20,7 +19,7 @@ int main(int argc, char* argv[])
 
     // Last modulus has to be three times the value of scale, otherwise, it will
     // fail. 3298535538689ULL =~ 3 * pow(2.0, 40)
-    context.set_custom_coeff_modulus(
+    context.set_coeff_modulus_values(
         {3298535538689ULL, 1099512938497ULL, 1099515691009ULL,
          1099516870657ULL, 1099521458177ULL, 1099522375681ULL,
          1099523555329ULL, 1099525128193ULL, 1099526176769ULL,
@@ -38,26 +37,28 @@ int main(int argc, char* argv[])
 
     // Generate keys: the public key for encryption, the secret key for
     // decryption and evaluation key(relinkey) for relinearization.
-    heongpu::HEKeyGenerator keygen(context);
-    heongpu::Secretkey secret_key(context,
-                                  16); // hamming weight is 16 in this example
+    heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
+    heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(
+        context,
+        16); // hamming weight is 16 in this example
     keygen.generate_secret_key(secret_key);
 
-    heongpu::Publickey public_key(context);
+    heongpu::Publickey<heongpu::Scheme::CKKS> public_key(context);
     keygen.generate_public_key(public_key, secret_key);
 
-    heongpu::Relinkey relin_key(context);
+    heongpu::Relinkey<heongpu::Scheme::CKKS> relin_key(context);
     keygen.generate_relin_key(relin_key, secret_key);
 
     // Initialize Encoder, Encryptor, Evaluator, and Decryptor. The Encoder will
     // encode the message for SIMD operations. The Encryptor will use the public
     // key to encrypt data, while the Decryptor will use the secret key to
     // decrypt it. The Evaluator will handle operations on the encrypted data.
-    heongpu::HEEncoder encoder(context);
-    heongpu::HEEncryptor encryptor(context, public_key);
-    heongpu::HEDecryptor decryptor(context, secret_key);
+    heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
+    heongpu::HEEncryptor<heongpu::Scheme::CKKS> encryptor(context, public_key);
+    heongpu::HEDecryptor<heongpu::Scheme::CKKS> decryptor(context, secret_key);
     // heongpu::HEOperator operators(context);
-    heongpu::HELogicOperator operators(context, encoder, scale);
+    heongpu::HELogicOperator<heongpu::Scheme::CKKS> operators(context, encoder,
+                                                              scale);
 
     // Generate simple vector in CPU.
     const int slot_count = poly_modulus_degree / 2;
@@ -70,16 +71,16 @@ int main(int argc, char* argv[])
 
     //  Transfer that vector from CPU to GPU and Encode that simple vector in
     //  GPU.
-    heongpu::Plaintext P1(context);
+    heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
     encoder.encode(P1, message1, scale);
 
-    heongpu::Plaintext P2(context);
+    heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
     encoder.encode(P2, message2, scale);
 
-    heongpu::Ciphertext C1(context);
+    heongpu::Ciphertext<heongpu::Scheme::CKKS> C1(context);
     encryptor.encrypt(C1, P1);
 
-    heongpu::Ciphertext C2(context);
+    heongpu::Ciphertext<heongpu::Scheme::CKKS> C2(context);
     encryptor.encrypt(C2, P2);
 
     // Check README.md for more detail information
@@ -98,7 +99,7 @@ int main(int argc, char* argv[])
     std::vector<int> key_index = operators.bootstrapping_key_indexs();
     std::cout << "Total galois key needed for CKKS bootstrapping: "
               << key_index.size() << std::endl;
-    heongpu::Galoiskey galois_key(
+    heongpu::Galoiskey<heongpu::Scheme::CKKS> galois_key(
         context, key_index); // all galois keys are stored in GPU
     // heongpu::Galoiskey galois_key(context,key_index, false); // all galois
     // keys are stored in CPU
@@ -116,13 +117,13 @@ int main(int argc, char* argv[])
     std::cout << "Depth before bootstrapping: " << C1.depth() << std::endl;
 
     // Bootstapping Operation
-    heongpu::Ciphertext cipher_boot =
+    heongpu::Ciphertext<heongpu::Scheme::CKKS> cipher_boot =
         operators.AND_bootstrapping(C1, C2, galois_key, relin_key);
 
     std::cout << "Depth after bootstrapping: " << cipher_boot.depth()
               << std::endl;
 
-    heongpu::Plaintext P_res1(context);
+    heongpu::Plaintext<heongpu::Scheme::CKKS> P_res1(context);
     decryptor.decrypt(P_res1, cipher_boot);
     std::vector<Complex64> decrypted_1;
     encoder.decode(decrypted_1, P_res1);
