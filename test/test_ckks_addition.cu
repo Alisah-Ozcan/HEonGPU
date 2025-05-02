@@ -108,6 +108,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 8192;
@@ -181,6 +183,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 16384;
@@ -255,6 +259,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 32768;
@@ -331,6 +337,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 65536;
@@ -479,6 +487,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 8192;
@@ -546,6 +556,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 16384;
@@ -614,6 +626,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 32768;
@@ -684,6 +698,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 65536;
@@ -755,6 +771,8 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
+
+    cudaDeviceSynchronize();
 }
 
 int main(int argc, char** argv)

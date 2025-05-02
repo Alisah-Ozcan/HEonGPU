@@ -88,6 +88,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_I)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 8192;
@@ -168,6 +170,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_I)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 16384;
@@ -248,6 +252,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_I)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 32768;
@@ -329,6 +335,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_I)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 65536;
@@ -496,6 +504,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_II)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 8192;
@@ -576,6 +586,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_II)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 16384;
@@ -657,6 +669,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_II)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 32768;
@@ -738,6 +752,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_II)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 65536;
@@ -905,6 +921,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_III)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 8192;
@@ -985,6 +1003,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_III)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 16384;
@@ -1066,6 +1086,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_III)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 32768;
@@ -1147,6 +1169,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_III)
                              gpu_multiplication_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 65536;
@@ -1230,6 +1254,8 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_III)
                              gpu_multiplication_result.begin()),
                   true);
     }
+
+    cudaDeviceSynchronize();
 }
 
 int main(int argc, char** argv)

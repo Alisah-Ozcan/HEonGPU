@@ -106,6 +106,8 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
                   true);
     }
 
+    cudaDeviceSynchronize();
+
     {
         size_t poly_modulus_degree = 8192;
         int plain_modulus = 1032193;
@@ -202,6 +204,8 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
                              gpu_subtraction_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 16384;
@@ -299,6 +303,8 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
                              gpu_subtraction_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 32768;
@@ -397,6 +403,8 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
                              gpu_subtraction_result.begin()),
                   true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 65536;
@@ -497,6 +505,8 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
                              gpu_subtraction_result.begin()),
                   true);
     }
+
+    cudaDeviceSynchronize();
 }
 
 int main(int argc, char** argv)

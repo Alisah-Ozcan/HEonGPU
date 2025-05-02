@@ -88,6 +88,8 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 8192;
@@ -167,6 +169,8 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 16384;
@@ -246,6 +250,8 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 32768;
@@ -326,6 +332,8 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 65536;
@@ -418,6 +426,8 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
+
+    cudaDeviceSynchronize();
 }
 
 int main(int argc, char** argv)

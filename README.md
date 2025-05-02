@@ -88,19 +88,6 @@ N=65536 in under 170 ms.
 
 HEonGPU now includes support for **Multiparty Computation (MPC)** protocols, providing a secure and collaborative framework for encrypted computations. By incorporating *Multiparty Homomorphic Encryption (MHE)* capabilities, the library enables distributed computations with threshold encryption models such as `N-out-of-N`. The implementation is fully optimized for GPU environments, delivering minimal latency and maximum performance in collaborative settings.
 
----
-
-HEonGPU is a high-performance library designed to optimize Fully Homomorphic Encryption (FHE) operations on GPUs. By leveraging the parallel processing power of GPUs, it significantly reduces the computational load of FHE through concurrent execution of complex operations. Its multi-stream architecture enables efficient parallel processing and minimizes the overhead of data transfers between the CPU and GPU. These features make HEonGPU ideal for large-scale encrypted computations, offering reduced latency and improved performance.
-
-The goal of HEonGPU is to provide:
-- A high-performance framework for executing FHE schemes, specifically `BFV` and `CKKS`, by leveraging the parallel processing capabilities of CUDA.
-- A user-friendly C++ interface that requires no prior knowledge of GPU programming, with all CUDA kernels encapsulated in easy-to-use classes.
-- An optimized multi-stream architecture that ensures efficient memory management and concurrent execution of encrypted computations on the GPU.
-
-For more information about HEonGPU: https://eprint.iacr.org/2024/1543
-
-
-
 ## Installation
 
 ### Requirements
@@ -137,8 +124,20 @@ To build and install HEonGPU, follow the steps below. This includes configuring 
 
 </div>
 
+### Release (default)
+If you don’t specify a build type, **Release** mode is picked automatically:
+
 ```bash
+# Configure (defaults to Release)
 $ cmake -S . -D CMAKE_CUDA_ARCHITECTURES=89 -B build
+$ cmake --build ./build/
+$ sudo cmake --install build
+```
+
+### Debug
+To enable **Debug** mode (with -g for host and device(CUDA)):
+```bash
+$ cmake -S . -D CMAKE_BUILD_TYPE=Debug -D CMAKE_CUDA_ARCHITECTURES=89 -B build
 $ cmake --build ./build/
 $ sudo cmake --install build
 ```
