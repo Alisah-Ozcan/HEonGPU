@@ -13,6 +13,7 @@
 #include <istream>
 #include <fstream>
 #include <string>
+#include <cstdint>
 #include <stdexcept>
 #include <zlib.h>
 
