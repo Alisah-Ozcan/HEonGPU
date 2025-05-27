@@ -1,10 +1,10 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef DEFAULT_MODULUS_H
-#define DEFAULT_MODULUS_H
+#ifndef HEONGPU_DEFAULT_MODULUS_H
+#define HEONGPU_DEFAULT_MODULUS_H
 
 #include "common.cuh"
 #include "nttparameters.cuh"
@@ -34,4 +34,4 @@ namespace heongpu
 
     } // namespace defaultparams
 } // namespace heongpu
-#endif // DEFAULT_MODULUS_H
+#endif // HEONGPU_DEFAULT_MODULUS_H

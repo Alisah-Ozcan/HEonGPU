@@ -1,4 +1,4 @@
-# Copyright 2024 Alişah Özcan
+# Copyright 2024-2025 Alişah Özcan
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 # Developer: Alişah Özcan
@@ -13,6 +13,9 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(googletest)
+
+list(APPEND CMAKE_MODULE_PATH ${googletest_SOURCE_DIR}/cmake)
+include(GoogleTest)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_LOCATION}/test)
 
@@ -41,6 +44,11 @@ function(add_test exe source)
         CUDA_SEPARABLE_COMPILATION OFF
         POSITION_INDEPENDENT_CODE ON
         CUDA_RUNTIME_LIBRARY Static
+    )
+    gtest_discover_tests(${exe}
+        PROPERTIES
+          LABELS "unit"
+          TIMEOUT 30
     )
 endfunction()
 

@@ -1,4 +1,4 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -38,24 +38,25 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
     cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({40, 30, 30}, {40});
+        context.set_coeff_modulus_bit_sizes({40, 30, 30}, {40});
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::CKKS> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::CKKS> encryptor(context,
+                                                              public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::CKKS> decryptor(context,
+                                                              secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -67,14 +68,14 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 30);
         encoder.encode(P1, message, scale);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::CKKS> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<double> gpu_result;
@@ -84,27 +85,30 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 8192;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({40, 30, 30, 30, 30}, {40});
+        context.set_coeff_modulus_bit_sizes({40, 30, 30, 30, 30}, {40});
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::CKKS> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::CKKS> encryptor(context,
+                                                              public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::CKKS> decryptor(context,
+                                                              secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -116,14 +120,14 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 30);
         encoder.encode(P1, message, scale);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::CKKS> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<double> gpu_result;
@@ -133,28 +137,31 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 16384;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus(
+        context.set_coeff_modulus_bit_sizes(
             {45, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35}, {45});
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::CKKS> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::CKKS> encryptor(context,
+                                                              public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::CKKS> decryptor(context,
+                                                              secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -166,14 +173,14 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 35);
         encoder.encode(P1, message, scale);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::CKKS> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<double> gpu_result;
@@ -183,29 +190,33 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 32768;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({59, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
-                                   40, 40, 40, 40, 40, 40, 40, 40},
-                                  {59});
+        context.set_coeff_modulus_bit_sizes({59, 40, 40, 40, 40, 40, 40, 40, 40,
+                                             40, 40, 40, 40, 40, 40, 40, 40, 40,
+                                             40},
+                                            {59});
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::CKKS> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::CKKS> encryptor(context,
+                                                              public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::CKKS> decryptor(context,
+                                                              secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -217,14 +228,14 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 40);
         encoder.encode(P1, message, scale);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::CKKS> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<double> gpu_result;
@@ -234,31 +245,34 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
+    
+    cudaDeviceSynchronize();
 
     {
         size_t poly_modulus_degree = 65536;
-        heongpu::Parameters context(
-            heongpu::scheme_type::ckks,
+        heongpu::HEContext<heongpu::Scheme::CKKS> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
         context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus({59, 45, 45, 45, 45, 45, 45, 45, 45, 45,
-                                   45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
-                                   45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
-                                   45, 45, 45, 45, 45, 45, 45},
-                                  {59});
+        context.set_coeff_modulus_bit_sizes(
+            {59, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
+             45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
+             45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45},
+            {59});
         context.generate();
 
-        heongpu::HEKeyGenerator keygen(context);
-        heongpu::Secretkey secret_key(context);
+        heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
+        heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
         keygen.generate_secret_key(secret_key);
 
-        heongpu::Publickey public_key(context);
+        heongpu::Publickey<heongpu::Scheme::CKKS> public_key(context);
         keygen.generate_public_key(public_key, secret_key);
 
-        heongpu::HEEncoder encoder(context);
-        heongpu::HEEncryptor encryptor(context, public_key);
-        heongpu::HEDecryptor decryptor(context, secret_key);
+        heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
+        heongpu::HEEncryptor<heongpu::Scheme::CKKS> encryptor(context,
+                                                              public_key);
+        heongpu::HEDecryptor<heongpu::Scheme::CKKS> decryptor(context,
+                                                              secret_key);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -270,14 +284,14 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
             message[i] = dis(gen);
         }
 
-        heongpu::Plaintext P1(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P1(context);
         double scale = pow(2.0, 45);
         encoder.encode(P1, message, scale);
 
-        heongpu::Ciphertext C1(context);
+        heongpu::Ciphertext<heongpu::Scheme::CKKS> C1(context);
         encryptor.encrypt(C1, P1);
 
-        heongpu::Plaintext P2(context);
+        heongpu::Plaintext<heongpu::Scheme::CKKS> P2(context);
         decryptor.decrypt(P2, C1);
 
         std::vector<double> gpu_result;
@@ -287,6 +301,8 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
+
+    cudaDeviceSynchronize();
 }
 
 int main(int argc, char** argv)

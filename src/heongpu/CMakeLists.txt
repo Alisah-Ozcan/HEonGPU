@@ -1,4 +1,4 @@
-# Copyright 2024 Alişah Özcan
+# Copyright 2024-2025 Alişah Özcan
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 # Developer: Alişah Özcan
@@ -7,17 +7,24 @@ file(GLOB_RECURSE LIB_SOURCE_FILES
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     CONFIGURE_DEPENDS
     lib/host/*.cu
+    lib/host/bfv/*.cu
+    lib/host/ckks/*.cu
     lib/kernel/*.cu
     lib/util/*.cu
+    lib/util/*.cpp
 )
 
 file(GLOB_RECURSE LIB_HEADER_FILES
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     CONFIGURE_DEPENDS
     include/host/*.cuh
+    include/host/bfv/*.cuh
+    include/host/ckks/*.cuh
     include/kernel/*.cuh
     include/util/*.cuh
     include/host/*.h
+    include/host/bfv/*.h
+    include/host/ckks/*.h
     include/kernel/*.h
     include/util/*.h
 )
@@ -43,9 +50,11 @@ target_include_directories(
 target_link_libraries(heongpu PUBLIC 
     ntt
     fft
+    rngongpu
     gmp
     rmm
     CUDA::curand
+    ZLIB::ZLIB
 )
 
 set_target_properties(heongpu PROPERTIES

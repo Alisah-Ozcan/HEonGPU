@@ -1,4 +1,4 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -10,13 +10,15 @@
 // These examples have been developed with reference to the Microsoft SEAL
 // library.
 
+// Set up HE Scheme
+constexpr auto Scheme = heongpu::Scheme::BFV;
+
 int main(int argc, char* argv[])
 {
     cudaSetDevice(0); // Use it for memory pool
 
     // Initialize encryption parameters for the BFV scheme.
-    heongpu::Parameters context(
-        heongpu::scheme_type::bfv,
+    heongpu::HEContext<Scheme> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     // Set the polynomial modulus degree. This controls the complexity
@@ -28,8 +30,7 @@ int main(int argc, char* argv[])
 
     // Alternative -> select sec_level_type as sec128(default), sec192,
     // sec256, none
-    // heongpu::Parameters context(
-    //    heongpu::scheme_type::bfv,
+    // heongpu::HEContext<Scheme> context(
     //    heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
     //    heongpu::sec_level_type::sec128);
 
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
     // operations that can be performed before the ciphertext becomes too
     // noisy to decrypt. We use a default setting suitable for our chosen
     // polynomial modulus degree.
-    context.set_default_coeff_modulus(1);
+    context.set_coeff_modulus_default_values(1);
 
     // Alternative -> first input is Q (ciphertext modulus), second one
     // is P and it determines to Q_tilda which is key modulus.(Q_tilda = QxP)
@@ -58,24 +59,24 @@ int main(int argc, char* argv[])
 
     // Generate keys: the public key for encryption, the secret key for
     // decryption and evaluation key(relinkey) for relinearization..
-    heongpu::HEKeyGenerator keygen(context);
-    heongpu::Secretkey secret_key(context);
+    heongpu::HEKeyGenerator<Scheme> keygen(context);
+    heongpu::Secretkey<Scheme> secret_key(context);
     keygen.generate_secret_key(secret_key);
 
-    heongpu::Publickey public_key(context);
+    heongpu::Publickey<Scheme> public_key(context);
     keygen.generate_public_key(public_key, secret_key);
 
-    heongpu::Relinkey relin_key(context);
+    heongpu::Relinkey<Scheme> relin_key(context);
     keygen.generate_relin_key(relin_key, secret_key);
 
     // Initialize Encoder, Encryptor, Evaluator, and Decryptor. The Encoder will
     // encode the message for SIMD operations. The Encryptor will use the public
     // key to encrypt data, while the Decryptor will use the secret key to
     // decrypt it. The Evaluator will handle operations on the encrypted data.
-    heongpu::HEEncoder encoder(context);
-    heongpu::HEEncryptor encryptor(context, public_key);
-    heongpu::HEDecryptor decryptor(context, secret_key);
-    heongpu::HELogicOperator operators(context, encoder);
+    heongpu::HEEncoder<Scheme> encoder(context);
+    heongpu::HEEncryptor<Scheme> encryptor(context, public_key);
+    heongpu::HEDecryptor<Scheme> decryptor(context, secret_key);
+    heongpu::HELogicOperator<Scheme> operators(context, encoder);
 
     // Generate simple matrix in CPU.
     const int row_size = poly_modulus_degree / 2;
@@ -110,7 +111,7 @@ int main(int argc, char* argv[])
     display_matrix(message, row_size);
 
     std::cout << "Transfer matrix to GPU and encode matrix." << std::endl;
-    heongpu::Plaintext P1(context);
+    heongpu::Plaintext<Scheme> P1(context);
     // Transfer that vector from CPU to GPU and Encode that simple vector in
     // GPU.
     encoder.encode(P1, message);
@@ -122,21 +123,21 @@ int main(int argc, char* argv[])
     // This plaintext(in GPU) value will be converted into an encrypted form
     // (ciphertext in GPU), which can be used for secure computations.
     std::cout << "Encrypt plaintext matrix." << std::endl;
-    heongpu::Ciphertext C1(context);
+    heongpu::Ciphertext<Scheme> C1(context);
     encryptor.encrypt(C1, P1);
 
     std::cout << "Initial noise budget in C1: "
               << decryptor.remainder_noise_budget(C1) << " bits" << std::endl;
 
     std::cout << "AND message homomorphically." << std::endl;
-    heongpu::Ciphertext C2(context);
+    heongpu::Ciphertext<Scheme> C2(context);
     operators.AND(C1, C1, C2, relin_key);
 
     std::cout << "Noise budget in C1 after multiplication: "
               << decryptor.remainder_noise_budget(C2) << " bits" << std::endl;
 
     std::cout << "Decrypt and decode result." << std::endl;
-    heongpu::Plaintext P2(context);
+    heongpu::Plaintext<Scheme> P2(context);
     decryptor.decrypt(P2, C2);
 
     std::cout << "Decode plaintext ing GPU and Transfer data from GPU to CPU."
@@ -158,7 +159,7 @@ int main(int argc, char* argv[])
     std::cout << "Message2 plaintext matrix." << std::endl;
     display_matrix(message2, row_size);
 
-    heongpu::Plaintext P3(context);
+    heongpu::Plaintext<Scheme> P3(context);
     encoder.encode(P3, message2);
 
     std::cout << "XNOR ciphertext with plaintext." << std::endl;
@@ -168,7 +169,7 @@ int main(int argc, char* argv[])
               << decryptor.remainder_noise_budget(C2) << " bits" << std::endl;
 
     std::cout << "Decrypt and decode result." << std::endl;
-    heongpu::Plaintext P4(context);
+    heongpu::Plaintext<Scheme> P4(context);
     decryptor.decrypt(P4, C2);
 
     std::vector<uint64_t> check2;

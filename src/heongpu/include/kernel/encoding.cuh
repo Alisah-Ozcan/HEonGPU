@@ -1,15 +1,14 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef ENCODING_H
-#define ENCODING_H
+#ifndef HEONGPU_ENCODING_H
+#define HEONGPU_ENCODING_H
 
-#include "common.cuh"
-#include "cuda_runtime.h"
-#include "context.cuh"
-#include "fft.cuh"
+#include <curand_kernel.h>
+#include "modular_arith.cuh"
+#include "complex.cuh"
 #include "bigintegerarith.cuh"
 
 namespace heongpu
@@ -48,4 +47,4 @@ namespace heongpu
         double two_pow_64, int* reverse_order, int n_power);
 
 } // namespace heongpu
-#endif // ENCODING_H
+#endif // HEONGPU_ENCODING_H

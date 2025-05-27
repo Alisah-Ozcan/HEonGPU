@@ -4,3 +4,6 @@
 [submodule "thirdparty/GPU-NTT"]
 	path = thirdparty/GPU-NTT
 	url = https://github.com/Alisah-Ozcan/GPU-NTT
+[submodule "thirdparty/RNGonGPU"]
+	path = thirdparty/RNGonGPU
+	url = https://github.com/Alisah-Ozcan/RNGonGPU

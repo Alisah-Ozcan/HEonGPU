@@ -1,14 +1,13 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef STORAGE_MANAGER_H
-#define STORAGE_MANAGER_H
+#ifndef HEONGPU_STORAGE_MANAGER_H
+#define HEONGPU_STORAGE_MANAGER_H
 
 #include "common.cuh"
 #include "nttparameters.cuh"
-#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -276,4 +275,4 @@ namespace heongpu
     }
 
 } // namespace heongpu
-#endif // STORAGE_MANAGER_H
+#endif // HEONGPU_STORAGE_MANAGER_H

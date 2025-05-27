@@ -1,4 +1,4 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -7,19 +7,22 @@
 #include "../example_util.h"
 #include <omp.h>
 
+// Set up HE Scheme
+constexpr auto Scheme = heongpu::Scheme::CKKS;
+
 int main(int argc, char* argv[])
 {
     cudaSetDevice(0); // Use it for memory pool
 
     // Initialize encryption parameters for the CKKS scheme.
-    heongpu::Parameters context(
-        heongpu::scheme_type::ckks,
+    heongpu::HEContext<Scheme> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
         heongpu::sec_level_type::none);
 
     size_t poly_modulus_degree = 16384;
     context.set_poly_modulus_degree(poly_modulus_degree);
-    context.set_coeff_modulus({60, 36, 36, 36, 36, 36, 36, 36}, {60, 60});
+    context.set_coeff_modulus_bit_sizes({60, 36, 36, 36, 36, 36, 36, 36},
+                                        {60, 60});
     context.generate();
     context.print_parameters();
 
@@ -27,17 +30,17 @@ int main(int argc, char* argv[])
 
     // Generate keys: the public key for encryption, the secret key for
     // decryption, and evaluation keys(relinkey, galoiskey, switchkey).
-    heongpu::HEKeyGenerator keygen(context);
-    heongpu::Secretkey secret_key(context);
+    heongpu::HEKeyGenerator<Scheme> keygen(context);
+    heongpu::Secretkey<Scheme> secret_key(context);
     keygen.generate_secret_key(secret_key);
 
-    heongpu::Publickey public_key(context);
+    heongpu::Publickey<Scheme> public_key(context);
     keygen.generate_public_key(public_key, secret_key);
 
-    heongpu::Relinkey relin_key(context);
+    heongpu::Relinkey<Scheme> relin_key(context);
     keygen.generate_relin_key(relin_key, secret_key);
 
-    heongpu::Galoiskey galois_key(context);
+    heongpu::Galoiskey<Scheme> galois_key(context);
     keygen.generate_galois_key(
         galois_key, secret_key); // This way will create 16(2x8) different power
                                  // of 2, if you need more change from define.h
@@ -53,18 +56,18 @@ int main(int argc, char* argv[])
     // keygen.generate_galois_key(galois_key, secret_key);
     // use apply_galois instead of rotate_row!
 
-    heongpu::Secretkey secret_key2(context);
+    heongpu::Secretkey<Scheme> secret_key2(context);
     keygen.generate_secret_key(secret_key2);
 
-    heongpu::Switchkey switch_key1_to_key2(context, false);
+    heongpu::Switchkey<Scheme> switch_key1_to_key2(context, false);
     keygen.generate_switch_key(switch_key1_to_key2, secret_key2, secret_key);
 
-    heongpu::HEEncoder encoder(context);
-    heongpu::HEEncryptor encryptor(context, public_key);
+    heongpu::HEEncoder<Scheme> encoder(context);
+    heongpu::HEEncryptor<Scheme> encryptor(context, public_key);
     // Initialize 2 different Decryptor with respect to different secretkeys.
-    heongpu::HEDecryptor decryptor_key1(context, secret_key);
-    heongpu::HEDecryptor decryptor_key2(context, secret_key2);
-    heongpu::HEArithmeticOperator operators(context, encoder);
+    heongpu::HEDecryptor<Scheme> decryptor_key1(context, secret_key);
+    heongpu::HEDecryptor<Scheme> decryptor_key2(context, secret_key2);
+    heongpu::HEArithmeticOperator<Scheme> operators(context, encoder);
 
     // Generate simple matrix in CPU.
     const int slot_count = poly_modulus_degree / 2;
@@ -82,7 +85,7 @@ int main(int argc, char* argv[])
     display_vector(message);
 
     std::cout << "Transfer vector to GPU and encode vector." << std::endl;
-    heongpu::Plaintext P1(context);
+    heongpu::Plaintext<Scheme> P1(context);
     // Transfer that vector from CPU to GPU and Encode that simple vector in
     // GPU.
     encoder.encode(P1, message, scale);
@@ -94,7 +97,7 @@ int main(int argc, char* argv[])
     // This plaintext(in GPU) value will be converted into an encrypted form
     // (ciphertext in GPU), which can be used for secure computations.
     std::cout << "Encrypt plaintext vector." << std::endl;
-    heongpu::Ciphertext C1(context);
+    heongpu::Ciphertext<Scheme> C1(context);
     encryptor.encrypt(C1, P1);
 
     std::cout << "Square message homomorphically." << std::endl;
@@ -106,7 +109,7 @@ int main(int argc, char* argv[])
     operators.rescale_inplace(C1);
 
     std::cout << "Decrypt and decode result." << std::endl;
-    heongpu::Plaintext P2(context);
+    heongpu::Plaintext<Scheme> P2(context);
     decryptor_key1.decrypt(P2, C1);
 
     std::cout << "Decode plaintext and Transfer data from GPU to CPU."
@@ -126,7 +129,7 @@ int main(int argc, char* argv[])
     operators.rotate_rows_inplace(C1, galois_key, 3);
 
     std::cout << "Decrypt and decode result." << std::endl;
-    heongpu::Plaintext P3(context);
+    heongpu::Plaintext<Scheme> P3(context);
     decryptor_key1.decrypt(P3, C1);
 
     std::vector<double> check2;
@@ -143,7 +146,7 @@ int main(int argc, char* argv[])
     operators.keyswitch(C1, C1, switch_key1_to_key2);
 
     std::cout << "Decrypt and decode result." << std::endl;
-    heongpu::Plaintext P4(context);
+    heongpu::Plaintext<Scheme> P4(context);
     decryptor_key2.decrypt(
         P4, C1); // do not forget this should be decryptor of key2
 

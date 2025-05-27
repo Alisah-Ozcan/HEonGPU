@@ -1,14 +1,13 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef DECRYPTION_H
-#define DECRYPTION_H
+#ifndef HEONGPU_DECRYPTION_H
+#define HEONGPU_DECRYPTION_H
 
-#include "common.cuh"
-#include "cuda_runtime.h"
-#include "context.cuh"
+#include <curand_kernel.h>
+#include "modular_arith.cuh"
 #include "bigintegerarith.cuh"
 
 namespace heongpu
@@ -66,4 +65,4 @@ namespace heongpu
         int decomp_mod_count);
 
 } // namespace heongpu
-#endif // DECRYPTION_H
+#endif // HEONGPU_DECRYPTION_H

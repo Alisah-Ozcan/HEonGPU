@@ -1,4 +1,4 @@
-﻿// Copyright 2024 Alişah Özcan
+﻿// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
@@ -222,8 +222,9 @@ namespace heongpu
     {
         // 2 * n * d * max(D) * max(D')
 
-        int total_bit = 1 + countBits(n) + countBits(dtilda_counter.size()) +
-                        (m * 60) + (m * 60);
+        int total_bit = 1 + calculate_bit_size(n) +
+                        calculate_bit_size(dtilda_counter.size()) + (m * 60) +
+                        (m * 60);
 
         float result = static_cast<float>(total_bit);
 

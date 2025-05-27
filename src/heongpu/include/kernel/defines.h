@@ -1,10 +1,10 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef DEFINES_H
-#define DEFINES_H
+#ifndef HEONGPU_DEFINES_H
+#define HEONGPU_DEFINES_H
 
 // --------------------- //
 // Author: Alisah Ozcan
@@ -37,4 +37,4 @@ constexpr static float max_device_memorypool_size = 0.8f; // %80 of GPU memory
 constexpr static float initial_host_memorypool_size = 0.1f; // %10 of CPU memory
 constexpr static float max_host_memorypool_size = 0.2f; // %20 of CPU memory
 
-#endif // DEFINES_H
+#endif // HEONGPU_DEFINES_H

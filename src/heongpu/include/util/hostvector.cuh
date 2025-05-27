@@ -1,10 +1,10 @@
-// Copyright 2024 Alişah Özcan
+// Copyright 2024-2025 Alişah Özcan
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#ifndef HOST_VECTOR_H
-#define HOST_VECTOR_H
+#ifndef HEONGPU_HOST_VECTOR_H
+#define HEONGPU_HOST_VECTOR_H
 
 #include "memorypool.cuh"
 #include "devicevector.cuh"
@@ -30,4 +30,4 @@ namespace heongpu
     };
 
 } // namespace heongpu
-#endif // HOST_VECTOR_H
+#endif // HEONGPU_HOST_VECTOR_H

@@ -1,10 +1,16 @@
-# Copyright 2024 Alişah Özcan
+# Copyright 2024-2025 Alişah Özcan
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 # Developer: Alişah Özcan
 
 cmake_minimum_required(VERSION 3.26.4 FATAL_ERROR)
-project(HEonGPU VERSION 1.0 LANGUAGES C CXX CUDA ASM)
+project(HEonGPU VERSION 1.1 LANGUAGES C CXX CUDA ASM)
+
+if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type (Debug or Release)" )
+endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release Debug)
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 set(BINARY_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake)
@@ -12,9 +18,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+set(CMAKE_CUDA_FLAGS_DEBUG   "${CMAKE_CUDA_FLAGS_DEBUG} -g")
+set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE} -O3")
+
 find_package(CUDAToolkit REQUIRED)
 find_package(Thrust REQUIRED)
 find_package(OpenMP REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES 75)
@@ -37,7 +50,7 @@ set(HEonGPU_PROJECT_CONFIG "${HEonGPU_GENERATED_DIR}/${PROJECT_NAME}Config.cmake
 set(HEonGPU_TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets")
 set(HEonGPU_CONFIG_INSTALL_DIR "lib/cmake/${PROJECT_NAME}-${PROJECT_VERSION}")
 set(HEonGPU_NAMESPACE "${PROJECT_NAME}::")
-set(HEonGPU_VERSION 1.0)
+set(HEonGPU_VERSION 1.1)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -56,6 +69,10 @@ install(
 
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
 
+set(RNGonGPU_USE_INTERNAL_GPUNTT
+    OFF CACHE BOOL
+    "Force using global GPU-NTT (thirdparty/GPU-NTT) instead of RNGonGPU's internal" FORCE)
+
 add_subdirectory(thirdparty)
 add_subdirectory(src)
 
@@ -66,6 +83,7 @@ add_subdirectory(src)
 option(HEonGPU_BUILD_TESTS "Build HEonGPU Tests" OFF)
 message(STATUS "HEonGPU_BUILD_TESTS: ${HEonGPU_BUILD_TESTS}")
 if(HEonGPU_BUILD_TESTS)
+    enable_testing()
     add_subdirectory(test)
 endif()
 

@@ -1,4 +1,4 @@
-# Copyright 2024 Alişah Özcan
+# Copyright 2024-2025 Alişah Özcan
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 # Developer: Alişah Özcan
@@ -15,8 +15,8 @@ set(EXECUTABLES
     7_multi_stream_usage_way2 7_multi_stream_usage_way2.cu
     8_basic_bfv_logic 8_basic_bfv_logic.cu
     9_basic_ckks_logic 9_basic_ckks_logic.cu
-    10_profiling 10_profiling.cu
-    11_bootstrap_prof 11_bootstrap_prof.cu
+    10_bfv_serialization 10_bfv_serialization.cu
+    11_ckks_serialization 11_ckks_serialization.cu
 )
 
 function(add_example exe source)
