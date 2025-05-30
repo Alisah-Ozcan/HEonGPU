@@ -160,5 +160,18 @@ namespace heongpu
     calculate_upper_half_threshold(const std::vector<Modulus64>& prime_vector,
                                    const int size);
 
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+
+    static __forceinline__ __device__ uint32_t warp_reduce(uint32_t input)
+    {
+        for (int offset = warpSize / 2; offset > 0; offset >>= 1)
+        {
+            input += __shfl_down_sync(0xFFFFFFFF, input, offset);
+        }
+        return input;
+    }
+
 } // namespace heongpu
 #endif // HEONGPU_UTIL_H

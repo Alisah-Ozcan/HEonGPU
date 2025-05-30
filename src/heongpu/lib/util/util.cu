@@ -267,7 +267,7 @@ namespace heongpu
 
         for (int size : prime_bit_sizes)
         {
-            prime_vector_.emplace_back(Modulus(prime_table[size].back()));
+            prime_vector_.emplace_back(Modulus64(prime_table[size].back()));
             prime_table[size].pop_back();
         }
 
@@ -301,7 +301,7 @@ namespace heongpu
 
         for (int size : prime_bit_sizes)
         {
-            all_primes.emplace_back(Modulus(prime_table[size].back()));
+            all_primes.emplace_back(Modulus64(prime_table[size].back()));
             prime_table[size].pop_back();
         }
 
@@ -781,7 +781,8 @@ namespace heongpu
         return result_upper_half_threshold;
     }
 
-    //////////////////////////
-    //////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
 
 } // namespace heongpu

@@ -9,6 +9,7 @@ file(GLOB_RECURSE LIB_SOURCE_FILES
     lib/host/*.cu
     lib/host/bfv/*.cu
     lib/host/ckks/*.cu
+    lib/host/tfhe/*.cu
     lib/kernel/*.cu
     lib/util/*.cu
     lib/util/*.cpp
@@ -20,6 +21,7 @@ file(GLOB_RECURSE LIB_HEADER_FILES
     include/host/*.cuh
     include/host/bfv/*.cuh
     include/host/ckks/*.cuh
+    include/host/tfhe/*.cuh
     include/kernel/*.cuh
     include/util/*.cuh
     include/host/*.h

@@ -10,6 +10,8 @@
 #include <curand_kernel.h>
 #include "cuda_runtime.h"
 #include "modular_arith.cuh"
+#include "util.cuh"
+#include "small_ntt.cuh"
 
 namespace heongpu
 {
@@ -132,6 +134,41 @@ namespace heongpu
                                      Data64* old_secret_key, Data64* e_a,
                                      Modulus64* modulus, Data64* factor,
                                      int n_power, int rns_mod_count);
+
+    __global__ void tfhe_secretkey_gen_kernel(int32_t* secret_key, int size,
+                                              int seed);
+
+    __global__ void tfhe_generate_noise_kernel(double* output, int seed, int n,
+                                               double stddev);
+
+    __global__ void tfhe_generate_uniform_random_number_kernel(int32_t* output,
+                                                               int seed, int n);
+
+    __global__ void tfhe_generate_switchkey_kernel(
+        const int32_t* sk_rlwe, const int32_t* sk_lwe, const double* noise,
+        int32_t* input_a, int32_t* output_b, int n, int base_bit, int length);
+
+    __global__ void
+    tfhe_generate_bootkey_random_numbers_kernel(int32_t* boot_key, int N, int k,
+                                                int bk_length, int seed,
+                                                double stddev);
+
+    __global__ void tfhe_convert_rlwekey_ntt_domain_kernel(
+        Data64* key_out, int32_t* key_in,
+        const Root64* __restrict__ forward_root_of_unity_table,
+        const Modulus64 modulus, int N);
+
+    __global__ void tfhe_generate_bootkey_kernel(
+        const Data64* sk_rlwe, const int32_t* sk_lwe, int32_t* boot_key,
+        const Root64* __restrict__ forward_root_of_unity_table,
+        const Root64* __restrict__ inverse_root_of_unity_table,
+        const Ninverse64 n_inverse, const Modulus64 modulus, int N, int k,
+        int bk_bit, int bk_length);
+
+    __global__ void tfhe_convert_bootkey_ntt_domain_kernel(
+        Data64* key_out, int32_t* key_in,
+        const Root64* __restrict__ forward_root_of_unity_table,
+        const Modulus64 modulus, int N, int k, int bk_length);
 
 } // namespace heongpu
 #endif // HEONGPU_KEYGENERATION_H

@@ -3,7 +3,7 @@
 HEonGPU is a high-performance library designed to optimize Fully Homomorphic Encryption (FHE) operations on GPUs. By leveraging the parallel processing power of GPUs, it significantly reduces the computational load of FHE through concurrent execution of complex operations. Its multi-stream architecture enables efficient parallel processing and minimizes the overhead of data transfers between the CPU and GPU. These features make HEonGPU ideal for large-scale encrypted computations, offering reduced latency and improved performance.
 
 The goal of HEonGPU is to provide:
-- A high-performance framework for executing FHE schemes, specifically `BFV` and `CKKS`, by leveraging the parallel processing capabilities of CUDA.
+- A high-performance framework for executing FHE schemes, specifically `BFV`, `CKKS` and `TFHE`, by leveraging the parallel processing capabilities of CUDA.
 - A user-friendly C++ interface that requires no prior knowledge of GPU programming, with all CUDA kernels encapsulated in easy-to-use classes.
 - An optimized multi-stream architecture that ensures efficient memory management and concurrent execution of encrypted computations on the GPU.
 
@@ -17,17 +17,47 @@ For more information about HEonGPU: https://eprint.iacr.org/2024/1543
 |:----------------------------:|:---------:|
 | BFV                          | ✓         |
 | CKKS                         | ✓         |
-| BGV                          | Soon      |
-| TFHE                         | Very Soon |
+| BGV                          | Very Soon |
+| TFHE                         | ✓         |
 | CKKS Regular Bootstrapping   | ✓         |
 | CKKS Slim Bootstrapping      | ✓         |
 | CKKS Bit Bootstrapping       | ✓         |
 | CKKS Gate Bootstrapping      | ✓         |
+| TFHE Gate Bootstrapping      | ✓         |
 | Multiparty Computation (MPC) | ✓         |
 
 </div>
 
 ## News
+
+### 🚨 **New Scheme: TFHE (Torus Fully Homomorphic Encryption)**
+
+The HEonGPU library now includes support for the `TFHE` (Torus Fully Homomorphic Encryption) scheme with GPU acceleration. This enables efficient evaluation of Boolean circuits using fast gate bootstrapping and low-latency parallel execution on modern CUDA-enabled GPUs.
+
+Currently, the implementation supports a fixed parameter set targeting 128-bit security. In upcoming releases, we plan to:
+
+- Make the parameters fully configurable,
+- Provide default parameter sets for **128-bit**, **192-bit**, and **256-bit** security levels.
+- Further optimize and accelerate the TFHE implementation with improved CUDA kernels and parallelism strategies,
+- Introduce native support for **homomorphic unsigned arithmetic** via new types:  
+  `huint8`, `huint16`, `huint32`, `huint64`, `huint128`, and `huint256`.
+
+
+<div align="center">
+
+|           | uint8 | uint16 | uint32 | uint64 | uint128 | uint256 |
+|-----------|-------|--------|--------|--------|---------|---------|
+| [TFHE-rs](https://github.com/zama-ai/tfhe-rs)   | 31.53 | 31.54  | 31.55  | 32.03  | 33.74   | 58.32   |
+| [Literature](https://tches.iacr.org/index.php/TCHES/article/view/11931)  | 18.63 | 18.61  | 18.87  | 24.23  | 29.97   | 58.30   |
+| **HEonGPU**   | **12.72** | **12.75**  | **13.60**  | **15.88**  | **23.10**   | **38.24**   |
+| Speedup (vs [TFHE-rs](https://github.com/zama-ai/tfhe-rs))  | 2.48× | 2.47×  | 2.32×  | 2.02×  | 1.46×   | 1.52×   |
+| Speedup (vs [Literature](https://tches.iacr.org/index.php/TCHES/article/view/11931)) | 1.46× | 1.46×  | 1.39×  | 1.53×  | 1.30×   | 1.52×   |
+
+</div>
+
+> **Table**: Latency (ms) comparison between [TFHE-rs](https://github.com/zama-ai/tfhe-rs), [Literature](https://tches.iacr.org/index.php/TCHES/article/view/11931), and HEonGPU for different bit sizes (on GPU), based on the STD128 parameter set.  
+> All benchmarks were performed on an **NVIDIA RTX 4090 GPU**.  
+> The last two rows show the speedup of HEonGPU with respect to [TFHE-rs](https://github.com/zama-ai/tfhe-rs) and [Literature](https://tches.iacr.org/index.php/TCHES/article/view/11931).
 
 ### 🚨 **New Feature: Serialization Module**
 
@@ -124,20 +154,8 @@ To build and install HEonGPU, follow the steps below. This includes configuring 
 
 </div>
 
-### Release (default)
-If you don’t specify a build type, **Release** mode is picked automatically:
-
 ```bash
-# Configure (defaults to Release)
 $ cmake -S . -D CMAKE_CUDA_ARCHITECTURES=89 -B build
-$ cmake --build ./build/
-$ sudo cmake --install build
-```
-
-### Debug
-To enable **Debug** mode (with -g for host and device(CUDA)):
-```bash
-$ cmake -S . -D CMAKE_BUILD_TYPE=Debug -D CMAKE_CUDA_ARCHITECTURES=89 -B build
 $ cmake --build ./build/
 $ sudo cmake --install build
 ```

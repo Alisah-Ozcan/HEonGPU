@@ -438,7 +438,43 @@ namespace heongpu
         }
     }
 
-    //////////////////
-    //////////////////
+    __global__ void decrypt_lwe_kernel(int32_t* sk, int32_t* input_a,
+                                       int32_t* input_b, int32_t* output, int n,
+                                       int k)
+    {
+        extern __shared__ uint32_t sdata[];
+        int idx = threadIdx.x;
+        int block_x = blockIdx.x;
+
+        int lane = idx & (warpSize - 1);
+        int wid = idx >> 5;
+        int n_warps = (blockDim.x + warpSize - 1) >> 5;
+
+        int base = block_x * n;
+        uint32_t local_sum = 0;
+        for (int i = idx; i < n; i += blockDim.x)
+        {
+            uint32_t secret_key = sk[i];
+            uint32_t r = input_a[base + i];
+            local_sum += (uint32_t) (r * secret_key);
+        }
+
+        uint32_t warp_sum = warp_reduce(local_sum);
+
+        if (lane == 0)
+            sdata[wid] = warp_sum;
+        __syncthreads();
+
+        if (wid == 0)
+        {
+            uint32_t block_sum = (lane < n_warps ? sdata[lane] : 0);
+            block_sum = warp_reduce(block_sum);
+            if (lane == 0)
+            {
+                output[block_x] =
+                    static_cast<int32_t>(input_b[block_x] - block_sum);
+            }
+        }
+    }
 
 } // namespace heongpu

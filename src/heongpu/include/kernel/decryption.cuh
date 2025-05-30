@@ -9,6 +9,7 @@
 #include <curand_kernel.h>
 #include "modular_arith.cuh"
 #include "bigintegerarith.cuh"
+#include "util.cuh"
 
 namespace heongpu
 {
@@ -63,6 +64,14 @@ namespace heongpu
         Modulus64 gamma, Data64* Qi_t, Data64* Qi_gamma, Data64* Qi_inverse,
         Data64 mulq_inv_t, Data64 mulq_inv_gamma, Data64 inv_gamma, int n_power,
         int decomp_mod_count);
+
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+
+    __global__ void decrypt_lwe_kernel(int32_t* sk, int32_t* input_a,
+                                       int32_t* input_b, int32_t* output, int n,
+                                       int k);
 
 } // namespace heongpu
 #endif // HEONGPU_DECRYPTION_H

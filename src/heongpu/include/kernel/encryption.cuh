@@ -9,6 +9,8 @@
 #include "common.cuh"
 #include "cuda_runtime.h"
 #include "modular_arith.cuh"
+#include <curand_kernel.h>
+#include "util.cuh"
 
 namespace heongpu
 {
@@ -34,6 +36,18 @@ namespace heongpu
     __global__ void cipher_message_add_kernel(Data64* ciphertext,
                                               Data64* plaintext,
                                               Modulus64* modulus, int n_power);
+
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
+
+    __global__ void initialize_random_states_kernel(curandState_t* states,
+                                                    Data64 seed,
+                                                    int total_threads);
+
+    __global__ void encrypt_lwe_kernel(curandState_t* states, int32_t* sk,
+                                       int32_t* output_a, int32_t* output_b,
+                                       int n, int k, int total_state_count);
 
 } // namespace heongpu
 

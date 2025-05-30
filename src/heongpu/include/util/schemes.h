@@ -13,7 +13,8 @@ namespace heongpu
     enum class Scheme
     {
         BFV,
-        CKKS
+        CKKS,
+        TFHE
     };
 
     template <Scheme S> class Ciphertext;
@@ -35,6 +36,8 @@ namespace heongpu
     template <Scheme S> class MultipartyGaloiskey;
 
     template <Scheme S> class Switchkey;
+
+    template <Scheme S> class Bootstrappingkey;
 
     template <Scheme S> class HEKeyGenerator;
 
@@ -65,7 +68,10 @@ namespace heongpu
         ckks = 0x2,
 
         // Brakerski-Gentry-Vaikuntanathan scheme
-        bgv = 0x3
+        bgv = 0x3,
+
+        // Fast Fully Homomorphic Encryption over the Torus
+        tfhe = 0x4
     };
 
     enum class sec_level_type : std::uint8_t

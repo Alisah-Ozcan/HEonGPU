@@ -266,4 +266,64 @@ namespace heongpu
         ciphertext[idx + (block_y << n_power)] = ct_0;
     }
 
+    __global__ void initialize_random_states_kernel(curandState* states,
+                                                    Data64 seed,
+                                                    int total_threads)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= total_threads)
+            return;
+
+        curand_init(seed, (Data64) idx, 0, &states[idx]);
+    }
+
+    __global__ void encrypt_lwe_kernel(curandState_t* states, int32_t* sk,
+                                       int32_t* output_a, int32_t* output_b,
+                                       int n, int k, int total_state_count)
+    {
+        extern __shared__ uint32_t sdata[];
+        int idx = threadIdx.x;
+        int block_x = blockIdx.x;
+        int g_idx = block_x * blockDim.x + idx;
+
+        curandState_t local_state = states[g_idx];
+
+        int lane = idx & (warpSize - 1);
+        int wid = idx >> 5;
+        int n_warps = (blockDim.x + warpSize - 1) >> 5;
+
+        for (int seg = block_x; seg < k; seg += gridDim.x)
+        {
+            int base = seg * n;
+            uint32_t local_sum = 0;
+            for (int i = idx; i < n; i += blockDim.x)
+            {
+                uint32_t secret_key = sk[i];
+                uint32_t r = curand(&local_state);
+                output_a[base + i] = r;
+                local_sum += (uint32_t) (r * secret_key);
+            }
+
+            uint32_t warp_sum = warp_reduce(local_sum);
+
+            if (lane == 0)
+                sdata[wid] = warp_sum;
+            __syncthreads();
+
+            if (wid == 0)
+            {
+                uint32_t block_sum = (lane < n_warps ? sdata[lane] : 0);
+                block_sum = warp_reduce(block_sum);
+                if (lane == 0)
+                {
+                    output_b[seg] =
+                        static_cast<int32_t>(block_sum + output_b[seg]);
+                }
+            }
+            __syncthreads();
+        }
+
+        states[g_idx] = local_state;
+    }
+
 } // namespace heongpu

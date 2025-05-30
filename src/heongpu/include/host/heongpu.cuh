@@ -30,6 +30,15 @@
 #include "ckks/decryptor.cuh"
 #include "ckks/operator.cuh"
 
+#include "tfhe/context.cuh"
+#include "tfhe/secretkey.cuh"
+#include "tfhe/ciphertext.cuh"
+#include "tfhe/keygenerator.cuh"
+#include "tfhe/encryptor.cuh"
+#include "tfhe/decryptor.cuh"
+#include "tfhe/evaluationkey.cuh"
+#include "tfhe/operator.cuh"
+
 #include "serializer.h"
 
 namespace heongpu

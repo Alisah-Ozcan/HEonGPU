@@ -997,4 +997,421 @@ namespace heongpu
         }
     }
 
+    // Not cryptographically secure, will be fixed later.
+    __global__ void tfhe_secretkey_gen_kernel(int32_t* secret_key, int size,
+                                              int seed)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (idx >= size)
+            return;
+
+        curandState_t state;
+        curand_init(seed, idx, 0, &state);
+
+        int32_t value = (curand(&state) & 1); // 0 or 1
+        secret_key[idx] = value;
+    }
+
+    __global__ void tfhe_generate_noise_kernel(double* output, int seed, int n,
+                                               double stddev)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (idx < n)
+        {
+            curandState_t thread_state;
+            curand_init(seed, idx, 0, &thread_state);
+
+            double z = curand_normal_double(&thread_state);
+
+            output[idx] = stddev * z;
+        }
+    }
+
+    __global__ void tfhe_generate_uniform_random_number_kernel(int32_t* output,
+                                                               int seed, int n)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (idx < n)
+        {
+            curandState_t thread_state;
+            curand_init(seed, idx, 0, &thread_state);
+
+            int32_t result = curand(&thread_state);
+
+            output[idx] = result;
+        }
+    }
+
+    __global__ void tfhe_generate_switchkey_kernel(
+        const int32_t* sk_rlwe, const int32_t* sk_lwe, const double* noise,
+        int32_t* input_a, int32_t* output_b, int n, int base_bit, int length)
+    {
+        extern __shared__ uint32_t sdata[];
+        int idx = threadIdx.x;
+        int block_x = blockIdx.x;
+
+        int lane = idx & (warpSize - 1);
+        int wid = idx >> 5;
+        int nWarps = (blockDim.x + warpSize - 1) / warpSize;
+
+        int base_bit_reg = base_bit;
+        int base = 1 << base_bit;
+
+        int32_t sk_rlwe_reg = sk_rlwe[block_x];
+
+        Data64 offset_a = block_x * ((Data64) (base - 1) * length * n);
+        Data64 offset_b = block_x * ((Data64) (base - 1) * length);
+
+        for (int length_index = 0; length_index < length; length_index++)
+        {
+            uint32_t bl = 1 << (32 - ((length_index + 1) * base_bit_reg));
+
+            int offset_in_a = length_index * (base - 1) * n;
+            int offset_in_b = length_index * (base - 1);
+
+            for (int base_index = 0; base_index < (base - 1); base_index++)
+            {
+                uint32_t temp = bl * (base_index + 1);
+                uint32_t message = sk_rlwe_reg * temp;
+
+                uint32_t local_sum = 0;
+                for (int i = idx; i < n; i += blockDim.x)
+                {
+                    Data64 input_a_index =
+                        offset_a + offset_in_a + (base_index * n) + i;
+
+                    uint32_t secret_key = sk_lwe[i];
+                    uint32_t a_reg = input_a[input_a_index];
+
+                    local_sum += (uint32_t) (a_reg * secret_key);
+                }
+
+                uint32_t warp_sum = warp_reduce(local_sum);
+
+                if (lane == 0)
+                    sdata[wid] = warp_sum;
+                __syncthreads();
+
+                if (wid == 0)
+                {
+                    uint32_t block_sum = (lane < nWarps ? sdata[lane] : 0);
+                    block_sum = warp_reduce(block_sum);
+                    if (lane == 0)
+                    {
+                        Data64 output_b_index =
+                            offset_b + offset_in_b + base_index;
+
+                        double noise_reg = noise[output_b_index];
+                        // Make it efficient
+                        double frac = noise_reg - trunc(noise_reg);
+                        double x = frac * 4294967296.0; // 1ULL<<32 = 4294967296
+                        uint32_t u = static_cast<uint32_t>(floor(x + 0.5));
+
+                        output_b[output_b_index] = static_cast<int32_t>(
+                            block_sum + message + static_cast<int32_t>(u));
+                    }
+                }
+                __syncthreads();
+            }
+        }
+    }
+
+    __global__ void tfhe_generate_bootkey_random_numbers_kernel(
+        int32_t* boot_key, int N, int k, int bk_length, int seed, double stddev)
+    {
+        const int idx_x = threadIdx.x;
+        const int block_x = blockIdx.x;
+        const int g_idx = block_x * blockDim.x + idx_x;
+
+        const int N_reg = N;
+        const int k_reg = k;
+        const int length_reg = bk_length;
+
+        const double stddev_reg = stddev;
+
+        curandState_t thread_state;
+        curand_init(seed, g_idx, 0, &thread_state);
+
+        Data64 offset_block = block_x * (Data64) (k_reg + 1) *
+                              ((Data64) length_reg * (k_reg + 1) * N_reg);
+
+        for (int loop1 = 0; loop1 < (k_reg + 1); loop1++)
+        {
+            int offset1 = loop1 * (length_reg * (k_reg + 1) * N_reg);
+
+            for (int loop2 = 0; loop2 < length_reg; loop2++)
+            {
+                int offset2 = loop2 * ((k_reg + 1) * N_reg);
+
+                for (int loop3 = 0; loop3 < k_reg; loop3++) // (k_reg + 1)
+                {
+                    Data64 offset = offset_block + offset1 + offset2;
+                    offset = offset + (loop3 * N_reg);
+
+                    boot_key[offset + idx_x] = curand(&thread_state);
+                    boot_key[offset + idx_x + blockDim.x] =
+                        curand(&thread_state);
+                }
+
+                Data64 offset = offset_block + offset1 + offset2;
+                offset = offset + (k_reg * N_reg);
+
+                double r0 = curand_normal_double(&thread_state);
+                double r1 = curand_normal_double(&thread_state);
+                r0 = r0 * stddev_reg;
+                r1 = r1 * stddev_reg;
+
+                double frac0 = r0 - trunc(r0);
+                double frac1 = r1 - trunc(r1);
+                double x0 = frac0 * 4294967296.0;
+                double x1 = frac1 * 4294967296.0;
+                uint32_t u0 = static_cast<uint32_t>(floor(x0 + 0.5));
+                uint32_t u1 = static_cast<uint32_t>(floor(x1 + 0.5));
+
+                boot_key[offset + idx_x] = static_cast<int32_t>(u0);
+                boot_key[offset + idx_x + blockDim.x] =
+                    static_cast<int32_t>(u1);
+            }
+        }
+    }
+
+    __global__ void tfhe_convert_rlwekey_ntt_domain_kernel(
+        Data64* key_out, int32_t* key_in,
+        const Root64* __restrict__ forward_root_of_unity_table,
+        const Modulus64 modulus, int N)
+    {
+        extern __shared__ char shared_memory_typed[];
+        Data64* shared_memory_poly1 =
+            reinterpret_cast<Data64*>(shared_memory_typed);
+
+        const int idx_x = threadIdx.x;
+        const int block_x = blockIdx.x;
+
+        const Modulus64 modulus_reg = modulus;
+
+        Data64 offset = block_x * N;
+
+        int32_t key_reg0 = key_in[offset + idx_x];
+        int32_t key_reg1 = key_in[offset + idx_x + blockDim.x];
+
+        // PRE PROCESS
+        shared_memory_poly1[idx_x] =
+            (key_reg0 < 0) ? static_cast<Data64>(modulus_reg.value + key_reg0)
+                           : static_cast<Data64>(key_reg0);
+        shared_memory_poly1[idx_x + blockDim.x] =
+            (key_reg1 < 0) ? static_cast<Data64>(modulus_reg.value + key_reg1)
+                           : static_cast<Data64>(key_reg1);
+        __syncthreads();
+
+        SmallForwardNTT(shared_memory_poly1, forward_root_of_unity_table,
+                        modulus_reg, false);
+
+        key_out[offset + idx_x] = shared_memory_poly1[idx_x];
+        key_out[offset + idx_x + blockDim.x] =
+            shared_memory_poly1[idx_x + blockDim.x];
+    }
+
+    // Should Perform 512 Threads !
+    __global__ void tfhe_generate_bootkey_kernel(
+        const Data64* sk_rlwe, const int32_t* sk_lwe, int32_t* boot_key,
+        const Root64* __restrict__ forward_root_of_unity_table,
+        const Root64* __restrict__ inverse_root_of_unity_table,
+        const Ninverse64 n_inverse, const Modulus64 modulus, int N, int k,
+        int bk_bit, int bk_length)
+    {
+        extern __shared__ char shared_memory_typed[];
+        Data64* shared_memory_poly1 =
+            reinterpret_cast<Data64*>(shared_memory_typed);
+
+        const int idx_x = threadIdx.x;
+        const int block_x = blockIdx.x;
+
+        const int N_reg = N;
+        const int k_reg = k;
+        const int length_reg = bk_length;
+        const int bit_reg = bk_bit;
+
+        const Modulus64 modulus_reg = modulus;
+        const Data64 threshold = modulus_reg.value >> 1;
+        const Ninverse64 n_inverse_reg = n_inverse;
+
+        uint32_t message;
+        if (idx_x == 0)
+        {
+            message = sk_lwe[block_x];
+        }
+        __syncthreads();
+
+        Data64 offset_block = block_x * (Data64) (k_reg + 1) *
+                              ((Data64) length_reg * (k_reg + 1) * N_reg);
+
+        for (int loop1 = 0; loop1 < (k_reg + 1); loop1++)
+        {
+            int offset1 = loop1 * (length_reg * (k_reg + 1) * N_reg);
+
+            for (int loop2 = 0; loop2 < length_reg; loop2++)
+            {
+                int offset2 = loop2 * ((k_reg + 1) * N_reg);
+
+                uint32_t m_h = 1 << (32 - ((loop2 + 1) * bit_reg));
+
+                uint32_t acc0 = 0;
+                uint32_t acc1 = 0;
+
+                for (int loop3 = 0; loop3 < k_reg; loop3++)
+                {
+                    Data64 offset = offset_block + offset1 + offset2;
+                    offset = offset + (loop3 * N_reg);
+
+                    int offset_sk = (loop3 * N_reg);
+
+                    // PRE PROCESS
+                    int32_t boot_key0 = boot_key[offset + idx_x];
+                    int32_t boot_key1 = boot_key[offset + idx_x + blockDim.x];
+                    shared_memory_poly1[idx_x] =
+                        (boot_key0 < 0)
+                            ? static_cast<Data64>(modulus_reg.value + boot_key0)
+                            : static_cast<Data64>(boot_key0);
+                    shared_memory_poly1[idx_x + blockDim.x] =
+                        (boot_key1 < 0)
+                            ? static_cast<Data64>(modulus_reg.value + boot_key1)
+                            : static_cast<Data64>(boot_key1);
+                    __syncthreads();
+
+                    SmallForwardNTT(shared_memory_poly1,
+                                    forward_root_of_unity_table, modulus_reg,
+                                    false);
+
+                    Data64 value0 = shared_memory_poly1[idx_x];
+                    Data64 value1 = shared_memory_poly1[idx_x + blockDim.x];
+
+                    Data64 sk_rlwe0 = sk_rlwe[offset_sk + idx_x];
+                    Data64 sk_rlwe1 = sk_rlwe[offset_sk + idx_x + blockDim.x];
+
+                    value0 =
+                        OPERATOR_GPU_64::mult(value0, sk_rlwe0, modulus_reg);
+                    value1 =
+                        OPERATOR_GPU_64::mult(value1, sk_rlwe1, modulus_reg);
+
+                    shared_memory_poly1[idx_x] = value0;
+                    shared_memory_poly1[idx_x + blockDim.x] = value1;
+                    __syncthreads();
+
+                    SmallInverseNTT(shared_memory_poly1,
+                                    inverse_root_of_unity_table, modulus_reg,
+                                    n_inverse_reg, false);
+
+                    // POST PROCESS
+                    value0 = shared_memory_poly1[idx_x];
+                    value1 = shared_memory_poly1[idx_x + blockDim.x];
+                    __syncthreads();
+
+                    int32_t poly_mul0 =
+                        (value0 >= threshold)
+                            ? static_cast<int32_t>(static_cast<int64_t>(
+                                  value0 - modulus_reg.value))
+                            : static_cast<int32_t>(
+                                  static_cast<int64_t>(value0));
+                    int32_t poly_mul1 =
+                        (value1 >= threshold)
+                            ? static_cast<int32_t>(static_cast<int64_t>(
+                                  value1 - modulus_reg.value))
+                            : static_cast<int32_t>(
+                                  static_cast<int64_t>(value1));
+
+                    acc0 = acc0 + static_cast<uint32_t>(poly_mul0);
+                    acc1 = acc1 + static_cast<uint32_t>(poly_mul1);
+
+                    if ((loop1 == loop3) && (idx_x == 0))
+                    {
+                        uint32_t message_modified = m_h * message;
+                        boot_key[offset + idx_x] =
+                            boot_key0 + static_cast<int32_t>(message_modified);
+                    }
+                    __syncthreads();
+                }
+
+                Data64 offset = offset_block + offset1 + offset2;
+                offset = offset + (k_reg * N_reg);
+
+                acc0 = acc0 + boot_key[offset + idx_x];
+                acc1 = acc1 + boot_key[offset + idx_x + blockDim.x];
+
+                int32_t add_end = 0;
+                if ((loop1 == k_reg) && (idx_x == 0))
+                {
+                    uint32_t message_modified = m_h * message;
+                    add_end = static_cast<int32_t>(message_modified);
+                }
+
+                boot_key[offset + idx_x] = acc0 + add_end;
+                boot_key[offset + idx_x + blockDim.x] = acc1;
+            }
+        }
+    }
+
+    __global__ void tfhe_convert_bootkey_ntt_domain_kernel(
+        Data64* key_out, int32_t* key_in,
+        const Root64* __restrict__ forward_root_of_unity_table,
+        const Modulus64 modulus, int N, int k, int bk_length)
+    {
+        extern __shared__ char shared_memory_typed[];
+        Data64* shared_memory_poly1 =
+            reinterpret_cast<Data64*>(shared_memory_typed);
+
+        const int idx_x = threadIdx.x;
+        const int block_x = blockIdx.x;
+
+        const int N_reg = N;
+        const int k_reg = k;
+        const int length_reg = bk_length;
+
+        const Modulus64 modulus_reg = modulus;
+
+        Data64 offset_block = block_x * (Data64) (k_reg + 1) *
+                              ((Data64) length_reg * (k_reg + 1) * N_reg);
+
+        for (int loop1 = 0; loop1 < (k_reg + 1); loop1++)
+        {
+            int offset1 = loop1 * (length_reg * (k_reg + 1) * N_reg);
+
+            for (int loop2 = 0; loop2 < length_reg; loop2++)
+            {
+                int offset2 = loop2 * ((k_reg + 1) * N_reg);
+
+                for (int loop3 = 0; loop3 < (k_reg + 1); loop3++)
+                {
+                    Data64 offset = offset_block + offset1 + offset2;
+                    offset = offset + (loop3 * N_reg);
+
+                    // PRE PROCESS
+                    int32_t boot_key0 = key_in[offset + idx_x];
+                    int32_t boot_key1 = key_in[offset + idx_x + blockDim.x];
+                    shared_memory_poly1[idx_x] =
+                        (boot_key0 < 0)
+                            ? static_cast<Data64>(modulus_reg.value + boot_key0)
+                            : static_cast<Data64>(boot_key0);
+                    shared_memory_poly1[idx_x + blockDim.x] =
+                        (boot_key1 < 0)
+                            ? static_cast<Data64>(modulus_reg.value + boot_key1)
+                            : static_cast<Data64>(boot_key1);
+                    __syncthreads();
+
+                    SmallForwardNTT(shared_memory_poly1,
+                                    forward_root_of_unity_table, modulus_reg,
+                                    false);
+
+                    Data64 value0 = shared_memory_poly1[idx_x];
+                    Data64 value1 = shared_memory_poly1[idx_x + blockDim.x];
+
+                    key_out[offset + idx_x] = value0;
+                    key_out[offset + idx_x + blockDim.x] = value1;
+                }
+            }
+        }
+    }
+
 } // namespace heongpu
