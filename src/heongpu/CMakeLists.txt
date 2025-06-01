@@ -15,22 +15,6 @@ file(GLOB_RECURSE LIB_SOURCE_FILES
     lib/util/*.cpp
 )
 
-file(GLOB_RECURSE LIB_HEADER_FILES
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    CONFIGURE_DEPENDS
-    include/host/*.cuh
-    include/host/bfv/*.cuh
-    include/host/ckks/*.cuh
-    include/host/tfhe/*.cuh
-    include/kernel/*.cuh
-    include/util/*.cuh
-    include/host/*.h
-    include/host/bfv/*.h
-    include/host/ckks/*.h
-    include/kernel/*.h
-    include/util/*.h
-)
-
 add_library(heongpu STATIC ${LIB_SOURCE_FILES})
 
 set_target_properties(heongpu PROPERTIES
@@ -47,7 +31,6 @@ target_include_directories(
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/util>
     $<INSTALL_INTERFACE:include/HEonGPU-${PROJECT_VERSION}>
 )
-
 
 target_link_libraries(heongpu PUBLIC 
     ntt
@@ -74,4 +57,26 @@ install(TARGETS heongpu
   ARCHIVE DESTINATION ${ARCHIVE_DESTINATION}
 )
 
-install(FILES ${LIB_HEADER_FILES} DESTINATION ${INCLUDES_INSTALL_DIR})
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/host/
+  DESTINATION ${INCLUDES_INSTALL_DIR}
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.cuh"
+)
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/kernel/
+  DESTINATION ${INCLUDES_INSTALL_DIR}
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.cuh"
+)
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/util/
+  DESTINATION ${INCLUDES_INSTALL_DIR}
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.cuh"
+)
