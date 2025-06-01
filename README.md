@@ -206,6 +206,8 @@ $ Example: ./build/bin/examples/1_basic_bfv
 #include "heongpu.cuh"
 
 int main() {
+    cudaSetDevice(0); // Use it for memory pool
+    
     heongpu::HEContext<heongpu::Scheme::BFV> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
@@ -226,7 +228,7 @@ int main() {
     heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
     heongpu::HEEncryptor<heongpu::Scheme::BFV> encryptor(context, public_key);
     heongpu::HEDecryptor<heongpu::Scheme::BFV> decryptor(context, secret_key);
-    heongpu::HEOperator<heongpu::Scheme::BFV> operators(context);
+    heongpu::HEArithmeticOperator<heongpu::Scheme::BFV> operators(context, encoder);
 
     std::vector<uint64_t> message(poly_modulus_degree, 8ULL);
     heongpu::Plaintext<heongpu::Scheme::BFV> P1(context);
