@@ -26,22 +26,25 @@ namespace heongpu
          * boolean messages into ciphertexts that can later be decrypted by
          * the corresponding decryptor.
          *
-         * @param context Reference to the HEContext object containing encryption
-         *                parameters for the TFHE scheme.
-         * @param secret_key Reference to the Secretkey object used for encryption.
+         * @param context Reference to the HEContext object containing
+         * encryption parameters for the TFHE scheme.
+         * @param secret_key Reference to the Secretkey object used for
+         * encryption.
          */
         __host__ HEEncryptor(HEContext<Scheme::TFHE>& context,
                              Secretkey<Scheme::TFHE>& secret_key);
-        
-         /**
+
+        /**
          * @brief Encrypts a vector of boolean messages into a TFHE ciphertext.
          *
          * This function performs symmetric encryption by encoding the input
          * boolean messages into Torus format and encrypting them using the
          * secret key.
          *
-         * @param ciphertext Output ciphertext where the encrypted result will be stored.
-         * @param messages Vector of boolean values representing the plaintext to encrypt.
+         * @param ciphertext Output ciphertext where the encrypted result will
+         * be stored.
+         * @param messages Vector of boolean values representing the plaintext
+         * to encrypt.
          */
         __host__ void
         encrypt(Ciphertext<Scheme::TFHE>& ciphertext,

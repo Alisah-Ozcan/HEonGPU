@@ -41,8 +41,8 @@ namespace heongpu
         /**
          * @brief Evaluates the NAND gate on two TFHE ciphertexts.
          *
-         * Computes the NAND of `input1` and `input2`, writing the result to `output`.
-         * Requires the bootstrapping key for ciphertext refresh.
+         * Computes the NAND of `input1` and `input2`, writing the result to
+         * `output`. Requires the bootstrapping key for ciphertext refresh.
          *
          * @param input1 First input ciphertext.
          * @param input2 Second input ciphertext.
@@ -137,8 +137,8 @@ namespace heongpu
         /**
          * @brief Evaluates the AND gate on two TFHE ciphertexts.
          *
-         * Computes the AND of `input1` and `input2`, writing the result to `output`.
-         * Requires the bootstrapping key for ciphertext refresh.
+         * Computes the AND of `input1` and `input2`, writing the result to
+         * `output`. Requires the bootstrapping key for ciphertext refresh.
          *
          * @param input1 First input ciphertext.
          * @param input2 Second input ciphertext.
@@ -233,8 +233,8 @@ namespace heongpu
         /**
          * @brief Evaluates the NOR gate on two TFHE ciphertexts.
          *
-         * Computes the NOR of `input1` and `input2`, writing the result to `output`.
-         * Requires the bootstrapping key for ciphertext refresh.
+         * Computes the NOR of `input1` and `input2`, writing the result to
+         * `output`. Requires the bootstrapping key for ciphertext refresh.
          *
          * @param input1 First input ciphertext.
          * @param input2 Second input ciphertext.
@@ -329,8 +329,8 @@ namespace heongpu
         /**
          * @brief Evaluates the OR gate on two TFHE ciphertexts.
          *
-         * Computes the OR of `input1` and `input2`, writing the result to `output`.
-         * Requires the bootstrapping key for ciphertext refresh.
+         * Computes the OR of `input1` and `input2`, writing the result to
+         * `output`. Requires the bootstrapping key for ciphertext refresh.
          *
          * @param input1 First input ciphertext.
          * @param input2 Second input ciphertext.
@@ -425,8 +425,8 @@ namespace heongpu
         /**
          * @brief Evaluates the XNOR gate on two TFHE ciphertexts.
          *
-         * Computes the XNOR of `input1` and `input2`, writing the result to `output`.
-         * Requires the bootstrapping key for ciphertext refresh.
+         * Computes the XNOR of `input1` and `input2`, writing the result to
+         * `output`. Requires the bootstrapping key for ciphertext refresh.
          *
          * @param input1 First input ciphertext.
          * @param input2 Second input ciphertext.
@@ -521,8 +521,8 @@ namespace heongpu
         /**
          * @brief Evaluates the XOR gate on two TFHE ciphertexts.
          *
-         * Computes the XOR of `input1` and `input2`, writing the result to `output`.
-         * Requires the bootstrapping key for ciphertext refresh.
+         * Computes the XOR of `input1` and `input2`, writing the result to
+         * `output`. Requires the bootstrapping key for ciphertext refresh.
          *
          * @param input1 First input ciphertext.
          * @param input2 Second input ciphertext.
@@ -617,8 +617,8 @@ namespace heongpu
         /**
          * @brief Evaluates the NOT gate on two TFHE ciphertexts.
          *
-         * Computes the NOT of `input1` and `input2`, writing the result to `output`.
-         * Requires the bootstrapping key for ciphertext refresh.
+         * Computes the NOT of `input1` and `input2`, writing the result to
+         * `output`. Requires the bootstrapping key for ciphertext refresh.
          *
          * @param input1 First input ciphertext.
          * @param input2 Second input ciphertext.
@@ -664,8 +664,8 @@ namespace heongpu
         /**
          * @brief Evaluates the MUX(multiplexer) gate on two TFHE ciphertexts.
          *
-         * Computes the MUX of `input1` and `input2`, writing the result to `output`.
-         * Requires the bootstrapping key for ciphertext refresh.
+         * Computes the MUX of `input1` and `input2`, writing the result to
+         * `output`. Requires the bootstrapping key for ciphertext refresh.
          *
          * @param input1 First input ciphertext.
          * @param input2 Second input ciphertext.

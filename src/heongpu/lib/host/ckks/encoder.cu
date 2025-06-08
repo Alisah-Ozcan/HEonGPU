@@ -139,11 +139,11 @@ namespace heongpu
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        gpufft::fft_configuration<Float64> cfg_ifft = {
-            .n_power = log_slot_count_,
-            .fft_type = gpufft::type::INVERSE,
-            .mod_inverse = Complex64(fix, 0.0),
-            .stream = stream};
+        gpufft::fft_configuration<Float64> cfg_ifft{};
+        cfg_ifft.n_power = log_slot_count_;
+        cfg_ifft.fft_type = gpufft::type::INVERSE;
+        cfg_ifft.mod_inverse = Complex64(fix, 0.0);
+        cfg_ifft.stream = stream;
 
         gpufft::GPU_Special_FFT(temp_complex.data(),
                                 special_ifft_roots_table_->data(), cfg_ifft, 1);
@@ -188,11 +188,11 @@ namespace heongpu
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        gpufft::fft_configuration<Float64> cfg_ifft = {
-            .n_power = log_slot_count_,
-            .fft_type = gpufft::type::INVERSE,
-            .mod_inverse = Complex64(fix, 0.0),
-            .stream = stream};
+        gpufft::fft_configuration<Float64> cfg_ifft{};
+        cfg_ifft.n_power = log_slot_count_;
+        cfg_ifft.fft_type = gpufft::type::INVERSE;
+        cfg_ifft.mod_inverse = Complex64(fix, 0.0);
+        cfg_ifft.stream = stream;
 
         gpufft::GPU_Special_FFT(temp_complex.data(),
                                 special_ifft_roots_table_->data(), cfg_ifft, 1);
@@ -232,11 +232,11 @@ namespace heongpu
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        gpufft::fft_configuration<Float64> cfg_ifft = {
-            .n_power = log_slot_count_,
-            .fft_type = gpufft::type::INVERSE,
-            .mod_inverse = Complex64(fix, 0.0),
-            .stream = stream};
+        gpufft::fft_configuration<Float64> cfg_ifft{};
+        cfg_ifft.n_power = log_slot_count_;
+        cfg_ifft.fft_type = gpufft::type::INVERSE;
+        cfg_ifft.mod_inverse = Complex64(fix, 0.0);
+        cfg_ifft.stream = stream;
 
         gpufft::GPU_Special_FFT(message_gpu.data(),
                                 special_ifft_roots_table_->data(), cfg_ifft, 1);
@@ -276,11 +276,11 @@ namespace heongpu
 
         double fix = scale / static_cast<double>(slot_count_);
 
-        gpufft::fft_configuration<Float64> cfg_ifft = {
-            .n_power = log_slot_count_,
-            .fft_type = gpufft::type::INVERSE,
-            .mod_inverse = Complex64(fix, 0.0),
-            .stream = stream};
+        gpufft::fft_configuration<Float64> cfg_ifft{};
+        cfg_ifft.n_power = log_slot_count_;
+        cfg_ifft.fft_type = gpufft::type::INVERSE;
+        cfg_ifft.mod_inverse = Complex64(fix, 0.0);
+        cfg_ifft.stream = stream;
 
         gpufft::GPU_Special_FFT(message_gpu.data(),
                                 special_ifft_roots_table_->data(), cfg_ifft, 1);
@@ -383,10 +383,10 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        gpufft::fft_configuration<Float64> cfg_fft = {
-            .n_power = log_slot_count_,
-            .fft_type = gpufft::type::FORWARD,
-            .stream = stream};
+        gpufft::fft_configuration<Float64> cfg_fft{};
+        cfg_fft.n_power = log_slot_count_;
+        cfg_fft.fft_type = gpufft::type::FORWARD;
+        cfg_fft.stream = stream;
 
         gpufft::GPU_Special_FFT(temp_complex.data(),
                                 special_fft_roots_table_->data(), cfg_fft, 1);
@@ -447,10 +447,10 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        gpufft::fft_configuration<Float64> cfg_fft = {
-            .n_power = log_slot_count_,
-            .fft_type = gpufft::type::FORWARD,
-            .stream = stream};
+        gpufft::fft_configuration<Float64> cfg_fft{};
+        cfg_fft.n_power = log_slot_count_;
+        cfg_fft.fft_type = gpufft::type::FORWARD;
+        cfg_fft.stream = stream;
 
         gpufft::GPU_Special_FFT(temp_complex.data(),
                                 special_fft_roots_table_->data(), cfg_fft, 1);
@@ -509,10 +509,10 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        gpufft::fft_configuration<Float64> cfg_fft = {
-            .n_power = log_slot_count_,
-            .fft_type = gpufft::type::FORWARD,
-            .stream = stream};
+        gpufft::fft_configuration<Float64> cfg_fft{};
+        cfg_fft.n_power = log_slot_count_;
+        cfg_fft.fft_type = gpufft::type::FORWARD;
+        cfg_fft.stream = stream;
 
         gpufft::GPU_Special_FFT(message_gpu.data(),
                                 special_fft_roots_table_->data(), cfg_fft, 1);
@@ -567,10 +567,10 @@ namespace heongpu
             plain.scale_, two_pow_64, reverse_order->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        gpufft::fft_configuration<Float64> cfg_fft = {
-            .n_power = log_slot_count_,
-            .fft_type = gpufft::type::FORWARD,
-            .stream = stream};
+        gpufft::fft_configuration<Float64> cfg_fft{};
+        cfg_fft.n_power = log_slot_count_;
+        cfg_fft.fft_type = gpufft::type::FORWARD;
+        cfg_fft.stream = stream;
 
         gpufft::GPU_Special_FFT(message_gpu.data(),
                                 special_fft_roots_table_->data(), cfg_fft, 1);

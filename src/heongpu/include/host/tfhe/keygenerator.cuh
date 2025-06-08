@@ -40,7 +40,8 @@ namespace heongpu
             const ExecutionOptions& options = ExecutionOptions());
 
         /**
-         * @brief Generates a TFHE bootstrapping key and key switching key under the Bootstrappingkey.
+         * @brief Generates a TFHE bootstrapping key and key switching key under
+         * the Bootstrappingkey.
          *
          * Uses the given secret key and writes the result to `bk`.
          *

@@ -26,43 +26,39 @@ namespace heongpu
          * decryption of ciphertexts that were previously encrypted under the
          * same parameters and key.
          *
-         * @param context Reference to the HEContext object containing encryption
-         *                parameters for the TFHE scheme.
+         * @param context Reference to the HEContext object containing
+         * encryption parameters for the TFHE scheme.
          * @param secret_key Reference to the Secretkey object associated with
          *                   the TFHE encryption scheme.
          */
         __host__ HEDecryptor(HEContext<Scheme::TFHE>& context,
                              Secretkey<Scheme::TFHE>& secret_key);
-        
+
         /**
          * @brief Decrypts a TFHE ciphertext into a vector of boolean messages.
          *
-         * This function performs decryption of a given ciphertext using the TFHE
-         * scheme and writes the result into a boolean vector. Internally, it invokes
-         * the appropriate decryption kernel via the input storage manager, which
-         * handles any memory transfer or layout preparation needed for GPU
-         * decryption.
+         * This function performs decryption of a given ciphertext using the
+         * TFHE scheme and writes the result into a boolean vector. Internally,
+         * it invokes the appropriate decryption kernel via the input storage
+         * manager, which handles any memory transfer or layout preparation
+         * needed for GPU decryption.
          *
          * @param ciphertext Reference to the ciphertext to be decrypted.
-         * @param messages Reference to a vector that will hold the decrypted boolean values.
-         * @param options Optional execution options, including the CUDA stream to
-         *                use. Defaults to `ExecutionOptions()`.
+         * @param messages Reference to a vector that will hold the decrypted
+         * boolean values.
+         * @param options Optional execution options, including the CUDA stream
+         * to use. Defaults to `ExecutionOptions()`.
          */
         __host__ void
         decrypt(Ciphertext<Scheme::TFHE>& ciphertext,
                 std::vector<bool>& messages,
                 const ExecutionOptions& options = ExecutionOptions())
         {
-
-          input_storage_manager(
-            ciphertext,
-            [&](Ciphertext<Scheme::TFHE>& ciphertext_)
-            {
-                decrypt_lwe(messages, ciphertext, options.stream_);
-            },
-            options, false);
-
-            
+            input_storage_manager(
+                ciphertext,
+                [&](Ciphertext<Scheme::TFHE>& ciphertext_)
+                { decrypt_lwe(messages, ciphertext, options.stream_); },
+                options, false);
         }
 
       private:
