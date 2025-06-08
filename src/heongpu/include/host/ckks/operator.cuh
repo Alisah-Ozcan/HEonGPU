@@ -179,6 +179,7 @@ namespace heongpu
                                         input1_.rescale_required_;
                                     output_.relinearization_required_ =
                                         input1_.relinearization_required_;
+                                    output_.ciphertext_generated_ = true;
                                 },
                                 options);
                         },
@@ -280,6 +281,7 @@ namespace heongpu
                                         input1_.rescale_required_;
                                     output_.relinearization_required_ =
                                         input1_.relinearization_required_;
+                                    output_.ciphertext_generated_ = true;
                                 },
                                 options);
                         },
@@ -382,6 +384,7 @@ namespace heongpu
                                     output_.in_ntt_domain_ =
                                         input1_.in_ntt_domain_;
                                     output_.relinearization_required_ = true;
+                                    output_.ciphertext_generated_ = true;
                                 },
                                 options);
                         },
@@ -469,6 +472,7 @@ namespace heongpu
                                         input1_.in_ntt_domain_;
                                     output_.relinearization_required_ =
                                         input1_.relinearization_required_;
+                                    output_.ciphertext_generated_ = true;
                                 },
                                 options);
                         },
@@ -625,6 +629,7 @@ namespace heongpu
                                 input1_.rescale_required_;
                             output_.relinearization_required_ =
                                 input1_.relinearization_required_;
+                            output_.ciphertext_generated_ = true;
                         },
                         options);
                 },
@@ -727,6 +732,7 @@ namespace heongpu
                                 input1_.rescale_required_;
                             output_.relinearization_required_ =
                                 input1_.relinearization_required_;
+                            output_.ciphertext_generated_ = true;
                         },
                         options);
                 },
@@ -823,6 +829,7 @@ namespace heongpu
                                 input1_.rescale_required_;
                             output_.relinearization_required_ =
                                 input1_.relinearization_required_;
+                            output_.ciphertext_generated_ = true;
                         },
                         options);
                 },
@@ -902,6 +909,7 @@ namespace heongpu
                                 input1_.rescale_required_;
                             output_.relinearization_required_ =
                                 input1_.relinearization_required_;
+                            output_.ciphertext_generated_ = true;
                         },
                         options);
                 },
@@ -987,6 +995,7 @@ namespace heongpu
                             output.rescale_required_ = input1.rescale_required_;
                             output.relinearization_required_ =
                                 input1.relinearization_required_;
+                            output_.ciphertext_generated_ = true;
                         },
                         options);
                 },
@@ -1030,6 +1039,7 @@ namespace heongpu
                             output.depth_ = input1.depth_ + 1;
                             output.scale_ = input1.scale_;
                             output.in_ntt_domain_ = input1.in_ntt_domain_;
+                            output.plaintext_generated_ = true;
                         },
                         options);
                 },
