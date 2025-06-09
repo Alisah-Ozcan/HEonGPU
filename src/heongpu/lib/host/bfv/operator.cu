@@ -223,6 +223,7 @@ namespace heongpu
                                 output_.in_ntt_domain_ = input1_.in_ntt_domain_;
                                 output_.relinearization_required_ =
                                     input1_.relinearization_required_;
+                                output_.ciphertext_generated_ = true;
 
                                 output_.memory_set(std::move(output_memory));
                             },
@@ -290,6 +291,7 @@ namespace heongpu
                                 output_.in_ntt_domain_ = input1_.in_ntt_domain_;
                                 output_.relinearization_required_ =
                                     input1_.relinearization_required_;
+                                output_.ciphertext_generated_ = true;
 
                                 output_.memory_set(std::move(output_memory));
                             },
@@ -336,6 +338,7 @@ namespace heongpu
                         output_.in_ntt_domain_ = input1_.in_ntt_domain_;
                         output_.relinearization_required_ =
                             input1_.relinearization_required_;
+                        output_.ciphertext_generated_ = true;
 
                         output_.memory_set(std::move(output_memory));
                     },
@@ -1504,6 +1507,7 @@ namespace heongpu
         cipher.storage_type_ = storage_type::DEVICE;
 
         cipher.relinearization_required_ = input.relinearization_required_;
+        cipher.ciphertext_generated_ = true;
 
         int cipher_memory_size = 2 * Q_size_ * n;
 

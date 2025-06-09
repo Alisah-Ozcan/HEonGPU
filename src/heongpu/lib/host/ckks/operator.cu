@@ -191,6 +191,7 @@ namespace heongpu
                                      input2_.rescale_required_);
                                 output_.relinearization_required_ =
                                     input1_.relinearization_required_;
+                                output_.ciphertext_generated_ = true;
 
                                 output_.memory_set(std::move(output_memory));
                             },
@@ -270,6 +271,7 @@ namespace heongpu
                                      input2_.rescale_required_);
                                 output_.relinearization_required_ =
                                     input1_.relinearization_required_;
+                                output_.ciphertext_generated_ = true;
 
                                 output_.memory_set(std::move(output_memory));
                             },
@@ -323,6 +325,7 @@ namespace heongpu
                         output_.rescale_required_ = input1_.rescale_required_;
                         output_.relinearization_required_ =
                             input1_.relinearization_required_;
+                        output_.ciphertext_generated_ = true;
 
                         output_.memory_set(std::move(output_memory));
                     },
@@ -1940,6 +1943,7 @@ namespace heongpu
         cipher.rescale_required_ = false;
         cipher.relinearization_required_ = false;
         cipher.scale_ = scale;
+        cipher.ciphertext_generated_ = true;
 
         int cipher_memory_size = 2 * (Q_size_ - cipher.depth_) * n;
 
@@ -1968,6 +1972,7 @@ namespace heongpu
         cipher.rescale_required_ = input.rescale_required_;
         cipher.relinearization_required_ = input.relinearization_required_;
         cipher.scale_ = input.scale_;
+        cipher.ciphertext_generated_ = true;
 
         int cipher_memory_size = 2 * (Q_size_ - cipher.depth_) * n;
 
@@ -2199,6 +2204,7 @@ namespace heongpu
                 inner_sum.rescale_required_ = result.rescale_required_;
                 inner_sum.relinearization_required_ =
                     result.relinearization_required_;
+                inner_sum.ciphertext_generated_ = true;
 
                 rotate_rows_inplace(inner_sum, galois_key, real_shift, options);
 
@@ -2285,6 +2291,7 @@ namespace heongpu
                 inner_sum.rescale_required_ = result.rescale_required_;
                 inner_sum.relinearization_required_ =
                     result.relinearization_required_;
+                inner_sum.ciphertext_generated_ = true;
 
                 int real_shift_size = real_shift[m][j].size();
                 for (int ss = 0; ss < real_shift_size; ss++)
@@ -2645,6 +2652,7 @@ namespace heongpu
         result.in_ntt_domain_ = second.in_ntt_domain_;
         result.rescale_required_ = second.rescale_required_;
         result.relinearization_required_ = second.relinearization_required_;
+        result.ciphertext_generated_ = true;
 
         //
 
@@ -4399,6 +4407,7 @@ namespace heongpu
         result.in_ntt_domain_ = ciph_cos.in_ntt_domain_;
         result.rescale_required_ = ciph_cos.rescale_required_;
         result.relinearization_required_ = ciph_cos.relinearization_required_;
+        result.ciphertext_generated_ = true;
 
         //
 
@@ -4547,6 +4556,7 @@ namespace heongpu
         cipher_add.in_ntt_domain_ = cipher.in_ntt_domain_;
         cipher_add.rescale_required_ = cipher.rescale_required_;
         cipher_add.relinearization_required_ = cipher.relinearization_required_;
+        cipher_add.ciphertext_generated_ = true;
         //////////////////////////////
 
         Ciphertext<Scheme::CKKS> ciph_neg_exp =
@@ -4592,6 +4602,7 @@ namespace heongpu
         result.in_ntt_domain_ = ciph_sin.in_ntt_domain_;
         result.rescale_required_ = ciph_sin.rescale_required_;
         result.relinearization_required_ = ciph_sin.relinearization_required_;
+        result.ciphertext_generated_ = true;
         //////////////////////////////
 
         return result;
@@ -4645,6 +4656,7 @@ namespace heongpu
         result.in_ntt_domain_ = ciph_sin.in_ntt_domain_;
         result.rescale_required_ = ciph_sin.rescale_required_;
         result.relinearization_required_ = ciph_sin.relinearization_required_;
+        result.ciphertext_generated_ = true;
         //////////////////////////////
 
         return result;
@@ -4675,6 +4687,7 @@ namespace heongpu
         cipher_add.in_ntt_domain_ = cipher.in_ntt_domain_;
         cipher_add.rescale_required_ = cipher.rescale_required_;
         cipher_add.relinearization_required_ = cipher.relinearization_required_;
+        cipher_add.ciphertext_generated_ = true;
         //////////////////////////////
 
         Ciphertext<Scheme::CKKS> ciph_neg_exp =
@@ -4720,6 +4733,7 @@ namespace heongpu
         result.in_ntt_domain_ = ciph_sin.in_ntt_domain_;
         result.rescale_required_ = ciph_sin.rescale_required_;
         result.relinearization_required_ = ciph_sin.relinearization_required_;
+        result.ciphertext_generated_ = true;
         //////////////////////////////
 
         return result;
@@ -4750,6 +4764,7 @@ namespace heongpu
         cipher_add.in_ntt_domain_ = cipher.in_ntt_domain_;
         cipher_add.rescale_required_ = cipher.rescale_required_;
         cipher_add.relinearization_required_ = cipher.relinearization_required_;
+        cipher_add.ciphertext_generated_ = true;
         //////////////////////////////
 
         Ciphertext<Scheme::CKKS> ciph_neg_exp =
@@ -4795,6 +4810,7 @@ namespace heongpu
         result.in_ntt_domain_ = ciph_sin.in_ntt_domain_;
         result.rescale_required_ = ciph_sin.rescale_required_;
         result.relinearization_required_ = ciph_sin.relinearization_required_;
+        result.ciphertext_generated_ = true;
         //////////////////////////////
 
         return result;
@@ -4848,6 +4864,7 @@ namespace heongpu
         result.in_ntt_domain_ = ciph_sin.in_ntt_domain_;
         result.rescale_required_ = ciph_sin.rescale_required_;
         result.relinearization_required_ = ciph_sin.relinearization_required_;
+        result.ciphertext_generated_ = true;
         //////////////////////////////
 
         return result;
@@ -4878,6 +4895,7 @@ namespace heongpu
         cipher_add.in_ntt_domain_ = cipher.in_ntt_domain_;
         cipher_add.rescale_required_ = cipher.rescale_required_;
         cipher_add.relinearization_required_ = cipher.relinearization_required_;
+        cipher_add.ciphertext_generated_ = true;
         //////////////////////////////
 
         Ciphertext<Scheme::CKKS> ciph_neg_exp =
@@ -4923,6 +4941,7 @@ namespace heongpu
         result.in_ntt_domain_ = ciph_sin.in_ntt_domain_;
         result.rescale_required_ = ciph_sin.rescale_required_;
         result.relinearization_required_ = ciph_sin.relinearization_required_;
+        result.ciphertext_generated_ = true;
         //////////////////////////////
 
         return result;
