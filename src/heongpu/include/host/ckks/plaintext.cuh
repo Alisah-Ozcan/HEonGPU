@@ -127,7 +127,8 @@ namespace heongpu
             : scheme_(copy.scheme_), plain_size_(copy.plain_size_),
               depth_(copy.depth_), scale_(copy.scale_),
               in_ntt_domain_(copy.in_ntt_domain_),
-              storage_type_(copy.storage_type_)
+              storage_type_(copy.storage_type_),
+              plaintext_generated_(copy.plaintext_generated_)
         {
             if (copy.storage_type_ == storage_type::DEVICE)
             {
@@ -154,6 +155,7 @@ namespace heongpu
               scale_(std::move(assign.scale_)),
               in_ntt_domain_(std::move(assign.in_ntt_domain_)),
               storage_type_(std::move(assign.storage_type_)),
+              plaintext_generated_(std::move(assign.plaintext_generated_)),
               device_locations_(std::move(assign.device_locations_)),
               host_locations_(std::move(assign.host_locations_))
         {
@@ -169,6 +171,7 @@ namespace heongpu
                 scale_ = copy.scale_;
                 in_ntt_domain_ = copy.in_ntt_domain_;
                 storage_type_ = copy.storage_type_;
+                plaintext_generated_ = copy.plaintext_generated_;
 
                 if (copy.storage_type_ == storage_type::DEVICE)
                 {
@@ -199,6 +202,7 @@ namespace heongpu
                 plain_size_ = std::move(assign.plain_size_);
                 in_ntt_domain_ = std::move(assign.in_ntt_domain_);
                 storage_type_ = std::move(assign.storage_type_);
+                plaintext_generated_ = std::move(assign.plaintext_generated_);
                 depth_ = std::move(assign.depth_);
                 scale_ = std::move(assign.scale_);
                 device_locations_ = std::move(assign.device_locations_);
