@@ -59,8 +59,12 @@ int main(int argc, char* argv[])
     heongpu::Secretkey<Scheme> secret_key2(context);
     keygen.generate_secret_key(secret_key2);
 
-    heongpu::Switchkey<Scheme> switch_key1_to_key2(context, false);
-    keygen.generate_switch_key(switch_key1_to_key2, secret_key2, secret_key);
+    heongpu::Switchkey<Scheme> switch_key1_to_key2(context);
+    keygen.generate_switch_key(
+        switch_key1_to_key2, secret_key2, secret_key,
+        heongpu::ExecutionOptions().set_storage_type(
+            heongpu::storage_type::HOST)); // generate_switch_key is stored in
+                                           // HOST
 
     heongpu::HEEncoder<Scheme> encoder(context);
     heongpu::HEEncryptor<Scheme> encryptor(context, public_key);

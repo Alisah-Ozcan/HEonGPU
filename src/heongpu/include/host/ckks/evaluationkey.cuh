@@ -48,11 +48,8 @@ namespace heongpu
          *
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
-         * @param store_in_gpu A boolean value indicating whether to store the
-         * key in GPU memory. Default is true.
          */
-        __host__ Relinkey(HEContext<Scheme::CKKS>& context,
-                          bool store_in_gpu = true);
+        __host__ Relinkey(HEContext<Scheme::CKKS>& context);
 
         /**
          * @brief Stores the relinearization key in the device (GPU) memory.
@@ -451,8 +448,7 @@ namespace heongpu
 
       public:
         __host__ MultipartyRelinkey(HEContext<Scheme::CKKS>& context,
-                                    const RNGSeed seed,
-                                    bool store_in_gpu = true);
+                                    const RNGSeed seed);
 
         /**
          * @brief Retrieves the seed value used for key generation.
@@ -493,11 +489,8 @@ namespace heongpu
          *
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
-         * @param store_in_gpu A boolean value indicating whether to store the
-         * key in GPU memory. Default is true.
          */
-        __host__ Galoiskey(HEContext<Scheme::CKKS>& context,
-                           bool store_in_gpu = true);
+        __host__ Galoiskey(HEContext<Scheme::CKKS>& context);
 
         /**
          * @brief Constructs a new Galoiskey object allowing specific rotations
@@ -507,12 +500,9 @@ namespace heongpu
          * encryption parameters.
          * @param shift_vec Vector of integers representing the allowed shifts
          * for rotations.
-         * @param store_in_gpu A boolean value indicating whether to store the
-         * key in GPU memory. Default is true.
          */
         __host__ Galoiskey(HEContext<Scheme::CKKS>& context,
-                           std::vector<int>& shift_vec,
-                           bool store_in_gpu = true);
+                           std::vector<int>& shift_vec);
 
         /**
          * @brief Constructs a new Galoiskey object allowing certain Galois
@@ -522,12 +512,9 @@ namespace heongpu
          * encryption parameters.
          * @param galois_elts Vector of Galois elements (represented as unsigned
          * 32-bit integers) specifying the rotations allowed.
-         * @param store_in_gpu A boolean value indicating whether to store the
-         * key in GPU memory. Default is true.
          */
         __host__ Galoiskey(HEContext<Scheme::CKKS>& context,
-                           std::vector<uint32_t>& galois_elts,
-                           bool store_in_gpu = true);
+                           std::vector<uint32_t>& galois_elts);
 
         /**
          * @brief Stores the galois key in the device (GPU) memory.
@@ -853,18 +840,15 @@ namespace heongpu
 
       public:
         __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS>& context,
-                                     const RNGSeed seed,
-                                     bool store_in_gpu = true);
+                                     const RNGSeed seed);
 
         __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS>& context,
                                      std::vector<int>& shift_vec,
-                                     const RNGSeed seed,
-                                     bool store_in_gpu = true);
+                                     const RNGSeed seed);
 
         __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS>& context,
                                      std::vector<uint32_t>& galois_elts,
-                                     const RNGSeed seed,
-                                     bool store_in_gpu = true);
+                                     const RNGSeed seed);
 
         /**
          * @brief Retrieves the seed value used for key generation.
@@ -912,11 +896,8 @@ namespace heongpu
          *
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
-         * @param store_in_gpu A boolean value indicating whether to store the
-         * key in GPU memory. Default is true.
          */
-        __host__ Switchkey(HEContext<Scheme::CKKS>& context,
-                           bool store_in_gpu = true);
+        __host__ Switchkey(HEContext<Scheme::CKKS>& context);
 
         /**
          * @brief Stores the switch key in the device (GPU) memory.

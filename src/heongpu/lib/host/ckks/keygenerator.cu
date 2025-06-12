@@ -2371,6 +2371,8 @@ namespace heongpu
                 }
             }
         }
+
+        gk.storage_type_ = options.storage_;
     }
 
     __host__ void HEKeyGenerator<Scheme::CKKS>::generate_switch_key_method_I(

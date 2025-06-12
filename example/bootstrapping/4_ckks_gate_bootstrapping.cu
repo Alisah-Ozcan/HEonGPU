@@ -99,13 +99,14 @@ int main(int argc, char* argv[])
     std::vector<int> key_index = operators.bootstrapping_key_indexs();
     std::cout << "Total galois key needed for CKKS bootstrapping: "
               << key_index.size() << std::endl;
-    heongpu::Galoiskey<heongpu::Scheme::CKKS> galois_key(
-        context, key_index); // all galois keys are stored in GPU
-    // heongpu::Galoiskey galois_key(context,key_index, false); // all galois
-    // keys are stored in CPU
+    heongpu::Galoiskey<heongpu::Scheme::CKKS> galois_key(context, key_index);
 
     // Generates all galois key needed for bootstrapping
-    keygen.generate_galois_key(galois_key, secret_key);
+    keygen.generate_galois_key(galois_key,
+                               secret_key); // all galois keys are stored in GPU
+    // keygen.generate_galois_key(galois_key, secret_key,
+    // heongpu::ExecutionOptions().set_storage_type(heongpu::storage_type::HOST));
+    // // all galois keys are stored in CPU
 
     // Drop all level until one level remain
     for (int i = 0; i < (19 - StoC_piece); i++)

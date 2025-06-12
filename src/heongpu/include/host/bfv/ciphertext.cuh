@@ -203,8 +203,7 @@ namespace heongpu
               storage_type_(std::move(assign.storage_type_)),
               relinearization_required_(
                   std::move(assign.relinearization_required_)),
-              ciphertext_generated_(
-                  std::move(assign.ciphertext_generated_)),
+              ciphertext_generated_(std::move(assign.ciphertext_generated_)),
               device_locations_(std::move(assign.device_locations_)),
               host_locations_(std::move(assign.host_locations_))
         {
@@ -259,8 +258,7 @@ namespace heongpu
                 relinearization_required_ =
                     std::move(assign.relinearization_required_);
 
-                ciphertext_generated_ =
-                    std::move(assign.ciphertext_generated_);
+                ciphertext_generated_ = std::move(assign.ciphertext_generated_);
 
                 device_locations_ = std::move(assign.device_locations_);
                 host_locations_ = std::move(assign.host_locations_);

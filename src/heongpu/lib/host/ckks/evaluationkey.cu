@@ -8,8 +8,7 @@
 namespace heongpu
 {
 
-    __host__ Relinkey<Scheme::CKKS>::Relinkey(HEContext<Scheme::CKKS>& context,
-                                              bool store_in_gpu)
+    __host__ Relinkey<Scheme::CKKS>::Relinkey(HEContext<Scheme::CKKS>& context)
     {
         if (!context.context_generated_)
         {
@@ -22,9 +21,6 @@ namespace heongpu
         ring_size = context.n;
         Q_prime_size_ = context.Q_prime_size;
         Q_size_ = context.Q_size;
-
-        storage_type_ =
-            store_in_gpu ? storage_type::DEVICE : storage_type::HOST;
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
@@ -449,14 +445,13 @@ namespace heongpu
     }
 
     __host__ MultipartyRelinkey<Scheme::CKKS>::MultipartyRelinkey(
-        HEContext<Scheme::CKKS>& context, const RNGSeed seed, bool store_in_gpu)
-        : Relinkey(context, store_in_gpu), seed_(seed)
+        HEContext<Scheme::CKKS>& context, const RNGSeed seed)
+        : Relinkey(context), seed_(seed)
     {
     }
 
     __host__
-    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context,
-                                       bool store_in_gpu)
+    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context)
     {
         if (!context.context_generated_)
         {
@@ -469,9 +464,6 @@ namespace heongpu
         ring_size = context.n;
         Q_prime_size_ = context.Q_prime_size;
         Q_size_ = context.Q_size;
-
-        storage_type_ =
-            store_in_gpu ? storage_type::DEVICE : storage_type::HOST;
 
         customized = false;
 
@@ -526,8 +518,7 @@ namespace heongpu
 
     __host__
     Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context,
-                                       std::vector<int>& shift_vec,
-                                       bool store_in_gpu)
+                                       std::vector<int>& shift_vec)
     {
         if (!context.context_generated_)
         {
@@ -540,9 +531,6 @@ namespace heongpu
         ring_size = context.n;
         Q_prime_size_ = context.Q_prime_size;
         Q_size_ = context.Q_size;
-
-        storage_type_ =
-            store_in_gpu ? storage_type::DEVICE : storage_type::HOST;
 
         customized = false;
 
@@ -592,8 +580,7 @@ namespace heongpu
 
     __host__
     Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context,
-                                       std::vector<uint32_t>& galois_elts,
-                                       bool store_in_gpu)
+                                       std::vector<uint32_t>& galois_elts)
     {
         if (!context.context_generated_)
         {
@@ -606,9 +593,6 @@ namespace heongpu
         ring_size = context.n;
         Q_prime_size_ = context.Q_prime_size;
         Q_size_ = context.Q_size;
-
-        storage_type_ =
-            store_in_gpu ? storage_type::DEVICE : storage_type::HOST;
 
         customized = true;
 
@@ -923,28 +907,27 @@ namespace heongpu
     }
 
     __host__ MultipartyGaloiskey<Scheme::CKKS>::MultipartyGaloiskey(
-        HEContext<Scheme::CKKS>& context, const RNGSeed seed, bool store_in_gpu)
-        : Galoiskey(context, store_in_gpu), seed_(seed)
+        HEContext<Scheme::CKKS>& context, const RNGSeed seed)
+        : Galoiskey(context), seed_(seed)
     {
     }
 
     __host__ MultipartyGaloiskey<Scheme::CKKS>::MultipartyGaloiskey(
         HEContext<Scheme::CKKS>& context, std::vector<int>& shift_vec,
-        const RNGSeed seed, bool store_in_gpu)
-        : Galoiskey(context, shift_vec, store_in_gpu), seed_(seed)
+        const RNGSeed seed)
+        : Galoiskey(context, shift_vec), seed_(seed)
     {
     }
 
     __host__ MultipartyGaloiskey<Scheme::CKKS>::MultipartyGaloiskey(
         HEContext<Scheme::CKKS>& context, std::vector<uint32_t>& galois_elts,
-        const RNGSeed seed, bool store_in_gpu)
-        : Galoiskey(context, galois_elts, store_in_gpu), seed_(seed)
+        const RNGSeed seed)
+        : Galoiskey(context, galois_elts), seed_(seed)
     {
     }
 
     __host__
-    Switchkey<Scheme::CKKS>::Switchkey(HEContext<Scheme::CKKS>& context,
-                                       bool store_in_gpu)
+    Switchkey<Scheme::CKKS>::Switchkey(HEContext<Scheme::CKKS>& context)
     {
         if (!context.context_generated_)
         {
@@ -957,9 +940,6 @@ namespace heongpu
         ring_size = context.n;
         Q_prime_size_ = context.Q_prime_size;
         Q_size_ = context.Q_size;
-
-        storage_type_ =
-            store_in_gpu ? storage_type::DEVICE : storage_type::HOST;
 
         switch (static_cast<int>(context.keyswitching_type_))
         {
