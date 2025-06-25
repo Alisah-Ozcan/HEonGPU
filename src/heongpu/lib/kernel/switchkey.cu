@@ -236,8 +236,7 @@ namespace heongpu
         last_ct =
             OPERATOR_GPU_64::add(last_ct, half[0], modulus[decomp_mod_count]);
 
-        Data64 zero_ = 0;
-        last_ct = OPERATOR_GPU_64::add(last_ct, zero_, modulus[block_y]);
+        last_ct = OPERATOR_GPU_64::reduce_forced(last_ct, modulus[block_y]);
 
         last_ct =
             OPERATOR_GPU_64::sub(last_ct, half_mod[block_y], modulus[block_y]);
@@ -274,8 +273,7 @@ namespace heongpu
         last_ct =
             OPERATOR_GPU_64::add(last_ct, half[0], modulus[decomp_mod_count]);
 
-        Data64 zero_ = 0;
-        last_ct = OPERATOR_GPU_64::add(last_ct, zero_, modulus[block_y]);
+        last_ct = OPERATOR_GPU_64::reduce_forced(last_ct, modulus[block_y]);
 
         last_ct =
             OPERATOR_GPU_64::sub(last_ct, half_mod[block_y], modulus[block_y]);
@@ -321,7 +319,6 @@ namespace heongpu
         Data64 input_ = input[idx + (block_y << n_power) +
                               ((Q_prime_size << n_power) * block_z)];
 
-        Data64 zero_ = 0;
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
         {
@@ -330,8 +327,9 @@ namespace heongpu
                 last_ct_add_half_, half[i], modulus[(Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
-                Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                                    modulus[Q_size + j]);
+                Data64 temp1 = OPERATOR_GPU_64::reduce_forced(
+                    last_ct_add_half_, modulus[Q_size + j]);
+
                 temp1 = OPERATOR_GPU_64::sub(temp1,
                                              half_mod[location_ + Q_size + j],
                                              modulus[Q_size + j]);
@@ -344,8 +342,8 @@ namespace heongpu
                     modulus[Q_size + j]);
             }
 
-            Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                                modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::reduce_forced(last_ct_add_half_,
+                                                          modulus[block_y]);
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
                                          modulus[block_y]);
 
@@ -386,7 +384,6 @@ namespace heongpu
         Data64 input_ = input[idx + (block_y << n_power) +
                               ((Q_prime_size << n_power) * block_z)];
 
-        Data64 zero_ = 0;
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
         {
@@ -395,8 +392,8 @@ namespace heongpu
                 last_ct_add_half_, half[i], modulus[(Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
-                Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                                    modulus[Q_size + j]);
+                Data64 temp1 = OPERATOR_GPU_64::reduce_forced(
+                    last_ct_add_half_, modulus[Q_size + j]);
                 temp1 = OPERATOR_GPU_64::sub(temp1,
                                              half_mod[location_ + Q_size + j],
                                              modulus[Q_size + j]);
@@ -409,8 +406,8 @@ namespace heongpu
                     modulus[Q_size + j]);
             }
 
-            Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                                modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::reduce_forced(last_ct_add_half_,
+                                                          modulus[block_y]);
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
                                          modulus[block_y]);
 
@@ -455,7 +452,6 @@ namespace heongpu
         Data64 input_ = input[idx + (block_y << n_power) +
                               ((Q_prime_size << n_power) * block_z)];
 
-        Data64 zero_ = 0;
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
         {
@@ -464,8 +460,8 @@ namespace heongpu
                 last_ct_add_half_, half[i], modulus[(Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
-                Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                                    modulus[Q_size + j]);
+                Data64 temp1 = OPERATOR_GPU_64::reduce_forced(
+                    last_ct_add_half_, modulus[Q_size + j]);
                 temp1 = OPERATOR_GPU_64::sub(temp1,
                                              half_mod[location_ + Q_size + j],
                                              modulus[Q_size + j]);
@@ -478,8 +474,8 @@ namespace heongpu
                     modulus[Q_size + j]);
             }
 
-            Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                                modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::reduce_forced(last_ct_add_half_,
+                                                          modulus[block_y]);
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
                                          modulus[block_y]);
 
@@ -1466,7 +1462,6 @@ namespace heongpu
         Data64 input_ = input[idx + (block_y << n_power) +
                               ((Q_prime_size << n_power) * block_z)];
 
-        Data64 zero_ = 0;
         int location_ = 0;
         for (int i = 0; i < P_size; i++)
         {
@@ -1475,8 +1470,8 @@ namespace heongpu
                 last_ct_add_half_, half[i], modulus[(Q_prime_size - 1 - i)]);
             for (int j = 0; j < (P_size - 1 - i); j++)
             {
-                Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                                    modulus[Q_size + j]);
+                Data64 temp1 = OPERATOR_GPU_64::reduce_forced(
+                    last_ct_add_half_, modulus[Q_size + j]);
                 temp1 = OPERATOR_GPU_64::sub(temp1,
                                              half_mod[location_ + Q_size + j],
                                              modulus[Q_size + j]);
@@ -1489,8 +1484,8 @@ namespace heongpu
                     modulus[Q_size + j]);
             }
 
-            Data64 temp1 = OPERATOR_GPU_64::add(last_ct_add_half_, zero_,
-                                                modulus[block_y]);
+            Data64 temp1 = OPERATOR_GPU_64::reduce_forced(last_ct_add_half_,
+                                                          modulus[block_y]);
             temp1 = OPERATOR_GPU_64::sub(temp1, half_mod[location_ + block_y],
                                          modulus[block_y]);
 
