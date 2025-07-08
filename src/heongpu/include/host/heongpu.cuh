@@ -17,6 +17,7 @@
 #include "bfv/encryptor.cuh"
 #include "bfv/decryptor.cuh"
 #include "bfv/operator.cuh"
+#include "bfv/mpcmanager.cuh"
 
 #include "ckks/context.cuh"
 #include "ckks/secretkey.cuh"
@@ -29,6 +30,7 @@
 #include "ckks/encryptor.cuh"
 #include "ckks/decryptor.cuh"
 #include "ckks/operator.cuh"
+#include "ckks/mpcmanager.cuh"
 
 #include "tfhe/context.cuh"
 #include "tfhe/secretkey.cuh"

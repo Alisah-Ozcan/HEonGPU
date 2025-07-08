@@ -477,4 +477,193 @@ namespace heongpu
         }
     }
 
+    __global__ void col_boot_dec_mul_with_sk(const Data64* ct1, const Data64* a,
+                                             const Data64* sk, Data64* output,
+                                             const Modulus64* modulus,
+                                             int n_power, int decomp_mod_count)
+    {
+        const int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        const int block_y = blockIdx.y; // decomp_mod_count
+        const int block_z = blockIdx.z; // 2
+
+        int in_index = idx + (block_y << n_power);
+        int out_index = in_index + ((decomp_mod_count * block_z) << n_power);
+
+        const Modulus64 mod = modulus[block_y];
+
+        const Data64 sk_ = sk[in_index];
+        Data64 result;
+
+        if (block_z == 0)
+        {
+            // c1 * sk mod q
+            Data64 ct_1_ = ct1[in_index];
+            result = OPERATOR_GPU_64::mult(ct_1_, sk_, mod);
+        }
+        else
+        {
+            // −(a * sk) mod q
+            Data64 zero = 0ULL;
+            Data64 a_ = a[in_index];
+            result = OPERATOR_GPU_64::mult(a_, sk_, mod);
+            result = OPERATOR_GPU_64::sub(zero, result, mod);
+        }
+
+        output[out_index] = result;
+    }
+
+    __global__ void col_boot_add_random_and_errors(
+        Data64* ct, const Data64* errors, const Data64* random_plain,
+        const Modulus64* modulus, Modulus64 plain_mod, Data64 Q_mod_t,
+        Data64 upper_threshold, Data64* coeffdiv_plain, int n_power,
+        int decomp_mod_count)
+    {
+        const int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        const int block_y = blockIdx.y; // decomp_mod_count
+        const int block_z = blockIdx.z; // 2
+
+        int in_index = idx + (block_y << n_power) +
+                       ((decomp_mod_count * block_z) << n_power);
+
+        const Modulus64 mod = modulus[block_y];
+        Data64 ct_ = ct[in_index];
+        Data64 error = errors[in_index];
+
+        // Compute ∆M
+        Data64 random_message = random_plain[idx];
+        Data64 fix = random_message * Q_mod_t;
+        fix = fix + upper_threshold;
+        fix = int(fix / plain_mod.value);
+        Data64 delta_m =
+            OPERATOR_GPU_64::mult(random_message, coeffdiv_plain[block_y], mod);
+        delta_m = OPERATOR_GPU_64::add(delta_m, fix, mod);
+
+        // Add error term
+        ct_ = OPERATOR_GPU_64::add(ct_, error, mod);
+
+        if (block_z == 0)
+        {
+            ct_ = OPERATOR_GPU_64::sub(ct_, delta_m, mod);
+        }
+        else
+        {
+            ct_ = OPERATOR_GPU_64::add(ct_, delta_m, mod);
+        }
+
+        ct[in_index] = ct_;
+    }
+
+    __global__ void col_boot_enc(Data64* ct, const Data64* h,
+                                 const Data64* random_plain,
+                                 const Modulus64* modulus, Modulus64 plain_mod,
+                                 Data64 Q_mod_t, Data64 upper_threshold,
+                                 Data64* coeffdiv_plain, int n_power,
+                                 int decomp_mod_count)
+    {
+        const int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        const int block_y = blockIdx.y; // decomp_mod_count
+
+        int in_index = idx + (block_y << n_power);
+
+        const Modulus64 mod = modulus[block_y];
+        Data64 h_ = h[in_index];
+
+        // Compute ∆M
+        Data64 random_message = random_plain[idx];
+        Data64 fix = random_message * Q_mod_t;
+        fix = fix + upper_threshold;
+        fix = int(fix / plain_mod.value);
+        Data64 delta_m =
+            OPERATOR_GPU_64::mult(random_message, coeffdiv_plain[block_y], mod);
+        delta_m = OPERATOR_GPU_64::add(delta_m, fix, mod);
+
+        Data64 ct_ = OPERATOR_GPU_64::add(h_, delta_m, mod);
+
+        ct[in_index] = ct_;
+    }
+
+    __global__ void col_boot_dec_mul_with_sk_ckks(
+        const Data64* ct1, const Data64* a, const Data64* sk, Data64* output,
+        const Modulus64* modulus, int n_power, int decomp_mod_count,
+        int current_decomp_mod_count)
+    {
+        const int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        const int block_y =
+            blockIdx.y; // current_decomp_mod_count + decomp_mod_count
+
+        int in_index = idx + (block_y << n_power);
+        Data64 result = 0ULL;
+
+        if (block_y < current_decomp_mod_count)
+        {
+            const Modulus64 mod = modulus[block_y];
+            const Data64 sk_ = sk[in_index];
+
+            // c1 * sk mod q
+            Data64 ct_1_ = ct1[in_index];
+            result = OPERATOR_GPU_64::mult(ct_1_, sk_, mod);
+        }
+        else
+        {
+            int offset_block = block_y - current_decomp_mod_count;
+            const Modulus64 mod = modulus[offset_block];
+            int m_in_index = idx + (offset_block << n_power);
+            const Data64 sk_ = sk[m_in_index];
+
+            // −(a * sk) mod q
+            Data64 zero = 0ULL;
+            Data64 a_ = a[m_in_index];
+            result = OPERATOR_GPU_64::mult(a_, sk_, mod);
+            result = OPERATOR_GPU_64::sub(zero, result, mod);
+        }
+
+        output[in_index] = result;
+    }
+
+    __global__ void col_boot_add_random_and_errors_ckks(
+        Data64* ct, const Data64* error0, const Data64* error1,
+        const Data64* random_plain, const Modulus64* modulus, int n_power,
+        int decomp_mod_count, int current_decomp_mod_count)
+    {
+        const int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        const int block_y =
+            blockIdx.y; // current_decomp_mod_count + decomp_mod_count
+
+        Data64 ct_ = 0ULL;
+        int in_index = idx + (block_y << n_power);
+
+        if (block_y < current_decomp_mod_count)
+        {
+            const Modulus64 mod = modulus[block_y];
+
+            ct_ = ct[in_index];
+            Data64 error = error0[in_index];
+            Data64 random_message = random_plain[in_index];
+
+            // Add error term
+            ct_ = OPERATOR_GPU_64::add(ct_, error, mod);
+
+            // Add random message
+            ct_ = OPERATOR_GPU_64::sub(ct_, random_message, mod);
+        }
+        else
+        {
+            int offset_block = block_y - current_decomp_mod_count;
+            const Modulus64 mod = modulus[offset_block];
+            int m_in_index = idx + (offset_block << n_power);
+
+            ct_ = ct[in_index];
+            Data64 error = error1[m_in_index];
+            Data64 random_message = random_plain[m_in_index];
+
+            // Add error term
+            ct_ = OPERATOR_GPU_64::add(ct_, error, mod);
+
+            // Add random message
+            ct_ = OPERATOR_GPU_64::add(ct_, random_message, mod);
+        }
+
+        ct[in_index] = ct_;
+    }
+
 } // namespace heongpu

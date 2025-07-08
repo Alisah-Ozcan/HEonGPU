@@ -55,6 +55,8 @@ namespace heongpu
 
     template <Scheme S> class Secretkey;
 
+    template <Scheme S> class HEMultiPartyManager;
+
     // Describes the type of encryption scheme to be used.
     enum class scheme_type : std::uint8_t
     {

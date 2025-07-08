@@ -23,6 +23,7 @@ namespace heongpu
     {
         template <Scheme S> friend class HEKeyGenerator;
         template <Scheme S> friend class HEEncryptor;
+        template <Scheme S> friend class HEMultiPartyManager;
 
         template <typename T, typename F>
         friend void input_storage_manager(T& object, F function,

@@ -31,6 +31,7 @@ namespace heongpu
         template <Scheme S> friend class HEOperator;
         template <Scheme S> friend class HEArithmeticOperator;
         template <Scheme S> friend class HELogicOperator;
+        template <Scheme S> friend class HEMultiPartyManager;
 
       public:
         /**

@@ -66,12 +66,40 @@ namespace heongpu
         int decomp_mod_count);
 
     //////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////
 
     __global__ void decrypt_lwe_kernel(int32_t* sk, int32_t* input_a,
                                        int32_t* input_b, int32_t* output, int n,
                                        int k);
+
+    //////////////////////////////////////////////////////////////////////////////////
+
+    __global__ void col_boot_dec_mul_with_sk(const Data64* ct1, const Data64* a,
+                                             const Data64* sk, Data64* output,
+                                             const Modulus64* modulus,
+                                             int n_power, int decomp_mod_count);
+
+    __global__ void col_boot_add_random_and_errors(
+        Data64* ct, const Data64* errors, const Data64* random_plain,
+        const Modulus64* modulus, Modulus64 plain_mod, Data64 Q_mod_t,
+        Data64 upper_threshold, Data64* coeffdiv_plain, int n_power,
+        int decomp_mod_count);
+
+    __global__ void col_boot_enc(Data64* ct, const Data64* h,
+                                 const Data64* random_plain,
+                                 const Modulus64* modulus, Modulus64 plain_mod,
+                                 Data64 Q_mod_t, Data64 upper_threshold,
+                                 Data64* coeffdiv_plain, int n_power,
+                                 int decomp_mod_count);
+
+    __global__ void col_boot_dec_mul_with_sk_ckks(
+        const Data64* ct1, const Data64* a, const Data64* sk, Data64* output,
+        const Modulus64* modulus, int n_power, int decomp_mod_count,
+        int current_decomp_mod_count);
+
+    __global__ void col_boot_add_random_and_errors_ckks(
+        Data64* ct, const Data64* error0, const Data64* error1,
+        const Data64* random_plain, const Modulus64* modulus, int n_power,
+        int decomp_mod_count, int current_decomp_mod_count);
 
 } // namespace heongpu
 #endif // HEONGPU_DECRYPTION_H

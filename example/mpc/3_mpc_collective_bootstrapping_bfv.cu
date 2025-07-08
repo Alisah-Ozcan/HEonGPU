@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     std::vector<int> shift_value = {1};
 
     ///////////////////////////////////////////////////////////
-    ///////////// Alice Setup (Stage 1) (Phases 1) ////////////
+    ////////////// Alice Setup (Key Generation) ///////////////
     ///////////////////////////////////////////////////////////
 
     heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen_alice(context);
@@ -43,20 +43,8 @@ int main(int argc, char* argv[])
     mpc_manager_alice.generate_public_key_share(public_key_alice,
                                                 secret_key_alice);
 
-    // Relinkey
-    heongpu::MultipartyRelinkey<heongpu::Scheme::BFV> relin_key_alice_stage1(
-        context, common_seed);
-    mpc_manager_alice.generate_relin_key_init(relin_key_alice_stage1,
-                                              secret_key_alice);
-
-    // Galoiskey
-    heongpu::MultipartyGaloiskey<heongpu::Scheme::BFV> galois_key_alice(
-        context, shift_value, common_seed);
-    mpc_manager_alice.generate_galois_key_share(galois_key_alice,
-                                                secret_key_alice);
-
     ///////////////////////////////////////////////////////////
-    ////////////// Bob Setup (Stage 1) (Phases 1) /////////////
+    //////////////// Bob Setup (Key Generation) ///////////////
     ///////////////////////////////////////////////////////////
 
     heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen_bob(context);
@@ -70,19 +58,8 @@ int main(int argc, char* argv[])
         context, common_seed);
     mpc_manager_bob.generate_public_key_share(public_key_bob, secret_key_bob);
 
-    // Relinkey
-    heongpu::MultipartyRelinkey<heongpu::Scheme::BFV> relin_key_bob_stage1(
-        context, common_seed);
-    mpc_manager_bob.generate_relin_key_init(relin_key_bob_stage1,
-                                            secret_key_bob);
-
-    // Galoiskey
-    heongpu::MultipartyGaloiskey<heongpu::Scheme::BFV> galois_key_bob(
-        context, shift_value, common_seed);
-    mpc_manager_bob.generate_galois_key_share(galois_key_bob, secret_key_bob);
-
     ///////////////////////////////////////////////////////////
-    /////////// Charlie Setup (Stage 1) (Phases 1) ////////////
+    ///////////// Charlie Setup (Key Generation) //////////////
     ///////////////////////////////////////////////////////////
 
     heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen_charlie(context);
@@ -98,20 +75,8 @@ int main(int argc, char* argv[])
     mpc_manager_charlie.generate_public_key_share(public_key_charlie,
                                                   secret_key_charlie);
 
-    // Relinkey
-    heongpu::MultipartyRelinkey<heongpu::Scheme::BFV> relin_key_charlie_stage1(
-        context, common_seed);
-    mpc_manager_charlie.generate_relin_key_init(relin_key_charlie_stage1,
-                                                secret_key_charlie);
-
-    // Galoiskey
-    heongpu::MultipartyGaloiskey<heongpu::Scheme::BFV> galois_key_charlie(
-        context, shift_value, common_seed);
-    mpc_manager_charlie.generate_galois_key_share(galois_key_charlie,
-                                                  secret_key_charlie);
-
     ///////////////////////////////////////////////////////////
-    ///////////// Key Sharing (Stage 1) (Phases 1) ////////////
+    //////////////// Server Setup (Key Sharing) ///////////////
     ///////////////////////////////////////////////////////////
 
     std::vector<heongpu::MultipartyPublickey<heongpu::Scheme::BFV>>
@@ -120,82 +85,14 @@ int main(int argc, char* argv[])
     participant_public_keys.push_back(public_key_bob);
     participant_public_keys.push_back(public_key_charlie);
 
-    std::vector<heongpu::MultipartyRelinkey<heongpu::Scheme::BFV>>
-        participant_relin_keys_stage1;
-    participant_relin_keys_stage1.push_back(relin_key_alice_stage1);
-    participant_relin_keys_stage1.push_back(relin_key_bob_stage1);
-    participant_relin_keys_stage1.push_back(relin_key_charlie_stage1);
-
-    std::vector<heongpu::MultipartyGaloiskey<heongpu::Scheme::BFV>>
-        participant_galois_keys;
-    participant_galois_keys.push_back(galois_key_alice);
-    participant_galois_keys.push_back(galois_key_bob);
-    participant_galois_keys.push_back(galois_key_charlie);
-
-    heongpu::HEKeyGenerator<heongpu::Scheme::BFV> keygen_server(context);
     heongpu::HEMultiPartyManager<heongpu::Scheme::BFV> mpc_manager_server(
         context);
     heongpu::Publickey<heongpu::Scheme::BFV> common_public_key(context);
     mpc_manager_server.assemble_public_key_share(participant_public_keys,
                                                  common_public_key);
 
-    heongpu::MultipartyRelinkey<heongpu::Scheme::BFV> common_relin_key_stage1(
-        context, common_seed);
-    mpc_manager_server.assemble_relin_key_init(participant_relin_keys_stage1,
-                                               common_relin_key_stage1);
-
-    heongpu::Galoiskey<heongpu::Scheme::BFV> common_galois_key(context,
-                                                               shift_value);
-    mpc_manager_server.assemble_galois_key_share(participant_galois_keys,
-                                                 common_galois_key);
-
     ///////////////////////////////////////////////////////////
-    ///////////// Alice Setup (Stage 1) (Phases 2) ////////////
-    ///////////////////////////////////////////////////////////
-
-    // Relinkey
-    heongpu::MultipartyRelinkey<heongpu::Scheme::BFV> relin_key_alice_stage2(
-        context, common_seed);
-    mpc_manager_alice.generate_relin_key_share(
-        common_relin_key_stage1, relin_key_alice_stage2, secret_key_alice);
-
-    ///////////////////////////////////////////////////////////
-    ////////////// Bob Setup (Stage 1) (Phases 2) /////////////
-    ///////////////////////////////////////////////////////////
-
-    // Relinkey
-    heongpu::MultipartyRelinkey<heongpu::Scheme::BFV> relin_key_bob_stage2(
-        context, common_seed);
-    mpc_manager_bob.generate_relin_key_share(
-        common_relin_key_stage1, relin_key_bob_stage2, secret_key_bob);
-
-    ///////////////////////////////////////////////////////////
-    //////////// Charlie Setup (Stage 1) (Phases 2) ///////////
-    ///////////////////////////////////////////////////////////
-
-    // Relinkey
-    heongpu::MultipartyRelinkey<heongpu::Scheme::BFV> relin_key_charlie_stage2(
-        context, common_seed);
-    mpc_manager_charlie.generate_relin_key_share(
-        common_relin_key_stage1, relin_key_charlie_stage2, secret_key_charlie);
-
-    ///////////////////////////////////////////////////////////
-    //////////// Key Sharing (Stage 1) (Phases 2) /////////////
-    ///////////////////////////////////////////////////////////
-
-    std::vector<heongpu::MultipartyRelinkey<heongpu::Scheme::BFV>>
-        participant_relin_keys_stage2;
-    participant_relin_keys_stage2.push_back(relin_key_alice_stage2);
-    participant_relin_keys_stage2.push_back(relin_key_bob_stage2);
-    participant_relin_keys_stage2.push_back(relin_key_charlie_stage2);
-
-    heongpu::Relinkey<heongpu::Scheme::BFV> common_relin_key(context);
-    mpc_manager_server.assemble_relin_key_share(participant_relin_keys_stage2,
-                                                common_relin_key_stage1,
-                                                common_relin_key);
-
-    ///////////////////////////////////////////////////////////
-    ////////////////// Alice Setup (Stage 2) //////////////////
+    ///////////////// Alice Setup (Encryption) ////////////////
     ///////////////////////////////////////////////////////////
 
     heongpu::HEEncoder<heongpu::Scheme::BFV> encoder_alice(context);
@@ -218,7 +115,7 @@ int main(int argc, char* argv[])
     encryptor_alice.encrypt(ciphertext_alice, plaintext_alice);
 
     ///////////////////////////////////////////////////////////
-    /////////////////// Bob Setup (Stage 2) ///////////////////
+    ////////////////// Bob Setup (Encryption) /////////////////
     ///////////////////////////////////////////////////////////
 
     heongpu::HEEncoder<heongpu::Scheme::BFV> encoder_bob(context);
@@ -240,7 +137,7 @@ int main(int argc, char* argv[])
     encryptor_bob.encrypt(ciphertext_bob, plaintext_bob);
 
     ///////////////////////////////////////////////////////////
-    ///////////////// Charlie Setup (Stage 2) /////////////////
+    /////////////// Charlie Setup (Encryption) ////////////////
     ///////////////////////////////////////////////////////////
 
     heongpu::HEEncoder<heongpu::Scheme::BFV> encoder_charlie(context);
@@ -262,47 +159,84 @@ int main(int argc, char* argv[])
     encryptor_charlie.encrypt(ciphertext_charlie, plaintext_charlie);
 
     ///////////////////////////////////////////////////////////
-    ///////////////// Server Setup (Stage 3) //////////////////
+    ////////// Server Setup (Homomorphic Operations) //////////
     ///////////////////////////////////////////////////////////
 
     heongpu::HEArithmeticOperator<heongpu::Scheme::BFV> operators(
         context, encoder_charlie);
 
-    heongpu::Ciphertext<heongpu::Scheme::BFV> cipher_mult(context);
-    operators.multiply(ciphertext_alice, ciphertext_bob, cipher_mult);
-    operators.relinearize_inplace(cipher_mult, common_relin_key);
-
-    heongpu::Ciphertext<heongpu::Scheme::BFV> cipher_mult_add(context);
-    operators.add(cipher_mult, ciphertext_charlie, cipher_mult_add);
-
-    heongpu::Ciphertext<heongpu::Scheme::BFV> cipher_mult_add_rotate(context);
-    operators.rotate_rows(cipher_mult_add, cipher_mult_add_rotate,
-                          common_galois_key, 1);
+    heongpu::Ciphertext<heongpu::Scheme::BFV> cipher_accum(context);
+    operators.add(ciphertext_alice, ciphertext_bob, cipher_accum);
+    operators.add(cipher_accum, ciphertext_charlie, cipher_accum);
 
     ///////////////////////////////////////////////////////////
-    /////////////////// Alice Setup (Stage 4) /////////////////
+    /////////////////// Alice Setup (ColBoot) /////////////////
+    ///////////////////////////////////////////////////////////
+
+    heongpu::Ciphertext<heongpu::Scheme::BFV> boot_alice_ciphertext_alice(
+        context);
+    mpc_manager_alice.distributed_bootstrapping_participant(
+        cipher_accum, boot_alice_ciphertext_alice, secret_key_alice,
+        common_seed);
+
+    ///////////////////////////////////////////////////////////
+    /////////////////// Bob Setup (ColBoot) ///////////////////
+    ///////////////////////////////////////////////////////////
+
+    heongpu::Ciphertext<heongpu::Scheme::BFV> boot_bob_ciphertext_bob(context);
+    mpc_manager_bob.distributed_bootstrapping_participant(
+        cipher_accum, boot_bob_ciphertext_bob, secret_key_bob, common_seed);
+
+    ///////////////////////////////////////////////////////////
+    /////////////////// Charlie Setup (ColBoot) ///////////////
+    ///////////////////////////////////////////////////////////
+
+    heongpu::Ciphertext<heongpu::Scheme::BFV> boot_charlie_ciphertext_charlie(
+        context);
+    mpc_manager_charlie.distributed_bootstrapping_participant(
+        cipher_accum, boot_charlie_ciphertext_charlie, secret_key_charlie,
+        common_seed);
+
+    ///////////////////////////////////////////////////////////
+    /////////////////// Server Setup (ColBoot) ////////////////
+    ///////////////////////////////////////////////////////////
+
+    heongpu::HEMultiPartyManager<heongpu::Scheme::BFV> boot_server(context);
+
+    std::vector<heongpu::Ciphertext<heongpu::Scheme::BFV>> all_boot_ciphertexts;
+    all_boot_ciphertexts.push_back(boot_alice_ciphertext_alice);
+    all_boot_ciphertexts.push_back(boot_bob_ciphertext_bob);
+    all_boot_ciphertexts.push_back(boot_charlie_ciphertext_charlie);
+
+    heongpu::Ciphertext<heongpu::Scheme::BFV> boot_server_ciphertext(context);
+    boot_server.distributed_bootstrapping_coordinator(
+        all_boot_ciphertexts, cipher_accum, boot_server_ciphertext,
+        common_seed);
+
+    ///////////////////////////////////////////////////////////
+    /////////// Alice Setup (Partially Decryption) ////////////
     ///////////////////////////////////////////////////////////
 
     heongpu::Ciphertext<heongpu::Scheme::BFV> partial_ciphertext_alice(context);
-    mpc_manager_alice.decrypt_partial(cipher_mult_add_rotate, secret_key_alice,
+    mpc_manager_alice.decrypt_partial(boot_server_ciphertext, secret_key_alice,
                                       partial_ciphertext_alice);
 
     ///////////////////////////////////////////////////////////
-    /////////////////// Bob Setup (Stage 4) ///////////////////
+    ///////////// Bob Setup (Partially Decryption) ////////////
     ///////////////////////////////////////////////////////////
 
     heongpu::Ciphertext<heongpu::Scheme::BFV> partial_ciphertext_bob(context);
-    mpc_manager_bob.decrypt_partial(cipher_mult_add_rotate, secret_key_bob,
+    mpc_manager_bob.decrypt_partial(boot_server_ciphertext, secret_key_bob,
                                     partial_ciphertext_bob);
 
     ///////////////////////////////////////////////////////////
-    ///////////////// Charlie Setup (Stage 4) /////////////////
+    /////////// Charlie Setup (Partially Decryption) //////////
     ///////////////////////////////////////////////////////////
 
     heongpu::Ciphertext<heongpu::Scheme::BFV> partial_ciphertext_charlie(
         context);
     mpc_manager_charlie.decrypt_partial(
-        cipher_mult_add_rotate, secret_key_charlie, partial_ciphertext_charlie);
+        boot_server_ciphertext, secret_key_charlie, partial_ciphertext_charlie);
 
     ///////////////////////////////////////////////////////////
 
