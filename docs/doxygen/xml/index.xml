@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.13.2" xml:lang="en-US">
+  <compound refid="classheongpu_1_1Bootstrappingkey" kind="class"><name>heongpu::Bootstrappingkey</name>
+  </compound>
+  <compound refid="classheongpu_1_1Ciphertext" kind="class"><name>heongpu::Ciphertext</name>
+  </compound>
+  <compound refid="classheongpu_1_1Galoiskey" kind="class"><name>heongpu::Galoiskey</name>
+  </compound>
+  <compound refid="classheongpu_1_1HEArithmeticOperator" kind="class"><name>heongpu::HEArithmeticOperator</name>
+  </compound>
+  <compound refid="classheongpu_1_1HEContext" kind="class"><name>heongpu::HEContext</name>
+  </compound>
+  <compound refid="classheongpu_1_1HEDecryptor" kind="class"><name>heongpu::HEDecryptor</name>
+  </compound>
+  <compound refid="classheongpu_1_1HEEncoder" kind="class"><name>heongpu::HEEncoder</name>
+  </compound>
+  <compound refid="classheongpu_1_1HEEncryptor" kind="class"><name>heongpu::HEEncryptor</name>
+  </compound>
+  <compound refid="classheongpu_1_1HEKeyGenerator" kind="class"><name>heongpu::HEKeyGenerator</name>
+  </compound>
+  <compound refid="classheongpu_1_1HELogicOperator" kind="class"><name>heongpu::HELogicOperator</name>
+  </compound>
+  <compound refid="classheongpu_1_1HEMultiPartyManager" kind="class"><name>heongpu::HEMultiPartyManager</name>
+  </compound>
+  <compound refid="classheongpu_1_1HEOperator" kind="class"><name>heongpu::HEOperator</name>
+  </compound>
+  <compound refid="structheongpu_1_1serializer_1_1is__serializable" kind="struct"><name>heongpu::serializer::is_serializable</name>
+  </compound>
+  <compound refid="structheongpu_1_1serializer_1_1is__serializable_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1f0e1870e041079f0df57f176b8decee8" kind="struct"><name>heongpu::serializer::is_serializable&lt; T, std::void_t&lt; decltype(std::declval&lt; const T &gt;().save(std::declval&lt; std::ostream &amp; &gt;())), decltype(std::declval&lt; T &gt;().load(std::declval&lt; std::istream &amp; &gt;()))&gt; &gt;</name>
+  </compound>
+  <compound refid="classheongpu_1_1MultipartyGaloiskey" kind="class"><name>heongpu::MultipartyGaloiskey</name>
+  </compound>
+  <compound refid="classheongpu_1_1MultipartyPublickey" kind="class"><name>heongpu::MultipartyPublickey</name>
+  </compound>
+  <compound refid="classheongpu_1_1MultipartyRelinkey" kind="class"><name>heongpu::MultipartyRelinkey</name>
+  </compound>
+  <compound refid="classheongpu_1_1Plaintext" kind="class"><name>heongpu::Plaintext</name>
+  </compound>
+  <compound refid="classheongpu_1_1Publickey" kind="class"><name>heongpu::Publickey</name>
+  </compound>
+  <compound refid="classheongpu_1_1Relinkey" kind="class"><name>heongpu::Relinkey</name>
+  </compound>
+  <compound refid="classheongpu_1_1Secretkey" kind="class"><name>heongpu::Secretkey</name>
+  </compound>
+  <compound refid="classheongpu_1_1Switchkey" kind="class"><name>heongpu::Switchkey</name>
+  </compound>
+  <compound refid="namespaceheongpu" kind="namespace"><name>heongpu</name>
+    <member refid="schemes_8h_1a1b74237023d8b101f91948b330b96e05" kind="enum"><name>Scheme</name></member>
+    <member refid="schemes_8h_1a1b74237023d8b101f91948b330b96e05aae1d058d6be72afd0b7109dc8ec06d47" kind="enumvalue"><name>BFV</name></member>
+    <member refid="schemes_8h_1a1b74237023d8b101f91948b330b96e05ad1c4ec19c6f23b5f84e1a17afde05c46" kind="enumvalue"><name>CKKS</name></member>
+    <member refid="schemes_8h_1a1b74237023d8b101f91948b330b96e05a466b52877bf7dae9e0e5a66ca23c4c37" kind="enumvalue"><name>TFHE</name></member>
+    <member refid="schemes_8h_1aa4047e534721de83b3c84b6f94b5b616" kind="enum"><name>scheme_type</name></member>
+    <member refid="schemes_8h_1aa4047e534721de83b3c84b6f94b5b616a334c4a4c42fdb79d7ebc3e73b517e6f8" kind="enumvalue"><name>none</name></member>
+    <member refid="schemes_8h_1aa4047e534721de83b3c84b6f94b5b616a9c1217c663d36f77e1984c43328d037c" kind="enumvalue"><name>bfv</name></member>
+    <member refid="schemes_8h_1aa4047e534721de83b3c84b6f94b5b616a383247a6733f528940c75fde17bddca7" kind="enumvalue"><name>ckks</name></member>
+    <member refid="schemes_8h_1aa4047e534721de83b3c84b6f94b5b616a2e222cfba36e832597112846699e7a18" kind="enumvalue"><name>bgv</name></member>
+    <member refid="schemes_8h_1aa4047e534721de83b3c84b6f94b5b616a7be87268726692a48d64c478cfbb3147" kind="enumvalue"><name>tfhe</name></member>
+    <member refid="schemes_8h_1a59588302eb8634743ed147ea35f6a287" kind="enum"><name>sec_level_type</name></member>
+    <member refid="schemes_8h_1a59588302eb8634743ed147ea35f6a287a334c4a4c42fdb79d7ebc3e73b517e6f8" kind="enumvalue"><name>none</name></member>
+    <member refid="schemes_8h_1a59588302eb8634743ed147ea35f6a287a37ac40582ffa0d2209fceee8be26609b" kind="enumvalue"><name>sec128</name></member>
+    <member refid="schemes_8h_1a59588302eb8634743ed147ea35f6a287ab1219231bee863401ac5a4bea42acdde" kind="enumvalue"><name>sec192</name></member>
+    <member refid="schemes_8h_1a59588302eb8634743ed147ea35f6a287ab5abd50beb2984383a5968ffd21d34f0" kind="enumvalue"><name>sec256</name></member>
+    <member refid="schemes_8h_1a44abdd38edca3eb2c032d08d8c8ae83b" kind="enum"><name>keyswitching_type</name></member>
+    <member refid="schemes_8h_1a44abdd38edca3eb2c032d08d8c8ae83bab50339a10e1de285ac99d4c3990b8693" kind="enumvalue"><name>NONE</name></member>
+    <member refid="schemes_8h_1a44abdd38edca3eb2c032d08d8c8ae83ba27ba5c8b454fd6f6e690ed67c41e8bf8" kind="enumvalue"><name>KEYSWITCHING_METHOD_I</name></member>
+    <member refid="schemes_8h_1a44abdd38edca3eb2c032d08d8c8ae83bad9d106b078da1b435b81254b0eb7201e" kind="enumvalue"><name>KEYSWITCHING_METHOD_II</name></member>
+    <member refid="schemes_8h_1a44abdd38edca3eb2c032d08d8c8ae83ba02185d53f1a795b9f1675e77b242b661" kind="enumvalue"><name>KEYSWITCHING_METHOD_III</name></member>
+    <member refid="schemes_8h_1a482058ab493113e495ed736e09731387" kind="enum"><name>logic_bootstrapping_type</name></member>
+    <member refid="schemes_8h_1a482058ab493113e495ed736e09731387ab50339a10e1de285ac99d4c3990b8693" kind="enumvalue"><name>NONE</name></member>
+    <member refid="schemes_8h_1a482058ab493113e495ed736e09731387abef37c1ca0fd60299bed2f251fda90e6" kind="enumvalue"><name>BIT_BOOTSTRAPPING</name></member>
+    <member refid="schemes_8h_1a482058ab493113e495ed736e09731387a70b1893844db184f30b2b333ccae8ea5" kind="enumvalue"><name>GATE_BOOTSTRAPPING</name></member>
+    <member refid="secstdparams_8h_1a01397390d0f04bb6a591ff37d9308875" kind="variable"><name>error_std_dev</name></member>
+    <member refid="secstdparams_8h_1a825a881d6f0adb34640ca9d6f38c1a12" kind="function"><name>heongpu_128bit_std_parms</name></member>
+    <member refid="secstdparams_8h_1a8db65a165f4388a0011e7b6dec59af29" kind="function"><name>heongpu_192bit_std_parms</name></member>
+    <member refid="secstdparams_8h_1aeb02ab9a4c7a787194f1895ed07a5d88" kind="function"><name>heongpu_256bit_std_parms</name></member>
+  </compound>
+  <compound refid="namespaceheongpu_1_1serializer" kind="namespace"><name>heongpu::serializer</name>
+    <member refid="serializer_8h_1a85adb2ad12805cc50b77b5ed23829d4b" kind="variable"><name>is_serializable_v</name></member>
+    <member refid="serializer_8h_1ae77977b0b6351415fb579342d726be1c" kind="function"><name>to_buffer</name></member>
+    <member refid="serializer_8h_1af5d66b60f676b0448da5b7d732af88bd" kind="function"><name>from_buffer</name></member>
+    <member refid="serializer_8h_1afed93c2e5e3f967c1f19abe8486b9b79" kind="function"><name>compress</name></member>
+    <member refid="serializer_8h_1ad52fd441e5e784dbf976f083c840bc20" kind="function"><name>decompress</name></member>
+    <member refid="serializer_8h_1a37ec54705ec1546e0298450c9fb2bb00" kind="function"><name>serialize</name></member>
+    <member refid="serializer_8h_1a9b5345c960cf45bfa8307f0032700ce1" kind="function"><name>deserialize</name></member>
+    <member refid="serializer_8h_1a3df41ba04f4dac6fdf06be2dbc38bf5b" kind="function"><name>save_to_file</name></member>
+    <member refid="serializer_8h_1a8e4c58f7223c01a51db1825cb4622a70" kind="function"><name>load_from_file</name></member>
+  </compound>
+  <compound refid="namespacestd" kind="namespace"><name>std</name>
+  </compound>
+  <compound refid="defines_8h" kind="file"><name>defines.h</name>
+    <member refid="defines_8h_1ad45f6c8ce5dd25eb295cdd22d6c295ab" kind="define"><name>MAX_POLY_DEGREE</name></member>
+    <member refid="defines_8h_1ae8eb60bba44c3eb2b03ef50f51682a25" kind="define"><name>MIN_POLY_DEGREE</name></member>
+    <member refid="defines_8h_1adc610d37f2695770231304552ddca5dc" kind="define"><name>MAX_USER_DEFINED_MOD_BIT_COUNT</name></member>
+    <member refid="defines_8h_1a2f1ce73133cc0ee2bbbe8c391324f0d3" kind="define"><name>MIN_USER_DEFINED_MOD_BIT_COUNT</name></member>
+    <member refid="defines_8h_1a0305d529f1d999c360e48ff7fa7ba465" kind="define"><name>MAX_MOD_BIT_COUNT</name></member>
+    <member refid="defines_8h_1a69b3b524d376dcc0754c02bbb535f0fd" kind="define"><name>MIN_MOD_BIT_COUNT</name></member>
+    <member refid="defines_8h_1aeee9bda75cbcad6e20b4c4a0a952843a" kind="define"><name>MAX_BSK_SIZE</name></member>
+    <member refid="defines_8h_1a7ced02e1eecb3948c2a9bf57b678a138" kind="define"><name>MAX_SHIFT</name></member>
+    <member refid="defines_8h_1a6828421f95cf62dfadadd4e7fe946e46" kind="variable"><name>initial_device_memorypool_size</name></member>
+    <member refid="defines_8h_1a63f2c09255d796cb96b941fe28704c7d" kind="variable"><name>max_device_memorypool_size</name></member>
+    <member refid="defines_8h_1a60ff6c26b410a3fe17d4cf5f8a688c99" kind="variable"><name>initial_host_memorypool_size</name></member>
+    <member refid="defines_8h_1adb44e56f67dbc14665204b8984515d67" kind="variable"><name>max_host_memorypool_size</name></member>
+  </compound>
+  <compound refid="schemes_8h" kind="file"><name>schemes.h</name>
+  </compound>
+  <compound refid="secstdparams_8h" kind="file"><name>secstdparams.h</name>
+  </compound>
+  <compound refid="serializer_8h" kind="file"><name>serializer.h</name>
+  </compound>
+  <compound refid="dir_1b990c1dc8bac0a1ae59e6c647366f02" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src/heongpu</name>
+  </compound>
+  <compound refid="dir_a5dbda1ad52f443c6f2d75fc1aa38428" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src/heongpu/include</name>
+  </compound>
+  <compound refid="dir_0e83dbf37a1f78b1707c9b01872ca0b2" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel</name>
+  </compound>
+  <compound refid="dir_68267d1309a1af8e8297ef4c3efbcdba" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src</name>
+  </compound>
+  <compound refid="dir_d33f902ee075f393705e05f91e3ce261" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src/heongpu/include/util</name>
+  </compound>
+</doxygenindex>

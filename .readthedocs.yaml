@@ -1,0 +1,31 @@
+#.readthedocs.yaml
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+# Set the OS, Python version and other tools you might need
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.9"
+  
+  # Install system dependencies, including doxygen
+  apt_packages:
+    - doxygen
+    # Add graphviz if you want doxygen to generate diagrams
+    # - graphviz
+
+  jobs:
+    # These jobs run at different stages of the build
+    # We'll run doxygen before sphinx builds the documentation
+    pre_build:
+      - doxygen docs/Doxyfile
+
+# Build documentation in the docs/ directory with Sphinx
+sphinx:
+  configuration: docs/conf.py
+
+# Declare the Python requirements required to build your docs
+python:
+  install:
+    - requirements: docs/requirements.txt

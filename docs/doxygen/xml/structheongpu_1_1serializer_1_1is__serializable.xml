@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+  <compounddef id="structheongpu_1_1serializer_1_1is__serializable" kind="struct" language="C++" prot="public">
+    <compoundname>heongpu::serializer::is_serializable</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">std::false_type</basecompoundref>
+    <includes refid="serializer_8h" local="no">serializer.h</includes>
+    <templateparamlist>
+      <param>
+        <type>typename</type>
+      </param>
+      <param>
+        <type>typename</type>
+        <defval>void</defval>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+<para>Trait to detect serializable types (having save/load methods). </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>heongpu::serializer::is_serializable&lt; typename, typename &gt;</label>
+        <link refid="structheongpu_1_1serializer_1_1is__serializable"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>std::false_type</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>heongpu::serializer::is_serializable&lt; typename, typename &gt;</label>
+        <link refid="structheongpu_1_1serializer_1_1is__serializable"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>std::false_type</label>
+      </node>
+    </collaborationgraph>
+    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="52" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" bodystart="53" bodyend="54"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

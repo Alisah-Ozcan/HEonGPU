@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+  <compounddef id="dir_d33f902ee075f393705e05f91e3ce261" kind="dir">
+    <compoundname>/home/piney/research/cisec/HEonGPU/src/heongpu/include/util</compoundname>
+    <innerfile refid="schemes_8h">schemes.h</innerfile>
+    <innerfile refid="secstdparams_8h">secstdparams.h</innerfile>
+    <innerfile refid="serializer_8h">serializer.h</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/"/>
+  </compounddef>
+</doxygen>
