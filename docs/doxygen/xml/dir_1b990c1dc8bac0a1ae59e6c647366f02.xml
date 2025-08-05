@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+  <compounddef id="dir_1b990c1dc8bac0a1ae59e6c647366f02" kind="dir">
+    <compoundname>/home/piney/research/cisec/HEonGPU/src/heongpu</compoundname>
+    <innerdir refid="dir_a5dbda1ad52f443c6f2d75fc1aa38428">/home/piney/research/cisec/HEonGPU/src/heongpu/include</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/"/>
+  </compounddef>
+</doxygen>

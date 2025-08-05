@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+  <compounddef id="classheongpu_1_1HEDecryptor" kind="class" language="C++" prot="public">
+    <compoundname>heongpu::HEDecryptor</compoundname>
+    <templateparamlist>
+      <param>
+        <type>Scheme</type>
+        <declname>S</declname>
+        <defname>S</defname>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" line="24" column="16" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="24" bodyend="-1"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,237 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+  <compounddef id="namespaceheongpu_1_1serializer" kind="namespace" language="C++">
+    <compoundname>heongpu::serializer</compoundname>
+    <innerclass refid="structheongpu_1_1serializer_1_1is__serializable" prot="public">heongpu::serializer::is_serializable</innerclass>
+    <innerclass refid="structheongpu_1_1serializer_1_1is__serializable_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1f0e1870e041079f0df57f176b8decee8" prot="public">heongpu::serializer::is_serializable&lt; T, std::void_t&lt; decltype(std::declval&lt; const T &gt;().save(std::declval&lt; std::ostream &amp; &gt;())), decltype(std::declval&lt; T &gt;().load(std::declval&lt; std::istream &amp; &gt;()))&gt; &gt;</innerclass>
+    <sectiondef kind="var">
+      <memberdef kind="variable" id="serializer_8h_1a85adb2ad12805cc50b77b5ed23829d4b" prot="public" static="no" constexpr="yes" mutable="no">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>bool</type>
+        <definition>bool heongpu::serializer::is_serializable_v</definition>
+        <argsstring></argsstring>
+        <name>is_serializable_v</name>
+        <qualifiedname>heongpu::serializer::is_serializable_v</qualifiedname>
+        <initializer>= <ref refid="structheongpu_1_1serializer_1_1is__serializable" kindref="compound">is_serializable</ref>&lt;T&gt;::value</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="67" column="31" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="serializer_8h_1ae77977b0b6351415fb579342d726be1c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; uint8_t &gt;</type>
+        <definition>std::vector&lt; uint8_t &gt; heongpu::serializer::to_buffer</definition>
+        <argsstring>(const std::stringstream &amp;ss)</argsstring>
+        <name>to_buffer</name>
+        <qualifiedname>heongpu::serializer::to_buffer</qualifiedname>
+        <param>
+          <type>const std::stringstream &amp;</type>
+          <declname>ss</declname>
+        </param>
+        <briefdescription>
+<para>Convert a stringstream to a byte buffer. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="28" column="21" declfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" declline="28" declcolumn="21"/>
+      </memberdef>
+      <memberdef kind="function" id="serializer_8h_1af5d66b60f676b0448da5b7d732af88bd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void heongpu::serializer::from_buffer</definition>
+        <argsstring>(std::stringstream &amp;ss, const std::vector&lt; uint8_t &gt; &amp;buffer)</argsstring>
+        <name>from_buffer</name>
+        <qualifiedname>heongpu::serializer::from_buffer</qualifiedname>
+        <param>
+          <type>std::stringstream &amp;</type>
+          <declname>ss</declname>
+        </param>
+        <param>
+          <type>const std::vector&lt; uint8_t &gt; &amp;</type>
+          <declname>buffer</declname>
+        </param>
+        <briefdescription>
+<para>Load a byte buffer into a stringstream. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="33" column="14" declfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" declline="33" declcolumn="14"/>
+      </memberdef>
+      <memberdef kind="function" id="serializer_8h_1afed93c2e5e3f967c1f19abe8486b9b79" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; uint8_t &gt;</type>
+        <definition>std::vector&lt; uint8_t &gt; heongpu::serializer::compress</definition>
+        <argsstring>(const std::vector&lt; uint8_t &gt; &amp;data)</argsstring>
+        <name>compress</name>
+        <qualifiedname>heongpu::serializer::compress</qualifiedname>
+        <param>
+          <type>const std::vector&lt; uint8_t &gt; &amp;</type>
+          <declname>data</declname>
+        </param>
+        <briefdescription>
+<para>Compress raw data using zlib. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>std::runtime_error</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>on failure. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="40" column="21" declfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" declline="40" declcolumn="21"/>
+      </memberdef>
+      <memberdef kind="function" id="serializer_8h_1ad52fd441e5e784dbf976f083c840bc20" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::vector&lt; uint8_t &gt;</type>
+        <definition>std::vector&lt; uint8_t &gt; heongpu::serializer::decompress</definition>
+        <argsstring>(const std::vector&lt; uint8_t &gt; &amp;data)</argsstring>
+        <name>decompress</name>
+        <qualifiedname>heongpu::serializer::decompress</qualifiedname>
+        <param>
+          <type>const std::vector&lt; uint8_t &gt; &amp;</type>
+          <declname>data</declname>
+        </param>
+        <briefdescription>
+<para>Decompress zlib-compressed data. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="exception"><parameteritem>
+<parameternamelist>
+<parametername>std::runtime_error</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>on failure. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="46" column="21" declfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" declline="46" declcolumn="21"/>
+      </memberdef>
+      <memberdef kind="function" id="serializer_8h_1a37ec54705ec1546e0298450c9fb2bb00" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::enable_if_t&lt; is_serializable_v&lt; T &gt;, std::vector&lt; uint8_t &gt; &gt;</type>
+        <definition>std::enable_if_t&lt; is_serializable_v&lt; T &gt;, std::vector&lt; uint8_t &gt; &gt; heongpu::serializer::serialize</definition>
+        <argsstring>(const T &amp;obj)</argsstring>
+        <name>serialize</name>
+        <qualifiedname>heongpu::serializer::serialize</qualifiedname>
+        <param>
+          <type>const T &amp;</type>
+          <declname>obj</declname>
+        </param>
+        <briefdescription>
+<para>Serialize an object to a compressed byte buffer. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="74" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" bodystart="74" bodyend="79"/>
+      </memberdef>
+      <memberdef kind="function" id="serializer_8h_1a9b5345c960cf45bfa8307f0032700ce1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>std::enable_if_t&lt; is_serializable_v&lt; T &gt;, T &gt;</type>
+        <definition>std::enable_if_t&lt; is_serializable_v&lt; T &gt;, T &gt; heongpu::serializer::deserialize</definition>
+        <argsstring>(const std::vector&lt; uint8_t &gt; &amp;buffer)</argsstring>
+        <name>deserialize</name>
+        <qualifiedname>heongpu::serializer::deserialize</qualifiedname>
+        <param>
+          <type>const std::vector&lt; uint8_t &gt; &amp;</type>
+          <declname>buffer</declname>
+        </param>
+        <briefdescription>
+<para>Deserialize an object from a compressed byte buffer. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="86" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" bodystart="86" bodyend="93"/>
+      </memberdef>
+      <memberdef kind="function" id="serializer_8h_1a3df41ba04f4dac6fdf06be2dbc38bf5b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void heongpu::serializer::save_to_file</definition>
+        <argsstring>(const T &amp;obj, const std::string &amp;filename)</argsstring>
+        <name>save_to_file</name>
+        <qualifiedname>heongpu::serializer::save_to_file</qualifiedname>
+        <param>
+          <type>const T &amp;</type>
+          <declname>obj</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+<para>Save a serializable object to a binary file. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="99" column="14" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" bodystart="99" bodyend="110"/>
+      </memberdef>
+      <memberdef kind="function" id="serializer_8h_1a8e4c58f7223c01a51db1825cb4622a70" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>typename T</type>
+          </param>
+        </templateparamlist>
+        <type>T</type>
+        <definition>T heongpu::serializer::load_from_file</definition>
+        <argsstring>(const std::string &amp;filename)</argsstring>
+        <name>load_from_file</name>
+        <qualifiedname>heongpu::serializer::load_from_file</qualifiedname>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>filename</declname>
+        </param>
+        <briefdescription>
+<para>Load a serializable object from a binary file. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="115" column="23" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" bodystart="115" bodyend="128"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/serializer.h" line="22" column="5"/>
+  </compounddef>
+</doxygen>
