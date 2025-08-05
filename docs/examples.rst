@@ -60,7 +60,7 @@ These examples demonstrate more advanced capabilities of the library, such as di
     * **Key Concept**: **Galois Keys and Rotation**. It illustrates how to generate ``Galoiskey`` objects and use them to perform SIMD rotations on the encrypted vectors.
 
 7. Key-Switching Methods in CKKS (``4_switchkey_methods_ckks.cu``)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     This example is the CKKS counterpart to the previous one, showcasing rotations and key-switching for approximate numbers.
 
     * **Workflow**: It demonstrates the use of ``rotate_rows_inplace`` with Galois keys and the ``keyswitch`` operation, highlighting that the core concepts are similar across both BFV and CKKS.
@@ -79,7 +79,7 @@ Serialization
 -------------
 
 9. Serialization in BFV and CKKS (``10_``, ``11_`` examples)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     These examples demonstrate how to serialize and deserialize all major HEonGPU objects, which is essential for saving state, persistence, and client-server communication.
 
     * ``10_bfv_serialization.cu`` and ``11_ckks_serialization.cu`` showcase the same workflow for their respective schemes.

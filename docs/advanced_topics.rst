@@ -5,8 +5,8 @@ Advanced Topics
 
 This section covers advanced usage patterns, configuration options, and integration strategies for developers looking to leverage the full capabilities of the HEonGPU library.
 
-Configuration (``define.h``)
---------------------------
+Configuration (``defines.h``)
+-----------------------------
 
 The ``src/heongpu/include/kernel/defines.h`` file is an essential configuration header that contains key settings defining the library's limits and default behaviors. Advanced users can modify these values to tune the library for specific hardware or demanding use cases.
 
