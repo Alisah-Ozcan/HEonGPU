@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="addition_8cuh" kind="file" language="C++">
+    <compoundname>addition.cuh</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">//<sp/>Copyright<sp/>2024-2025<sp/>Alişah<sp/>Özcan</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0,<sp/>see<sp/>LICENSE<sp/>for<sp/>details.</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>SPDX-License-Identifier:<sp/>Apache-2.0</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>Developer:<sp/>Alişah<sp/>Özcan</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#ifndef<sp/>HEONGPU_ADDITION_H</highlight></codeline>
+<codeline><highlight class="normal">#define<sp/>HEONGPU_ADDITION_H</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&lt;curand_kernel.h&gt;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;modular_arith.cuh&quot;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">namespace<sp/>heongpu</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Addition<sp/>Kernel</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>addition(Data64*<sp/>in1,<sp/>Data64*<sp/>in2,<sp/>Data64*<sp/>out,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Substraction<sp/>Kernel</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>substraction(Data64*<sp/>in1,<sp/>Data64*<sp/>in2,<sp/>Data64*<sp/>out,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Negation<sp/>Kernel</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>negation(Data64*<sp/>in1,<sp/>Data64*<sp/>out,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Plaintext<sp/>Addition<sp/>Kernel(BFV)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>addition_plain_bfv_poly(Data64*<sp/>cipher,<sp/>Data64*<sp/>plain,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>output,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64<sp/>plain_mod,<sp/>Data64<sp/>Q_mod_t,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64<sp/>upper_threshold,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>coeffdiv_plain,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Plaintext<sp/>Substraction<sp/>Kernel(BFV)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>substraction_plain_bfv_poly(Data64*<sp/>cipher,<sp/>Data64*<sp/>plain,<sp/>Data64*<sp/>output,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>Modulus64<sp/>plain_mod,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64<sp/>Q_mod_t,<sp/>Data64<sp/>upper_threshold,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>coeffdiv_plain,<sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Plaintext<sp/>Addition<sp/>Kernel(BFV)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>addition_plain_bfv_poly_inplace(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>cipher,<sp/>Data64*<sp/>plain,<sp/>Data64*<sp/>output,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64<sp/>plain_mod,<sp/>Data64<sp/>Q_mod_t,<sp/>Data64<sp/>upper_threshold,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>coeffdiv_plain,<sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Plaintext<sp/>Substraction<sp/>Kernel(BFV)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>substraction_plain_bfv_poly_inplace(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>cipher,<sp/>Data64*<sp/>plain,<sp/>Data64*<sp/>output,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64<sp/>plain_mod,<sp/>Data64<sp/>Q_mod_t,<sp/>Data64<sp/>upper_threshold,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>coeffdiv_plain,<sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Plaintext<sp/>Addition<sp/>Kernel(CKKS)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>addition_plain_ckks_poly(Data64*<sp/>in1,<sp/>Data64*<sp/>in2,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>out,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Homomorphic<sp/>Plaintext<sp/>Substraction<sp/>Kernel(CKKS)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>substraction_plain_ckks_poly(Data64*<sp/>in1,<sp/>Data64*<sp/>in2,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>out,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">}<sp/>//<sp/>namespace<sp/>heongpu</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#endif<sp/>//<sp/>HEONGPU_ADDITION_H</highlight></codeline>
+    </programlisting>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/addition.cuh"/>
+  </compounddef>
+</doxygen>

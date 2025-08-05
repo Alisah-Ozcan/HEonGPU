@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_23b9b446a1abf1f668dac23a98278ec3" kind="dir">
+    <compoundname>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host</compoundname>
+    <innerdir refid="dir_e02a988ecf1f027a636e0b4702eb4fc4">/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/bfv</innerdir>
+    <innerdir refid="dir_0354c9135ca39689587fe82bd3f48e1e">/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/ckks</innerdir>
+    <innerdir refid="dir_ebff9c7f6fc35bc60a15652e3ccde545">/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/tfhe</innerdir>
+    <innerfile refid="heongpu_8cuh">heongpu.cuh</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/"/>
+  </compounddef>
+</doxygen>

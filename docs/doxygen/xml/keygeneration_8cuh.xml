@@ -1,0 +1,187 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="keygeneration_8cuh" kind="file" language="C++">
+    <compoundname>keygeneration.cuh</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">//<sp/>Copyright<sp/>2024-2025<sp/>Alişah<sp/>Özcan</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0,<sp/>see<sp/>LICENSE<sp/>for<sp/>details.</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>SPDX-License-Identifier:<sp/>Apache-2.0</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>Developer:<sp/>Alişah<sp/>Özcan</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#ifndef<sp/>HEONGPU_KEYGENERATION_H</highlight></codeline>
+<codeline><highlight class="normal">#define<sp/>HEONGPU_KEYGENERATION_H</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;common.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&lt;curand_kernel.h&gt;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;cuda_runtime.h&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;modular_arith.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;util.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;small_ntt.cuh&quot;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">namespace<sp/>heongpu</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Secret<sp/>Key<sp/>Generation</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>secretkey_gen_kernel(int*<sp/>secret_key,<sp/>int<sp/>hamming_weight,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>seed);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>secretkey_rns_kernel(int*<sp/>input,<sp/>Data64*<sp/>output,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>int<sp/>n_power,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>rns_mod_count);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Public<sp/>Key<sp/>Generation</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>publickey_gen_kernel(Data64*<sp/>public_key,<sp/>Data64*<sp/>secret_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>error_poly,<sp/>Data64*<sp/>a_poly,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>int<sp/>n_power,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>rns_mod_count);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>threshold_pk_addition(Data64*<sp/>pk1,<sp/>Data64*<sp/>pk2,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>pkout,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>bool<sp/>first);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Relinearization<sp/>Key<sp/>Generation</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>relinkey_gen_kernel(Data64*<sp/>relin_key,<sp/>Data64*<sp/>secret_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>error_poly,<sp/>Data64*<sp/>a_poly,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>rns_mod_count);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>multi_party_relinkey_piece_method_I_stage_I_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>rk,<sp/>Data64*<sp/>sk,<sp/>Data64*<sp/>a,<sp/>Data64*<sp/>u,<sp/>Data64*<sp/>e0,<sp/>Data64*<sp/>e1,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,<sp/>int<sp/>n_power,<sp/>int<sp/>rns_mod_count);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>multi_party_relinkey_piece_method_I_II_stage_II_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>rk_1,<sp/>Data64*<sp/>rk_2,<sp/>Data64*<sp/>sk,<sp/>Data64*<sp/>u,<sp/>Data64*<sp/>e0,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>e1,<sp/>Modulus64*<sp/>modulus,<sp/>int<sp/>n_power,<sp/>int<sp/>rns_mod_count,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>decomp_mod_count);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>multi_party_relinkey_piece_method_II_stage_I_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>rk,<sp/>Data64*<sp/>sk,<sp/>Data64*<sp/>a,<sp/>Data64*<sp/>u,<sp/>Data64*<sp/>e0,<sp/>Data64*<sp/>e1,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,<sp/>int*<sp/>Sk_pair,<sp/>int<sp/>n_power,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>l_tilda,<sp/>int<sp/>d,<sp/>int<sp/>Q_size,<sp/>int<sp/>P_size);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>multi_party_relinkey_method_I_stage_I_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>rk_in,<sp/>Data64*<sp/>rk_out,<sp/>Modulus64*<sp/>modulus,<sp/>int<sp/>n_power,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>Q_prime_size,<sp/>int<sp/>l,<sp/>bool<sp/>first);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>multi_party_relinkey_method_I_stage_II_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>rk1,<sp/>Data64*<sp/>rk2,<sp/>Data64*<sp/>rk_out,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>Q_prime_size,<sp/>int<sp/>l);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>multi_party_relinkey_method_I_stage_II_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>rk_in,<sp/>Data64*<sp/>rk_out,<sp/>Modulus64*<sp/>modulus,<sp/>int<sp/>n_power,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>Q_prime_size,<sp/>int<sp/>l);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>relinkey_gen_II_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>relin_key_temp,<sp/>Data64*<sp/>secret_key,<sp/>Data64*<sp/>error_poly,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>a_poly,<sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,<sp/>int*<sp/>Sk_pair,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>l_tilda,<sp/>int<sp/>d,<sp/>int<sp/>Q_size,<sp/>int<sp/>P_size);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>relinkey_gen_II_leveled_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>relin_key_temp,<sp/>Data64*<sp/>secret_key,<sp/>Data64*<sp/>error_poly,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>a_poly,<sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,<sp/>int*<sp/>Sk_pair,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>l_tilda,<sp/>int<sp/>d,<sp/>int<sp/>Q_size,<sp/>int<sp/>P_size,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int*<sp/>mod_index);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>relinkey_DtoB_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>relin_key_temp,<sp/>Data64*<sp/>relin_key,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>B_base,<sp/>Data64*<sp/>base_change_matrix_D_to_B,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>Mi_inv_D_to_B,<sp/>Data64*<sp/>prod_D_to_B,<sp/>int*<sp/>I_j_,<sp/>int*<sp/>I_location_,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>l_tilda,<sp/>int<sp/>d_tilda,<sp/>int<sp/>d,<sp/>int<sp/>r_prime);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>relinkey_DtoB_leveled_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>relin_key_temp,<sp/>Data64*<sp/>relin_key,<sp/>Modulus64*<sp/>modulus,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>B_base,<sp/>Data64*<sp/>base_change_matrix_D_to_B,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>Mi_inv_D_to_B,<sp/>Data64*<sp/>prod_D_to_B,<sp/>int*<sp/>I_j_,<sp/>int*<sp/>I_location_,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>l_tilda,<sp/>int<sp/>d_tilda,<sp/>int<sp/>d,<sp/>int<sp/>r_prime,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int*<sp/>mod_index);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Galois<sp/>Key<sp/>Generation</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>int<sp/>steps_to_galois_elt(int<sp/>steps,<sp/>int<sp/>coeff_count,<sp/>int<sp/>group_order);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__device__<sp/>int<sp/>bitreverse_gpu(int<sp/>index,<sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__device__<sp/>int<sp/>permutation(int<sp/>index,<sp/>int<sp/>galois_elt,<sp/>int<sp/>coeff_count,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>galoiskey_gen_kernel(Data64*<sp/>galois_key,<sp/>Data64*<sp/>secret_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>error_poly,<sp/>Data64*<sp/>a_poly,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>galois_elt,<sp/>int<sp/>n_power,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>rns_mod_count);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>galoiskey_gen_II_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>galois_key_temp,<sp/>Data64*<sp/>secret_key,<sp/>Data64*<sp/>error_poly,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>a_poly,<sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,<sp/>int<sp/>galois_elt,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int*<sp/>Sk_pair,<sp/>int<sp/>n_power,<sp/>int<sp/>l_tilda,<sp/>int<sp/>d,<sp/>int<sp/>Q_size,<sp/>int<sp/>P_size);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>multi_party_galoiskey_gen_method_I_II_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>gk_1,<sp/>Data64*<sp/>gk_2,<sp/>Modulus64*<sp/>modulus,<sp/>int<sp/>n_power,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>rns_mod_count,<sp/>int<sp/>decomp_mod_count,<sp/>bool<sp/>first);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>//<sp/>Switch<sp/>Key<sp/>Generation</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>switchkey_gen_kernel(Data64*<sp/>switch_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>new_secret_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>old_secret_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>error_poly,<sp/>Data64*<sp/>a_poly,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>rns_mod_count);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>switchkey_gen_II_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>switch_key,<sp/>Data64*<sp/>new_secret_key,<sp/>Data64*<sp/>old_secret_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>error_poly,<sp/>Data64*<sp/>a_poly,<sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int*<sp/>Sk_pair,<sp/>int<sp/>n_power,<sp/>int<sp/>l_tilda,<sp/>int<sp/>d,<sp/>int<sp/>Q_size,<sp/>int<sp/>P_size);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>switchkey_kernel(Data64*<sp/>switch_key,<sp/>Data64*<sp/>new_secret_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>old_secret_key,<sp/>Data64*<sp/>e_a,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Modulus64*<sp/>modulus,<sp/>Data64*<sp/>factor,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>n_power,<sp/>int<sp/>rns_mod_count);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>tfhe_secretkey_gen_kernel(int32_t*<sp/>secret_key,<sp/>int<sp/>size,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>seed);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>tfhe_generate_noise_kernel(double*<sp/>output,<sp/>int<sp/>seed,<sp/>int<sp/>n,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>double<sp/>stddev);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>tfhe_generate_uniform_random_number_kernel(int32_t*<sp/>output,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>seed,<sp/>int<sp/>n);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>tfhe_generate_switchkey_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>int32_t*<sp/>sk_rlwe,<sp/>const<sp/>int32_t*<sp/>sk_lwe,<sp/>const<sp/>double*<sp/>noise,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int32_t*<sp/>input_a,<sp/>int32_t*<sp/>output_b,<sp/>int<sp/>n,<sp/>int<sp/>base_bit,<sp/>int<sp/>length);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>tfhe_generate_bootkey_random_numbers_kernel(int32_t*<sp/>boot_key,<sp/>int<sp/>N,<sp/>int<sp/>k,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>bk_length,<sp/>int<sp/>seed,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>double<sp/>stddev);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>tfhe_convert_rlwekey_ntt_domain_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>key_out,<sp/>int32_t*<sp/>key_in,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>Root64*<sp/>__restrict__<sp/>forward_root_of_unity_table,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>Modulus64<sp/>modulus,<sp/>int<sp/>N);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>tfhe_generate_bootkey_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>Data64*<sp/>sk_rlwe,<sp/>const<sp/>int32_t*<sp/>sk_lwe,<sp/>int32_t*<sp/>boot_key,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>Root64*<sp/>__restrict__<sp/>forward_root_of_unity_table,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>Root64*<sp/>__restrict__<sp/>inverse_root_of_unity_table,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>Ninverse64<sp/>n_inverse,<sp/>const<sp/>Modulus64<sp/>modulus,<sp/>int<sp/>N,<sp/>int<sp/>k,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>int<sp/>bk_bit,<sp/>int<sp/>bk_length);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>__global__<sp/>void<sp/>tfhe_convert_bootkey_ntt_domain_kernel(</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Data64*<sp/>key_out,<sp/>int32_t*<sp/>key_in,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>Root64*<sp/>__restrict__<sp/>forward_root_of_unity_table,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>Modulus64<sp/>modulus,<sp/>int<sp/>N,<sp/>int<sp/>k,<sp/>int<sp/>bk_length);</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">}<sp/>//<sp/>namespace<sp/>heongpu</highlight></codeline>
+<codeline><highlight class="normal">#endif<sp/>//<sp/>HEONGPU_KEYGENERATION_H</highlight></codeline>
+    </programlisting>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/keygeneration.cuh"/>
+  </compounddef>
+</doxygen>

@@ -1,33 +1,32 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
   <compounddef id="namespaceheongpu" kind="namespace" language="C++">
     <compoundname>heongpu</compoundname>
-    <innerclass refid="classheongpu_1_1Bootstrappingkey" prot="public">heongpu::Bootstrappingkey</innerclass>
     <innerclass refid="classheongpu_1_1Ciphertext" prot="public">heongpu::Ciphertext</innerclass>
-    <innerclass refid="classheongpu_1_1Galoiskey" prot="public">heongpu::Galoiskey</innerclass>
-    <innerclass refid="classheongpu_1_1HEArithmeticOperator" prot="public">heongpu::HEArithmeticOperator</innerclass>
     <innerclass refid="classheongpu_1_1HEContext" prot="public">heongpu::HEContext</innerclass>
     <innerclass refid="classheongpu_1_1HEDecryptor" prot="public">heongpu::HEDecryptor</innerclass>
     <innerclass refid="classheongpu_1_1HEEncoder" prot="public">heongpu::HEEncoder</innerclass>
     <innerclass refid="classheongpu_1_1HEEncryptor" prot="public">heongpu::HEEncryptor</innerclass>
-    <innerclass refid="classheongpu_1_1HEKeyGenerator" prot="public">heongpu::HEKeyGenerator</innerclass>
-    <innerclass refid="classheongpu_1_1HELogicOperator" prot="public">heongpu::HELogicOperator</innerclass>
-    <innerclass refid="classheongpu_1_1HEMultiPartyManager" prot="public">heongpu::HEMultiPartyManager</innerclass>
-    <innerclass refid="classheongpu_1_1HEOperator" prot="public">heongpu::HEOperator</innerclass>
-    <innerclass refid="classheongpu_1_1MultipartyGaloiskey" prot="public">heongpu::MultipartyGaloiskey</innerclass>
-    <innerclass refid="classheongpu_1_1MultipartyPublickey" prot="public">heongpu::MultipartyPublickey</innerclass>
+    <innerclass refid="classheongpu_1_1Relinkey" prot="public">heongpu::Relinkey</innerclass>
     <innerclass refid="classheongpu_1_1MultipartyRelinkey" prot="public">heongpu::MultipartyRelinkey</innerclass>
+    <innerclass refid="classheongpu_1_1Galoiskey" prot="public">heongpu::Galoiskey</innerclass>
+    <innerclass refid="classheongpu_1_1MultipartyGaloiskey" prot="public">heongpu::MultipartyGaloiskey</innerclass>
+    <innerclass refid="classheongpu_1_1Switchkey" prot="public">heongpu::Switchkey</innerclass>
+    <innerclass refid="classheongpu_1_1Bootstrappingkey" prot="public">heongpu::Bootstrappingkey</innerclass>
+    <innerclass refid="classheongpu_1_1HEKeyGenerator" prot="public">heongpu::HEKeyGenerator</innerclass>
+    <innerclass refid="classheongpu_1_1HEOperator" prot="public">heongpu::HEOperator</innerclass>
+    <innerclass refid="classheongpu_1_1HEArithmeticOperator" prot="public">heongpu::HEArithmeticOperator</innerclass>
+    <innerclass refid="classheongpu_1_1HELogicOperator" prot="public">heongpu::HELogicOperator</innerclass>
     <innerclass refid="classheongpu_1_1Plaintext" prot="public">heongpu::Plaintext</innerclass>
     <innerclass refid="classheongpu_1_1Publickey" prot="public">heongpu::Publickey</innerclass>
-    <innerclass refid="classheongpu_1_1Relinkey" prot="public">heongpu::Relinkey</innerclass>
+    <innerclass refid="classheongpu_1_1MultipartyPublickey" prot="public">heongpu::MultipartyPublickey</innerclass>
     <innerclass refid="classheongpu_1_1Secretkey" prot="public">heongpu::Secretkey</innerclass>
-    <innerclass refid="classheongpu_1_1Switchkey" prot="public">heongpu::Switchkey</innerclass>
+    <innerclass refid="classheongpu_1_1HEMultiPartyManager" prot="public">heongpu::HEMultiPartyManager</innerclass>
     <innernamespace refid="namespaceheongpu_1_1serializer">heongpu::serializer</innernamespace>
-    <sectiondef kind="enum">
+      <sectiondef kind="enum">
       <memberdef kind="enum" id="schemes_8h_1a1b74237023d8b101f91948b330b96e05" prot="public" static="no" strong="yes">
         <type></type>
         <name>Scheme</name>
-        <qualifiedname>heongpu::Scheme</qualifiedname>
         <enumvalue id="schemes_8h_1a1b74237023d8b101f91948b330b96e05aae1d058d6be72afd0b7109dc8ec06d47" prot="public">
           <name>BFV</name>
           <briefdescription>
@@ -55,12 +54,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" line="13" column="5" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="14" bodyend="18"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" line="13" column="5" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="14" bodyend="18"/>
       </memberdef>
       <memberdef kind="enum" id="schemes_8h_1aa4047e534721de83b3c84b6f94b5b616" prot="public" static="no" strong="yes">
         <type>std::uint8_t</type>
         <name>scheme_type</name>
-        <qualifiedname>heongpu::scheme_type</qualifiedname>
         <enumvalue id="schemes_8h_1aa4047e534721de83b3c84b6f94b5b616a334c4a4c42fdb79d7ebc3e73b517e6f8" prot="public">
           <name>none</name>
           <initializer>= 0x0</initializer>
@@ -107,12 +105,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" line="61" column="5" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="62" bodyend="77"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" line="61" column="5" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="62" bodyend="77"/>
       </memberdef>
       <memberdef kind="enum" id="schemes_8h_1a59588302eb8634743ed147ea35f6a287" prot="public" static="no" strong="yes">
         <type>std::uint8_t</type>
         <name>sec_level_type</name>
-        <qualifiedname>heongpu::sec_level_type</qualifiedname>
         <enumvalue id="schemes_8h_1a59588302eb8634743ed147ea35f6a287a334c4a4c42fdb79d7ebc3e73b517e6f8" prot="public">
           <name>none</name>
           <initializer>= 0x0</initializer>
@@ -151,12 +148,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" line="79" column="5" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="80" bodyend="95"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" line="79" column="5" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="80" bodyend="95"/>
       </memberdef>
       <memberdef kind="enum" id="schemes_8h_1a44abdd38edca3eb2c032d08d8c8ae83b" prot="public" static="no" strong="yes">
         <type>std::uint8_t</type>
         <name>keyswitching_type</name>
-        <qualifiedname>heongpu::keyswitching_type</qualifiedname>
         <enumvalue id="schemes_8h_1a44abdd38edca3eb2c032d08d8c8ae83bab50339a10e1de285ac99d4c3990b8693" prot="public">
           <name>NONE</name>
           <initializer>= 0x0</initializer>
@@ -195,12 +191,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" line="97" column="5" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="98" bodyend="103"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" line="97" column="5" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="98" bodyend="103"/>
       </memberdef>
       <memberdef kind="enum" id="schemes_8h_1a482058ab493113e495ed736e09731387" prot="public" static="no" strong="yes">
         <type>std::uint8_t</type>
         <name>logic_bootstrapping_type</name>
-        <qualifiedname>heongpu::logic_bootstrapping_type</qualifiedname>
         <enumvalue id="schemes_8h_1a482058ab493113e495ed736e09731387ab50339a10e1de285ac99d4c3990b8693" prot="public">
           <name>NONE</name>
           <initializer>= 0x0</initializer>
@@ -231,16 +226,15 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" line="105" column="5" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="106" bodyend="112"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" line="105" column="5" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" bodystart="106" bodyend="112"/>
       </memberdef>
-    </sectiondef>
-    <sectiondef kind="var">
+      </sectiondef>
+      <sectiondef kind="var">
       <memberdef kind="variable" id="secstdparams_8h_1a01397390d0f04bb6a591ff37d9308875" prot="public" static="no" constexpr="yes" mutable="no">
-        <type>double</type>
-        <definition>double heongpu::error_std_dev</definition>
+        <type>constexpr double</type>
+        <definition>constexpr double heongpu::error_std_dev</definition>
         <argsstring></argsstring>
         <name>error_std_dev</name>
-        <qualifiedname>heongpu::error_std_dev</qualifiedname>
         <initializer>= 3.2</initializer>
         <briefdescription>
         </briefdescription>
@@ -248,16 +242,15 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/secstdparams.h" line="22" column="22" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/secstdparams.h" bodystart="22" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/secstdparams.h" line="22" column="22" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/secstdparams.h" bodystart="22" bodyend="-1"/>
       </memberdef>
-    </sectiondef>
-    <sectiondef kind="func">
+      </sectiondef>
+      <sectiondef kind="func">
       <memberdef kind="function" id="secstdparams_8h_1a825a881d6f0adb34640ca9d6f38c1a12" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
-        <type>int</type>
-        <definition>int heongpu::heongpu_128bit_std_parms</definition>
+        <type>constexpr int</type>
+        <definition>constexpr int heongpu::heongpu_128bit_std_parms</definition>
         <argsstring>(size_t poly_modulus_degree) noexcept</argsstring>
         <name>heongpu_128bit_std_parms</name>
-        <qualifiedname>heongpu::heongpu_128bit_std_parms</qualifiedname>
         <param>
           <type>size_t</type>
           <declname>poly_modulus_degree</declname>
@@ -268,14 +261,13 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/secstdparams.h" line="25" column="19" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/secstdparams.h" bodystart="25" bodyend="41"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/secstdparams.h" line="25" column="19" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/secstdparams.h" bodystart="25" bodyend="41"/>
       </memberdef>
       <memberdef kind="function" id="secstdparams_8h_1a8db65a165f4388a0011e7b6dec59af29" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
-        <type>int</type>
-        <definition>int heongpu::heongpu_192bit_std_parms</definition>
+        <type>constexpr int</type>
+        <definition>constexpr int heongpu::heongpu_192bit_std_parms</definition>
         <argsstring>(size_t poly_modulus_degree) noexcept</argsstring>
         <name>heongpu_192bit_std_parms</name>
-        <qualifiedname>heongpu::heongpu_192bit_std_parms</qualifiedname>
         <param>
           <type>size_t</type>
           <declname>poly_modulus_degree</declname>
@@ -286,14 +278,13 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/secstdparams.h" line="44" column="19" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/secstdparams.h" bodystart="44" bodyend="60"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/secstdparams.h" line="44" column="19" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/secstdparams.h" bodystart="44" bodyend="60"/>
       </memberdef>
       <memberdef kind="function" id="secstdparams_8h_1aeb02ab9a4c7a787194f1895ed07a5d88" prot="public" static="no" constexpr="yes" const="no" explicit="no" inline="no" noexcept="yes" virt="non-virtual">
-        <type>int</type>
-        <definition>int heongpu::heongpu_256bit_std_parms</definition>
+        <type>constexpr int</type>
+        <definition>constexpr int heongpu::heongpu_256bit_std_parms</definition>
         <argsstring>(size_t poly_modulus_degree) noexcept</argsstring>
         <name>heongpu_256bit_std_parms</name>
-        <qualifiedname>heongpu::heongpu_256bit_std_parms</qualifiedname>
         <param>
           <type>size_t</type>
           <declname>poly_modulus_degree</declname>
@@ -304,13 +295,13 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/secstdparams.h" line="63" column="19" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/secstdparams.h" bodystart="63" bodyend="79"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/secstdparams.h" line="63" column="19" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/secstdparams.h" bodystart="63" bodyend="79"/>
       </memberdef>
-    </sectiondef>
+      </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h" line="11" column="1"/>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h" line="11" column="1"/>
   </compounddef>
 </doxygen>

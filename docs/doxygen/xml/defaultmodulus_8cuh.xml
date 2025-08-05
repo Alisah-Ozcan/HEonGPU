@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="defaultmodulus_8cuh" kind="file" language="C++">
+    <compoundname>defaultmodulus.cuh</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">//<sp/>Copyright<sp/>2024-2025<sp/>Alişah<sp/>Özcan</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0,<sp/>see<sp/>LICENSE<sp/>for<sp/>details.</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>SPDX-License-Identifier:<sp/>Apache-2.0</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>Developer:<sp/>Alişah<sp/>Özcan</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#ifndef<sp/>HEONGPU_DEFAULT_MODULUS_H</highlight></codeline>
+<codeline><highlight class="normal">#define<sp/>HEONGPU_DEFAULT_MODULUS_H</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;common.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;nttparameters.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&lt;unordered_map&gt;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&lt;vector&gt;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">namespace<sp/>heongpu</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>/*</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>The<sp/>default<sp/>modulus<sp/>for<sp/>different<sp/>poly_modulus_degree<sp/>values<sp/>was<sp/>determined</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>based<sp/>on<sp/>security<sp/>estimates<sp/>from<sp/>the<sp/>lattice-estimator<sp/>tool,<sp/>with<sp/>parameters</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>selected<sp/>to<sp/>align<sp/>with<sp/>the<sp/>desired<sp/>security<sp/>level.</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>lattice-estimator:<sp/>https://github.com/malb/lattice-estimator</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>Reference:<sp/>https://eprint.iacr.org/2015/046</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>*/</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>namespace<sp/>defaultparams</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>std::unordered_map&lt;std::size_t,<sp/>std::vector&lt;Modulus64&gt;&gt;&amp;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>get_128bit_sec_modulus();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>std::unordered_map&lt;std::size_t,<sp/>std::vector&lt;Modulus64&gt;&gt;&amp;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>get_192bit_sec_modulus();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>const<sp/>std::unordered_map&lt;std::size_t,<sp/>std::vector&lt;Modulus64&gt;&gt;&amp;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>get_256bit_sec_modulus();</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>//<sp/>namespace<sp/>defaultparams</highlight></codeline>
+<codeline><highlight class="normal">}<sp/>//<sp/>namespace<sp/>heongpu</highlight></codeline>
+<codeline><highlight class="normal">#endif<sp/>//<sp/>HEONGPU_DEFAULT_MODULUS_H</highlight></codeline>
+    </programlisting>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/defaultmodulus.cuh"/>
+  </compounddef>
+</doxygen>

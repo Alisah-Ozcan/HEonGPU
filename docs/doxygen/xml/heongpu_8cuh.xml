@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="heongpu_8cuh" kind="file" language="C++">
+    <compoundname>heongpu.cuh</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">//<sp/>Copyright<sp/>2024-2025<sp/>Alişah<sp/>Özcan</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>Licensed<sp/>under<sp/>the<sp/>Apache<sp/>License,<sp/>Version<sp/>2.0,<sp/>see<sp/>LICENSE<sp/>for<sp/>details.</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>SPDX-License-Identifier:<sp/>Apache-2.0</highlight></codeline>
+<codeline><highlight class="normal">//<sp/>Developer:<sp/>Alişah<sp/>Özcan</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#ifndef<sp/>HEONGPU_H</highlight></codeline>
+<codeline><highlight class="normal">#define<sp/>HEONGPU_H</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/context.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/secretkey.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/publickey.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/plaintext.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/ciphertext.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/evaluationkey.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/encoder.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/keygenerator.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/encryptor.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/decryptor.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/operator.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;bfv/mpcmanager.cuh&quot;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/context.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/secretkey.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/publickey.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/plaintext.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/ciphertext.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/evaluationkey.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/encoder.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/keygenerator.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/encryptor.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/decryptor.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/operator.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;ckks/mpcmanager.cuh&quot;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;tfhe/context.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;tfhe/secretkey.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;tfhe/ciphertext.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;tfhe/keygenerator.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;tfhe/encryptor.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;tfhe/decryptor.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;tfhe/evaluationkey.cuh&quot;</highlight></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;tfhe/operator.cuh&quot;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#include<sp/>&quot;serializer.h&quot;</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">namespace<sp/>heongpu</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">}<sp/>//<sp/>namespace<sp/>heongpu</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">#endif<sp/>//<sp/>HEONGPU_H</highlight></codeline>
+    </programlisting>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/heongpu.cuh"/>
+  </compounddef>
+</doxygen>

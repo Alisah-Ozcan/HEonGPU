@@ -1,14 +1,22 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
   <compounddef id="dir_d33f902ee075f393705e05f91e3ce261" kind="dir">
-    <compoundname>/home/piney/research/cisec/HEonGPU/src/heongpu/include/util</compoundname>
+    <compoundname>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util</compoundname>
+    <innerfile refid="bigintegerarith_8cuh">bigintegerarith.cuh</innerfile>
+    <innerfile refid="defaultmodulus_8cuh">defaultmodulus.cuh</innerfile>
+    <innerfile refid="devicevector_8cuh">devicevector.cuh</innerfile>
+    <innerfile refid="hostvector_8cuh">hostvector.cuh</innerfile>
+    <innerfile refid="memorypool_8cuh">memorypool.cuh</innerfile>
+    <innerfile refid="random_8cuh">random.cuh</innerfile>
     <innerfile refid="schemes_8h">schemes.h</innerfile>
     <innerfile refid="secstdparams_8h">secstdparams.h</innerfile>
     <innerfile refid="serializer_8h">serializer.h</innerfile>
+    <innerfile refid="storagemanager_8cuh">storagemanager.cuh</innerfile>
+    <innerfile refid="util_8cuh">util.cuh</innerfile>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/"/>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/"/>
   </compounddef>
 </doxygen>

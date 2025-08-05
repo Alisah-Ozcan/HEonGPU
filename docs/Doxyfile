@@ -1040,6 +1040,8 @@ FILE_PATTERNS          = *.c \
                          *.ccm \
                          *.c++ \
                          *.c++m \
+                         *.cu \
+                         *.cuh \
                          *.java \
                          *.ii \
                          *.ixx \

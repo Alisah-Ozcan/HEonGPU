@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.13.2" xml:lang="en-US">
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.9.1" xml:lang="en-US">
   <compound refid="classheongpu_1_1Bootstrappingkey" kind="class"><name>heongpu::Bootstrappingkey</name>
   </compound>
   <compound refid="classheongpu_1_1Ciphertext" kind="class"><name>heongpu::Ciphertext</name>
@@ -76,16 +76,90 @@
   </compound>
   <compound refid="namespaceheongpu_1_1serializer" kind="namespace"><name>heongpu::serializer</name>
     <member refid="serializer_8h_1a85adb2ad12805cc50b77b5ed23829d4b" kind="variable"><name>is_serializable_v</name></member>
-    <member refid="serializer_8h_1ae77977b0b6351415fb579342d726be1c" kind="function"><name>to_buffer</name></member>
+    <member refid="serializer_8h_1aced44515fd8d6bba5d2a84675345e2c7" kind="function"><name>to_buffer</name></member>
     <member refid="serializer_8h_1af5d66b60f676b0448da5b7d732af88bd" kind="function"><name>from_buffer</name></member>
-    <member refid="serializer_8h_1afed93c2e5e3f967c1f19abe8486b9b79" kind="function"><name>compress</name></member>
-    <member refid="serializer_8h_1ad52fd441e5e784dbf976f083c840bc20" kind="function"><name>decompress</name></member>
-    <member refid="serializer_8h_1a37ec54705ec1546e0298450c9fb2bb00" kind="function"><name>serialize</name></member>
-    <member refid="serializer_8h_1a9b5345c960cf45bfa8307f0032700ce1" kind="function"><name>deserialize</name></member>
+    <member refid="serializer_8h_1ad5568505a1d274119614f505a1a1cd4f" kind="function"><name>compress</name></member>
+    <member refid="serializer_8h_1a4e6ab8601f3970950935df48848644b0" kind="function"><name>decompress</name></member>
+    <member refid="serializer_8h_1a565e26362ef7702a45076983d2a4a9ce" kind="function"><name>serialize</name></member>
+    <member refid="serializer_8h_1a1f5aeb8f28d0077a49dc06507a2057d3" kind="function"><name>deserialize</name></member>
     <member refid="serializer_8h_1a3df41ba04f4dac6fdf06be2dbc38bf5b" kind="function"><name>save_to_file</name></member>
     <member refid="serializer_8h_1a8e4c58f7223c01a51db1825cb4622a70" kind="function"><name>load_from_file</name></member>
   </compound>
   <compound refid="namespacestd" kind="namespace"><name>std</name>
+  </compound>
+  <compound refid="bfv_2ciphertext_8cuh" kind="file"><name>ciphertext.cuh</name>
+  </compound>
+  <compound refid="ckks_2ciphertext_8cuh" kind="file"><name>ciphertext.cuh</name>
+  </compound>
+  <compound refid="tfhe_2ciphertext_8cuh" kind="file"><name>ciphertext.cuh</name>
+  </compound>
+  <compound refid="bfv_2context_8cuh" kind="file"><name>context.cuh</name>
+  </compound>
+  <compound refid="ckks_2context_8cuh" kind="file"><name>context.cuh</name>
+  </compound>
+  <compound refid="tfhe_2context_8cuh" kind="file"><name>context.cuh</name>
+  </compound>
+  <compound refid="bfv_2decryptor_8cuh" kind="file"><name>decryptor.cuh</name>
+  </compound>
+  <compound refid="ckks_2decryptor_8cuh" kind="file"><name>decryptor.cuh</name>
+  </compound>
+  <compound refid="tfhe_2decryptor_8cuh" kind="file"><name>decryptor.cuh</name>
+  </compound>
+  <compound refid="bfv_2encoder_8cuh" kind="file"><name>encoder.cuh</name>
+  </compound>
+  <compound refid="ckks_2encoder_8cuh" kind="file"><name>encoder.cuh</name>
+  </compound>
+  <compound refid="bfv_2encryptor_8cuh" kind="file"><name>encryptor.cuh</name>
+  </compound>
+  <compound refid="ckks_2encryptor_8cuh" kind="file"><name>encryptor.cuh</name>
+  </compound>
+  <compound refid="tfhe_2encryptor_8cuh" kind="file"><name>encryptor.cuh</name>
+  </compound>
+  <compound refid="bfv_2evaluationkey_8cuh" kind="file"><name>evaluationkey.cuh</name>
+  </compound>
+  <compound refid="ckks_2evaluationkey_8cuh" kind="file"><name>evaluationkey.cuh</name>
+  </compound>
+  <compound refid="tfhe_2evaluationkey_8cuh" kind="file"><name>evaluationkey.cuh</name>
+  </compound>
+  <compound refid="bfv_2keygenerator_8cuh" kind="file"><name>keygenerator.cuh</name>
+  </compound>
+  <compound refid="ckks_2keygenerator_8cuh" kind="file"><name>keygenerator.cuh</name>
+  </compound>
+  <compound refid="tfhe_2keygenerator_8cuh" kind="file"><name>keygenerator.cuh</name>
+  </compound>
+  <compound refid="bfv_2mpcmanager_8cuh" kind="file"><name>mpcmanager.cuh</name>
+  </compound>
+  <compound refid="ckks_2mpcmanager_8cuh" kind="file"><name>mpcmanager.cuh</name>
+  </compound>
+  <compound refid="bfv_2operator_8cuh" kind="file"><name>operator.cuh</name>
+  </compound>
+  <compound refid="ckks_2operator_8cuh" kind="file"><name>operator.cuh</name>
+  </compound>
+  <compound refid="tfhe_2operator_8cuh" kind="file"><name>operator.cuh</name>
+  </compound>
+  <compound refid="bfv_2plaintext_8cuh" kind="file"><name>plaintext.cuh</name>
+  </compound>
+  <compound refid="ckks_2plaintext_8cuh" kind="file"><name>plaintext.cuh</name>
+  </compound>
+  <compound refid="bfv_2publickey_8cuh" kind="file"><name>publickey.cuh</name>
+  </compound>
+  <compound refid="ckks_2publickey_8cuh" kind="file"><name>publickey.cuh</name>
+  </compound>
+  <compound refid="bfv_2secretkey_8cuh" kind="file"><name>secretkey.cuh</name>
+  </compound>
+  <compound refid="ckks_2secretkey_8cuh" kind="file"><name>secretkey.cuh</name>
+  </compound>
+  <compound refid="tfhe_2secretkey_8cuh" kind="file"><name>secretkey.cuh</name>
+  </compound>
+  <compound refid="heongpu_8cuh" kind="file"><name>heongpu.cuh</name>
+  </compound>
+  <compound refid="addition_8cuh" kind="file"><name>addition.cuh</name>
+  </compound>
+  <compound refid="bootstrapping_8cuh" kind="file"><name>bootstrapping.cuh</name>
+  </compound>
+  <compound refid="contextpool_8cuh" kind="file"><name>contextpool.cuh</name>
+  </compound>
+  <compound refid="decryption_8cuh" kind="file"><name>decryption.cuh</name>
   </compound>
   <compound refid="defines_8h" kind="file"><name>defines.h</name>
     <member refid="defines_8h_1ad45f6c8ce5dd25eb295cdd22d6c295ab" kind="define"><name>MAX_POLY_DEGREE</name></member>
@@ -96,10 +170,34 @@
     <member refid="defines_8h_1a69b3b524d376dcc0754c02bbb535f0fd" kind="define"><name>MIN_MOD_BIT_COUNT</name></member>
     <member refid="defines_8h_1aeee9bda75cbcad6e20b4c4a0a952843a" kind="define"><name>MAX_BSK_SIZE</name></member>
     <member refid="defines_8h_1a7ced02e1eecb3948c2a9bf57b678a138" kind="define"><name>MAX_SHIFT</name></member>
-    <member refid="defines_8h_1a6828421f95cf62dfadadd4e7fe946e46" kind="variable"><name>initial_device_memorypool_size</name></member>
-    <member refid="defines_8h_1a63f2c09255d796cb96b941fe28704c7d" kind="variable"><name>max_device_memorypool_size</name></member>
-    <member refid="defines_8h_1a60ff6c26b410a3fe17d4cf5f8a688c99" kind="variable"><name>initial_host_memorypool_size</name></member>
-    <member refid="defines_8h_1adb44e56f67dbc14665204b8984515d67" kind="variable"><name>max_host_memorypool_size</name></member>
+    <member refid="defines_8h_1a7926b9fc4dde353db4b0cab794871018" kind="variable"><name>initial_device_memorypool_size</name></member>
+    <member refid="defines_8h_1a4c977e3bacfc3646249ce82ebe37dc26" kind="variable"><name>max_device_memorypool_size</name></member>
+    <member refid="defines_8h_1a7123f712d130fe77f2b8a54be8330e9f" kind="variable"><name>initial_host_memorypool_size</name></member>
+    <member refid="defines_8h_1ad06a5c90b72e7f5c7247aca2901b0cdd" kind="variable"><name>max_host_memorypool_size</name></member>
+  </compound>
+  <compound refid="encoding_8cuh" kind="file"><name>encoding.cuh</name>
+  </compound>
+  <compound refid="encryption_8cuh" kind="file"><name>encryption.cuh</name>
+  </compound>
+  <compound refid="keygeneration_8cuh" kind="file"><name>keygeneration.cuh</name>
+  </compound>
+  <compound refid="multiplication_8cuh" kind="file"><name>multiplication.cuh</name>
+  </compound>
+  <compound refid="small__ntt_8cuh" kind="file"><name>small_ntt.cuh</name>
+  </compound>
+  <compound refid="switchkey_8cuh" kind="file"><name>switchkey.cuh</name>
+  </compound>
+  <compound refid="bigintegerarith_8cuh" kind="file"><name>bigintegerarith.cuh</name>
+  </compound>
+  <compound refid="defaultmodulus_8cuh" kind="file"><name>defaultmodulus.cuh</name>
+  </compound>
+  <compound refid="devicevector_8cuh" kind="file"><name>devicevector.cuh</name>
+  </compound>
+  <compound refid="hostvector_8cuh" kind="file"><name>hostvector.cuh</name>
+  </compound>
+  <compound refid="memorypool_8cuh" kind="file"><name>memorypool.cuh</name>
+  </compound>
+  <compound refid="random_8cuh" kind="file"><name>random.cuh</name>
   </compound>
   <compound refid="schemes_8h" kind="file"><name>schemes.h</name>
   </compound>
@@ -107,14 +205,26 @@
   </compound>
   <compound refid="serializer_8h" kind="file"><name>serializer.h</name>
   </compound>
-  <compound refid="dir_1b990c1dc8bac0a1ae59e6c647366f02" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src/heongpu</name>
+  <compound refid="storagemanager_8cuh" kind="file"><name>storagemanager.cuh</name>
   </compound>
-  <compound refid="dir_a5dbda1ad52f443c6f2d75fc1aa38428" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src/heongpu/include</name>
+  <compound refid="util_8cuh" kind="file"><name>util.cuh</name>
   </compound>
-  <compound refid="dir_0e83dbf37a1f78b1707c9b01872ca0b2" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel</name>
+  <compound refid="dir_e02a988ecf1f027a636e0b4702eb4fc4" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/bfv</name>
   </compound>
-  <compound refid="dir_68267d1309a1af8e8297ef4c3efbcdba" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src</name>
+  <compound refid="dir_0354c9135ca39689587fe82bd3f48e1e" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/ckks</name>
   </compound>
-  <compound refid="dir_d33f902ee075f393705e05f91e3ce261" kind="dir"><name>/home/piney/research/cisec/HEonGPU/src/heongpu/include/util</name>
+  <compound refid="dir_1b990c1dc8bac0a1ae59e6c647366f02" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu</name>
+  </compound>
+  <compound refid="dir_23b9b446a1abf1f668dac23a98278ec3" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host</name>
+  </compound>
+  <compound refid="dir_a5dbda1ad52f443c6f2d75fc1aa38428" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include</name>
+  </compound>
+  <compound refid="dir_0e83dbf37a1f78b1707c9b01872ca0b2" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel</name>
+  </compound>
+  <compound refid="dir_68267d1309a1af8e8297ef4c3efbcdba" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src</name>
+  </compound>
+  <compound refid="dir_ebff9c7f6fc35bc60a15652e3ccde545" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/tfhe</name>
+  </compound>
+  <compound refid="dir_d33f902ee075f393705e05f91e3ce261" kind="dir"><name>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util</name>
   </compound>
 </doxygenindex>

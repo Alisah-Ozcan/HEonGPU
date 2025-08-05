@@ -1,21 +1,21 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
   <compounddef id="defines_8h" kind="file" language="C++">
     <compoundname>defines.h</compoundname>
-    <includedby refid="schemes_8h" local="yes">/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h</includedby>
+    <includedby refid="schemes_8h" local="yes">/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h</includedby>
     <invincdepgraph>
       <node id="1">
-        <label>/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h</label>
+        <label>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h</label>
         <link refid="defines_8h"/>
         <childnode refid="2" relation="include">
         </childnode>
       </node>
       <node id="2">
-        <label>/home/piney/research/cisec/HEonGPU/src/heongpu/include/util/schemes.h</label>
+        <label>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util/schemes.h</label>
         <link refid="schemes_8h_source"/>
       </node>
     </invincdepgraph>
-    <sectiondef kind="define">
+      <sectiondef kind="define">
       <memberdef kind="define" id="defines_8h_1ad45f6c8ce5dd25eb295cdd22d6c295ab" prot="public" static="no">
         <name>MAX_POLY_DEGREE</name>
         <initializer>65536</initializer>
@@ -25,7 +25,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="14" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="14" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="14" column="9" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="14" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="defines_8h_1ae8eb60bba44c3eb2b03ef50f51682a25" prot="public" static="no">
         <name>MIN_POLY_DEGREE</name>
@@ -36,7 +36,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="15" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="15" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="15" column="9" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="15" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="defines_8h_1adc610d37f2695770231304552ddca5dc" prot="public" static="no">
         <name>MAX_USER_DEFINED_MOD_BIT_COUNT</name>
@@ -47,7 +47,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="18" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="18" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="18" column="9" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="18" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="defines_8h_1a2f1ce73133cc0ee2bbbe8c391324f0d3" prot="public" static="no">
         <name>MIN_USER_DEFINED_MOD_BIT_COUNT</name>
@@ -58,7 +58,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="19" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="19" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="19" column="9" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="19" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="defines_8h_1a0305d529f1d999c360e48ff7fa7ba465" prot="public" static="no">
         <name>MAX_MOD_BIT_COUNT</name>
@@ -69,7 +69,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="22" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="22" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="22" column="9" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="22" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="defines_8h_1a69b3b524d376dcc0754c02bbb535f0fd" prot="public" static="no">
         <name>MIN_MOD_BIT_COUNT</name>
@@ -80,7 +80,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="23" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="23" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="23" column="9" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="23" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="defines_8h_1aeee9bda75cbcad6e20b4c4a0a952843a" prot="public" static="no">
         <name>MAX_BSK_SIZE</name>
@@ -91,7 +91,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="26" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="26" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="26" column="9" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="26" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="defines_8h_1a7ced02e1eecb3948c2a9bf57b678a138" prot="public" static="no">
         <name>MAX_SHIFT</name>
@@ -102,13 +102,13 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="30" column="9" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="30" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="30" column="9" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="30" bodyend="-1"/>
       </memberdef>
-    </sectiondef>
-    <sectiondef kind="var">
-      <memberdef kind="variable" id="defines_8h_1a6828421f95cf62dfadadd4e7fe946e46" prot="public" static="yes" constexpr="yes" mutable="no">
-        <type>float</type>
-        <definition>float initial_device_memorypool_size</definition>
+      </sectiondef>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="defines_8h_1a7926b9fc4dde353db4b0cab794871018" prot="public" static="yes" constexpr="yes" mutable="no">
+        <type>constexpr static float</type>
+        <definition>constexpr static float initial_device_memorypool_size</definition>
         <argsstring></argsstring>
         <name>initial_device_memorypool_size</name>
         <initializer>=
@@ -119,11 +119,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="33" column="24" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="33" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="33" column="24" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="33" bodyend="-1"/>
       </memberdef>
-      <memberdef kind="variable" id="defines_8h_1a63f2c09255d796cb96b941fe28704c7d" prot="public" static="yes" constexpr="yes" mutable="no">
-        <type>float</type>
-        <definition>float max_device_memorypool_size</definition>
+      <memberdef kind="variable" id="defines_8h_1a4c977e3bacfc3646249ce82ebe37dc26" prot="public" static="yes" constexpr="yes" mutable="no">
+        <type>constexpr static float</type>
+        <definition>constexpr static float max_device_memorypool_size</definition>
         <argsstring></argsstring>
         <name>max_device_memorypool_size</name>
         <initializer>= 0.8f</initializer>
@@ -133,11 +133,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="35" column="24" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="35" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="35" column="24" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="35" bodyend="-1"/>
       </memberdef>
-      <memberdef kind="variable" id="defines_8h_1a60ff6c26b410a3fe17d4cf5f8a688c99" prot="public" static="yes" constexpr="yes" mutable="no">
-        <type>float</type>
-        <definition>float initial_host_memorypool_size</definition>
+      <memberdef kind="variable" id="defines_8h_1a7123f712d130fe77f2b8a54be8330e9f" prot="public" static="yes" constexpr="yes" mutable="no">
+        <type>constexpr static float</type>
+        <definition>constexpr static float initial_host_memorypool_size</definition>
         <argsstring></argsstring>
         <name>initial_host_memorypool_size</name>
         <initializer>= 0.1f</initializer>
@@ -147,11 +147,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="37" column="24" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="37" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="37" column="24" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="37" bodyend="-1"/>
       </memberdef>
-      <memberdef kind="variable" id="defines_8h_1adb44e56f67dbc14665204b8984515d67" prot="public" static="yes" constexpr="yes" mutable="no">
-        <type>float</type>
-        <definition>float max_host_memorypool_size</definition>
+      <memberdef kind="variable" id="defines_8h_1ad06a5c90b72e7f5c7247aca2901b0cdd" prot="public" static="yes" constexpr="yes" mutable="no">
+        <type>constexpr static float</type>
+        <definition>constexpr static float max_host_memorypool_size</definition>
         <argsstring></argsstring>
         <name>max_host_memorypool_size</name>
         <initializer>= 0.2f</initializer>
@@ -161,9 +161,9 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" line="38" column="24" bodyfile="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="38" bodyend="-1"/>
+        <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" line="38" column="24" bodyfile="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h" bodystart="38" bodyend="-1"/>
       </memberdef>
-    </sectiondef>
+      </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
@@ -201,15 +201,15 @@
 <codeline lineno="30"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>MAX_SHIFT<sp/>8</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="31"><highlight class="normal"></highlight></codeline>
 <codeline lineno="32"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Memorypool<sp/>sizes</highlight><highlight class="normal"></highlight></codeline>
-<codeline lineno="33"><highlight class="normal"></highlight><highlight class="keyword">constexpr</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>initial_device_memorypool_size<sp/>=</highlight></codeline>
+<codeline lineno="33"><highlight class="normal">constexpr<sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>initial_device_memorypool_size<sp/>=</highlight></codeline>
 <codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/>0.5f;<sp/></highlight><highlight class="comment">//<sp/>%50<sp/>of<sp/>GPU<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
-<codeline lineno="35"><highlight class="normal"></highlight><highlight class="keyword">constexpr</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>max_device_memorypool_size<sp/>=<sp/>0.8f;<sp/></highlight><highlight class="comment">//<sp/>%80<sp/>of<sp/>GPU<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal">constexpr<sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>max_device_memorypool_size<sp/>=<sp/>0.8f;<sp/></highlight><highlight class="comment">//<sp/>%80<sp/>of<sp/>GPU<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="36"><highlight class="normal"></highlight></codeline>
-<codeline lineno="37"><highlight class="normal"></highlight><highlight class="keyword">constexpr</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>initial_host_memorypool_size<sp/>=<sp/>0.1f;<sp/></highlight><highlight class="comment">//<sp/>%10<sp/>of<sp/>CPU<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
-<codeline lineno="38"><highlight class="normal"></highlight><highlight class="keyword">constexpr</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>max_host_memorypool_size<sp/>=<sp/>0.2f;<sp/></highlight><highlight class="comment">//<sp/>%20<sp/>of<sp/>CPU<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal">constexpr<sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>initial_host_memorypool_size<sp/>=<sp/>0.1f;<sp/></highlight><highlight class="comment">//<sp/>%10<sp/>of<sp/>CPU<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal">constexpr<sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>max_host_memorypool_size<sp/>=<sp/>0.2f;<sp/></highlight><highlight class="comment">//<sp/>%20<sp/>of<sp/>CPU<sp/>memory</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="39"><highlight class="normal"></highlight></codeline>
 <codeline lineno="40"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">//<sp/>HEONGPU_DEFINES_H</highlight><highlight class="normal"></highlight></codeline>
     </programlisting>
-    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel/defines.h"/>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel/defines.h"/>
   </compounddef>
 </doxygen>

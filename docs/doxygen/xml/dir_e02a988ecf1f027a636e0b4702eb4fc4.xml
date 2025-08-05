@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
+  <compounddef id="dir_e02a988ecf1f027a636e0b4702eb4fc4" kind="dir">
+    <compoundname>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/bfv</compoundname>
+    <innerfile refid="bfv_2ciphertext_8cuh">ciphertext.cuh</innerfile>
+    <innerfile refid="bfv_2context_8cuh">context.cuh</innerfile>
+    <innerfile refid="bfv_2decryptor_8cuh">decryptor.cuh</innerfile>
+    <innerfile refid="bfv_2encoder_8cuh">encoder.cuh</innerfile>
+    <innerfile refid="bfv_2encryptor_8cuh">encryptor.cuh</innerfile>
+    <innerfile refid="bfv_2evaluationkey_8cuh">evaluationkey.cuh</innerfile>
+    <innerfile refid="bfv_2keygenerator_8cuh">keygenerator.cuh</innerfile>
+    <innerfile refid="bfv_2mpcmanager_8cuh">mpcmanager.cuh</innerfile>
+    <innerfile refid="bfv_2operator_8cuh">operator.cuh</innerfile>
+    <innerfile refid="bfv_2plaintext_8cuh">plaintext.cuh</innerfile>
+    <innerfile refid="bfv_2publickey_8cuh">publickey.cuh</innerfile>
+    <innerfile refid="bfv_2secretkey_8cuh">secretkey.cuh</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host/bfv/"/>
+  </compounddef>
+</doxygen>

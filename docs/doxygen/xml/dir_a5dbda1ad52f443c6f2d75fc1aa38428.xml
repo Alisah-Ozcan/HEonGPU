@@ -1,13 +1,14 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.13.2" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.1" xml:lang="en-US">
   <compounddef id="dir_a5dbda1ad52f443c6f2d75fc1aa38428" kind="dir">
-    <compoundname>/home/piney/research/cisec/HEonGPU/src/heongpu/include</compoundname>
-    <innerdir refid="dir_0e83dbf37a1f78b1707c9b01872ca0b2">/home/piney/research/cisec/HEonGPU/src/heongpu/include/kernel</innerdir>
-    <innerdir refid="dir_d33f902ee075f393705e05f91e3ce261">/home/piney/research/cisec/HEonGPU/src/heongpu/include/util</innerdir>
+    <compoundname>/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include</compoundname>
+    <innerdir refid="dir_23b9b446a1abf1f668dac23a98278ec3">/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/host</innerdir>
+    <innerdir refid="dir_0e83dbf37a1f78b1707c9b01872ca0b2">/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/kernel</innerdir>
+    <innerdir refid="dir_d33f902ee075f393705e05f91e3ce261">/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/util</innerdir>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/home/piney/research/cisec/HEonGPU/src/heongpu/include/"/>
+    <location file="/home/alisah/Desktop/HEonGPU_DOCS/HEonGPU/src/heongpu/include/"/>
   </compounddef>
 </doxygen>
