@@ -7,7 +7,9 @@ The goal of HEonGPU is to provide:
 - A user-friendly C++ interface that requires no prior knowledge of GPU programming, with all CUDA kernels encapsulated in easy-to-use classes.
 - An optimized multi-stream architecture that ensures efficient memory management and concurrent execution of encrypted computations on the GPU.
 
-For more information about HEonGPU: https://eprint.iacr.org/2024/1543
+For more information about HEonGPU: 
+- https://eprint.iacr.org/2024/1543
+- https://heongpu.readthedocs.io/
 
 ### Current HEonGPU Capabilities and Schemes
 
