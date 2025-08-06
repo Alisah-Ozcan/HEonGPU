@@ -15,11 +15,11 @@ build:
     # Add graphviz if you want doxygen to generate diagrams
     # - graphviz
 
-  jobs:
+  # jobs:
     # These jobs run at different stages of the build
     # We'll run doxygen before sphinx builds the documentation
-    pre_build:
-      - doxygen docs/Doxyfile
+    # pre_build:
+    #   - doxygen docs/Doxyfile
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:

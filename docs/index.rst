@@ -18,6 +18,7 @@ This documentation provides a comprehensive guide to the library, from installat
    bootstrapping
    examples
    api_reference
+   full_api/library_root
    advanced_topics
    contributing
    appendix

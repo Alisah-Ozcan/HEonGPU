@@ -1,0 +1,11 @@
+# Sphinx build output
+_build/
+
+# Exhale auto-generated API files
+full_api/
+
+# Doxygen build output (if generated here)
+doxygen/
+
+# Python virtual environment
+venv/
