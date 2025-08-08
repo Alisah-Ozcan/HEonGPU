@@ -127,6 +127,11 @@ namespace heongpu
         DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         DeviceVector<double> message_gpu(slot_count_, stream);
+        if (message.size() < slot_count_)
+        {
+            cudaMemsetAsync(message_gpu.data(), 0, slot_count_ * sizeof(double),
+                            stream);
+        }
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(double), cudaMemcpyHostToDevice,
                         stream);
@@ -176,6 +181,11 @@ namespace heongpu
         DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         DeviceVector<double> message_gpu(slot_count_, stream);
+        if (message.size() < slot_count_)
+        {
+            cudaMemsetAsync(message_gpu.data(), 0, slot_count_ * sizeof(double),
+                            stream);
+        }
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(double), cudaMemcpyHostToDevice,
                         stream);
@@ -225,6 +235,11 @@ namespace heongpu
         DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         DeviceVector<Complex64> message_gpu(slot_count_, stream);
+        if (message.size() < slot_count_)
+        {
+            cudaMemsetAsync(message_gpu.data(), 0,
+                            slot_count_ * sizeof(Complex64), stream);
+        }
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Complex64),
                         cudaMemcpyHostToDevice, stream);
@@ -269,6 +284,11 @@ namespace heongpu
         DeviceVector<Data64> output_memory(n * Q_size_, stream);
 
         DeviceVector<Complex64> message_gpu(slot_count_, stream);
+        if (message.size() < slot_count_)
+        {
+            cudaMemsetAsync(message_gpu.data(), 0,
+                            slot_count_ * sizeof(Complex64), stream);
+        }
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Complex64),
                         cudaMemcpyHostToDevice, stream);
