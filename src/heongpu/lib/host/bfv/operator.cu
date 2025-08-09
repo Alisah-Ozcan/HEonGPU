@@ -620,22 +620,24 @@ namespace heongpu
                                 modulus_->data(), cfg_ntt,
                                 Q_size_ * Q_prime_size_, Q_prime_size_);
 
+        int iteration_count_1 = Q_size_ / 4;
+        int iteration_count_2 = Q_size_ % 4;
         // TODO: make it efficient
         if (relin_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
-                                         0, stream>>>(
+            keyswitch_multiply_accumulate_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_relin, relin_key.data(), temp2_relin, modulus_->data(),
-                n_power, Q_size_);
+                n_power, Q_prime_size_, iteration_count_1, iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(relin_key.host_location_, stream);
-            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
-                                         0, stream>>>(
+            keyswitch_multiply_accumulate_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
-                n_power, Q_size_);
+                n_power, Q_prime_size_, iteration_count_1, iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -770,21 +772,23 @@ namespace heongpu
                                 Q_prime_size_);
 
         // TODO: make it efficient
+        int iteration_count_1 = d / 4;
+        int iteration_count_2 = d % 4;
         if (relin_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_method_II_kernel<<<
+            keyswitch_multiply_accumulate_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_relin, relin_key.data(), temp2_relin, modulus_->data(),
-                n_power, Q_prime_size_, d);
+                n_power, Q_prime_size_, iteration_count_1, iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(relin_key.host_location_, stream);
-            multiply_accumulate_method_II_kernel<<<
+            keyswitch_multiply_accumulate_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
-                n_power, Q_prime_size_, d);
+                n_power, Q_prime_size_, iteration_count_1, iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -937,22 +941,26 @@ namespace heongpu
 
         // MultSum
         // TODO: make it efficient
+        int iteration_count_1 = Q_size_ / 4;
+        int iteration_count_2 = Q_size_ % 4;
         if (galois_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
-                                         0, stream>>>(
+            keyswitch_multiply_accumulate_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_rotation, galois_key.device_location_[galois_elt].data(),
-                temp2_rotation, modulus_->data(), n_power, Q_size_);
+                temp2_rotation, modulus_->data(), n_power, Q_prime_size_,
+                iteration_count_1, iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(
                 galois_key.host_location_[galois_elt], stream);
-            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
-                                         0, stream>>>(
+            keyswitch_multiply_accumulate_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_rotation, key_location.data(), temp2_rotation,
-                modulus_->data(), n_power, Q_size_);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -1026,22 +1034,26 @@ namespace heongpu
 
         // MultSum
         // TODO: make it efficient
+        int iteration_count_1 = d / 4;
+        int iteration_count_2 = d % 4;
         if (galois_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_method_II_kernel<<<
+            keyswitch_multiply_accumulate_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp2_rotation, galois_key.device_location_[galois_elt].data(),
-                temp3_rotation, modulus_->data(), n_power, Q_prime_size_, d);
+                temp3_rotation, modulus_->data(), n_power, Q_prime_size_,
+                iteration_count_1, iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(
                 galois_key.host_location_[galois_elt], stream);
-            multiply_accumulate_method_II_kernel<<<
+            keyswitch_multiply_accumulate_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
-                modulus_->data(), n_power, Q_prime_size_, d);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -1103,22 +1115,26 @@ namespace heongpu
 
         // MultSum
         // TODO: make it efficient
+        int iteration_count_1 = Q_size_ / 4;
+        int iteration_count_2 = Q_size_ % 4;
         if (galois_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
-                                         0, stream>>>(
+            keyswitch_multiply_accumulate_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_rotation, galois_key.c_data(), temp2_rotation,
-                modulus_->data(), n_power, Q_size_);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(galois_key.zero_host_location_,
                                               stream);
-            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
-                                         0, stream>>>(
+            keyswitch_multiply_accumulate_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_rotation, key_location.data(), temp2_rotation,
-                modulus_->data(), n_power, Q_size_);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -1192,22 +1208,26 @@ namespace heongpu
 
         // MultSum
         // TODO: make it efficient
+        int iteration_count_1 = d / 4;
+        int iteration_count_2 = d % 4;
         if (galois_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_method_II_kernel<<<
+            keyswitch_multiply_accumulate_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp2_rotation, galois_key.c_data(), temp3_rotation,
-                modulus_->data(), n_power, Q_prime_size_, d);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(galois_key.zero_host_location_,
                                               stream);
-            multiply_accumulate_method_II_kernel<<<
+            keyswitch_multiply_accumulate_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
-                modulus_->data(), n_power, Q_prime_size_, d);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -1267,22 +1287,26 @@ namespace heongpu
                                 Q_size_ * Q_prime_size_, Q_prime_size_);
 
         // TODO: make it efficient
+        int iteration_count_1 = Q_size_ / 4;
+        int iteration_count_2 = Q_size_ % 4;
         if (switch_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
-                                         0, stream>>>(
+            keyswitch_multiply_accumulate_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_rotation, switch_key.data(), temp2_rotation,
-                modulus_->data(), n_power, Q_size_);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(switch_key.host_location_,
                                               stream);
-            multiply_accumulate_kernel<<<dim3((n >> 8), Q_prime_size_, 1), 256,
-                                         0, stream>>>(
+            keyswitch_multiply_accumulate_kernel<<<
+                dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp1_rotation, key_location.data(), temp2_rotation,
-                modulus_->data(), n_power, Q_size_);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -1351,22 +1375,26 @@ namespace heongpu
                                 Q_prime_size_);
 
         // TODO: make it efficient
+        int iteration_count_1 = d / 4;
+        int iteration_count_2 = d % 4;
         if (switch_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_method_II_kernel<<<
+            keyswitch_multiply_accumulate_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp2_rotation, switch_key.data(), temp3_rotation,
-                modulus_->data(), n_power, Q_prime_size_, d);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(switch_key.host_location_,
                                               stream);
-            multiply_accumulate_method_II_kernel<<<
+            keyswitch_multiply_accumulate_kernel<<<
                 dim3((n >> 8), Q_prime_size_, 1), 256, 0, stream>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
-                modulus_->data(), n_power, Q_prime_size_, d);
+                modulus_->data(), n_power, Q_prime_size_, iteration_count_1,
+                iteration_count_2);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 

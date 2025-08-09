@@ -587,21 +587,25 @@ namespace heongpu
             new_prime_locations + location);
 
         // TODO: make it efficient
+        int iteration_count_1 = current_decomp_count / 4;
+        int iteration_count_2 = current_decomp_count % 4;
         if (relin_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_leveled_kernel<<<
+            keyswitch_multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp1_relin, relin_key.data(), temp2_relin, modulus_->data(),
-                first_rns_mod_count, current_decomp_count, n_power);
+                first_rns_mod_count, current_decomp_count, iteration_count_1,
+                iteration_count_2, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(relin_key.host_location_, stream);
-            multiply_accumulate_leveled_kernel<<<
+            keyswitch_multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
-                first_rns_mod_count, current_decomp_count, n_power);
+                first_rns_mod_count, current_decomp_count, iteration_count_1,
+                iteration_count_2, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -858,24 +862,26 @@ namespace heongpu
             current_rns_mod_count, new_prime_locations + location);
 
         // TODO: make it efficient
+        int iteration_count_1 = d_leveled_->operator[](input1.depth_) / 4;
+        int iteration_count_2 = d_leveled_->operator[](input1.depth_) % 4;
         if (relin_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_leveled_method_II_kernel<<<
+            keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp1_relin, relin_key.data(), temp2_relin, modulus_->data(),
                 first_rns_mod_count, current_decomp_count,
-                current_rns_mod_count, d_leveled_->operator[](input1.depth_),
+                current_rns_mod_count, iteration_count_1, iteration_count_2,
                 input1.depth_, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(relin_key.host_location_, stream);
-            multiply_accumulate_leveled_method_II_kernel<<<
+            keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp1_relin, key_location.data(), temp2_relin, modulus_->data(),
                 first_rns_mod_count, current_decomp_count,
-                current_rns_mod_count, d_leveled_->operator[](input1.depth_),
+                current_rns_mod_count, iteration_count_1, iteration_count_2,
                 input1.depth_, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
@@ -1224,24 +1230,27 @@ namespace heongpu
 
         // MultSum
         // TODO: make it efficient
+        int iteration_count_1 = current_decomp_count / 4;
+        int iteration_count_2 = current_decomp_count % 4;
         if (galois_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_leveled_kernel<<<
+            keyswitch_multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp2_rotation, galois_key.device_location_[galois_elt].data(),
                 temp3_rotation, modulus_->data(), first_rns_mod_count,
-                current_decomp_count, n_power);
+                current_decomp_count, iteration_count_1, iteration_count_2,
+                n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(
                 galois_key.host_location_[galois_elt], stream);
-            multiply_accumulate_leveled_kernel<<<
+            keyswitch_multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                n_power);
+                iteration_count_1, iteration_count_2, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -1345,25 +1354,27 @@ namespace heongpu
 
         // MultSum
         // TODO: make it efficient
+        int iteration_count_1 = d_leveled_->operator[](input1.depth_) / 4;
+        int iteration_count_2 = d_leveled_->operator[](input1.depth_) % 4;
         if (galois_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_leveled_method_II_kernel<<<
+            keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp3_rotation, galois_key.device_location_[galois_elt].data(),
                 temp4_rotation, modulus_->data(), first_rns_mod_count,
-                current_decomp_count, current_rns_mod_count,
-                d_leveled_->operator[](input1.depth_), input1.depth_, n_power);
+                current_decomp_count, current_rns_mod_count, iteration_count_1,
+                iteration_count_2, input1.depth_, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(
                 galois_key.host_location_[galois_elt], stream);
-            multiply_accumulate_leveled_method_II_kernel<<<
+            keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp3_rotation, key_location.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                current_rns_mod_count, d_leveled_->operator[](input1.depth_),
+                current_rns_mod_count, iteration_count_1, iteration_count_2,
                 input1.depth_, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
@@ -1452,24 +1463,26 @@ namespace heongpu
             new_prime_locations + location);
 
         // TODO: make it efficient
+        int iteration_count_1 = current_decomp_count / 4;
+        int iteration_count_2 = current_decomp_count % 4;
         if (switch_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_leveled_kernel<<<
+            keyswitch_multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp2_rotation, switch_key.data(), temp3_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                n_power);
+                iteration_count_1, iteration_count_2, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(switch_key.host_location_,
                                               stream);
-            multiply_accumulate_leveled_kernel<<<
+            keyswitch_multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                n_power);
+                iteration_count_1, iteration_count_2, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -1596,13 +1609,15 @@ namespace heongpu
             current_rns_mod_count, new_prime_locations + location);
 
         // TODO: make it efficient
+        int iteration_count_1 = d_leveled_->operator[](input1.depth_) / 4;
+        int iteration_count_2 = d_leveled_->operator[](input1.depth_) % 4;
         if (switch_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_leveled_method_II_kernel<<<
+            keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp3_rotation, switch_key.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                current_rns_mod_count, d_leveled_->operator[](input1.depth_),
+                current_rns_mod_count, iteration_count_1, iteration_count_2,
                 input1.depth_, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
@@ -1610,11 +1625,11 @@ namespace heongpu
         {
             DeviceVector<Data64> key_location(switch_key.host_location_,
                                               stream);
-            multiply_accumulate_leveled_method_II_kernel<<<
+            keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp3_rotation, key_location.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                current_rns_mod_count, d_leveled_->operator[](input1.depth_),
+                current_rns_mod_count, iteration_count_1, iteration_count_2,
                 input1.depth_, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
@@ -1716,24 +1731,26 @@ namespace heongpu
 
         // MultSum
         // TODO: make it efficient
+        int iteration_count_1 = current_decomp_count / 4;
+        int iteration_count_2 = current_decomp_count % 4;
         if (conjugate_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_leveled_kernel<<<
+            keyswitch_multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp2_rotation, conjugate_key.c_data(), temp3_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                n_power);
+                iteration_count_1, iteration_count_2, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
         else
         {
             DeviceVector<Data64> key_location(conjugate_key.zero_host_location_,
                                               stream);
-            multiply_accumulate_leveled_kernel<<<
+            keyswitch_multiply_accumulate_leveled_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp2_rotation, key_location.data(), temp3_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                n_power);
+                iteration_count_1, iteration_count_2, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
@@ -1838,13 +1855,15 @@ namespace heongpu
 
         // MultSum
         // TODO: make it efficient
+        int iteration_count_1 = d_leveled_->operator[](input1.depth_) / 4;
+        int iteration_count_2 = d_leveled_->operator[](input1.depth_) % 4;
         if (conjugate_key.storage_type_ == storage_type::DEVICE)
         {
-            multiply_accumulate_leveled_method_II_kernel<<<
+            keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp3_rotation, conjugate_key.c_data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                current_rns_mod_count, d_leveled_->operator[](input1.depth_),
+                current_rns_mod_count, iteration_count_1, iteration_count_2,
                 input1.depth_, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
@@ -1852,11 +1871,11 @@ namespace heongpu
         {
             DeviceVector<Data64> key_location(conjugate_key.zero_host_location_,
                                               stream);
-            multiply_accumulate_leveled_method_II_kernel<<<
+            keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                 dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                 temp3_rotation, key_location.data(), temp4_rotation,
                 modulus_->data(), first_rns_mod_count, current_decomp_count,
-                current_rns_mod_count, d_leveled_->operator[](input1.depth_),
+                current_rns_mod_count, iteration_count_1, iteration_count_2,
                 input1.depth_, n_power);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
@@ -2761,25 +2780,28 @@ namespace heongpu
 
             // MultSum
             // TODO: make it efficient
+            int iteration_count_1 = current_decomp_count / 4;
+            int iteration_count_2 = current_decomp_count % 4;
             if (galois_key.storage_type_ == storage_type::DEVICE)
             {
-                multiply_accumulate_leveled_kernel<<<
+                keyswitch_multiply_accumulate_leveled_kernel<<<
                     dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                     temp2_rotation,
                     galois_key.device_location_[galoiselt].data(),
                     temp3_rotation, modulus_->data(), first_rns_mod_count,
-                    current_decomp_count, n_power);
+                    current_decomp_count, iteration_count_1, iteration_count_2,
+                    n_power);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
             }
             else
             {
                 DeviceVector<Data64> key_location(
                     galois_key.host_location_[galoiselt], stream);
-                multiply_accumulate_leveled_kernel<<<
+                keyswitch_multiply_accumulate_leveled_kernel<<<
                     dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                     temp2_rotation, key_location.data(), temp3_rotation,
                     modulus_->data(), first_rns_mod_count, current_decomp_count,
-                    n_power);
+                    iteration_count_1, iteration_count_2, n_power);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
             }
 
@@ -2896,28 +2918,31 @@ namespace heongpu
 
             // MultSum
             // TODO: make it efficient
+            int iteration_count_1 =
+                d_leveled_->operator[](first_cipher.depth_) / 4;
+            int iteration_count_2 =
+                d_leveled_->operator[](first_cipher.depth_) % 4;
             if (galois_key.storage_type_ == storage_type::DEVICE)
             {
-                multiply_accumulate_leveled_method_II_kernel<<<
+                keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                     dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                     temp3_rotation,
                     galois_key.device_location_[galoiselt].data(),
                     temp4_rotation, modulus_->data(), first_rns_mod_count,
                     current_decomp_count, current_rns_mod_count,
-                    d_leveled_->operator[](first_cipher.depth_),
-                    first_cipher.depth_, n_power);
+                    iteration_count_1, iteration_count_2, first_cipher.depth_,
+                    n_power);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
             }
             else
             {
                 DeviceVector<Data64> key_location(
                     galois_key.host_location_[galoiselt], stream);
-                multiply_accumulate_leveled_method_II_kernel<<<
+                keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
                     dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
                     temp3_rotation, key_location.data(), temp4_rotation,
                     modulus_->data(), first_rns_mod_count, current_decomp_count,
-                    current_rns_mod_count,
-                    d_leveled_->operator[](first_cipher.depth_),
+                    current_rns_mod_count, iteration_count_1, iteration_count_2,
                     first_cipher.depth_, n_power);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
             }

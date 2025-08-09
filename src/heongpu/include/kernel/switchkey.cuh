@@ -11,7 +11,6 @@
 
 namespace heongpu
 {
-
     __global__ void cipher_broadcast_kernel(Data64* input, Data64* output,
                                             Modulus64* modulus, int n_power,
                                             int rns_mod_count);
@@ -20,24 +19,22 @@ namespace heongpu
                                     Modulus64* modulus, int first_rns_mod_count,
                                     int current_rns_mod_count, int n_power);
 
-    __global__ void multiply_accumulate_kernel(Data64* input, Data64* relinkey,
-                                               Data64* output,
-                                               Modulus64* modulus, int n_power,
-                                               int decomp_mod_count);
+    __global__ void keyswitch_multiply_accumulate_kernel(
+        Data64* input, const Data64* __restrict__ relinkey, Data64* output,
+        Modulus64* modulus, int n_power, int Q_tilda_size, int iteration_count1,
+        int iteration_count2);
 
-    __global__ void
-    multiply_accumulate_method_II_kernel(Data64* input, Data64* relinkey,
-                                         Data64* output, Modulus64* modulus,
-                                         int n_power, int Q_tilda_size, int d);
+    __global__ void keyswitch_multiply_accumulate_leveled_kernel(
+        Data64* input, const Data64* __restrict__ relinkey, Data64* output,
+        Modulus64* modulus, int first_rns_mod_count,
+        int current_decomp_mod_count, int iteration_count1,
+        int iteration_count2, int n_power);
 
-    __global__ void multiply_accumulate_leveled_kernel(
-        Data64* input, Data64* relinkey, Data64* output, Modulus64* modulus,
-        int first_rns_mod_count, int current_decomp_mod_count, int n_power);
-
-    __global__ void multiply_accumulate_leveled_method_II_kernel(
-        Data64* input, Data64* relinkey, Data64* output, Modulus64* modulus,
-        int first_rns_mod_count, int current_decomp_mod_count,
-        int current_rns_mod_count, int d, int level, int n_power);
+    __global__ void keyswitch_multiply_accumulate_leveled_method_II_kernel(
+        Data64* input, const Data64* __restrict__ relinkey, Data64* output,
+        Modulus64* modulus, int first_rns_mod_count,
+        int current_decomp_mod_count, int current_rns_mod_count,
+        int iteration_count1, int iteration_count2, int level, int n_power);
 
     __global__ void
     divide_round_lastq_kernel(Data64* input, Data64* ct, Data64* output,
