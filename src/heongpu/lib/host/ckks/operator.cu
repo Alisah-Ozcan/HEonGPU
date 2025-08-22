@@ -85,7 +85,7 @@ namespace heongpu
         std::vector<int> input_loc;
 
         int counter = Q_size_;
-        for (int i = 0; i < Q_size_ - 1; i++)
+        for (int i = 0; i < Q_size_; i++)
         {
             for (int j = 0; j < counter; j++)
             {
