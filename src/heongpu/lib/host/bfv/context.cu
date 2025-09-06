@@ -72,6 +72,17 @@ namespace heongpu
                                        "than 1 for KEYSWITCHING_METHOD_I!");
             }
 
+            if ((log_P_bases_bit_sizes.size() < 2) &&
+                (keyswitching_type_ ==
+                     keyswitching_type::KEYSWITCHING_METHOD_II ||
+                 keyswitching_type_ ==
+                     keyswitching_type::KEYSWITCHING_METHOD_III))
+            {
+                throw std::logic_error("log_P_bases_bit_sizes cannot be lower "
+                                       "than 2 for KEYSWITCHING_METHOD_II and!"
+                                       "KEYSWITCHING_METHOD_III");
+            }
+
             if (!coefficient_validator(log_Q_bases_bit_sizes,
                                        log_P_bases_bit_sizes))
             {
