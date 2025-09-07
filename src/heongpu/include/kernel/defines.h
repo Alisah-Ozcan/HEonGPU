@@ -31,10 +31,10 @@
 
 // Memorypool sizes
 constexpr static float initial_device_memorypool_size =
-    0.5f; // %50 of GPU memory
-constexpr static float max_device_memorypool_size = 0.8f; // %80 of GPU memory
+    0.9f; // %50 of GPU memory
+constexpr static float max_device_memorypool_size = 0.95f; // %80 of GPU memory
 
-constexpr static float initial_host_memorypool_size = 0.1f; // %10 of CPU memory
-constexpr static float max_host_memorypool_size = 0.2f; // %20 of CPU memory
+constexpr static float initial_host_memorypool_size = 0.3f; // %10 of CPU memory
+constexpr static float max_host_memorypool_size = 0.4f; // %20 of CPU memory
 
 #endif // HEONGPU_DEFINES_H

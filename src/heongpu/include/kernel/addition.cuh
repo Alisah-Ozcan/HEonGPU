@@ -61,6 +61,17 @@ namespace heongpu
                                                  Modulus64* modulus,
                                                  int n_power);
 
+    __global__ void addition_constant_plain_ckks_poly(Data64* in1, double in2,
+                                                      Data64* out,
+                                                      Modulus64* modulus,
+                                                      double two_pow_64,
+                                                      int n_power);
+
+    __global__ void
+    substraction_constant_plain_ckks_poly(Data64* in1, double in2, Data64* out,
+                                          Modulus64* modulus, double two_pow_64,
+                                          int n_power);
+
 } // namespace heongpu
 
 #endif // HEONGPU_ADDITION_H

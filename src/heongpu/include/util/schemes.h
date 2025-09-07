@@ -102,6 +102,13 @@ namespace heongpu
         KEYSWITCHING_METHOD_III = 0x3, // EXTERNALPRODUCT_2 = 0x3
     };
 
+    enum class arithmetic_bootstrapping_type : std::uint8_t
+    {
+        NONE = 0x0,
+        REGULAR_BOOTSTRAPPING = 0x1,
+        SLIM_BOOTSTRAPPING = 0x2,
+    };
+
     enum class logic_bootstrapping_type : std::uint8_t
     {
         NONE = 0x0,

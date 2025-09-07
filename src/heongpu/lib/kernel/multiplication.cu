@@ -330,6 +330,47 @@ namespace heongpu
         out[location_ct] = ct;
     }
 
+    __global__ void
+    cipher_constant_plain_multiplication_kernel(Data64* in1, double in2,
+                                                Data64* out, Modulus64* modulus,
+                                                double two_pow_64, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
+        int block_y = blockIdx.y; // rns count
+        int block_z = blockIdx.z; // cipher count
+
+        int location_ct =
+            idx + (block_y << n_power) + ((gridDim.y * block_z) << n_power);
+
+        double message_r = in2;
+
+        double coeff_double = round(message_r);
+        bool is_negative = signbit(coeff_double);
+        coeff_double = fabs(coeff_double);
+
+        // Change Type
+        Data64 coeff[2] = {
+            static_cast<std::uint64_t>(fmod(coeff_double, two_pow_64)),
+            static_cast<std::uint64_t>(coeff_double / two_pow_64)};
+
+        Data64 pt;
+        if (is_negative)
+        {
+            pt = OPERATOR_GPU_64::reduce(coeff, modulus[block_y]);
+            pt = OPERATOR_GPU_64::sub(modulus[block_y].value, pt,
+                                      modulus[block_y]);
+        }
+        else
+        {
+            pt = OPERATOR_GPU_64::reduce(coeff, modulus[block_y]);
+        }
+
+        Data64 ct = in1[location_ct];
+
+        ct = OPERATOR_GPU_64::mult(ct, pt, modulus[block_y]);
+        out[location_ct] = ct;
+    }
+
     __global__ void cipherplain_multiply_accumulate_kernel(
         Data64* in1, Data64* in2, Data64* out, Modulus64* modulus,
         int iteration_count, int current_decomp_count, int first_decomp_count,
