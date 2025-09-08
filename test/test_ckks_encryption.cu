@@ -85,7 +85,7 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -137,7 +137,7 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -190,7 +190,7 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -245,7 +245,7 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
 
         EXPECT_EQ(fix_point_array_check(message, gpu_result), true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {

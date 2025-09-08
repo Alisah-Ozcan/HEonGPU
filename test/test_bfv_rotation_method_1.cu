@@ -88,7 +88,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -169,7 +169,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -250,7 +250,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -332,7 +332,7 @@ TEST(HEonGPU, BFV_Ciphertext_Rotation_Keyswitching_Method_I)
                       true);
         }
     }
-    
+
     cudaDeviceSynchronize();
 
     {

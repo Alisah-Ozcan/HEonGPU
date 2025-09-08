@@ -60,7 +60,7 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             std::equal(message.begin(), message.end(), gpu_result.begin()),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -114,7 +114,7 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             std::equal(message.begin(), message.end(), gpu_result.begin()),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -168,7 +168,7 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             std::equal(message.begin(), message.end(), gpu_result.begin()),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -223,7 +223,7 @@ TEST(HEonGPU, BFV_Encryption_Decryption)
             std::equal(message.begin(), message.end(), gpu_result.begin()),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {

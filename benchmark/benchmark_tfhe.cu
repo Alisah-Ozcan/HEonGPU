@@ -37,10 +37,15 @@ int main()
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    auto benchmark_gate = [&](const std::string& name, auto&& gate_func, const std::vector<bool>& input1, const std::vector<bool>& input2, const std::vector<bool>& control) {
+    auto benchmark_gate = [&](const std::string& name, auto&& gate_func,
+                              const std::vector<bool>& input1,
+                              const std::vector<bool>& input2,
+                              const std::vector<bool>& control)
+    {
         float accumulated_time = 0;
 
-        for (int r = 0; r < repeat_count; ++r) {
+        for (int r = 0; r < repeat_count; ++r)
+        {
             heongpu::Ciphertext<Scheme> ct1(context);
             heongpu::Ciphertext<Scheme> ct2(context);
             heongpu::Ciphertext<Scheme> ct3(context);
@@ -60,28 +65,59 @@ int main()
             accumulated_time += ms;
         }
 
-        std::cout << "[" << name << "] Avg Time: " << (accumulated_time / repeat_count) << " ms" << std::endl;
+        std::cout << "[" << name
+                  << "] Avg Time: " << (accumulated_time / repeat_count)
+                  << " ms" << std::endl;
     };
 
     std::vector<bool> input1(size), input2(size), control(size);
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i)
+    {
         input1[i] = dis(gen);
         input2[i] = dis(gen);
         control[i] = dis(gen);
     }
 
-    std::vector<bool> expected_nand(size), expected_and(size), expected_nor(size), expected_or(size);
-    std::vector<bool> expected_xnor(size), expected_xor(size), expected_not(size), expected_mux(size);
+    std::vector<bool> expected_nand(size), expected_and(size),
+        expected_nor(size), expected_or(size);
+    std::vector<bool> expected_xnor(size), expected_xor(size),
+        expected_not(size), expected_mux(size);
 
-    benchmark_gate("NAND", [&](auto& a, auto& b, auto&, auto& r) { logic.NAND(a, b, r, boot_key); }, input1, input2, control);
-    benchmark_gate("AND",  [&](auto& a, auto& b, auto&, auto& r) { logic.AND(a, b, r, boot_key); }, input1, input2, control);
-    benchmark_gate("NOR",  [&](auto& a, auto& b, auto&, auto& r) { logic.NOR(a, b, r, boot_key); }, input1, input2, control);
-    benchmark_gate("OR",   [&](auto& a, auto& b, auto&, auto& r) { logic.OR(a, b, r, boot_key); }, input1, input2, control);
-    benchmark_gate("XNOR", [&](auto& a, auto& b, auto&, auto& r) { logic.XNOR(a, b, r, boot_key); }, input1, input2, control);
-    benchmark_gate("XOR",  [&](auto& a, auto& b, auto&, auto& r) { logic.XOR(a, b, r, boot_key); }, input1, input2, control);
-    benchmark_gate("NOT",  [&](auto& a, auto&, auto&, auto& r) { logic.NOT(a, r); }, input1, input2, control);
+    benchmark_gate(
+        "NAND",
+        [&](auto& a, auto& b, auto&, auto& r)
+        { logic.NAND(a, b, r, boot_key); },
+        input1, input2, control);
+    benchmark_gate(
+        "AND",
+        [&](auto& a, auto& b, auto&, auto& r) { logic.AND(a, b, r, boot_key); },
+        input1, input2, control);
+    benchmark_gate(
+        "NOR",
+        [&](auto& a, auto& b, auto&, auto& r) { logic.NOR(a, b, r, boot_key); },
+        input1, input2, control);
+    benchmark_gate(
+        "OR",
+        [&](auto& a, auto& b, auto&, auto& r) { logic.OR(a, b, r, boot_key); },
+        input1, input2, control);
+    benchmark_gate(
+        "XNOR",
+        [&](auto& a, auto& b, auto&, auto& r)
+        { logic.XNOR(a, b, r, boot_key); },
+        input1, input2, control);
+    benchmark_gate(
+        "XOR",
+        [&](auto& a, auto& b, auto&, auto& r) { logic.XOR(a, b, r, boot_key); },
+        input1, input2, control);
+    benchmark_gate(
+        "NOT", [&](auto& a, auto&, auto&, auto& r) { logic.NOT(a, r); }, input1,
+        input2, control);
     std::cout << "The MUX will be even faster soon! -> ";
-    benchmark_gate("MUX",  [&](auto& a, auto& b, auto& c, auto& r) { logic.MUX(a, b, c, r, boot_key); }, input1, input2, control);
+    benchmark_gate(
+        "MUX",
+        [&](auto& a, auto& b, auto& c, auto& r)
+        { logic.MUX(a, b, c, r, boot_key); },
+        input1, input2, control);
 
     return 0;
 }

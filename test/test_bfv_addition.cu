@@ -204,7 +204,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
                              gpu_subtraction_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -303,7 +303,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
                              gpu_subtraction_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -403,7 +403,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Addition_Subtraction)
                              gpu_subtraction_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {

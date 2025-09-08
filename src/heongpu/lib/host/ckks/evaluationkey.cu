@@ -523,7 +523,8 @@ namespace heongpu
     }
 
     __host__
-    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context, int max_shift)
+    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context,
+                                       int max_shift)
     {
         if (!context.context_generated_)
         {

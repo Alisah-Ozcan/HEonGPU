@@ -110,7 +110,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -187,7 +187,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -265,7 +265,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -345,7 +345,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_I)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -505,7 +505,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -582,7 +582,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -660,7 +660,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -740,7 +740,7 @@ TEST(HEonGPU, CKKS_Relinearization_Keyswitching_Method_II)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {

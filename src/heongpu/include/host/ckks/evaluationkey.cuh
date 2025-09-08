@@ -495,9 +495,12 @@ namespace heongpu
         __host__ Galoiskey(HEContext<Scheme::CKKS>& context);
 
         /**
-         * @brief Constructs a new Galoiskey object with in the range (-2^max_shift, 2^max_shift).
-         * 
-         * This Galois key object supports all homomorphic rotations, though at some performance cost. Rotation speed improves as max_shift approaches half of the slot count.
+         * @brief Constructs a new Galoiskey object with in the range
+         * (-2^max_shift, 2^max_shift).
+         *
+         * This Galois key object supports all homomorphic rotations, though at
+         * some performance cost. Rotation speed improves as max_shift
+         * approaches half of the slot count.
          *
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.

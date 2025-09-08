@@ -43,7 +43,7 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
             std::equal(message.begin(), message.end(), gpu_result.begin()),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -80,7 +80,7 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
             std::equal(message.begin(), message.end(), gpu_result.begin()),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -117,7 +117,7 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
             std::equal(message.begin(), message.end(), gpu_result.begin()),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -155,7 +155,7 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
             std::equal(message.begin(), message.end(), gpu_result.begin()),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {

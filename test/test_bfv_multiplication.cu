@@ -88,7 +88,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
                              gpu_multiplication_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -170,7 +170,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
                              gpu_multiplication_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -252,7 +252,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
                              gpu_multiplication_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -335,7 +335,7 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
                              gpu_multiplication_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -497,7 +497,7 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
                              gpu_multiplication_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -572,7 +572,7 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
                              gpu_multiplication_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -647,7 +647,7 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
                              gpu_multiplication_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -723,7 +723,7 @@ TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
                              gpu_multiplication_result.begin()),
                   true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {

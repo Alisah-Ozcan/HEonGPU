@@ -78,7 +78,9 @@ int main(int argc, char* argv[])
     int StoC_piece = 3;
     heongpu::BootstrappingConfig boot_config(3, StoC_piece, 7, true);
     // Generates all bootstrapping parameters before bootstrapping
-    operators.generate_bootstrapping_params(scale, boot_config, heongpu::arithmetic_bootstrapping_type::SLIM_BOOTSTRAPPING);
+    operators.generate_bootstrapping_params(
+        scale, boot_config,
+        heongpu::arithmetic_bootstrapping_type::SLIM_BOOTSTRAPPING);
 
     std::vector<int> key_index = operators.bootstrapping_key_indexs();
     std::cout << "Total galois key needed for CKKS bootstrapping: "

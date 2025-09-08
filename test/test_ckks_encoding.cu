@@ -79,7 +79,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -125,7 +125,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -172,7 +172,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -221,7 +221,7 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
         EXPECT_EQ(fix_point_equal(number, gpu_result2[0]), true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {

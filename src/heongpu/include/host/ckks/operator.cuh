@@ -1571,7 +1571,8 @@ namespace heongpu
         operator_from_ciphertext(Ciphertext<Scheme::CKKS>& input,
                                  cudaStream_t stream = cudaStreamDefault);
 
-        __host__ std::vector<int> rotation_index_generator(uint64_t n, int K, int M);
+        __host__ std::vector<int> rotation_index_generator(uint64_t n, int K,
+                                                           int M);
 
         class Vandermonde
         {

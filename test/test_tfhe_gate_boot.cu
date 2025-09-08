@@ -31,16 +31,20 @@ TEST(HEonGPU, TFHE_Gate_Boots)
     std::uniform_int_distribution<int> dis(0, 1);
 
     std::vector<bool> input1(size), input2(size), control(size);
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i)
+    {
         input1[i] = dis(gen);
         input2[i] = dis(gen);
         control[i] = dis(gen);
     }
 
-    std::vector<bool> expected_nand(size), expected_and(size), expected_nor(size), expected_or(size);
-    std::vector<bool> expected_xnor(size), expected_xor(size), expected_not(size), expected_mux(size);
+    std::vector<bool> expected_nand(size), expected_and(size),
+        expected_nor(size), expected_or(size);
+    std::vector<bool> expected_xnor(size), expected_xor(size),
+        expected_not(size), expected_mux(size);
 
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i)
+    {
         expected_nand[i] = !(input1[i] & input2[i]);
         expected_and[i] = input1[i] & input2[i];
         expected_nor[i] = !(input1[i] | input2[i]);
@@ -58,7 +62,8 @@ TEST(HEonGPU, TFHE_Gate_Boots)
     encryptor.encrypt(ct2, input2);
     encryptor.encrypt(ct3, control);
 
-    auto check_gate = [&](auto&& gate_func, const auto& expected) {
+    auto check_gate = [&](auto&& gate_func, const auto& expected)
+    {
         heongpu::Ciphertext<Scheme> result(context);
         gate_func(result);
         std::vector<bool> decrypted;
@@ -66,14 +71,20 @@ TEST(HEonGPU, TFHE_Gate_Boots)
         EXPECT_EQ(decrypted, expected);
     };
 
-    check_gate([&](auto& r) { logic.NAND(ct1, ct2, r, boot_key); }, expected_nand);
-    check_gate([&](auto& r) { logic.AND(ct1, ct2, r, boot_key); }, expected_and);
-    check_gate([&](auto& r) { logic.NOR(ct1, ct2, r, boot_key); }, expected_nor);
+    check_gate([&](auto& r) { logic.NAND(ct1, ct2, r, boot_key); },
+               expected_nand);
+    check_gate([&](auto& r) { logic.AND(ct1, ct2, r, boot_key); },
+               expected_and);
+    check_gate([&](auto& r) { logic.NOR(ct1, ct2, r, boot_key); },
+               expected_nor);
     check_gate([&](auto& r) { logic.OR(ct1, ct2, r, boot_key); }, expected_or);
-    check_gate([&](auto& r) { logic.XNOR(ct1, ct2, r, boot_key); }, expected_xnor);
-    check_gate([&](auto& r) { logic.XOR(ct1, ct2, r, boot_key); }, expected_xor);
+    check_gate([&](auto& r) { logic.XNOR(ct1, ct2, r, boot_key); },
+               expected_xnor);
+    check_gate([&](auto& r) { logic.XOR(ct1, ct2, r, boot_key); },
+               expected_xor);
     check_gate([&](auto& r) { logic.NOT(ct1, r); }, expected_not);
-    check_gate([&](auto& r) { logic.MUX(ct1, ct2, ct3, r, boot_key); }, expected_mux);
+    check_gate([&](auto& r) { logic.MUX(ct1, ct2, ct3, r, boot_key); },
+               expected_mux);
 }
 
 int main(int argc, char** argv)

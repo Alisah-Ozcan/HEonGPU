@@ -108,7 +108,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -183,7 +183,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -259,7 +259,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -337,7 +337,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -487,7 +487,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -556,7 +556,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -626,7 +626,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -698,7 +698,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Addition)
             fix_point_array_check(message_multiplication_result, gpu_result),
             true);
     }
-    
+
     cudaDeviceSynchronize();
 
     {

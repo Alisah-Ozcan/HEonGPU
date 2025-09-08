@@ -1208,9 +1208,11 @@ namespace heongpu
         }
         else
         {
-            std::vector<int> indexs = rotation_index_generator(shift, galois_key.max_log_slot_, galois_key.max_shift_);
+            std::vector<int> indexs = rotation_index_generator(
+                shift, galois_key.max_log_slot_, galois_key.max_shift_);
             std::vector<int> required_galoiselt;
-            for (int index : indexs) {
+            for (int index : indexs)
+            {
                 if (!(galois_key.galois_elt.find(index) !=
                       galois_key.galois_elt.end()))
                 {
@@ -1247,9 +1249,11 @@ namespace heongpu
         }
         else
         {
-            std::vector<int> indexs = rotation_index_generator(shift, galois_key.max_log_slot_, galois_key.max_shift_);
+            std::vector<int> indexs = rotation_index_generator(
+                shift, galois_key.max_log_slot_, galois_key.max_shift_);
             std::vector<int> required_galoiselt;
-            for (int index : indexs) {
+            for (int index : indexs)
+            {
                 if (!(galois_key.galois_elt.find(index) !=
                       galois_key.galois_elt.end()))
                 {
@@ -1509,10 +1513,8 @@ namespace heongpu
         output.depth_ = input1.depth_;
         output.scale_ = input1.scale_;
         output.in_ntt_domain_ = input1.in_ntt_domain_;
-        output.rescale_required_ =
-            input1.rescale_required_;
-        output.relinearization_required_ =
-            input1.relinearization_required_;
+        output.rescale_required_ = input1.rescale_required_;
+        output.relinearization_required_ = input1.relinearization_required_;
         output.ciphertext_generated_ = true;
     }
 
@@ -2116,76 +2118,104 @@ namespace heongpu
         return cipher;
     }
 
-    __host__ std::vector<int> HEOperator<Scheme::CKKS>::rotation_index_generator(uint64_t n, int K, int M)
+    __host__ std::vector<int>
+    HEOperator<Scheme::CKKS>::rotation_index_generator(uint64_t n, int K, int M)
     {
-        if (K <= 0 || M < 0 || M >= K) return {};
+        if (K <= 0 || M < 0 || M >= K)
+            return {};
 
-        auto balance_mod_2k = [](uint64_t n, int K) {
-            if (K < 64) {
-                uint64_t mod  = (1ULL << K);
+        auto balance_mod_2k = [](uint64_t n, int K)
+        {
+            if (K < 64)
+            {
+                uint64_t mod = (1ULL << K);
                 uint64_t mask = mod - 1ULL;
-                uint64_t m    = n & mask;
-                int64_t half  = static_cast<int64_t>(mod >> 1);
-                return (m > half) ? static_cast<int64_t>(m) - static_cast<int64_t>(mod)
-                                : static_cast<int64_t>(m);
+                uint64_t m = n & mask;
+                int64_t half = static_cast<int64_t>(mod >> 1);
+                return (m > half)
+                           ? static_cast<int64_t>(m) - static_cast<int64_t>(mod)
+                           : static_cast<int64_t>(m);
             }
             return static_cast<int64_t>(n);
         };
 
         int64_t x = balance_mod_2k(n, K);
 
-        std::vector<long long> coeff(M+1, 0);
+        std::vector<long long> coeff(M + 1, 0);
 
         // NAF + fold
-        for (int i = 0; i < K && x != 0; i++) {
-            if (x & 1LL) {
+        for (int i = 0; i < K && x != 0; i++)
+        {
+            if (x & 1LL)
+            {
                 int ui = 1 - static_cast<int>((x >> 1) & 1) * 2; // ±1
-                if (i <= M) coeff[i] += ui;
-                else coeff[M] += static_cast<long long>(ui) << (i - M);
+                if (i <= M)
+                    coeff[i] += ui;
+                else
+                    coeff[M] += static_cast<long long>(ui) << (i - M);
                 x = (x - ui) >> 1;
-            } else {
+            }
+            else
+            {
                 x >>= 1;
             }
         }
 
         // normalize
-        for (int i = 0; i < M; i++) {
+        for (int i = 0; i < M; i++)
+        {
             long long v = coeff[i];
-            if (v >= 2 || v <= -2) {
+            if (v >= 2 || v <= -2)
+            {
                 long long carry = v / 2;
-                coeff[i]   -= carry * 2;
-                coeff[i+1] += carry;
+                coeff[i] -= carry * 2;
+                coeff[i + 1] += carry;
             }
         }
 
         // smoothing
-        for (int i = M; i >= 1; i--) {
-            long long up  = coeff[i];
-            long long low = coeff[i-1];
-            if (up > 0 && low < 0) {
+        for (int i = M; i >= 1; i--)
+        {
+            long long up = coeff[i];
+            long long low = coeff[i - 1];
+            if (up > 0 && low < 0)
+            {
                 long long up2 = up - 1, low2 = low + 2;
-                if (std::llabs(up2) + std::llabs(low2) <= std::llabs(up) + std::llabs(low)) {
-                    coeff[i] = up2; coeff[i-1] = low2;
+                if (std::llabs(up2) + std::llabs(low2) <=
+                    std::llabs(up) + std::llabs(low))
+                {
+                    coeff[i] = up2;
+                    coeff[i - 1] = low2;
                 }
-            } else if (up < 0 && low > 0) {
+            }
+            else if (up < 0 && low > 0)
+            {
                 long long up2 = up + 1, low2 = low - 2;
-                if (std::llabs(up2) + std::llabs(low2) <= std::llabs(up) + std::llabs(low)) {
-                    coeff[i] = up2; coeff[i-1] = low2;
+                if (std::llabs(up2) + std::llabs(low2) <=
+                    std::llabs(up) + std::llabs(low))
+                {
+                    coeff[i] = up2;
+                    coeff[i - 1] = low2;
                 }
             }
         }
 
         // coeff → list
         std::vector<int> out;
-        for (int i = 0; i <= M; i++) {
+        for (int i = 0; i <= M; i++)
+        {
             long long c = coeff[i];
-            if (!c) continue;
+            if (!c)
+                continue;
             int term = static_cast<int>(1ULL << i);
-            if (c > 0) while (c--) out.push_back( term);
-            else       while (c++) out.push_back(-term);
+            if (c > 0)
+                while (c--)
+                    out.push_back(term);
+            else
+                while (c++)
+                    out.push_back(-term);
         }
         return out;
-
     }
 
     __host__ void HEOperator<Scheme::CKKS>::quick_ckks_encoder_vec_complex(
@@ -2937,12 +2967,14 @@ namespace heongpu
             int shift_n1 = bsgs_shift[i];
             int offset = ((2 * current_decomp_count) << n_power) * i;
 
-            int galoiselt = steps_to_galois_elt(shift_n1, n, galois_key.group_order_);
-            bool key_exist = (galois_key.storage_type_ == storage_type::DEVICE)
-                                ? (galois_key.device_location_.find(galoiselt) !=
-                                    galois_key.device_location_.end())
-                                : (galois_key.host_location_.find(galoiselt) !=
-                                    galois_key.host_location_.end());
+            int galoiselt =
+                steps_to_galois_elt(shift_n1, n, galois_key.group_order_);
+            bool key_exist =
+                (galois_key.storage_type_ == storage_type::DEVICE)
+                    ? (galois_key.device_location_.find(galoiselt) !=
+                       galois_key.device_location_.end())
+                    : (galois_key.host_location_.find(galoiselt) !=
+                       galois_key.host_location_.end());
             if (key_exist)
             {
                 int galois_elt = galoiselt;
@@ -2955,15 +2987,16 @@ namespace heongpu
                     .mod_inverse = n_inverse_->data(),
                     .stream = stream};
 
-                gpuntt::GPU_NTT(first_cipher.data(), temp0_rotation, intt_table_->data(),
-                                modulus_->data(), cfg_intt, 2 * current_decomp_count,
-                                current_decomp_count);
+                gpuntt::GPU_NTT(first_cipher.data(), temp0_rotation,
+                                intt_table_->data(), modulus_->data(), cfg_intt,
+                                2 * current_decomp_count, current_decomp_count);
 
                 // TODO: make it efficient
-                ckks_duplicate_kernel<<<dim3((n >> 8), current_decomp_count, 1), 256, 0,
-                                        stream>>>(
+                ckks_duplicate_kernel<<<dim3((n >> 8), current_decomp_count, 1),
+                                        256, 0, stream>>>(
                     temp0_rotation, temp2_rotation, modulus_->data(), n_power,
-                    first_rns_mod_count, current_rns_mod_count, current_decomp_count);
+                    first_rns_mod_count, current_rns_mod_count,
+                    current_decomp_count);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
@@ -2981,9 +3014,9 @@ namespace heongpu
                     counter--;
                 }
                 gpuntt::GPU_NTT_Modulus_Ordered_Inplace(
-                    temp2_rotation, ntt_table_->data(), modulus_->data(), cfg_ntt,
-                    current_decomp_count * current_rns_mod_count, current_rns_mod_count,
-                    new_prime_locations + location);
+                    temp2_rotation, ntt_table_->data(), modulus_->data(),
+                    cfg_ntt, current_decomp_count * current_rns_mod_count,
+                    current_rns_mod_count, new_prime_locations + location);
 
                 // MultSum
                 // TODO: make it efficient
@@ -2992,11 +3025,13 @@ namespace heongpu
                 if (galois_key.storage_type_ == storage_type::DEVICE)
                 {
                     keyswitch_multiply_accumulate_leveled_kernel<<<
-                        dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
-                        temp2_rotation, galois_key.device_location_[galois_elt].data(),
+                        dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                        stream>>>(
+                        temp2_rotation,
+                        galois_key.device_location_[galois_elt].data(),
                         temp3_rotation, modulus_->data(), first_rns_mod_count,
-                        current_decomp_count, iteration_count_1, iteration_count_2,
-                        n_power);
+                        current_decomp_count, iteration_count_1,
+                        iteration_count_2, n_power);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
                 else
@@ -3004,16 +3039,18 @@ namespace heongpu
                     DeviceVector<Data64> key_location(
                         galois_key.host_location_[galois_elt], stream);
                     keyswitch_multiply_accumulate_leveled_kernel<<<
-                        dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
-                        temp2_rotation, key_location.data(), temp3_rotation,
-                        modulus_->data(), first_rns_mod_count, current_decomp_count,
-                        iteration_count_1, iteration_count_2, n_power);
+                        dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                        stream>>>(temp2_rotation, key_location.data(),
+                                  temp3_rotation, modulus_->data(),
+                                  first_rns_mod_count, current_decomp_count,
+                                  iteration_count_1, iteration_count_2,
+                                  n_power);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gpuntt::GPU_NTT_Modulus_Ordered_Inplace(
-                    temp3_rotation, intt_table_->data(), modulus_->data(), cfg_intt,
-                    2 * current_rns_mod_count, current_rns_mod_count,
+                    temp3_rotation, intt_table_->data(), modulus_->data(),
+                    cfg_intt, 2 * current_rns_mod_count, current_rns_mod_count,
                     new_prime_locations + location);
 
                 // ModDown + Permute
@@ -3021,22 +3058,25 @@ namespace heongpu
                     dim3((n >> 8), current_decomp_count, 2), 256, 0, stream>>>(
                     temp3_rotation, temp0_rotation, result.data() + offset,
                     modulus_->data(), half_p_->data(), half_mod_->data(),
-                    last_q_modinv_->data(), galois_elt, n_power, current_rns_mod_count,
-                    current_decomp_count, first_rns_mod_count, Q_size_,
-                    P_size_);
+                    last_q_modinv_->data(), galois_elt, n_power,
+                    current_rns_mod_count, current_decomp_count,
+                    first_rns_mod_count, Q_size_, P_size_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                gpuntt::GPU_NTT_Inplace(result.data() + offset, ntt_table_->data(),
-                                        modulus_->data(), cfg_ntt,
-                                        2 * current_decomp_count, current_decomp_count);
+                gpuntt::GPU_NTT_Inplace(result.data() + offset,
+                                        ntt_table_->data(), modulus_->data(),
+                                        cfg_ntt, 2 * current_decomp_count,
+                                        current_decomp_count);
             }
             else
-            {   
-                std::vector<int> indexs = rotation_index_generator(shift_n1, galois_key.max_log_slot_, galois_key.max_shift_);
+            {
+                std::vector<int> indexs = rotation_index_generator(
+                    shift_n1, galois_key.max_log_slot_, galois_key.max_shift_);
                 std::vector<int> required_galoiselt;
-                for (int index : indexs) {
+                for (int index : indexs)
+                {
                     if (!(galois_key.galois_elt.find(index) !=
-                        galois_key.galois_elt.end()))
+                          galois_key.galois_elt.end()))
                     {
                         throw std::logic_error("Galois key not present!");
                     }
@@ -3047,22 +3087,25 @@ namespace heongpu
                 for (auto& galois_elt : required_galoiselt)
                 {
                     gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
-                    .n_power = n_power,
-                    .ntt_type = gpuntt::INVERSE,
-                    .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
-                    .zero_padding = false,
-                    .mod_inverse = n_inverse_->data(),
-                    .stream = stream};
+                        .n_power = n_power,
+                        .ntt_type = gpuntt::INVERSE,
+                        .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
+                        .zero_padding = false,
+                        .mod_inverse = n_inverse_->data(),
+                        .stream = stream};
 
-                    gpuntt::GPU_NTT(in_data, temp0_rotation, intt_table_->data(),
-                                    modulus_->data(), cfg_intt, 2 * current_decomp_count,
+                    gpuntt::GPU_NTT(in_data, temp0_rotation,
+                                    intt_table_->data(), modulus_->data(),
+                                    cfg_intt, 2 * current_decomp_count,
                                     current_decomp_count);
 
                     // TODO: make it efficient
-                    ckks_duplicate_kernel<<<dim3((n >> 8), current_decomp_count, 1), 256, 0,
-                                            stream>>>(
-                        temp0_rotation, temp2_rotation, modulus_->data(), n_power,
-                        first_rns_mod_count, current_rns_mod_count, current_decomp_count);
+                    ckks_duplicate_kernel<<<dim3((n >> 8), current_decomp_count,
+                                                 1),
+                                            256, 0, stream>>>(
+                        temp0_rotation, temp2_rotation, modulus_->data(),
+                        n_power, first_rns_mod_count, current_rns_mod_count,
+                        current_decomp_count);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                     gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
@@ -3080,9 +3123,9 @@ namespace heongpu
                         counter--;
                     }
                     gpuntt::GPU_NTT_Modulus_Ordered_Inplace(
-                        temp2_rotation, ntt_table_->data(), modulus_->data(), cfg_ntt,
-                        current_decomp_count * current_rns_mod_count, current_rns_mod_count,
-                        new_prime_locations + location);
+                        temp2_rotation, ntt_table_->data(), modulus_->data(),
+                        cfg_ntt, current_decomp_count * current_rns_mod_count,
+                        current_rns_mod_count, new_prime_locations + location);
 
                     // MultSum
                     // TODO: make it efficient
@@ -3091,11 +3134,13 @@ namespace heongpu
                     if (galois_key.storage_type_ == storage_type::DEVICE)
                     {
                         keyswitch_multiply_accumulate_leveled_kernel<<<
-                            dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
-                            temp2_rotation, galois_key.device_location_[galois_elt].data(),
-                            temp3_rotation, modulus_->data(), first_rns_mod_count,
-                            current_decomp_count, iteration_count_1, iteration_count_2,
-                            n_power);
+                            dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                            stream>>>(
+                            temp2_rotation,
+                            galois_key.device_location_[galois_elt].data(),
+                            temp3_rotation, modulus_->data(),
+                            first_rns_mod_count, current_decomp_count,
+                            iteration_count_1, iteration_count_2, n_power);
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
                     }
                     else
@@ -3103,35 +3148,39 @@ namespace heongpu
                         DeviceVector<Data64> key_location(
                             galois_key.host_location_[galois_elt], stream);
                         keyswitch_multiply_accumulate_leveled_kernel<<<
-                            dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
-                            temp2_rotation, key_location.data(), temp3_rotation,
-                            modulus_->data(), first_rns_mod_count, current_decomp_count,
-                            iteration_count_1, iteration_count_2, n_power);
+                            dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                            stream>>>(temp2_rotation, key_location.data(),
+                                      temp3_rotation, modulus_->data(),
+                                      first_rns_mod_count, current_decomp_count,
+                                      iteration_count_1, iteration_count_2,
+                                      n_power);
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
                     }
 
                     gpuntt::GPU_NTT_Modulus_Ordered_Inplace(
-                        temp3_rotation, intt_table_->data(), modulus_->data(), cfg_intt,
-                        2 * current_rns_mod_count, current_rns_mod_count,
-                        new_prime_locations + location);
+                        temp3_rotation, intt_table_->data(), modulus_->data(),
+                        cfg_intt, 2 * current_rns_mod_count,
+                        current_rns_mod_count, new_prime_locations + location);
 
                     // ModDown + Permute
                     divide_round_lastq_permute_ckks_kernel<<<
-                        dim3((n >> 8), current_decomp_count, 2), 256, 0, stream>>>(
-                        temp3_rotation, temp0_rotation, result.data() + offset,
-                        modulus_->data(), half_p_->data(), half_mod_->data(),
-                        last_q_modinv_->data(), galois_elt, n_power, current_rns_mod_count,
-                        current_decomp_count, first_rns_mod_count, Q_size_,
-                        P_size_);
+                        dim3((n >> 8), current_decomp_count, 2), 256, 0,
+                        stream>>>(temp3_rotation, temp0_rotation,
+                                  result.data() + offset, modulus_->data(),
+                                  half_p_->data(), half_mod_->data(),
+                                  last_q_modinv_->data(), galois_elt, n_power,
+                                  current_rns_mod_count, current_decomp_count,
+                                  first_rns_mod_count, Q_size_, P_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                    gpuntt::GPU_NTT_Inplace(result.data() + offset, ntt_table_->data(),
-                                            modulus_->data(), cfg_ntt,
-                                            2 * current_decomp_count, current_decomp_count);
+                    gpuntt::GPU_NTT_Inplace(
+                        result.data() + offset, ntt_table_->data(),
+                        modulus_->data(), cfg_ntt, 2 * current_decomp_count,
+                        current_decomp_count);
 
                     in_data = result.data() + offset;
                 }
-            }                
+            }
         }
 
         return result;
@@ -3302,31 +3351,33 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         for (int i = 1; i < n1; i++)
-        {   
+        {
             int shift_n1 = bsgs_shift[i];
             int offset = ((2 * current_decomp_count) << n_power) * i;
 
-            int galoiselt = steps_to_galois_elt(shift_n1, n, galois_key.group_order_);
-            bool key_exist = (galois_key.storage_type_ == storage_type::DEVICE)
-                                ? (galois_key.device_location_.find(galoiselt) !=
-                                    galois_key.device_location_.end())
-                                : (galois_key.host_location_.find(galoiselt) !=
-                                    galois_key.host_location_.end());
+            int galoiselt =
+                steps_to_galois_elt(shift_n1, n, galois_key.group_order_);
+            bool key_exist =
+                (galois_key.storage_type_ == storage_type::DEVICE)
+                    ? (galois_key.device_location_.find(galoiselt) !=
+                       galois_key.device_location_.end())
+                    : (galois_key.host_location_.find(galoiselt) !=
+                       galois_key.host_location_.end());
             if (key_exist)
             {
                 int galois_elt = galoiselt;
-                
-                gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
-                .n_power = n_power,
-                .ntt_type = gpuntt::INVERSE,
-                .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
-                .zero_padding = false,
-                .mod_inverse = n_inverse_->data(),
-                .stream = stream};
 
-                gpuntt::GPU_NTT(first_cipher.data(), temp0_rotation, intt_table_->data(),
-                                modulus_->data(), cfg_intt, 2 * current_decomp_count,
-                                current_decomp_count);
+                gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
+                    .n_power = n_power,
+                    .ntt_type = gpuntt::INVERSE,
+                    .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
+                    .zero_padding = false,
+                    .mod_inverse = n_inverse_->data(),
+                    .stream = stream};
+
+                gpuntt::GPU_NTT(first_cipher.data(), temp0_rotation,
+                                intt_table_->data(), modulus_->data(), cfg_intt,
+                                2 * current_decomp_count, current_decomp_count);
 
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
@@ -3344,38 +3395,51 @@ namespace heongpu
                 }
 
                 base_conversion_DtoQtilde_relin_leveled_kernel<<<
-                    dim3((n >> 8), d_leveled_->operator[](first_cipher.depth_), 1), 256, 0,
-                    stream>>>(
-                    temp0_rotation + (current_decomp_count << n_power), temp3_rotation,
-                    modulus_->data(),
-                    base_change_matrix_D_to_Qtilda_leveled_->operator[](first_cipher.depth_)
+                    dim3((n >> 8), d_leveled_->operator[](first_cipher.depth_),
+                         1),
+                    256, 0, stream>>>(
+                    temp0_rotation + (current_decomp_count << n_power),
+                    temp3_rotation, modulus_->data(),
+                    base_change_matrix_D_to_Qtilda_leveled_
+                        ->
+                        operator[](first_cipher.depth_)
                         .data(),
-                    Mi_inv_D_to_Qtilda_leveled_->operator[](first_cipher.depth_).data(),
-                    prod_D_to_Qtilda_leveled_->operator[](first_cipher.depth_).data(),
+                    Mi_inv_D_to_Qtilda_leveled_->operator[](first_cipher.depth_)
+                        .data(),
+                    prod_D_to_Qtilda_leveled_->operator[](first_cipher.depth_)
+                        .data(),
                     I_j_leveled_->operator[](first_cipher.depth_).data(),
-                    I_location_leveled_->operator[](first_cipher.depth_).data(), n_power,
-                    d_leveled_->operator[](first_cipher.depth_), current_rns_mod_count,
-                    current_decomp_count, first_cipher.depth_,
+                    I_location_leveled_->operator[](first_cipher.depth_).data(),
+                    n_power, d_leveled_->operator[](first_cipher.depth_),
+                    current_rns_mod_count, current_decomp_count,
+                    first_cipher.depth_,
                     prime_location_leveled_->data() + location);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 gpuntt::GPU_NTT_Modulus_Ordered_Inplace(
-                    temp3_rotation, ntt_table_->data(), modulus_->data(), cfg_ntt,
-                    d_leveled_->operator[](first_cipher.depth_) * current_rns_mod_count,
+                    temp3_rotation, ntt_table_->data(), modulus_->data(),
+                    cfg_ntt,
+                    d_leveled_->operator[](first_cipher.depth_) *
+                        current_rns_mod_count,
                     current_rns_mod_count, new_prime_locations + location);
 
                 // MultSum
                 // TODO: make it efficient
-                int iteration_count_1 = d_leveled_->operator[](first_cipher.depth_) / 4;
-                int iteration_count_2 = d_leveled_->operator[](first_cipher.depth_) % 4;
+                int iteration_count_1 =
+                    d_leveled_->operator[](first_cipher.depth_) / 4;
+                int iteration_count_2 =
+                    d_leveled_->operator[](first_cipher.depth_) % 4;
                 if (galois_key.storage_type_ == storage_type::DEVICE)
                 {
                     keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
-                        dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
-                        temp3_rotation, galois_key.device_location_[galois_elt].data(),
+                        dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                        stream>>>(
+                        temp3_rotation,
+                        galois_key.device_location_[galois_elt].data(),
                         temp4_rotation, modulus_->data(), first_rns_mod_count,
-                        current_decomp_count, current_rns_mod_count, iteration_count_1,
-                        iteration_count_2, first_cipher.depth_, n_power);
+                        current_decomp_count, current_rns_mod_count,
+                        iteration_count_1, iteration_count_2,
+                        first_cipher.depth_, n_power);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
                 else
@@ -3383,17 +3447,19 @@ namespace heongpu
                     DeviceVector<Data64> key_location(
                         galois_key.host_location_[galois_elt], stream);
                     keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
-                        dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
-                        temp3_rotation, key_location.data(), temp4_rotation,
-                        modulus_->data(), first_rns_mod_count, current_decomp_count,
-                        current_rns_mod_count, iteration_count_1, iteration_count_2,
-                        first_cipher.depth_, n_power);
+                        dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                        stream>>>(temp3_rotation, key_location.data(),
+                                  temp4_rotation, modulus_->data(),
+                                  first_rns_mod_count, current_decomp_count,
+                                  current_rns_mod_count, iteration_count_1,
+                                  iteration_count_2, first_cipher.depth_,
+                                  n_power);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
                 }
 
                 gpuntt::GPU_NTT_Modulus_Ordered_Inplace(
-                    temp4_rotation, intt_table_->data(), modulus_->data(), cfg_intt,
-                    2 * current_rns_mod_count, current_rns_mod_count,
+                    temp4_rotation, intt_table_->data(), modulus_->data(),
+                    cfg_intt, 2 * current_rns_mod_count, current_rns_mod_count,
                     new_prime_locations + location);
 
                 // ModDown + Permute
@@ -3401,22 +3467,25 @@ namespace heongpu
                     dim3((n >> 8), current_decomp_count, 2), 256, 0, stream>>>(
                     temp4_rotation, temp0_rotation, result.data() + offset,
                     modulus_->data(), half_p_->data(), half_mod_->data(),
-                    last_q_modinv_->data(), galois_elt, n_power, current_rns_mod_count,
-                    current_decomp_count, first_rns_mod_count, Q_size_,
-                    P_size_);
+                    last_q_modinv_->data(), galois_elt, n_power,
+                    current_rns_mod_count, current_decomp_count,
+                    first_rns_mod_count, Q_size_, P_size_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                gpuntt::GPU_NTT_Inplace(result.data() + offset, ntt_table_->data(),
-                                        modulus_->data(), cfg_ntt,
-                                        2 * current_decomp_count, current_decomp_count);
+                gpuntt::GPU_NTT_Inplace(result.data() + offset,
+                                        ntt_table_->data(), modulus_->data(),
+                                        cfg_ntt, 2 * current_decomp_count,
+                                        current_decomp_count);
             }
             else
             {
-                std::vector<int> indexs = rotation_index_generator(shift_n1, galois_key.max_log_slot_, galois_key.max_shift_);
+                std::vector<int> indexs = rotation_index_generator(
+                    shift_n1, galois_key.max_log_slot_, galois_key.max_shift_);
                 std::vector<int> required_galoiselt;
-                for (int index : indexs) {
+                for (int index : indexs)
+                {
                     if (!(galois_key.galois_elt.find(index) !=
-                        galois_key.galois_elt.end()))
+                          galois_key.galois_elt.end()))
                     {
                         throw std::logic_error("Galois key not present!");
                     }
@@ -3427,15 +3496,16 @@ namespace heongpu
                 for (auto& galois_elt : required_galoiselt)
                 {
                     gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
-                    .n_power = n_power,
-                    .ntt_type = gpuntt::INVERSE,
-                    .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
-                    .zero_padding = false,
-                    .mod_inverse = n_inverse_->data(),
-                    .stream = stream};
+                        .n_power = n_power,
+                        .ntt_type = gpuntt::INVERSE,
+                        .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
+                        .zero_padding = false,
+                        .mod_inverse = n_inverse_->data(),
+                        .stream = stream};
 
-                    gpuntt::GPU_NTT(in_data, temp0_rotation, intt_table_->data(),
-                                    modulus_->data(), cfg_intt, 2 * current_decomp_count,
+                    gpuntt::GPU_NTT(in_data, temp0_rotation,
+                                    intt_table_->data(), modulus_->data(),
+                                    cfg_intt, 2 * current_decomp_count,
                                     current_decomp_count);
 
                     gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
@@ -3454,37 +3524,55 @@ namespace heongpu
                     }
 
                     base_conversion_DtoQtilde_relin_leveled_kernel<<<
-                        dim3((n >> 8), d_leveled_->operator[](first_cipher.depth_), 1), 256, 0,
-                        stream>>>(
-                        temp0_rotation + (current_decomp_count << n_power), temp3_rotation,
-                        modulus_->data(),
-                        base_change_matrix_D_to_Qtilda_leveled_->operator[](first_cipher.depth_)
+                        dim3((n >> 8),
+                             d_leveled_->operator[](first_cipher.depth_), 1),
+                        256, 0, stream>>>(
+                        temp0_rotation + (current_decomp_count << n_power),
+                        temp3_rotation, modulus_->data(),
+                        base_change_matrix_D_to_Qtilda_leveled_
+                            ->
+                            operator[](first_cipher.depth_)
                             .data(),
-                        Mi_inv_D_to_Qtilda_leveled_->operator[](first_cipher.depth_).data(),
-                        prod_D_to_Qtilda_leveled_->operator[](first_cipher.depth_).data(),
+                        Mi_inv_D_to_Qtilda_leveled_
+                            ->
+                            operator[](first_cipher.depth_)
+                            .data(),
+                        prod_D_to_Qtilda_leveled_
+                            ->
+                            operator[](first_cipher.depth_)
+                            .data(),
                         I_j_leveled_->operator[](first_cipher.depth_).data(),
-                        I_location_leveled_->operator[](first_cipher.depth_).data(), n_power,
-                        d_leveled_->operator[](first_cipher.depth_), current_rns_mod_count,
-                        current_decomp_count, first_cipher.depth_,
+                        I_location_leveled_->operator[](first_cipher.depth_)
+                            .data(),
+                        n_power, d_leveled_->operator[](first_cipher.depth_),
+                        current_rns_mod_count, current_decomp_count,
+                        first_cipher.depth_,
                         prime_location_leveled_->data() + location);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                     gpuntt::GPU_NTT_Modulus_Ordered_Inplace(
-                        temp3_rotation, ntt_table_->data(), modulus_->data(), cfg_ntt,
-                        d_leveled_->operator[](first_cipher.depth_) * current_rns_mod_count,
+                        temp3_rotation, ntt_table_->data(), modulus_->data(),
+                        cfg_ntt,
+                        d_leveled_->operator[](first_cipher.depth_) *
+                            current_rns_mod_count,
                         current_rns_mod_count, new_prime_locations + location);
 
                     // MultSum
                     // TODO: make it efficient
-                    int iteration_count_1 = d_leveled_->operator[](first_cipher.depth_) / 4;
-                    int iteration_count_2 = d_leveled_->operator[](first_cipher.depth_) % 4;
+                    int iteration_count_1 =
+                        d_leveled_->operator[](first_cipher.depth_) / 4;
+                    int iteration_count_2 =
+                        d_leveled_->operator[](first_cipher.depth_) % 4;
                     if (galois_key.storage_type_ == storage_type::DEVICE)
                     {
                         keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
-                            dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
-                            temp3_rotation, galois_key.device_location_[galois_elt].data(),
-                            temp4_rotation, modulus_->data(), first_rns_mod_count,
-                            current_decomp_count, current_rns_mod_count, iteration_count_1,
+                            dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                            stream>>>(
+                            temp3_rotation,
+                            galois_key.device_location_[galois_elt].data(),
+                            temp4_rotation, modulus_->data(),
+                            first_rns_mod_count, current_decomp_count,
+                            current_rns_mod_count, iteration_count_1,
                             iteration_count_2, first_cipher.depth_, n_power);
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
                     }
@@ -3493,36 +3581,40 @@ namespace heongpu
                         DeviceVector<Data64> key_location(
                             galois_key.host_location_[galois_elt], stream);
                         keyswitch_multiply_accumulate_leveled_method_II_kernel<<<
-                            dim3((n >> 8), current_rns_mod_count, 1), 256, 0, stream>>>(
-                            temp3_rotation, key_location.data(), temp4_rotation,
-                            modulus_->data(), first_rns_mod_count, current_decomp_count,
-                            current_rns_mod_count, iteration_count_1, iteration_count_2,
-                            first_cipher.depth_, n_power);
+                            dim3((n >> 8), current_rns_mod_count, 1), 256, 0,
+                            stream>>>(temp3_rotation, key_location.data(),
+                                      temp4_rotation, modulus_->data(),
+                                      first_rns_mod_count, current_decomp_count,
+                                      current_rns_mod_count, iteration_count_1,
+                                      iteration_count_2, first_cipher.depth_,
+                                      n_power);
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
                     }
 
                     gpuntt::GPU_NTT_Modulus_Ordered_Inplace(
-                        temp4_rotation, intt_table_->data(), modulus_->data(), cfg_intt,
-                        2 * current_rns_mod_count, current_rns_mod_count,
-                        new_prime_locations + location);
+                        temp4_rotation, intt_table_->data(), modulus_->data(),
+                        cfg_intt, 2 * current_rns_mod_count,
+                        current_rns_mod_count, new_prime_locations + location);
 
                     // ModDown + Permute
                     divide_round_lastq_permute_ckks_kernel<<<
-                        dim3((n >> 8), current_decomp_count, 2), 256, 0, stream>>>(
-                        temp4_rotation, temp0_rotation, result.data() + offset,
-                        modulus_->data(), half_p_->data(), half_mod_->data(),
-                        last_q_modinv_->data(), galois_elt, n_power, current_rns_mod_count,
-                        current_decomp_count, first_rns_mod_count, Q_size_,
-                        P_size_);
+                        dim3((n >> 8), current_decomp_count, 2), 256, 0,
+                        stream>>>(temp4_rotation, temp0_rotation,
+                                  result.data() + offset, modulus_->data(),
+                                  half_p_->data(), half_mod_->data(),
+                                  last_q_modinv_->data(), galois_elt, n_power,
+                                  current_rns_mod_count, current_decomp_count,
+                                  first_rns_mod_count, Q_size_, P_size_);
                     HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                    gpuntt::GPU_NTT_Inplace(result.data() + offset, ntt_table_->data(),
-                                            modulus_->data(), cfg_ntt,
-                                            2 * current_decomp_count, current_decomp_count);
+                    gpuntt::GPU_NTT_Inplace(
+                        result.data() + offset, ntt_table_->data(),
+                        modulus_->data(), cfg_ntt, 2 * current_decomp_count,
+                        current_decomp_count);
 
                     in_data = result.data() + offset;
                 }
-            }            
+            }
         }
         return result;
     }
@@ -3611,7 +3703,7 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         for (int i = 1; i < n1; i++)
-        {   
+        {
             int shift_n1 = bsgs_shift[i];
             int galoiselt =
                 steps_to_galois_elt(shift_n1, n, galois_key.group_order_);

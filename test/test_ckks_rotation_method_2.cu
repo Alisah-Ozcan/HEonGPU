@@ -124,7 +124,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
                       true);
         }
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -215,7 +215,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
                       true);
         }
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -307,7 +307,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
                       true);
         }
     }
-    
+
     cudaDeviceSynchronize();
 
     {
@@ -401,7 +401,7 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
                       true);
         }
     }
-    
+
     cudaDeviceSynchronize();
 
     {
