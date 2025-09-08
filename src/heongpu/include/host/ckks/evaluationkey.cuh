@@ -495,6 +495,16 @@ namespace heongpu
         __host__ Galoiskey(HEContext<Scheme::CKKS>& context);
 
         /**
+         * @brief Constructs a new Galoiskey object with in the range (-2^max_shift, 2^max_shift).
+         * 
+         * This Galois key object supports all homomorphic rotations, though at some performance cost. Rotation speed improves as max_shift approaches half of the slot count.
+         *
+         * @param context Reference to the Parameters object that sets the
+         * encryption parameters.
+         */
+        __host__ Galoiskey(HEContext<Scheme::CKKS>& context, int max_shift);
+
+        /**
          * @brief Constructs a new Galoiskey object allowing specific rotations
          * based on the given vector of shifts.
          *
@@ -812,6 +822,8 @@ namespace heongpu
         storage_type storage_type_;
         Data64 galoiskey_size_;
         std::vector<u_int32_t> custom_galois_elt;
+        int max_shift_;
+        int max_log_slot_;
 
         bool galois_key_generated_ = false;
 

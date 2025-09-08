@@ -6,6 +6,10 @@
 #ifndef HEONGPU_CKKS_OPERATOR_H
 #define HEONGPU_CKKS_OPERATOR_H
 
+#include <vector>
+#include <cstdint>
+#include <cstdlib>
+#include <cmath>
 #include "ntt.cuh"
 #include "fft.cuh"
 #include "addition.cuh"
@@ -1566,6 +1570,8 @@ namespace heongpu
         __host__ Ciphertext<Scheme::CKKS>
         operator_from_ciphertext(Ciphertext<Scheme::CKKS>& input,
                                  cudaStream_t stream = cudaStreamDefault);
+
+        __host__ std::vector<int> rotation_index_generator(uint64_t n, int K, int M);
 
         class Vandermonde
         {
