@@ -155,6 +155,16 @@ namespace heongpu
         inline int depth() const noexcept { return depth_; }
 
         /**
+         * @brief Returns the level of the ciphertext.
+         *
+         * @return int Level of the ciphertext.
+         */
+        inline int level() const noexcept
+        {
+            return coeff_modulus_count_ - (depth_ + 1);
+        }
+
+        /**
          * @brief Indicates whether the ciphertext is in the NTT (Number
          * Theoretic Transform) domain.
          *

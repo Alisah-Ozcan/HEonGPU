@@ -60,5 +60,25 @@ namespace heongpu
         int iteration_count, int current_decomp_count, int first_decomp_count,
         int n_power);
 
+    __global__ void cipher_div_by_i_kernel(Data64* in1, Data64* out,
+                                           unsigned long long* ntt_table,
+                                           Modulus64* modulus, int n_power);
+
+    __global__ void cipher_mult_by_i_kernel(Data64* in1, Data64* out,
+                                            unsigned long long* ntt_table,
+                                            Modulus64* modulus, int n_power);
+
+    __global__ void cipher_mult_by_gaussian_integer_kernel(
+        Data64* in1, Data64* real_rns, Data64* imag_rns, Data64* out,
+        Data64* ntt_table, Modulus64* modulus, int n_power);
+
+    __global__ void cipher_add_by_gaussian_integer_kernel(
+        Data64* in1, Data64* real_rns, Data64* imag_rns, Data64* out,
+        Data64* ntt_table, Modulus64* modulus, int n_power);
+
+    __global__ void cipher_mult_by_gaussian_integer_and_add_kernel(
+        Data64* in1, Data64* real_rns, Data64* imag_rns, Data64* accumulator,
+        Data64* ntt_table, Modulus64* modulus, int n_power);
+
 } // namespace heongpu
 #endif // HEONGPU_MULTIPLICATION_H

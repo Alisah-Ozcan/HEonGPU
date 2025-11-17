@@ -4,6 +4,7 @@
 // Developer: Alişah Özcan
 
 #include "util.cuh"
+#include <map>
 
 namespace heongpu
 {
@@ -557,6 +558,85 @@ namespace heongpu
         }
     }
 
+    std::vector<std::vector<int>> bsgs_index(const std::vector<int>& array,
+                                             int N1, std::vector<int>& rot_n1,
+                                             std::vector<int>& rot_n2)
+    {
+        std::vector<std::vector<int>> result;
+        int n = array.size();
+
+        std::map<int, bool> rot_n1_map;
+        std::map<int, bool> rot_n2_map;
+
+        std::vector<int> temp;
+        int prev_idx_n1 = (array[0] / N1) * N1;
+        for (const auto& rot : array)
+        {
+            int idx_n1 = (rot / N1) * N1;
+            if (idx_n1 != prev_idx_n1)
+            {
+                result.push_back(temp);
+                temp.clear();
+                prev_idx_n1 = idx_n1;
+            }
+
+            int idx_n2 = rot % N1;
+
+            temp.push_back(idx_n1 + idx_n2);
+
+            rot_n1_map[idx_n1] = true;
+            rot_n2_map[idx_n2] = true;
+        }
+
+        result.push_back(temp);
+
+        for (const auto& [key, _] : rot_n1_map)
+        {
+            rot_n1.push_back(key);
+        }
+        for (const auto& [key, _] : rot_n2_map)
+        {
+            rot_n2.push_back(key);
+        }
+        return result;
+    }
+
+    int find_best_bsgs_split(const std::vector<int>& array, int max_N,
+                             float bsgs_ratio)
+    {
+        const float epsilon = 1e-8f;  
+
+        for (int N1 = 1; N1 < max_N; N1 <<= 1)
+        {
+            std::vector<int> rot_n1;
+            std::vector<int> rot_n2;
+            bsgs_index(array, N1, rot_n1, rot_n2);
+
+            float current_ratio = float(rot_n2.size() - 1) / float(rot_n1.size() - 1);
+
+            if (std::abs(current_ratio - bsgs_ratio) < epsilon)
+            {
+                return N1;
+            }
+            if (current_ratio > bsgs_ratio)
+            {
+                return N1 / 2;
+            }
+        }
+
+        return 1;
+    }
+
+    std::vector<std::vector<int>> seperate_func_v2(const std::vector<int>& A,
+                                                   int slots,
+                                                   std::vector<int>& rot_n1,
+                                                   std::vector<int>& rot_n2,
+                                                   float bsgs_ratio)
+    {
+        int N1 = find_best_bsgs_split(A, slots, bsgs_ratio);
+        return bsgs_index(A, N1, rot_n1, rot_n2);
+    }
+
     std::vector<int> unique_sort(const std::vector<int>& input)
     {
         std::set<int> result(input.begin(), input.end());
@@ -587,6 +667,15 @@ namespace heongpu
         {
             throw std::out_of_range("taylor_number must be in range [6, 15]");
         }
+    }
+
+    BootstrappingConfigV2::BootstrappingConfigV2(
+        EncodingMatrixConfig stc_config, EvalModConfig eval_mod_config,
+        EncodingMatrixConfig cts_config)
+        : CtoS_piece_(cts_config.piece_), StoC_piece_(stc_config.piece_),
+          stc_config_(stc_config), eval_mod_config_(eval_mod_config),
+          cts_config_(cts_config)
+    {
     }
 
     //////////////////////////

@@ -59,6 +59,9 @@ namespace heongpu
         int R_matrix_counter, int output_index_counter, int mul_index,
         bool first, bool last, int n_power);
 
+    __global__ void complex_vector_scale_kernel(Complex64* data,
+                                                Complex64 scale, int n_power);
+
     __global__ void vector_rotate_kernel(Complex64* input, Complex64* output,
                                          int rotate_index, int n_power);
 
@@ -66,6 +69,9 @@ namespace heongpu
     // prime)
     __global__ void mod_raise_kernel(Data64* input, Data64* output,
                                      Modulus64* modulus, int n_power);
+
+    __global__ void mod_raise_kernel_v2(Data64* input, Data64* output,
+                                        Modulus64* modulus, int n_power);
 
     ///////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////

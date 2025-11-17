@@ -27,6 +27,7 @@ target_include_directories(
     heongpu
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/host>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/host/ckks>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/kernel>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/util>
     $<INSTALL_INTERFACE:include/HEonGPU-${PROJECT_VERSION}>
@@ -37,6 +38,7 @@ target_link_libraries(heongpu PUBLIC
     fft
     rngongpu
     gmp
+    ntl
     rmm
     CUDA::curand
     ZLIB::ZLIB

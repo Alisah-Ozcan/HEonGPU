@@ -306,4 +306,16 @@ namespace heongpu
         }
     }
 
+    __global__ void set_zero_cipher_ckks_poly(Data64* in1, Modulus64* modulus,
+                                              int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
+        int idy = blockIdx.y; // rns count
+        int idz = blockIdx.z; // cipher count
+
+        int location = idx + (idy << n_power) + ((gridDim.y * idz) << n_power);
+
+        in1[location] = 0;
+    }
+
 } // namespace heongpu
