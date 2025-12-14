@@ -57,6 +57,122 @@ namespace heongpu
     bool coefficient_validator(const std::vector<int>& log_Q_bases_bit_sizes,
                                const std::vector<int>& log_P_bases_bit_sizes);
 
+    enum class SineType
+    {
+        COS1,
+    };
+
+    enum class PolyType
+    {
+        MONOMIAL,
+        CHEBYSHEV
+    };
+
+    enum class LinearTransformType
+    {
+        COEFFS_TO_SLOTS,
+        SLOTS_TO_COEFFS
+    };
+
+    struct EvalModConfig
+    {
+        Data64 Q_;
+        int level_start_;
+        double message_ratio_;
+        int K_;
+        int sine_deg_;
+        int double_angle_;
+        int arcsine_deg_;
+        double scaling_factor_;
+        int piece_;
+        double sqrt2pi_;
+        double q_diff_;
+
+        SineType sine_type_ = SineType::COS1;
+        PolyType poly_type_ = PolyType::CHEBYSHEV;
+
+        EvalModConfig()
+            : sine_deg_(0), double_angle_(0), arcsine_deg_(0), level_start_(0),
+              K_(0), message_ratio_(0.0), Q_(0), scaling_factor_(0.0), piece_(0)
+        {
+        }
+
+        EvalModConfig(int level_start)
+            : sine_deg_(30), double_angle_(3), arcsine_deg_(0),
+              level_start_(level_start), K_(16), message_ratio_(256.0), Q_(0),
+              scaling_factor_(0.0)
+        {
+        }
+
+        EvalModConfig(Data64 Q, int level_start, double message_ratio, int K,
+                      int sine_deg, int double_angle, int arcsine_deg,
+                      double scaling_factor)
+            : sine_deg_(sine_deg), double_angle_(double_angle),
+              arcsine_deg_(arcsine_deg), level_start_(level_start), K_(K),
+              message_ratio_(message_ratio), Q_(Q),
+              scaling_factor_(scaling_factor)
+        {
+            // Calculate q_diff when Q is provided
+            if (Q != 0)
+            {
+                q_diff_ =
+                    static_cast<double>(Q) /
+                    std::pow(2.0,
+                             std::round(std::log2(static_cast<double>(Q))));
+            }
+            else
+            {
+                q_diff_ = 0.0;
+            }
+
+            // Calculate sqrt2pi when Q and scaling_factor are provided
+            if (Q != 0 && scaling_factor != 0.0)
+            {
+                sqrt2pi_ = std::pow((static_cast<double>(Q) * 0.5) /
+                                        (scaling_factor * M_PI),
+                                    1.0 / std::pow(2.0, double_angle));
+            }
+            else
+            {
+                sqrt2pi_ = 0.0;
+            }
+        }
+    };
+
+    struct EncodingMatrixConfig
+    {
+        LinearTransformType lt_type_;
+        int level_start_;
+        double bsgs_ratio_;
+        int piece_;
+
+        EncodingMatrixConfig()
+            : lt_type_(LinearTransformType::COEFFS_TO_SLOTS), level_start_(0),
+              bsgs_ratio_(0.0), piece_(0)
+        {
+        }
+
+        EncodingMatrixConfig(LinearTransformType lt_type, int level_start)
+            : lt_type_(lt_type), level_start_(level_start), bsgs_ratio_(2.0)
+        {
+            if (lt_type == LinearTransformType::COEFFS_TO_SLOTS)
+            {
+                piece_ = 4;
+            }
+            else
+            {
+                piece_ = 3;
+            }
+        }
+
+        EncodingMatrixConfig(LinearTransformType lt_type, int level_start,
+                             double bsgs_ratio, int piece)
+            : lt_type_(lt_type), level_start_(level_start),
+              bsgs_ratio_(bsgs_ratio), piece_(piece)
+        {
+        }
+    };
+
     struct BootstrappingConfig
     {
         int CtoS_piece_; // Default: 3
@@ -69,6 +185,20 @@ namespace heongpu
 
       private:
         void validate(); // Validates the configuration input values
+    };
+
+    struct BootstrappingConfigV2
+    {
+        int CtoS_piece_;
+        int StoC_piece_;
+
+        EncodingMatrixConfig cts_config_;
+        EncodingMatrixConfig stc_config_;
+        EvalModConfig eval_mod_config_;
+
+        BootstrappingConfigV2(EncodingMatrixConfig stc_config,
+                              EvalModConfig eval_mod_config,
+                              EncodingMatrixConfig cts_config);
     };
 
     Data64 extendedGCD(Data64 a, Data64 b, Data64& x, Data64& y);
@@ -126,6 +256,16 @@ namespace heongpu
                                               int chunk_size);
 
     std::vector<std::vector<int>> seperate_func(const std::vector<int>& A);
+
+    std::vector<std::vector<int>> bsgs_index(const std::vector<int>& array,
+                                             int N1, std::vector<int>& rot_n1,
+                                             std::vector<int>& rot_n2);
+
+    std::vector<std::vector<int>> seperate_func_v2(const std::vector<int>& A,
+                                                   int slots,
+                                                   std::vector<int>& rot_n1,
+                                                   std::vector<int>& rot_n2,
+                                                   float bsgs_ratio);
 
     std::vector<int> unique_sort(const std::vector<int>& input);
 

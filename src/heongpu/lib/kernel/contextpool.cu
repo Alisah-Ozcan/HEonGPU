@@ -126,6 +126,8 @@ namespace heongpu
                 {
                     n_ = poly_degree;
 
+                    m = P_size;
+
                     first_Qtilda_ = modulus.size();
                     first_Q_ = first_Qtilda_ - P_size;
                     first_P_ = P_size;

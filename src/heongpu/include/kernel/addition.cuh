@@ -72,6 +72,9 @@ namespace heongpu
                                           Modulus64* modulus, double two_pow_64,
                                           int n_power);
 
+    __global__ void set_zero_cipher_ckks_poly(Data64* in1, Modulus64* modulus,
+                                              int n_power);
+
 } // namespace heongpu
 
 #endif // HEONGPU_ADDITION_H

@@ -312,6 +312,18 @@ namespace heongpu
         }
     }
 
+    __global__ void complex_vector_scale_kernel(Complex64* data,
+                                                Complex64 scaling, int n_power)
+    {
+        int idx =
+            blockIdx.x * blockDim.x + threadIdx.x; // index within each vector
+        int idy = blockIdx.y; // matrix index
+
+        int location = idx + (idy << n_power);
+
+        data[location] = data[location] * scaling;
+    }
+
     __global__ void vector_rotate_kernel(Complex64* input, Complex64* output,
                                          int rotate_index, int n_power)
     {
@@ -339,6 +351,45 @@ namespace heongpu
         Data64 result = OPERATOR_GPU_64::reduce_forced(input_r, modulus[idy]);
 
         output[location_output] = result;
+    }
+
+    __global__ void mod_raise_kernel_v2(Data64* input, Data64* output,
+                                        Modulus64* modulus, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
+        int idy = blockIdx.y; // rns count
+        int idz = blockIdx.z; // cipher count
+
+        int location_input = idx + (idz << n_power);
+        int location_output =
+            idx + (idy << n_power) + ((gridDim.y * idz) << n_power);
+
+        Data64 q0 = modulus[0].value;
+        Data64 qi = modulus[idy].value;
+
+        // Get coefficient from level 0
+        Data64 coeff = input[location_input];
+
+        // Centered reduction around q0
+        // If coeff >= q0/2, use negative representation: coeff = q0 - coeff
+        Data64 pos = 1;
+        Data64 neg = 0;
+        if (coeff >= (q0 >> 1))
+        {
+            coeff = q0 - coeff;
+            pos = 0;
+            neg = 1;
+        }
+
+        if (idy == 0)
+        {
+            output[location_output] = input[location_input];
+        }
+        else
+        {
+            Data64 tmp = OPERATOR_GPU_64::reduce_forced(coeff, modulus[idy]);
+            output[location_output] = tmp * pos + (qi - tmp) * neg;
+        }
     }
 
     __global__ void
