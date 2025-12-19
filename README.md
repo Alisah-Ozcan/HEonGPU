@@ -142,10 +142,10 @@ HEonGPU now includes support for **Multiparty Computation (MPC)** protocols, pro
 - [GPU-FFT](https://github.com/Alisah-Ozcan/GPU-FFT)
 - [RNGonGPU](https://github.com/Alisah-Ozcan/RNGonGPU)
 - [RMM](https://github.com/rapidsai/rmm)
-- [Thrust](https://github.com/NVIDIA/thrust)
 - [GoogleTest](https://github.com/google/googletest)
 
-HEonGPU automatically handle third-party dependencies like GPU-NTT, GPU-FFT, RMM, Thrust, GoogleTest.
+HEonGPU automatically handle third-party dependencies like GPU-NTT, GPU-FFT, RMM, GoogleTest.
+Default CUDA architectures: `80;86;89;90`. Override with `-D CMAKE_CUDA_ARCHITECTURES=<...>` if needed.
 
 ### Build & Install
 
@@ -163,33 +163,31 @@ To build and install HEonGPU, follow the steps below. This includes configuring 
 </div>
 
 ```bash
-$ cmake -S . -D CMAKE_CUDA_ARCHITECTURES=89 -B build
+$ cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
 $ cmake --build ./build/
 $ sudo cmake --install build
 ```
+Available build types: `Debug`, `Release` (default), `RelWithDebInfo`, `MinSizeRel`. Override with `-D CMAKE_BUILD_TYPE=<type>`. These propagate to all bundled libraries (GPU-FFT, GPU-NTT, RNGonGPU).
 
 ## Testing & Benchmarking
 
 To run tests:
 
-```bash
-$ cmake -S . -D HEonGPU_BUILD_TESTS=ON -D CMAKE_CUDA_ARCHITECTURES=89 -B build
+$ cmake -S . -D HEonGPU_BUILD_TESTS=ON -B build -D CMAKE_BUILD_TYPE=Debug
 $ cmake --build ./build/
 
 $ ./build/bin/test/<...>
 $ Example: ./build/bin/test/bfv_addition_testcases
 ```
 Or:
-```bash
-$ cmake -S . -D HEonGPU_BUILD_TESTS=ON -D CMAKE_CUDA_ARCHITECTURES=89 -B build
+$ cmake -S . -D HEonGPU_BUILD_TESTS=ON -B build -D CMAKE_BUILD_TYPE=Debug
 $ cmake --build ./build/
 $ cmake --build build --target test
 ```
 
 To run benchmarks:
 
-```bash
-$ cmake -S . -D HEonGPU_BUILD_BENCHMARKS=ON -D CMAKE_CUDA_ARCHITECTURES=89 -B build
+$ cmake -S . -D HEonGPU_BUILD_BENCHMARKS=ON -B build -D CMAKE_BUILD_TYPE=Release
 $ cmake --build ./build/
 
 $ ./build/bin/benchmark/<...>
@@ -201,7 +199,7 @@ $ Example: ./build/bin/benchmark/bfv_benchmark
 To run examples:
 
 ```bash
-$ cmake -S . -D HEonGPU_BUILD_EXAMPLES=ON -D CMAKE_CUDA_ARCHITECTURES=89 -B build
+$ cmake -S . -D HEonGPU_BUILD_EXAMPLES=ON -D CMAKE_CUDA_ARCHITECTURES=89 -B build -D CMAKE_BUILD_TYPE=Release
 $ cmake --build ./build/
 
 $ ./build/bin/examples/<...>
@@ -211,7 +209,7 @@ $ Example: ./build/bin/examples/1_basic_bfv
 ### Toy Example
 
 ```c++
-#include "heongpu.cuh"
+#include "heongpu.hpp"
 
 int main() {
     cudaSetDevice(0); // Use it for memory pool
