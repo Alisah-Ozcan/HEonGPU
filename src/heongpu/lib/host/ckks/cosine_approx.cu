@@ -14,7 +14,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-#include "cosine_approx.cuh"
+#include "ckks/cosine_approx.cuh"
 
 using namespace NTL;
 

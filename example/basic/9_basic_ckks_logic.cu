@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#include "heongpu.cuh"
+#include "heongpu.hpp"
 #include "../example_util.h"
 #include <omp.h>
 

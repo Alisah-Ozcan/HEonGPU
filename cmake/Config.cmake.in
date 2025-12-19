@@ -7,5 +7,17 @@ find_dependency(OpenSSL REQUIRED)
 find_dependency(RNGonGPU REQUIRED)
 find_dependency(ZLIB REQUIRED)
 
-include("${CMAKE_CURRENT_LIST_DIR}/@HEonGPU_TARGETS_EXPORT_NAME@.cmake")
+if(NOT TARGET GMP::GMP)
+    find_library(GMP_LIBRARY NAMES gmp)
+    find_path(GMP_INCLUDE_DIR gmp.h)
+    if(NOT GMP_LIBRARY OR NOT GMP_INCLUDE_DIR)
+        message(FATAL_ERROR "GMP not found. Please install the GMP development package.")
+    endif()
+    add_library(GMP::GMP UNKNOWN IMPORTED)
+    set_target_properties(GMP::GMP PROPERTIES
+        IMPORTED_LOCATION ${GMP_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${GMP_INCLUDE_DIR}
+    )
+endif()
 
+include("${CMAKE_CURRENT_LIST_DIR}/@HEonGPU_TARGETS_EXPORT_NAME@.cmake")

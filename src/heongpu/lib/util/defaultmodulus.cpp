@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#include "defaultmodulus.cuh"
+#include "defaultmodulus.hpp"
 
 namespace heongpu
 {

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#include "contextpool.cuh"
+#include "contextpool.hpp"
 
 namespace heongpu
 {

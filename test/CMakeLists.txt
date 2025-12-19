@@ -43,8 +43,8 @@ function(add_test exe source)
     add_executable(${exe} ${source})
     target_link_libraries(${exe} PRIVATE heongpu CUDA::cudart gtest_main)
     set_target_properties(${exe} PROPERTIES
-        CUDA_SEPARABLE_COMPILATION OFF
-        POSITION_INDEPENDENT_CODE ON
+        CUDA_SEPARABLE_COMPILATION ON
+        POSITION_INDEPENDENT_CODE OFF
         CUDA_RUNTIME_LIBRARY Static
     )
     gtest_discover_tests(${exe}

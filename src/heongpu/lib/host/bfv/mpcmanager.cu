@@ -105,6 +105,7 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
             .ntt_type = gpuntt::FORWARD,
+            .ntt_layout = gpuntt::PerPolynomial,            
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
@@ -218,6 +219,7 @@ namespace heongpu
                         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                             .n_power = n_power,
                             .ntt_type = gpuntt::FORWARD,
+                            .ntt_layout = gpuntt::PerPolynomial,                            
                             .reduction_poly =
                                 gpuntt::ReductionPolynomial::X_N_plus,
                             .zero_padding = false,
@@ -313,6 +315,7 @@ namespace heongpu
                                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt =
                                     {.n_power = n_power,
                                      .ntt_type = gpuntt::FORWARD,
+                                     .ntt_layout = gpuntt::PerPolynomial,                                     
                                      .reduction_poly =
                                          gpuntt::ReductionPolynomial::X_N_plus,
                                      .zero_padding = false,
@@ -417,6 +420,7 @@ namespace heongpu
                         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                             .n_power = n_power,
                             .ntt_type = gpuntt::FORWARD,
+                            .ntt_layout = gpuntt::PerPolynomial,                            
                             .reduction_poly =
                                 gpuntt::ReductionPolynomial::X_N_plus,
                             .zero_padding = false,
@@ -513,6 +517,7 @@ namespace heongpu
                                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt =
                                     {.n_power = n_power,
                                      .ntt_type = gpuntt::FORWARD,
+                                     .ntt_layout = gpuntt::PerPolynomial,                                     
                                      .reduction_poly =
                                          gpuntt::ReductionPolynomial::X_N_plus,
                                      .zero_padding = false,
@@ -772,6 +777,7 @@ namespace heongpu
                         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                             .n_power = n_power,
                             .ntt_type = gpuntt::FORWARD,
+                            .ntt_layout = gpuntt::PerPolynomial,                            
                             .reduction_poly =
                                 gpuntt::ReductionPolynomial::X_N_plus,
                             .zero_padding = false,
@@ -821,6 +827,7 @@ namespace heongpu
                     gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                         .n_power = n_power,
                         .ntt_type = gpuntt::FORWARD,
+                        .ntt_layout = gpuntt::PerPolynomial,                        
                         .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
                         .zero_padding = false,
                         .stream = options.stream_};
@@ -868,6 +875,7 @@ namespace heongpu
                         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                             .n_power = n_power,
                             .ntt_type = gpuntt::FORWARD,
+                            .ntt_layout = gpuntt::PerPolynomial,                            
                             .reduction_poly =
                                 gpuntt::ReductionPolynomial::X_N_plus,
                             .zero_padding = false,
@@ -917,6 +925,7 @@ namespace heongpu
                     gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                         .n_power = n_power,
                         .ntt_type = gpuntt::FORWARD,
+                        .ntt_layout = gpuntt::PerPolynomial,                        
                         .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
                         .zero_padding = false,
                         .stream = options.stream_};
@@ -1010,6 +1019,7 @@ namespace heongpu
                         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                             .n_power = n_power,
                             .ntt_type = gpuntt::FORWARD,
+                            .ntt_layout = gpuntt::PerPolynomial,                            
                             .reduction_poly =
                                 gpuntt::ReductionPolynomial::X_N_plus,
                             .zero_padding = false,
@@ -1061,6 +1071,7 @@ namespace heongpu
                     gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                         .n_power = n_power,
                         .ntt_type = gpuntt::FORWARD,
+                        .ntt_layout = gpuntt::PerPolynomial,                        
                         .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
                         .zero_padding = false,
                         .stream = options.stream_};
@@ -1108,6 +1119,7 @@ namespace heongpu
                         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                             .n_power = n_power,
                             .ntt_type = gpuntt::FORWARD,
+                            .ntt_layout = gpuntt::PerPolynomial,                            
                             .reduction_poly =
                                 gpuntt::ReductionPolynomial::X_N_plus,
                             .zero_padding = false,
@@ -1159,6 +1171,7 @@ namespace heongpu
                     gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                         .n_power = n_power,
                         .ntt_type = gpuntt::FORWARD,
+                        .ntt_layout = gpuntt::PerPolynomial,                        
                         .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
                         .zero_padding = false,
                         .stream = options.stream_};
@@ -1387,6 +1400,7 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
             .ntt_type = gpuntt::FORWARD,
+            .ntt_layout = gpuntt::PerPolynomial,            
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
@@ -1410,6 +1424,7 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = gpuntt::INVERSE,
+            .ntt_layout = gpuntt::PerPolynomial,            
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .mod_inverse = n_inverse_->data(),
@@ -1417,7 +1432,7 @@ namespace heongpu
 
         DeviceVector<Data64> output_memory((2 * n * Q_size_), stream);
 
-        gpuntt::GPU_NTT(ct1_temp, output_memory.data() + (Q_size_ * n),
+        gpuntt::GPU_INTT(ct1_temp, output_memory.data() + (Q_size_ * n),
                         intt_table_->data(), modulus_->data(), cfg_intt,
                         Q_size_, Q_size_);
 
@@ -1521,6 +1536,7 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
             .ntt_type = gpuntt::FORWARD,
+            .ntt_layout = gpuntt::PerPolynomial,            
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
@@ -1548,12 +1564,13 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = gpuntt::INVERSE,
+            .ntt_layout = gpuntt::PerPolynomial,            
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .mod_inverse = n_inverse_->data(),
             .stream = stream};
 
-        gpuntt::GPU_NTT_Inplace(output_memory.data(), intt_table_->data(),
+        gpuntt::GPU_INTT_Inplace(output_memory.data(), intt_table_->data(),
                                 modulus_->data(), cfg_intt, 2 * Q_size_,
                                 Q_size_);
 
@@ -1626,12 +1643,13 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = gpuntt::INVERSE,
+            .ntt_layout = gpuntt::PerPolynomial,            
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .mod_inverse = n_inverse_->data(),
             .stream = stream};
 
-        gpuntt::GPU_NTT_Inplace(ct1, intt_table_->data(), modulus_->data(),
+        gpuntt::GPU_INTT_Inplace(ct1, intt_table_->data(), modulus_->data(),
                                 cfg_intt, Q_size_, Q_size_);
 
         col_boot_enc<<<dim3((n >> 8), Q_size_, 1), 256, 0, stream>>>(

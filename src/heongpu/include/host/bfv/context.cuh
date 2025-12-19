@@ -11,10 +11,10 @@
 #include "devicevector.cuh"
 #include "hostvector.cuh"
 #include "secstdparams.h"
-#include "defaultmodulus.cuh"
+#include "defaultmodulus.hpp"
 #include "random.cuh"
 #include <gmp.h>
-#include "contextpool.cuh"
+#include "contextpool.hpp"
 #include <ostream>
 #include <istream>
 

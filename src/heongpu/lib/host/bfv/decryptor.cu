@@ -90,6 +90,7 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
             .ntt_type = gpuntt::FORWARD,
+            .ntt_layout = gpuntt::PerPolynomial,
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
@@ -114,6 +115,7 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = gpuntt::INVERSE,
+            .ntt_layout = gpuntt::PerPolynomial,            
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .mod_inverse = n_inverse_->data(),
@@ -122,10 +124,10 @@ namespace heongpu
         if (ciphertext.in_ntt_domain_)
         {
             // TODO: merge these NTTs
-            gpuntt::GPU_NTT(ct0, ct0_temp, intt_table_->data(),
+            gpuntt::GPU_INTT(ct0, ct0_temp, intt_table_->data(),
                             modulus_->data(), cfg_intt, Q_size_, Q_size_);
 
-            gpuntt::GPU_NTT_Inplace(ct1_temp, intt_table_->data(),
+            gpuntt::GPU_INTT_Inplace(ct1_temp, intt_table_->data(),
                                     modulus_->data(), cfg_intt, Q_size_,
                                     Q_size_);
 
@@ -133,7 +135,7 @@ namespace heongpu
         }
         else
         {
-            gpuntt::GPU_NTT_Inplace(ct1_temp, intt_table_->data(),
+            gpuntt::GPU_INTT_Inplace(ct1_temp, intt_table_->data(),
                                     modulus_->data(), cfg_intt, Q_size_,
                                     Q_size_);
         }
@@ -160,6 +162,7 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
             .ntt_type = gpuntt::FORWARD,
+            .ntt_layout = gpuntt::PerPolynomial,
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .stream = stream};
@@ -174,12 +177,13 @@ namespace heongpu
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
             .n_power = n_power,
             .ntt_type = gpuntt::INVERSE,
+            .ntt_layout = gpuntt::PerPolynomial,            
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
             .mod_inverse = n_inverse_->data(),
             .stream = stream};
 
-        gpuntt::GPU_NTT_Inplace(ct1, intt_table_->data(), modulus_->data(),
+        gpuntt::GPU_INTT_Inplace(ct1, intt_table_->data(), modulus_->data(),
                                 cfg_intt, 2 * Q_size_, Q_size_);
 
         decryption_kernelx3<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
@@ -204,6 +208,7 @@ namespace heongpu
                 gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
                     .n_power = n_power,
                     .ntt_type = gpuntt::FORWARD,
+                    .ntt_layout = gpuntt::PerPolynomial,
                     .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
                     .stream = options.stream_};
@@ -221,12 +226,13 @@ namespace heongpu
                 gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
                     .n_power = n_power,
                     .ntt_type = gpuntt::INVERSE,
+                    .ntt_layout = gpuntt::PerPolynomial,                    
                     .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
                     .zero_padding = false,
                     .mod_inverse = n_inverse_->data(),
                     .stream = options.stream_};
 
-                gpuntt::GPU_NTT_Inplace(temp_memory.data(), intt_table_->data(),
+                gpuntt::GPU_INTT_Inplace(temp_memory.data(), intt_table_->data(),
                                         modulus_->data(), cfg_intt, Q_size_,
                                         Q_size_);
 

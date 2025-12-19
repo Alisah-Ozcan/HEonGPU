@@ -304,11 +304,13 @@ namespace heongpu
     //////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////
 
-    static __forceinline__ __device__ uint32_t warp_reduce(uint32_t input)
+    static __device__ __forceinline__ uint32_t warp_reduce(uint32_t input)
     {
         for (int offset = warpSize / 2; offset > 0; offset >>= 1)
         {
+#if defined(__CUDA_ARCH__)
             input += __shfl_down_sync(0xFFFFFFFF, input, offset);
+#endif
         }
         return input;
     }

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Yanbin Li
 
-#include "heongpu.cuh"
+#include "heongpu.hpp"
 #include "ckks/precision.cuh"
 #include "../example_util.h"
 

@@ -4,7 +4,7 @@
 // Developer: Yanbin Li
 
 #include <cmath>
-#include "chebyshev_interpolation.cuh"
+#include "ckks/chebyshev_interpolation.cuh"
 
 namespace heongpu
 {

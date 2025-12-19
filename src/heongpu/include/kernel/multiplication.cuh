@@ -61,11 +61,11 @@ namespace heongpu
         int n_power);
 
     __global__ void cipher_div_by_i_kernel(Data64* in1, Data64* out,
-                                           unsigned long long* ntt_table,
+                                           Data64* ntt_table,
                                            Modulus64* modulus, int n_power);
 
     __global__ void cipher_mult_by_i_kernel(Data64* in1, Data64* out,
-                                            unsigned long long* ntt_table,
+                                            Data64* ntt_table,
                                             Modulus64* modulus, int n_power);
 
     __global__ void cipher_mult_by_gaussian_integer_kernel(

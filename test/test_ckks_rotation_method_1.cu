@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#include "heongpu.cuh"
+#include "heongpu.hpp"
 #include <gtest/gtest.h>
 
 template <typename T>
