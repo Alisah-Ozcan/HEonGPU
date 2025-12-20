@@ -187,7 +187,7 @@ $ cmake --build build --target test
 
 To run benchmarks:
 
-$ cmake -S . -D HEonGPU_BUILD_BENCHMARKS=ON -B build -D CMAKE_BUILD_TYPE=Release
+$ cmake -S . -D HEonGPU_BUILD_BENCHMARKS=ON -D CMAKE_CUDA_ARCHITECTURES=89 -B build -D CMAKE_BUILD_TYPE=Release
 $ cmake --build ./build/
 
 $ ./build/bin/benchmark/<...>
@@ -209,7 +209,7 @@ $ Example: ./build/bin/examples/1_basic_bfv
 ### Toy Example
 
 ```c++
-#include "heongpu.hpp"
+#include <heongpu/heongpu.hpp>
 
 int main() {
     cudaSetDevice(0); // Use it for memory pool
@@ -255,11 +255,11 @@ int main() {
 }
 ```
 
-## Configuration Header ([define.h](src/heongpu/include/kernel/defines.h))
+## Configuration Header ([define.h](src/include/heongpu/kernel/defines.h))
 
-The [define.h](src/heongpu/include/kernel/defines.h) file is an essential configuration file for HEonGPU, containing key settings that define the library's limits and capabilities, including polynomial degrees, modulus bit-lengths, and memory pool sizes. 
+The [define.h](src/include/heongpu/kernel/defines.h) file is an essential configuration file for HEonGPU, containing key settings that define the library's limits and capabilities, including polynomial degrees, modulus bit-lengths, and memory pool sizes. 
 
-Features in [define.h](src/heongpu/include/kernel/defines.h):
+Features in [define.h](src/include/heongpu/kernel/defines.h):
 - **Polynomial Degree:** `MAX_POLY_DEGREE` (65536) and `MIN_POLY_DEGREE` (4096) define the range for polynomial degrees used in FHE.
 
 - **Modulus Bit-Length:** `MAX_USER_DEFINED_MOD_BIT_COUNT` (60), `MIN_USER_DEFINED_MOD_BIT_COUNT` (30), `MAX_MOD_BIT_COUNT` (61), `MIN_MOD_BIT_COUNT` (30) specify valid bit-lengths for user-defined and general modulus values.

@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Yanbin Li
 
-#include "heongpu.hpp"
-#include "ckks/precision.cuh"
+#include <heongpu/heongpu.hpp>
 #include "../example_util.h"
 
 int main(int argc, char* argv[])
@@ -134,7 +133,7 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "Level before bootstrapping: " << C1.level() << std::endl;
-    
+
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -142,7 +141,8 @@ int main(int argc, char* argv[])
     cudaEventRecord(start);
     heongpu::Ciphertext<heongpu::Scheme::CKKS> cipher_boot =
         operators.regular_bootstrapping_v2(C1, galois_key, relin_key,
-                                   swk_dense_to_sparse, swk_sparse_to_dense);
+                                           swk_dense_to_sparse,
+                                           swk_sparse_to_dense);
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
 
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
     cudaEventElapsedTime(&milliseconds, start, stop);
 
     std::cout << "Level after bootstrapping: " << cipher_boot.level()
-            << std::endl;
+              << std::endl;
     std::cout << "Bootstrapping time: " << milliseconds << " ms ("
               << milliseconds / 1000.0 << " seconds)" << std::endl;
 

@@ -8,7 +8,7 @@ This section covers advanced usage patterns, configuration options, and integrat
 Configuration (``defines.h``)
 -----------------------------
 
-The ``src/heongpu/include/kernel/defines.h`` file is an essential configuration header that contains key settings defining the library's limits and default behaviors. Advanced users can modify these values to tune the library for specific hardware or demanding use cases.
+The ``src/include/heongpu/kernel/defines.h`` file is an essential configuration header that contains key settings defining the library's limits and default behaviors. Advanced users can modify these values to tune the library for specific hardware or demanding use cases.
 
 Key settings include:
 

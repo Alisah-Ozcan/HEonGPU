@@ -98,7 +98,7 @@ Currently, taylor approximation is used for `Approximate Modular Reduction`; how
 
 The vandermonde matrix is automatically generated on GPU based on the `BootstrappingConfig` class and stored on the GPU in a ready-to-use and encoded format for processing.
 
-> **⚠ Warning:** Bootstrapping was tested on a system with 128 GB RAM and an NVIDIA RTX 4090(24 GB). If you are working with a system with lower specifications, please refer to [define.h](../../src/heongpu/include/kernel/defines.h) and adjust the memory pool settings according to your system.
+> **⚠ Warning:** Bootstrapping was tested on a system with 128 GB RAM and an NVIDIA RTX 4090(24 GB). If you are working with a system with lower specifications, please refer to [define.h](../../src/include/heongpu/kernel/defines.h) and adjust the memory pool settings according to your system.
 
 
 ### The papers used while implementing HEonGPU CKKS bootstrapping

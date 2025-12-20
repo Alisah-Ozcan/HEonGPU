@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Alişah Özcan
 
-#include "heongpu.hpp"
+#include <heongpu/heongpu.hpp>
 #include <iostream>
 #include <vector>
 
