@@ -1061,19 +1061,6 @@ namespace heongpu
                                         "Invalid Key Switching Type");
                                     break;
                             }
-
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
-                            output_.cipher_size_ = 2;
-                            output_.depth_ = input1_.depth_;
-                            output_.scale_ = input1_.scale_;
-                            output_.in_ntt_domain_ = input1_.in_ntt_domain_;
-                            output_.rescale_required_ =
-                                input1_.rescale_required_;
-                            output_.relinearization_required_ =
-                                input1_.relinearization_required_;
-                            output_.ciphertext_generated_ = true;
                         },
                         options);
                 },

@@ -1459,12 +1459,12 @@ namespace heongpu
                 required_galoiselt.push_back(galois_key.galois_elt[index]);
             }
 
-            Ciphertext<Scheme::CKKS>& in_data = input1;
+            Ciphertext<Scheme::CKKS>* current_input = &input1;
             for (auto& galois_elt : required_galoiselt)
             {
-                apply_galois_ckks_method_I(in_data, output, galois_key,
+                apply_galois_ckks_method_I(*current_input, output, galois_key,
                                            galois_elt, stream);
-                in_data = output;
+                current_input = &output;
             }
         }
     }
@@ -1500,12 +1500,12 @@ namespace heongpu
                 required_galoiselt.push_back(galois_key.galois_elt[index]);
             }
 
-            Ciphertext<Scheme::CKKS>& in_data = input1;
+            Ciphertext<Scheme::CKKS>* current_input = &input1;
             for (auto& galois_elt : required_galoiselt)
             {
-                apply_galois_ckks_method_II(in_data, output, galois_key,
+                apply_galois_ckks_method_II(*current_input, output, galois_key,
                                             galois_elt, stream);
-                in_data = output;
+                current_input = &output;
             }
         }
     }
@@ -1620,6 +1620,17 @@ namespace heongpu
                                 2 * current_decomp_count, current_decomp_count);
 
         output.memory_set(std::move(output_memory));
+
+        output.scheme_ = scheme_;
+        output.ring_size_ = n;
+        output.coeff_modulus_count_ = Q_size_;
+        output.cipher_size_ = 2;
+        output.depth_ = input1.depth_;
+        output.scale_ = input1.scale_;
+        output.in_ntt_domain_ = input1.in_ntt_domain_;
+        output.rescale_required_ = input1.rescale_required_;
+        output.relinearization_required_ = input1.relinearization_required_;
+        output.ciphertext_generated_ = true;
     }
 
     __host__ void HEOperator<Scheme::CKKS>::apply_galois_ckks_method_II(
