@@ -2296,6 +2296,33 @@ namespace heongpu
             const ExecutionOptions& options = ExecutionOptions());
 
         /**
+         * @brief Performs slim bootstrapping with non-sparse key support (v2).
+         *
+         * Slim bootstrapping is intended for real-valued CKKS messages and
+         * starts with SlotToCoeff. EvalMod is applied only to the real part,
+         * and the output remains in the slot domain.
+         *
+         * @param input1 Input ciphertext (must be at the configured StoC start
+         * level).
+         * @param galois_key Galois key for rotation operations.
+         * @param relin_key Relinearization key for EvalMod polynomial
+         * evaluation.
+         * @param swk_dense_to_sparse Optional switch key from dense to sparse
+         * representation.
+         * @param swk_sparse_to_dense Optional switch key from sparse to dense
+         * representation.
+         * @param options Execution options (stream, storage, etc.).
+         * @return Ciphertext Bootstrapped ciphertext in slots.
+         */
+        __host__ Ciphertext<Scheme::CKKS> slim_bootstrapping_v2(
+            Ciphertext<Scheme::CKKS>& input1,
+            Galoiskey<Scheme::CKKS>& galois_key,
+            Relinkey<Scheme::CKKS>& relin_key,
+            Switchkey<Scheme::CKKS>* swk_dense_to_sparse = nullptr,
+            Switchkey<Scheme::CKKS>* swk_sparse_to_dense = nullptr,
+            const ExecutionOptions& options = ExecutionOptions());
+
+        /**
          * @brief Performs slim bootstrapping on a ciphertext.(For more detail
          * please check README.md)
          *

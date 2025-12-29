@@ -6318,6 +6318,95 @@ namespace heongpu
     }
 
     __host__ Ciphertext<Scheme::CKKS>
+    HEArithmeticOperator<Scheme::CKKS>::slim_bootstrapping_v2(
+        Ciphertext<Scheme::CKKS>& input1, Galoiskey<Scheme::CKKS>& galois_key,
+        Relinkey<Scheme::CKKS>& relin_key,
+        Switchkey<Scheme::CKKS>* swk_dense_to_sparse,
+        Switchkey<Scheme::CKKS>* swk_sparse_to_dense,
+        const ExecutionOptions& options)
+    {
+        if (!boot_context_generated_)
+        {
+            throw std::invalid_argument(
+                "Bootstrapping operation can not be performed before "
+                "generating Bootstrapping parameters!");
+        }
+
+        int current_decomp_count = Q_size_ - input1.depth_;
+        if (current_decomp_count != (stc_config_.level_start_ + 1))
+        {
+            throw std::logic_error(
+                "Ciphertexts leveled should match StoC start level!");
+        }
+
+        ExecutionOptions options_inner =
+            ExecutionOptions()
+                .set_stream(options.stream_)
+                .set_storage_type(storage_type::DEVICE)
+                .set_initial_location(true);
+
+        // Slot to coeff (real-valued input)
+        Ciphertext<Scheme::CKKS> stc_result = multiply_matrix_v2(
+            input1, V_matrixs_rotated_encoded_, diags_matrices_bsgs_,
+            diags_matrices_bsgs_rot_n1_, diags_matrices_bsgs_rot_n2_,
+            galois_key, options_inner);
+
+        // Drop to Q0 for modulus raising
+        current_decomp_count = Q_size_ - stc_result.depth_;
+        while (current_decomp_count > 1)
+        {
+            mod_drop_inplace(stc_result, options_inner);
+            current_decomp_count = Q_size_ - stc_result.depth_;
+        }
+
+        // Match scale expectations for EvalMod path (same as regular v2)
+        Ciphertext<Scheme::CKKS> scaled_input = stc_result;
+        double q0OverMessageRatio = std::exp2(std::round(std::log2(
+            static_cast<double>(prime_vector_[0].value) /
+            eval_mod_config_.message_ratio_)));
+
+        scale_up(stc_result, std::round(q0OverMessageRatio / stc_result.scale()),
+                 scaled_input, options_inner);
+
+        if (std::round((static_cast<double>(prime_vector_[0].value) /
+                        eval_mod_config_.message_ratio_) /
+                       scaled_input.scale()) > 1.0)
+        {
+            scale_up(scaled_input,
+                     std::round((static_cast<double>(prime_vector_[0].value) /
+                                 eval_mod_config_.message_ratio_) /
+                                scaled_input.scale()),
+                     scaled_input, options_inner);
+        }
+
+        Ciphertext<Scheme::CKKS> c_raised = mod_up_from_q0(
+            scaled_input, swk_dense_to_sparse, swk_sparse_to_dense,
+            options_inner);
+
+        if ((eval_mod_config_.scaling_factor_ /
+             eval_mod_config_.message_ratio_) /
+                c_raised.scale() >
+            1.0)
+        {
+            scale_up(c_raised,
+                     std::round((eval_mod_config_.scaling_factor_ /
+                                 eval_mod_config_.message_ratio_) /
+                                c_raised.scale()),
+                     c_raised, options_inner);
+        }
+
+        // Coeff to slot, EvalMod on the real part only
+        std::vector<heongpu::Ciphertext<Scheme::CKKS>> enc_results =
+            coeff_to_slot_v2(c_raised, galois_key, options_inner);
+
+        Ciphertext<Scheme::CKKS> ciph_eval =
+            eval_mod(enc_results[0], relin_key, options_inner);
+        ciph_eval.scale_ = scale_boot_;
+
+        return ciph_eval;
+    }
+
+    __host__ Ciphertext<Scheme::CKKS>
     HEArithmeticOperator<Scheme::CKKS>::slim_bootstrapping(
         Ciphertext<Scheme::CKKS>& input1, Galoiskey<Scheme::CKKS>& galois_key,
         Relinkey<Scheme::CKKS>& relin_key, const ExecutionOptions& options)

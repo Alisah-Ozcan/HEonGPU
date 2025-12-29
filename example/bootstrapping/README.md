@@ -70,6 +70,14 @@ m(x) = Encode(<b>m</b>) where <b>m</b> &in; &#120121;
 
 The [4_ckks_gate_bootstrapping.cu](4_ckks_gate_bootstrapping.cu) provides a basic example of `Bit` bootstrapping with a polynomial degree of 4096. 
 
+#### [CKKS Regular Bootstrapping (V2)](5_ckks_regular_bootstrapping_v2.cu)
+
+The [5_ckks_regular_bootstrapping_v2.cu](5_ckks_regular_bootstrapping_v2.cu) demonstrates the second-generation (`v2`) regular bootstrapping path with optional dense↔sparse secret key switching support.
+
+#### [CKKS Slim Bootstrapping (V2)](6_ckks_slim_bootstrapping_v2.cu)
+
+The [6_ckks_slim_bootstrapping_v2.cu](6_ckks_slim_bootstrapping_v2.cu) demonstrates the second-generation (`v2`) slim bootstrapping path for real-valued messages, where EvalMod is applied only to the real part and the output remains in the slot domain.
+
 All logic gate can be applied with CKKS `Gate` Bootstrapping:
 - AND_boot - NAND_boot
 - OR_boot - NOR_boot
