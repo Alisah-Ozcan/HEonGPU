@@ -6333,10 +6333,12 @@ namespace heongpu
         }
 
         int current_decomp_count = Q_size_ - input1.depth_;
-        if (current_decomp_count != (stc_config_.level_start_ + 1))
+        // Slim bootstrapping starts with SlotToCoeff and should end that stage
+        // at Q0 (one modulus). Therefore, the input must have exactly
+        // (1 + StoC_piece_) moduli available.
+        if (current_decomp_count != (1 + StoC_piece_))
         {
-            throw std::logic_error(
-                "Ciphertexts leveled should match StoC start level!");
+            throw std::logic_error("Ciphertexts leveled should be at max!");
         }
 
         ExecutionOptions options_inner =
@@ -6351,12 +6353,13 @@ namespace heongpu
             diags_matrices_bsgs_rot_n1_, diags_matrices_bsgs_rot_n2_,
             galois_key, options_inner);
 
-        // Drop to Q0 for modulus raising
+        // After StoC (which consumes StoC_piece_ rescale steps), we must be at
+        // Q0 to perform modulus raising.
         current_decomp_count = Q_size_ - stc_result.depth_;
-        while (current_decomp_count > 1)
+        if (current_decomp_count != 1)
         {
-            mod_drop_inplace(stc_result, options_inner);
-            current_decomp_count = Q_size_ - stc_result.depth_;
+            throw std::logic_error(
+                "SlotToCoeff stage must end at Q0 for slim bootstrapping!");
         }
 
         // Match scale expectations for EvalMod path (same as regular v2)

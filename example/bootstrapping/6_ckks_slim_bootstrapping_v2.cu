@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 
     heongpu::BootstrappingConfigV2 boot_config(
         heongpu::EncodingMatrixConfig(
-            heongpu::LinearTransformType::SLOTS_TO_COEFFS, 12),
+            heongpu::LinearTransformType::SLOTS_TO_COEFFS, 3),
         eval_mod_config,
         heongpu::EncodingMatrixConfig(
             heongpu::LinearTransformType::COEFFS_TO_SLOTS, 24));
@@ -127,8 +127,9 @@ int main(int argc, char* argv[])
     heongpu::Galoiskey<heongpu::Scheme::CKKS> galois_key(context, key_index);
     keygen.generate_galois_key(galois_key, secret_key);
 
-    // Drop to StoC start level
-    for (int i = 0; i < 12; i++)
+    // For slim bootstrapping, input must have (1 + StoC_piece) moduli so that
+    // the SlotToCoeff stage ends at Q0.
+    for (int i = 0; i < 21; i++)
     {
         operators.mod_drop_inplace(C1);
     }
@@ -182,4 +183,3 @@ int main(int argc, char* argv[])
 
     return EXIT_SUCCESS;
 }
-
