@@ -457,6 +457,24 @@ namespace heongpu
         out[location_ct] = ct;
     }
 
+    __global__ void cipher_mult_by_inv2_kernel(Data64* in1, Data64* out,
+                                               Modulus64* modulus, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
+        int block_y = blockIdx.y; // rns count
+        int block_z = blockIdx.z; // cipher count
+
+        int location_ct =
+            idx + (block_y << n_power) + ((gridDim.y * block_z) << n_power);
+
+        Data64 ct = in1[location_ct];
+        Data64 qi = modulus[block_y].value;
+        Data64 inv2 = (qi + 1) >> 1;
+
+        ct = OPERATOR_GPU_64::mult(ct, inv2, modulus[block_y]);
+        out[location_ct] = ct;
+    }
+
     __global__ void cipher_mult_by_gaussian_integer_kernel(
         Data64* in1, Data64* real_rns, Data64* imag_rns, Data64* out,
         Data64* ntt_table, Modulus64* modulus, int n_power)

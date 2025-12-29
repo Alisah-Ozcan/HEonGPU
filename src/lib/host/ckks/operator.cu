@@ -6399,6 +6399,18 @@ namespace heongpu
         std::vector<heongpu::Ciphertext<Scheme::CKKS>> enc_results =
             coeff_to_slot_v2(c_raised, galois_key, options_inner);
 
+        // coeff_to_slot_v2 returns (c1+conj(c1)) which is 2*Re(c1);
+        // slim bootstrapping operates only on the real part, so scale it by 1/2
+        // without consuming an extra modulus.
+        int cipher_size = enc_results[0].relinearization_required_ ? 3 : 2;
+        current_decomp_count = Q_size_ - enc_results[0].depth_;
+        cipher_mult_by_inv2_kernel<<<
+            dim3((n >> 8), current_decomp_count, cipher_size), 256, 0,
+            options_inner.stream_>>>(
+            enc_results[0].data(), enc_results[0].data(), modulus_->data(),
+            n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
         Ciphertext<Scheme::CKKS> ciph_eval =
             eval_mod(enc_results[0], relin_key, options_inner);
         ciph_eval.scale_ = scale_boot_;
