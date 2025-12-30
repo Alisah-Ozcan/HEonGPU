@@ -83,6 +83,51 @@ namespace heongpu
                 options);
         }
 
+        /**
+         * @brief Encodes a coefficient vector into a plaintext polynomial.
+         *
+         * This method is equivalent to Lattigo's EncodeCoeffs + ToNTT: it maps
+         * the input vector to polynomial coefficients (coefficient domain),
+         * scales and rounds them, then converts to the NTT domain.
+         *
+         * @param plain Plaintext object where the result of the encoding will
+         * be stored.
+         * @param coeffs Vector of polynomial coefficients (size <= N).
+         * @param scale Scaling factor applied before rounding.
+         */
+        __host__ void
+        encode_coeffs(Plaintext<Scheme::CKKS>& plain,
+                      const std::vector<double>& coeffs, double scale,
+                      const ExecutionOptions& options = ExecutionOptions())
+        {
+            if ((scale <= 0) ||
+                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            {
+                throw std::invalid_argument("Scale out of bounds");
+            }
+
+            if (coeffs.size() > static_cast<size_t>(n))
+            {
+                throw std::invalid_argument(
+                    "Coefficient size can not be higher than poly degree!");
+            }
+
+            output_storage_manager(
+                plain,
+                [&](Plaintext<Scheme::CKKS>& plain_)
+                {
+                    encode_coeffs_ckks(plain_, coeffs, scale, options.stream_);
+
+                    plain.plain_size_ = n * Q_size_;
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
+                    plain.plaintext_generated_ = true;
+                },
+                options);
+        }
+
         //
 
         /**
@@ -115,6 +160,43 @@ namespace heongpu
                 [&](Plaintext<Scheme::CKKS>& plain_)
                 {
                     encode_ckks(plain_, message, scale, options.stream_);
+
+                    plain.plain_size_ = n * Q_size_;
+                    plain.scheme_ = scheme_;
+                    plain.depth_ = 0;
+                    plain.scale_ = scale;
+                    plain.in_ntt_domain_ = true;
+                    plain.plaintext_generated_ = true;
+                },
+                options);
+        }
+
+        /**
+         * @brief Encodes a coefficient vector (HostVector) into a plaintext
+         * polynomial. See encode_coeffs overload for details.
+         */
+        __host__ void
+        encode_coeffs(Plaintext<Scheme::CKKS>& plain,
+                      const HostVector<double>& coeffs, double scale,
+                      const ExecutionOptions& options = ExecutionOptions())
+        {
+            if ((scale <= 0) ||
+                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            {
+                throw std::invalid_argument("Scale out of bounds");
+            }
+
+            if (coeffs.size() > static_cast<size_t>(n))
+            {
+                throw std::invalid_argument(
+                    "Coefficient size can not be higher than poly degree!");
+            }
+
+            output_storage_manager(
+                plain,
+                [&](Plaintext<Scheme::CKKS>& plain_)
+                {
+                    encode_coeffs_ckks(plain_, coeffs, scale, options.stream_);
 
                     plain.plain_size_ = n * Q_size_;
                     plain.scheme_ = scheme_;
@@ -395,6 +477,16 @@ namespace heongpu
                                   const HostVector<double>& message,
                                   const double scale,
                                   const cudaStream_t stream);
+
+        __host__ void encode_coeffs_ckks(Plaintext<Scheme::CKKS>& plain,
+                                         const std::vector<double>& coeffs,
+                                         const double scale,
+                                         const cudaStream_t stream);
+
+        __host__ void encode_coeffs_ckks(Plaintext<Scheme::CKKS>& plain,
+                                         const HostVector<double>& coeffs,
+                                         const double scale,
+                                         const cudaStream_t stream);
 
         //
 

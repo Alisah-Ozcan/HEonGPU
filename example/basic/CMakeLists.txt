@@ -18,6 +18,7 @@ set(EXECUTABLES
     10_bfv_serialization 10_bfv_serialization.cu
     11_ckks_serialization 11_ckks_serialization.cu
     12_basic_tfhe 12_basic_tfhe.cu
+    13_poly_convolution_ckks 13_poly_convolution_ckks.cu
 )
 
 function(add_example exe source)

@@ -47,6 +47,8 @@ namespace heongpu
 
     template <Scheme S> class HELogicOperator;
 
+    template <Scheme S> class HEConvolution;
+
     template <Scheme S> class Plaintext;
 
     template <Scheme S> class Publickey;

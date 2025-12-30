@@ -175,6 +175,82 @@ namespace heongpu
         plain.memory_set(std::move(output_memory));
     }
 
+    __host__ void HEEncoder<Scheme::CKKS>::encode_coeffs_ckks(
+        Plaintext<Scheme::CKKS>& plain, const std::vector<double>& coeffs,
+        const double scale, const cudaStream_t stream)
+    {
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
+
+        DeviceVector<double> coeffs_gpu(n, stream);
+        if (coeffs.size() < static_cast<size_t>(n))
+        {
+            cudaMemsetAsync(coeffs_gpu.data(), 0, n * sizeof(double), stream);
+        }
+        cudaMemcpyAsync(coeffs_gpu.data(), coeffs.data(),
+                        coeffs.size() * sizeof(double),
+                        cudaMemcpyHostToDevice, stream);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        encode_kernel_ckks_coeffs_conversion<<<dim3(((n + 255) >> 8), 1, 1),
+                                               256, 0, stream>>>(
+            output_memory.data(), coeffs_gpu.data(),
+            static_cast<int>(coeffs.size()), modulus_->data(), Q_size_, scale,
+            two_pow_64, n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = gpuntt::FORWARD,
+            .ntt_layout = gpuntt::PerPolynomial,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
+
+        gpuntt::GPU_NTT_Inplace(output_memory.data(), ntt_table_->data(),
+                                modulus_->data(), cfg_ntt, Q_size_, Q_size_);
+
+        plain.scale_ = scale;
+        plain.memory_set(std::move(output_memory));
+    }
+
+    __host__ void HEEncoder<Scheme::CKKS>::encode_coeffs_ckks(
+        Plaintext<Scheme::CKKS>& plain, const HostVector<double>& coeffs,
+        const double scale, const cudaStream_t stream)
+    {
+        DeviceVector<Data64> output_memory(n * Q_size_, stream);
+
+        DeviceVector<double> coeffs_gpu(n, stream);
+        if (coeffs.size() < static_cast<size_t>(n))
+        {
+            cudaMemsetAsync(coeffs_gpu.data(), 0, n * sizeof(double), stream);
+        }
+        cudaMemcpyAsync(coeffs_gpu.data(), coeffs.data(),
+                        coeffs.size() * sizeof(double),
+                        cudaMemcpyHostToDevice, stream);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        encode_kernel_ckks_coeffs_conversion<<<dim3(((n + 255) >> 8), 1, 1),
+                                               256, 0, stream>>>(
+            output_memory.data(), coeffs_gpu.data(),
+            static_cast<int>(coeffs.size()), modulus_->data(), Q_size_, scale,
+            two_pow_64, n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
+            .n_power = n_power,
+            .ntt_type = gpuntt::FORWARD,
+            .ntt_layout = gpuntt::PerPolynomial,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .stream = stream};
+
+        gpuntt::GPU_NTT_Inplace(output_memory.data(), ntt_table_->data(),
+                                modulus_->data(), cfg_ntt, Q_size_, Q_size_);
+
+        plain.scale_ = scale;
+        plain.memory_set(std::move(output_memory));
+    }
+
     __host__ void HEEncoder<Scheme::CKKS>::encode_ckks(
         Plaintext<Scheme::CKKS>& plain, const HostVector<double>& message,
         const double scale, const cudaStream_t stream)

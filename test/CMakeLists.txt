@@ -35,6 +35,7 @@ set(EXECUTABLES
     ckks_relinearization_testcases test_ckks_relinearization.cu
     ckks_rotation_method_1_testcases test_ckks_rotation_method_1.cu
     ckks_rotation_method_2_testcases test_ckks_rotation_method_2.cu
+    ckks_poly_convolution_testcases test_poly_convolution_ckks.cu
 
     tfhe_gate_boot_testcases test_tfhe_gate_boot.cu
 )

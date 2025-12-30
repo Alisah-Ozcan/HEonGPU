@@ -76,6 +76,51 @@ namespace heongpu
         }
     }
 
+    __global__ void encode_kernel_ckks_coeffs_conversion(
+        Data64* plaintext, const double* coeffs, int coeff_count,
+        Modulus64* modulus, int coeff_modulus_count, double scale,
+        double two_pow_64, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        int n = 1 << n_power;
+        if (idx >= n)
+        {
+            return;
+        }
+
+        double message_r = 0.0;
+        if (idx < coeff_count)
+        {
+            message_r = coeffs[idx] * scale;
+        }
+
+        double coeff_double = round(message_r);
+        bool is_negative = signbit(coeff_double);
+        coeff_double = fabs(coeff_double);
+
+        Data64 coeff[2] = {
+            static_cast<std::uint64_t>(fmod(coeff_double, two_pow_64)),
+            static_cast<std::uint64_t>(coeff_double / two_pow_64)};
+
+        if (is_negative)
+        {
+            for (int i = 0; i < coeff_modulus_count; i++)
+            {
+                Data64 temp = OPERATOR_GPU_64::reduce(coeff, modulus[i]);
+                plaintext[idx + (i << n_power)] =
+                    OPERATOR_GPU_64::sub(modulus[i].value, temp, modulus[i]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < coeff_modulus_count; i++)
+            {
+                plaintext[idx + (i << n_power)] =
+                    OPERATOR_GPU_64::reduce(coeff, modulus[i]);
+            }
+        }
+    }
+
     __global__ void encode_kernel_int_ckks_conversion(Data64* plaintext,
                                                       std::int64_t message,
                                                       Modulus64* modulus,

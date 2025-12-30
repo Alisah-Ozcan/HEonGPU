@@ -25,6 +25,11 @@ namespace heongpu
         Data64* plaintext, double message, Modulus64* modulus,
         int coeff_modulus_count, double two_pow_64, int n_power);
 
+    __global__ void encode_kernel_ckks_coeffs_conversion(
+        Data64* plaintext, const double* coeffs, int coeff_count,
+        Modulus64* modulus, int coeff_modulus_count, double scale,
+        double two_pow_64, int n_power);
+
     __global__ void encode_kernel_int_ckks_conversion(Data64* plaintext,
                                                       std::int64_t message,
                                                       Modulus64* modulus,

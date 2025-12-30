@@ -32,6 +32,7 @@
 #include <heongpu/host/ckks/operator.cuh>
 #include <heongpu/host/ckks/mpcmanager.cuh>
 #include <heongpu/host/ckks/precision.cuh>
+#include <heongpu/host/ckks/convolution.cuh>
 
 #include <heongpu/host/tfhe/context.cuh>
 #include <heongpu/host/tfhe/secretkey.cuh>
