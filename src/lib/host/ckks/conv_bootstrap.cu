@@ -96,7 +96,7 @@ namespace heongpu
         // HEonGPU regular bootstrapping (v2) requires input at maximum depth:
         // current_decomp_count == 1  <=>  Q_size - depth == 1.
         auto t_drop0 = std::chrono::high_resolution_clock::now();
-        const int Q_size = ct_conv_coeff.modulus_count();
+        const int Q_size = ct_conv_coeff.coeff_modulus_count();
         while ((Q_size - ct_conv_coeff.depth()) > 1)
         {
             operators.mod_drop_inplace(ct_conv_coeff, options);
@@ -139,4 +139,3 @@ namespace heongpu
     }
 
 } // namespace heongpu
-
