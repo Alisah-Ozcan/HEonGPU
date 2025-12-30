@@ -5,9 +5,9 @@
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_LOCATION}/examples/basic)
 
-set(EXECUTABLES
-    1_basic_bfv 1_basic_bfv.cu
-    2_basic_ckks 2_basic_ckks.cu
+	set(EXECUTABLES
+	    1_basic_bfv 1_basic_bfv.cu
+	    2_basic_ckks 2_basic_ckks.cu
     3_switchkey_methods_bfv 3_switchkey_methods_bfv.cu
     4_switchkey_methods_ckks 4_switchkey_methods_ckks.cu
     5_default_stream_usage 5_default_stream_usage.cu
@@ -18,11 +18,12 @@ set(EXECUTABLES
     10_bfv_serialization 10_bfv_serialization.cu
     11_ckks_serialization 11_ckks_serialization.cu
     12_basic_tfhe 12_basic_tfhe.cu
-    13_poly_convolution_ckks 13_poly_convolution_ckks.cu
-    14_basic_convfhe_single 14_basic_convfhe_single.cu
-    demo_batchconv_pack demo_batchconv_pack.cu
-    bench_batchconv_pack bench_batchconv_pack.cu
-)
+	    13_poly_convolution_ckks 13_poly_convolution_ckks.cu
+	    14_basic_convfhe_single 14_basic_convfhe_single.cu
+	    15_demo_conv_relu_chain 15_demo_conv_relu_chain.cu
+	    demo_batchconv_pack demo_batchconv_pack.cu
+	    bench_batchconv_pack bench_batchconv_pack.cu
+	)
 
 function(add_example exe source)
     add_executable(${exe} ${source})

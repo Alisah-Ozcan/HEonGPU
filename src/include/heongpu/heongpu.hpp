@@ -34,6 +34,7 @@
 #include <heongpu/host/ckks/precision.cuh>
 #include <heongpu/host/ckks/convolution.cuh>
 #include <heongpu/host/ckks/batchconv_pack.cuh>
+#include <heongpu/host/ckks/conv_relu_layer.cuh>
 
 #include <heongpu/host/tfhe/context.cuh>
 #include <heongpu/host/tfhe/secretkey.cuh>

@@ -2337,6 +2337,12 @@ namespace heongpu
             Galoiskey<Scheme::CKKS>& galois_key,
             Relinkey<Scheme::CKKS>& relin_key,
             const ExecutionOptions& options = ExecutionOptions());
+
+        // Expose coefficient/slot transforms and polynomial evaluation for
+        // building higher-level pipelines (e.g., conv->CtoS->activation->StoC).
+        using HEOperator<Scheme::CKKS>::coeff_to_slot_v2;
+        using HEOperator<Scheme::CKKS>::slot_to_coeff_v2;
+        using HEOperator<Scheme::CKKS>::evaluate_poly;
     };
 
     /**

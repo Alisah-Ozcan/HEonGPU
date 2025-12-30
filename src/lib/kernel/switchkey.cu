@@ -1449,7 +1449,10 @@ namespace heongpu
 
         if ((index_raw >> n_power) & 1)
         {
-            result_value = (modulus[block_y].value - result_value);
+            // Avoid producing modulus.value (out of canonical range) when
+            // result_value == 0.
+            result_value =
+                (result_value == 0) ? 0 : (modulus[block_y].value - result_value);
         }
 
         cipher_out[index + (block_y << n_power) +
@@ -1594,7 +1597,9 @@ namespace heongpu
 
             if ((index_raw >> n_power) & 1)
             {
-                ct_in = (modulus[block_y].value - ct_in);
+                // Avoid producing modulus.value (out of canonical range) when
+                // ct_in == 0.
+                ct_in = (ct_in == 0) ? 0 : (modulus[block_y].value - ct_in);
             }
             //
 
@@ -1611,7 +1616,9 @@ namespace heongpu
 
             if ((index_raw >> n_power) & 1)
             {
-                input_ = (modulus[block_y].value - input_);
+                // Avoid producing modulus.value (out of canonical range) when
+                // input_ == 0.
+                input_ = (input_ == 0) ? 0 : (modulus[block_y].value - input_);
             }
             //
 
@@ -1689,7 +1696,9 @@ namespace heongpu
 
             if ((index_raw >> n_power) & 1)
             {
-                ct_in = (modulus[block_y].value - ct_in);
+                // Avoid producing modulus.value (out of canonical range) when
+                // ct_in == 0.
+                ct_in = (ct_in == 0) ? 0 : (modulus[block_y].value - ct_in);
             }
             //
 
@@ -1706,7 +1715,9 @@ namespace heongpu
 
             if ((index_raw >> n_power) & 1)
             {
-                input_ = (modulus[block_y].value - input_);
+                // Avoid producing modulus.value (out of canonical range) when
+                // input_ == 0.
+                input_ = (input_ == 0) ? 0 : (modulus[block_y].value - input_);
             }
             //
 

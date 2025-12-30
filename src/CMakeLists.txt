@@ -177,6 +177,7 @@ set(HEONGPU_HOST_CKKS_SOURCES
     lib/host/ckks/chebyshev_interpolation.cu
     lib/host/ckks/ciphertext.cu
     lib/host/ckks/convolution.cu
+    lib/host/ckks/conv_relu_layer.cu
     lib/host/ckks/context.cu
     lib/host/ckks/cosine_approx.cu
     lib/host/ckks/decryptor.cu
