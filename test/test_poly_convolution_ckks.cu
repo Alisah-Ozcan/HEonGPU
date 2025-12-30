@@ -9,12 +9,11 @@
 
 constexpr auto Scheme = heongpu::Scheme::CKKS;
 
-static std::vector<heongpu::Data64> cpu_negacyclic_convolution_mod(
-    const std::vector<heongpu::Data64>& a, const std::vector<heongpu::Data64>& b,
-    heongpu::Data64 mod)
+static std::vector<Data64> cpu_negacyclic_convolution_mod(
+    const std::vector<Data64>& a, const std::vector<Data64>& b, Data64 mod)
 {
     const size_t n = a.size();
-    std::vector<heongpu::Data64> out(n, 0);
+    std::vector<Data64> out(n, 0);
 
     for (size_t i = 0; i < n; i++)
     {
@@ -26,7 +25,7 @@ static std::vector<heongpu::Data64> cpu_negacyclic_convolution_mod(
 
             __uint128_t prod = static_cast<__uint128_t>(a[i]) *
                                static_cast<__uint128_t>(b[j]);
-            heongpu::Data64 term = static_cast<heongpu::Data64>(prod % mod);
+            Data64 term = static_cast<Data64>(prod % mod);
 
             if (wrap)
             {
@@ -102,23 +101,23 @@ TEST(CKKS, PolyConvolutionNegacyclicRNS)
     decryptor.decrypt(Pout, Ca);
 
     const int out_rns_count = Pout.size() / n;
-    heongpu::DeviceVector<heongpu::Data64> out_ntt(Pout.size());
+    heongpu::DeviceVector<Data64> out_ntt(Pout.size());
     cudaMemcpy(out_ntt.data(), Pout.data(),
-               Pout.size() * sizeof(heongpu::Data64),
+               Pout.size() * sizeof(Data64),
                cudaMemcpyDeviceToDevice);
 
     conv.to_coeff_domain_inplace(out_ntt, /*poly_count=*/1, out_rns_count);
 
-    std::vector<heongpu::Data64> c_host(static_cast<size_t>(n) * out_rns_count);
+    std::vector<Data64> c_host(static_cast<size_t>(n) * out_rns_count);
     cudaMemcpy(c_host.data(), out_ntt.data(),
-               c_host.size() * sizeof(heongpu::Data64),
+               c_host.size() * sizeof(Data64),
                cudaMemcpyDeviceToHost);
 
     for (int qi = 0; qi < out_rns_count; qi++)
     {
-        const heongpu::Data64 q = primes[qi].value;
-        std::vector<heongpu::Data64> a_q(static_cast<size_t>(n));
-        std::vector<heongpu::Data64> b_q(static_cast<size_t>(n));
+        const Data64 q = primes[qi].value;
+        std::vector<Data64> a_q(static_cast<size_t>(n));
+        std::vector<Data64> b_q(static_cast<size_t>(n));
         for (int i = 0; i < n; i++)
         {
             int64_t ai = static_cast<int64_t>(llround(a_coeff[i]));
@@ -129,12 +128,11 @@ TEST(CKKS, PolyConvolutionNegacyclicRNS)
                 am += static_cast<int64_t>(q);
             if (bm < 0)
                 bm += static_cast<int64_t>(q);
-            a_q[i] = static_cast<heongpu::Data64>(am);
-            b_q[i] = static_cast<heongpu::Data64>(bm);
+            a_q[i] = static_cast<Data64>(am);
+            b_q[i] = static_cast<Data64>(bm);
         }
 
-        std::vector<heongpu::Data64> ref =
-            cpu_negacyclic_convolution_mod(a_q, b_q, q);
+        std::vector<Data64> ref = cpu_negacyclic_convolution_mod(a_q, b_q, q);
 
         for (int i = 0; i < n; i++)
         {
