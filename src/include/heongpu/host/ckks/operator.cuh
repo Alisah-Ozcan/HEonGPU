@@ -2343,6 +2343,35 @@ namespace heongpu
         using HEOperator<Scheme::CKKS>::coeff_to_slot_v2;
         using HEOperator<Scheme::CKKS>::slot_to_coeff_v2;
         using HEOperator<Scheme::CKKS>::evaluate_poly;
+
+        /**
+         * @brief Evaluates a real monomial-basis polynomial on a ciphertext
+         * (typically in slot domain), using the built-in BSGS evaluator.
+         *
+         * This wrapper avoids exposing HEOperator::Polynomial publicly.
+         *
+         * @param cipher Input ciphertext.
+         * @param target_scale Desired output scale.
+         * @param coeffs Monomial coefficients c[i] for Σ c[i] * x^i.
+         * @param relin_key Relinearization key for internal multiplications.
+         * @param options Execution options (stream, storage).
+         */
+        __host__ Ciphertext<Scheme::CKKS> evaluate_poly_monomial(
+            Ciphertext<Scheme::CKKS>& cipher, double target_scale,
+            const std::vector<double>& coeffs, Relinkey<Scheme::CKKS>& relin_key,
+            const ExecutionOptions& options = ExecutionOptions())
+        {
+            std::vector<Complex64> c;
+            c.reserve(coeffs.size());
+            for (double v : coeffs)
+            {
+                c.emplace_back(v, 0.0);
+            }
+
+            const HEOperator<Scheme::CKKS>::Polynomial pol(
+                static_cast<int>(coeffs.size()) - 1, c, false, PolyType::MONOMIAL);
+            return evaluate_poly(cipher, target_scale, pol, relin_key, options);
+        }
     };
 
     /**

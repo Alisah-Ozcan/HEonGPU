@@ -10,19 +10,6 @@
 
 namespace heongpu
 {
-    static HEOperator<Scheme::CKKS>::Polynomial make_monomial_poly(
-        const std::vector<double>& coeffs)
-    {
-        std::vector<Complex64> c;
-        c.reserve(coeffs.size());
-        for (double v : coeffs)
-        {
-            c.emplace_back(v, 0.0);
-        }
-        return HEOperator<Scheme::CKKS>::Polynomial(
-            static_cast<int>(coeffs.size()) - 1, c, false, PolyType::MONOMIAL);
-    }
-
     __host__ Ciphertext<Scheme::CKKS> eval_conv_relu_layer(
         Ciphertext<Scheme::CKKS>& ct_in, const std::vector<double>& weights,
         const ConvReluLayerParams& params, HEEncoder<Scheme::CKKS>& encoder,
@@ -143,12 +130,10 @@ namespace heongpu
         }
 
         // 3) Activation in slot domain: ReLU(x) ≈ 0.5*(x + x*sign(x)).
-        const auto signP = make_monomial_poly(params.sign_poly);
-
         auto relu_inplace = [&](Ciphertext<Scheme::CKKS>& x)
         {
-            Ciphertext<Scheme::CKKS> sign =
-                operators.evaluate_poly(x, x.scale(), signP, relin_key, options);
+            Ciphertext<Scheme::CKKS> sign = operators.evaluate_poly_monomial(
+                x, x.scale(), params.sign_poly, relin_key, options);
 
             // abs ≈ x * sign
             // Align levels before multiplication (evaluate_poly may drop levels).
