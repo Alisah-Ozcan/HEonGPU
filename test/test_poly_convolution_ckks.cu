@@ -6,14 +6,15 @@
 #include <gtest/gtest.h>
 #include <heongpu/heongpu.hpp>
 #include <random>
+#include <cmath>
 
 constexpr auto Scheme = heongpu::Scheme::CKKS;
 
-static std::vector<Data64> cpu_negacyclic_convolution_mod(
-    const std::vector<Data64>& a, const std::vector<Data64>& b, Data64 mod)
+static std::vector<double> cpu_negacyclic_convolution(
+    const std::vector<double>& a, const std::vector<double>& b)
 {
     const size_t n = a.size();
-    std::vector<Data64> out(n, 0);
+    std::vector<double> out(n, 0.0);
 
     for (size_t i = 0; i < n; i++)
     {
@@ -23,17 +24,13 @@ static std::vector<Data64> cpu_negacyclic_convolution_mod(
             bool wrap = k >= n;
             k = wrap ? (k - n) : k;
 
-            __uint128_t prod = static_cast<__uint128_t>(a[i]) *
-                               static_cast<__uint128_t>(b[j]);
-            Data64 term = static_cast<Data64>(prod % mod);
-
             if (wrap)
             {
-                out[k] = (out[k] + (mod - term)) % mod; // x^N = -1
+                out[k] -= a[i] * b[j]; // x^N = -1
             }
             else
             {
-                out[k] = (out[k] + term) % mod;
+                out[k] += a[i] * b[j];
             }
         }
     }
@@ -65,15 +62,11 @@ TEST(CKKS, PolyConvolutionNegacyclicRNS)
     heongpu::HEEncryptor<Scheme> encryptor(context, public_key);
     heongpu::HEDecryptor<Scheme> decryptor(context, secret_key);
     heongpu::HEArithmeticOperator<Scheme> operators(context, encoder);
-    heongpu::HEConvolution<Scheme> conv(context);
 
     const int n = context.get_poly_modulus_degree();
-    const int q_count = context.get_ciphertext_modulus_count();
-    const auto primes = context.get_key_modulus();
-
     std::mt19937_64 rng(12345);
 
-    const double scale = 1.0;
+    const double scale = std::pow(2.0, 30);
     std::uniform_int_distribution<int64_t> signed_dist(-(1LL << 20),
                                                        (1LL << 20));
     std::vector<double> a_coeff(static_cast<size_t>(n), 0.0);
@@ -96,48 +89,19 @@ TEST(CKKS, PolyConvolutionNegacyclicRNS)
 
     operators.multiply_inplace(Ca, Cb);
     operators.relinearize_inplace(Ca, relin_key);
+    operators.rescale_inplace(Ca);
 
     heongpu::Plaintext<Scheme> Pout(context);
     decryptor.decrypt(Pout, Ca);
 
-    const int out_rns_count = Pout.size() / n;
-    heongpu::DeviceVector<Data64> out_ntt(Pout.size());
-    cudaMemcpy(out_ntt.data(), Pout.data(),
-               Pout.size() * sizeof(Data64),
-               cudaMemcpyDeviceToDevice);
+    std::vector<double> decoded;
+    encoder.decode_coeffs(decoded, Pout);
 
-    conv.to_coeff_domain_inplace(out_ntt, /*poly_count=*/1, out_rns_count);
+    std::vector<double> ref = cpu_negacyclic_convolution(a_coeff, b_coeff);
 
-    std::vector<Data64> c_host(static_cast<size_t>(n) * out_rns_count);
-    cudaMemcpy(c_host.data(), out_ntt.data(),
-               c_host.size() * sizeof(Data64),
-               cudaMemcpyDeviceToHost);
-
-    for (int qi = 0; qi < out_rns_count; qi++)
+    const double eps = 1e-3;
+    for (int i = 0; i < n; i++)
     {
-        const Data64 q = primes[qi].value;
-        std::vector<Data64> a_q(static_cast<size_t>(n));
-        std::vector<Data64> b_q(static_cast<size_t>(n));
-        for (int i = 0; i < n; i++)
-        {
-            int64_t ai = static_cast<int64_t>(llround(a_coeff[i]));
-            int64_t bi = static_cast<int64_t>(llround(b_coeff[i]));
-            int64_t am = ai % static_cast<int64_t>(q);
-            int64_t bm = bi % static_cast<int64_t>(q);
-            if (am < 0)
-                am += static_cast<int64_t>(q);
-            if (bm < 0)
-                bm += static_cast<int64_t>(q);
-            a_q[i] = static_cast<Data64>(am);
-            b_q[i] = static_cast<Data64>(bm);
-        }
-
-        std::vector<Data64> ref = cpu_negacyclic_convolution_mod(a_q, b_q, q);
-
-        for (int i = 0; i < n; i++)
-        {
-            ASSERT_EQ(c_host[static_cast<size_t>(qi) * n + i], ref[i])
-                << "Mismatch at qi=" << qi << ", i=" << i;
-        }
+        ASSERT_NEAR(decoded[i], ref[i], eps) << "Mismatch at i=" << i;
     }
 }

@@ -121,6 +121,91 @@ namespace heongpu
         }
     }
 
+    __global__ void decode_kernel_ckks_coeffs_decompose(
+        double* coeffs, Data64* plaintext_coeff, Modulus64* modulus,
+        Data64* Mi_inv, Data64* Mi, Data64* upper_half_threshold,
+        Data64* decryption_modulus, int coeff_modulus_count, double scale,
+        double two_pow_64, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring_size
+        int n = 1 << n_power;
+        if (idx >= n)
+        {
+            return;
+        }
+
+        double inv_scale = double(1.0) / scale;
+        double two_pow_64_reg = two_pow_64;
+
+        Data64 compose_result[50]; // TODO: Define size as global variable
+        Data64 big_integer_result[50]; // TODO: Define size as global variable
+
+        biginteger::set_zero(compose_result, coeff_modulus_count);
+
+#pragma unroll
+        for (int i = 0; i < coeff_modulus_count; i++)
+        {
+            Data64 base = plaintext_coeff[idx + (i << n_power)];
+            Data64 temp = OPERATOR_GPU_64::mult(base, Mi_inv[i], modulus[i]);
+
+            biginteger::multiply(Mi + (i * coeff_modulus_count),
+                                 coeff_modulus_count, temp, big_integer_result,
+                                 coeff_modulus_count);
+
+            biginteger::add_inplace(compose_result, big_integer_result,
+                                    coeff_modulus_count);
+
+            bool check = biginteger::is_greater_or_equal(
+                compose_result, decryption_modulus, coeff_modulus_count);
+
+            if (check)
+            {
+                biginteger::sub2(compose_result, decryption_modulus,
+                                 coeff_modulus_count, compose_result);
+            }
+        }
+
+        double result = double(0.0);
+
+        bool negative = biginteger::is_greater_or_equal(
+            compose_result, upper_half_threshold, coeff_modulus_count);
+
+        if (negative)
+        {
+            double scaled_two_pow_64 = inv_scale;
+            for (std::size_t j = 0; j < coeff_modulus_count;
+                 j++, scaled_two_pow_64 *= two_pow_64_reg)
+            {
+                if (compose_result[j] > decryption_modulus[j])
+                {
+                    auto diff = compose_result[j] - decryption_modulus[j];
+                    result += diff ? static_cast<double>(diff) * scaled_two_pow_64
+                                   : 0.0;
+                }
+                else
+                {
+                    auto diff = decryption_modulus[j] - compose_result[j];
+                    result -= diff ? static_cast<double>(diff) * scaled_two_pow_64
+                                   : 0.0;
+                }
+            }
+        }
+        else
+        {
+            double scaled_two_pow_64 = inv_scale;
+            for (std::size_t j = 0; j < coeff_modulus_count;
+                 j++, scaled_two_pow_64 *= two_pow_64_reg)
+            {
+                auto curr_coeff = compose_result[j];
+                result += curr_coeff ? static_cast<double>(curr_coeff) *
+                                           scaled_two_pow_64
+                                     : 0.0;
+            }
+        }
+
+        coeffs[idx] = result;
+    }
+
     __global__ void encode_kernel_int_ckks_conversion(Data64* plaintext,
                                                       std::int64_t message,
                                                       Modulus64* modulus,

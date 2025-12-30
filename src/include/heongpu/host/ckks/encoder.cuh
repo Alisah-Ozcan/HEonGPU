@@ -455,6 +455,41 @@ namespace heongpu
         }
 
         /**
+         * @brief Decodes a plaintext polynomial into coefficient vector.
+         *
+         * This method is the inverse of encode_coeffs: it converts from NTT
+         * domain to coefficient domain, composes CRT residues, and divides by
+         * the plaintext scale.
+         *
+         * @param coeffs Output coefficients (size = N).
+         * @param plain Input plaintext (NTT domain).
+         */
+        __host__ void
+        decode_coeffs(std::vector<double>& coeffs, Plaintext<Scheme::CKKS> plain,
+                      const ExecutionOptions& options = ExecutionOptions())
+        {
+            input_storage_manager(
+                plain,
+                [&](Plaintext<Scheme::CKKS> plain_)
+                { decode_coeffs_ckks(coeffs, plain_, options.stream_); },
+                options, false);
+        }
+
+        /**
+         * @brief Decodes a plaintext polynomial into coefficient HostVector.
+         */
+        __host__ void
+        decode_coeffs(HostVector<double>& coeffs, Plaintext<Scheme::CKKS> plain,
+                      const ExecutionOptions& options = ExecutionOptions())
+        {
+            input_storage_manager(
+                plain,
+                [&](Plaintext<Scheme::CKKS> plain_)
+                { decode_coeffs_ckks(coeffs, plain_, options.stream_); },
+                options, false);
+        }
+
+        /**
          * @brief Returns the number of slots.
          *
          * @return int Number of slots.
@@ -530,6 +565,14 @@ namespace heongpu
         __host__ void decode_ckks(HostVector<Complex64>& message,
                                   Plaintext<Scheme::CKKS>& plain,
                                   const cudaStream_t stream);
+
+        __host__ void decode_coeffs_ckks(std::vector<double>& coeffs,
+                                         Plaintext<Scheme::CKKS>& plain,
+                                         const cudaStream_t stream);
+
+        __host__ void decode_coeffs_ckks(HostVector<double>& coeffs,
+                                         Plaintext<Scheme::CKKS>& plain,
+                                         const cudaStream_t stream);
 
       private:
         scheme_type scheme_;

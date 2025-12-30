@@ -30,6 +30,12 @@ namespace heongpu
         Modulus64* modulus, int coeff_modulus_count, double scale,
         double two_pow_64, int n_power);
 
+    __global__ void decode_kernel_ckks_coeffs_decompose(
+        double* coeffs, Data64* plaintext_coeff, Modulus64* modulus,
+        Data64* Mi_inv, Data64* Mi, Data64* upper_half_threshold,
+        Data64* decryption_modulus, int coeff_modulus_count, double scale,
+        double two_pow_64, int n_power);
+
     __global__ void encode_kernel_int_ckks_conversion(Data64* plaintext,
                                                       std::int64_t message,
                                                       Modulus64* modulus,

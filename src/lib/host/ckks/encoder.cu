@@ -687,4 +687,100 @@ namespace heongpu
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
+    __host__ void
+    HEEncoder<Scheme::CKKS>::decode_coeffs_ckks(std::vector<double>& coeffs,
+                                                Plaintext<Scheme::CKKS>& plain,
+                                                const cudaStream_t stream)
+    {
+        int current_modulus_count = Q_size_ - plain.depth_;
+
+        DeviceVector<double> coeffs_gpu(n, stream);
+        DeviceVector<Data64> temp_plain(n * current_modulus_count, stream);
+
+        gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
+            .n_power = n_power,
+            .ntt_type = gpuntt::INVERSE,
+            .ntt_layout = gpuntt::PerPolynomial,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .mod_inverse = n_inverse_->data(),
+            .stream = stream};
+
+        gpuntt::GPU_INTT(plain.data(), temp_plain.data(), intt_table_->data(),
+                         modulus_->data(), cfg_intt, current_modulus_count,
+                         current_modulus_count);
+
+        int counter = Q_size_;
+        int location1 = 0;
+        int location2 = 0;
+        for (int i = 0; i < plain.depth_; i++)
+        {
+            location1 += counter;
+            location2 += (counter * counter);
+            counter--;
+        }
+
+        decode_kernel_ckks_coeffs_decompose<<<dim3(((n + 255) >> 8), 1, 1),
+                                              256, 0, stream>>>(
+            coeffs_gpu.data(), temp_plain.data(), modulus_->data(),
+            Mi_inv_->data() + location1, Mi_->data() + location2,
+            upper_half_threshold_->data() + location1,
+            decryption_modulus_->data() + location1, current_modulus_count,
+            plain.scale_, two_pow_64, n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        coeffs.resize(n);
+        cudaMemcpyAsync(coeffs.data(), coeffs_gpu.data(), n * sizeof(double),
+                        cudaMemcpyDeviceToHost, stream);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
+    __host__ void
+    HEEncoder<Scheme::CKKS>::decode_coeffs_ckks(HostVector<double>& coeffs,
+                                                Plaintext<Scheme::CKKS>& plain,
+                                                const cudaStream_t stream)
+    {
+        int current_modulus_count = Q_size_ - plain.depth_;
+
+        DeviceVector<double> coeffs_gpu(n, stream);
+        DeviceVector<Data64> temp_plain(n * current_modulus_count, stream);
+
+        gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
+            .n_power = n_power,
+            .ntt_type = gpuntt::INVERSE,
+            .ntt_layout = gpuntt::PerPolynomial,
+            .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
+            .zero_padding = false,
+            .mod_inverse = n_inverse_->data(),
+            .stream = stream};
+
+        gpuntt::GPU_INTT(plain.data(), temp_plain.data(), intt_table_->data(),
+                         modulus_->data(), cfg_intt, current_modulus_count,
+                         current_modulus_count);
+
+        int counter = Q_size_;
+        int location1 = 0;
+        int location2 = 0;
+        for (int i = 0; i < plain.depth_; i++)
+        {
+            location1 += counter;
+            location2 += (counter * counter);
+            counter--;
+        }
+
+        decode_kernel_ckks_coeffs_decompose<<<dim3(((n + 255) >> 8), 1, 1),
+                                              256, 0, stream>>>(
+            coeffs_gpu.data(), temp_plain.data(), modulus_->data(),
+            Mi_inv_->data() + location1, Mi_->data() + location2,
+            upper_half_threshold_->data() + location1,
+            decryption_modulus_->data() + location1, current_modulus_count,
+            plain.scale_, two_pow_64, n_power);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+        coeffs.resize(n);
+        cudaMemcpyAsync(coeffs.data(), coeffs_gpu.data(), n * sizeof(double),
+                        cudaMemcpyDeviceToHost, stream);
+        HEONGPU_CUDA_CHECK(cudaGetLastError());
+    }
+
 } // namespace heongpu
