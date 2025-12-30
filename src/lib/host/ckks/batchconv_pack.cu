@@ -131,14 +131,14 @@ namespace heongpu
         const ExecutionOptions& options)
     {
         // This is a depth-free linear transform: INTT -> negacyclic shift -> NTT.
-        if (ct.rescale_required_ || ct.relinearization_required_)
+        if (ct.rescale_required() || ct.relinearization_required())
         {
             throw std::invalid_argument(
                 "Ciphertext can not be shifted (rescale/relin required)!");
         }
 
-        const int current_decomp_count = Q_size_ - ct.depth_;
-        const int cipher_size = ct.cipher_size_;
+        const int current_decomp_count = Q_size_ - ct.depth();
+        const int cipher_size = ct.size();
         const int n = n_;
 
         int shift_norm = shift % n;
@@ -238,15 +238,15 @@ namespace heongpu
         // Ensure all ciphertexts are at same level/scale.
         for (int b = 1; b < B; b++)
         {
-            if (ct_b[b].depth_ != ct_b[0].depth_)
+            if (ct_b[b].depth() != ct_b[0].depth())
             {
                 throw std::invalid_argument("Ciphertext levels must match!");
             }
-            if (ct_b[b].scale_ != ct_b[0].scale_)
+            if (ct_b[b].scale() != ct_b[0].scale())
             {
                 throw std::invalid_argument("Ciphertext scales must match!");
             }
-            if (ct_b[b].cipher_size_ != ct_b[0].cipher_size_)
+            if (ct_b[b].size() != ct_b[0].size())
             {
                 throw std::invalid_argument("Ciphertext sizes must match!");
             }
