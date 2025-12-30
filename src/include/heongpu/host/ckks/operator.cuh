@@ -2390,8 +2390,7 @@ namespace heongpu
             double scale, int target_depth,
             const ExecutionOptions& options = ExecutionOptions())
         {
-            if ((scale <= 0) ||
-                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            if (scale <= 0)
             {
                 throw std::invalid_argument("Scale out of bounds");
             }
