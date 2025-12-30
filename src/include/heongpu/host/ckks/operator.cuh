@@ -2372,6 +2372,92 @@ namespace heongpu
                 static_cast<int>(coeffs.size()) - 1, c, false, PolyType::MONOMIAL);
             return evaluate_poly(cipher, target_scale, pol, relin_key, options);
         }
+
+        /**
+         * @brief Encodes a real-valued slot vector as a plaintext at a specific
+         * ciphertext depth (i.e., matching the active modulus subset).
+         *
+         * This is useful for slot-domain masking (0/1 masks) without forcing a
+         * ciphertext rescale.
+         *
+         * Layout semantics:
+         * - Slot index s (0..slot_count-1) corresponds to message[s].
+         * - The output plaintext is in NTT domain and can be used with
+         *   multiply_plain against a ciphertext with the same depth.
+         */
+        __host__ void encode_slots_leveled(
+            Plaintext<Scheme::CKKS>& plain, const std::vector<double>& message,
+            double scale, int target_depth,
+            const ExecutionOptions& options = ExecutionOptions())
+        {
+            if ((scale <= 0) ||
+                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            {
+                throw std::invalid_argument("Scale out of bounds");
+            }
+            if (target_depth < 0 || target_depth >= Q_size_)
+            {
+                throw std::invalid_argument("Invalid target depth");
+            }
+
+            const int current_decomp_count = Q_size_ - target_depth;
+            if (current_decomp_count <= 0)
+            {
+                throw std::invalid_argument("Invalid modulus count");
+            }
+            if (message.size() > static_cast<size_t>(slot_count_))
+            {
+                throw std::invalid_argument(
+                    "Vector size can not be higher than slot count!");
+            }
+
+            std::vector<Complex64> c(static_cast<size_t>(slot_count_),
+                                     Complex64(0.0, 0.0));
+            for (size_t i = 0; i < message.size(); i++)
+            {
+                c[i] = Complex64(message[i], 0.0);
+            }
+
+            DeviceVector<Data64> encoded(n * current_decomp_count, options.stream_);
+            quick_ckks_encoder_vec_complex(c.data(), encoded.data(), scale,
+                                           current_decomp_count);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
+
+            output_storage_manager(
+                plain,
+                [&](Plaintext<Scheme::CKKS>& plain_)
+                {
+                    plain_.memory_set(std::move(encoded));
+
+                    plain_.plain_size_ = n * current_decomp_count;
+                    plain_.scheme_ = scheme_;
+                    plain_.depth_ = target_depth;
+                    plain_.scale_ = scale;
+                    plain_.in_ntt_domain_ = true;
+                    plain_.plaintext_generated_ = true;
+                },
+                options);
+        }
+
+        /**
+         * @brief Multiplies a ciphertext by a plaintext mask without setting the
+         * "rescale_required" flag (intended for 0/1 masks with scale=1).
+         *
+         * This keeps the ciphertext at the same level and is compatible with
+         * rotations immediately after masking.
+         */
+        __host__ void multiply_plain_mask_inplace(
+            Ciphertext<Scheme::CKKS>& input1, Plaintext<Scheme::CKKS>& mask,
+            const ExecutionOptions& options = ExecutionOptions())
+        {
+            multiply_plain(input1, mask, input1, options);
+            input1.rescale_required_ = false;
+        }
+
+        /**
+         * @brief Returns CKKS slot count (N/2).
+         */
+        inline int slot_count() const noexcept { return slot_count_; }
     };
 
     /**
