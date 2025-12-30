@@ -3563,6 +3563,14 @@ namespace heongpu
 
         cipher_taylor = evaluate_poly(cipher_taylor, target_scale, sine_poly_,
                                       relin_key, options);
+        // evaluate_poly may return a ciphertext with rescale_required_ still set
+        // depending on scale/target_scale heuristics. eval_mod performs further
+        // ciphertext multiplications immediately after, so we must ensure the
+        // intermediate is rescaled.
+        if (cipher_taylor.rescale_required_)
+        {
+            rescale_inplace(cipher_taylor, options);
+        }
 
         double sqrt2pi = eval_mod_config_.sqrt2pi_;
         for (int i = 0; i < eval_mod_config_.double_angle_; i++)
