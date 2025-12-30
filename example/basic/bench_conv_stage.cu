@@ -111,14 +111,26 @@ static ConvStageBenchResult run_once(int B, int w, int k, int N)
         ops.multiply_plain_inplace(ct_b[out], Pk);
         ops.rescale_inplace(ct_b[out]);
     }
-    HEONGPU_CUDA_CHECK(cudaDeviceSynchronize());
+    cudaError_t err_sync1 = cudaDeviceSynchronize();
+    if (err_sync1 != cudaSuccess)
+    {
+        std::cerr << "CUDA sync failed: " << cudaGetErrorString(err_sync1)
+                  << std::endl;
+        std::terminate();
+    }
     auto t1 = std::chrono::high_resolution_clock::now();
 
     // ---- Pack stage timing: stride-B projection + monomial shifts + adds ----
     auto t2 = std::chrono::high_resolution_clock::now();
     heongpu::Ciphertext<Scheme> ct_pack =
         packer.pack_coeffs_strideB(ops, ct_b, B, gk_pack);
-    HEONGPU_CUDA_CHECK(cudaDeviceSynchronize());
+    cudaError_t err_sync2 = cudaDeviceSynchronize();
+    if (err_sync2 != cudaSuccess)
+    {
+        std::cerr << "CUDA sync failed: " << cudaGetErrorString(err_sync2)
+                  << std::endl;
+        std::terminate();
+    }
     auto t3 = std::chrono::high_resolution_clock::now();
 
     (void)ct_pack;
@@ -161,4 +173,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
