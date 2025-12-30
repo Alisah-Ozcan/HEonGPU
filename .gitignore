@@ -4,7 +4,8 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 CTestTestfile.cmake
-
+/optimal_conv/
+/test_lattigo/
 # Output directories
 /bin/
 /build/
