@@ -1,0 +1,77 @@
+﻿// Copyright 2024-2025 Alişah Özcan
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+// Developer: Alişah Özcan
+
+#ifndef HEONGPU_CKKS_BATCHCONV_PACK_H
+#define HEONGPU_CKKS_BATCHCONV_PACK_H
+
+#include "gpuntt/ntt_merge/ntt.cuh"
+#include <heongpu/host/ckks/context.cuh>
+#include <heongpu/host/ckks/ciphertext.cuh>
+#include <heongpu/host/ckks/plaintext.cuh>
+#include <heongpu/host/ckks/operator.cuh>
+#include <heongpu/kernel/transform.cuh>
+#include <heongpu/util/devicevector.cuh>
+#include <heongpu/util/storagemanager.cuh>
+#include <heongpu/util/util.cuh>
+
+namespace heongpu
+{
+    /**
+     * @brief HEBatchConvPack implements sparse BatchConv and PackCoeffs in
+     * coefficient-encoding.
+     *
+     * - BatchConv: pack B inputs into one ciphertext polynomial I_sparse(X),
+     *   then for each output b build Kb_sparse(X) and compute r_b(X) = I_sparse
+     *   * Kb_sparse.
+     * - PackCoeffs: pack r_b polynomials into one ciphertext by monomial shifts:
+     *   ct_pack(X) = Σ_b ct_b(X) * X^b.
+     *
+     * Notes:
+     * - Requires that each ct_b has non-zeros only at stride-B indices; this is
+     *   guaranteed by the construction (X^B substitution and ±in offsets).
+     * - Monomial shifts are implemented as INTT -> coefficient shift -> NTT,
+     *   and do not change ciphertext depth.
+     */
+    template <> class HEBatchConvPack<Scheme::CKKS>
+    {
+      public:
+        __host__ explicit HEBatchConvPack(HEContext<Scheme::CKKS>& context);
+
+        __host__ std::vector<double>
+        build_input_sparse_coeffs(const std::vector<double>& inputs, int B,
+                                  int w, int k) const;
+
+        __host__ std::vector<double>
+        build_kernel_sparse_coeffs_for_out(const std::vector<double>& kernels,
+                                           int out, int B, int w, int k) const;
+
+        __host__ void monomial_shift_inplace(Ciphertext<Scheme::CKKS>& ct,
+                                             int shift,
+                                             const ExecutionOptions& options =
+                                                 ExecutionOptions());
+
+        __host__ Ciphertext<Scheme::CKKS>
+        pack_coeffs(HEArithmeticOperator<Scheme::CKKS>& operators,
+                    std::vector<Ciphertext<Scheme::CKKS>>& ct_b, int B,
+                    const ExecutionOptions& options = ExecutionOptions());
+
+      private:
+        __host__ void add_coeff_with_neg_exp(std::vector<double>& poly, int exp,
+                                             double value) const;
+
+        scheme_type scheme_;
+        int n_;
+        int n_power_;
+        int Q_size_;
+
+        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
+        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
+        std::shared_ptr<DeviceVector<Root64>> intt_table_;
+        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
+    };
+
+} // namespace heongpu
+
+#endif // HEONGPU_CKKS_BATCHCONV_PACK_H

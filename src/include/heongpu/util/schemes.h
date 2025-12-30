@@ -49,6 +49,8 @@ namespace heongpu
 
     template <Scheme S> class HEConvolution;
 
+    template <Scheme S> class HEBatchConvPack;
+
     template <Scheme S> class Plaintext;
 
     template <Scheme S> class Publickey;

@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
     const int d = w - k + 1;
 
     // Choose N as the CKKS poly modulus degree.
-    const size_t poly_modulus_degree = 1024;
+    const size_t poly_modulus_degree = 4096;
 
     // CKKS parameters: keep scale ~ 2^30 stable after one mul+rescale.
     const double scale = std::pow(2.0, 30);
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 
     // FHE flow: coefficient encoding -> encrypt -> ciphertext multiplication.
     heongpu::HEContext<Scheme> context(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,heongpu::sec_level_type::none);
     context.set_poly_modulus_degree(poly_modulus_degree);
     context.set_coeff_modulus_bit_sizes({60, 30, 30}, {60});
     context.generate();

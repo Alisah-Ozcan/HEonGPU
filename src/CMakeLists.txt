@@ -88,6 +88,7 @@ set(HEONGPU_KERNEL_SOURCES
     lib/kernel/multiplication.cu
     lib/kernel/small_ntt.cu
     lib/kernel/switchkey.cu
+    lib/kernel/transform.cu
 )
 
 add_library(heongpu_kernel OBJECT ${HEONGPU_KERNEL_SOURCES})
@@ -172,6 +173,7 @@ set_target_properties(heongpu_host_bfv PROPERTIES
 )
 
 set(HEONGPU_HOST_CKKS_SOURCES
+    lib/host/ckks/batchconv_pack.cu
     lib/host/ckks/chebyshev_interpolation.cu
     lib/host/ckks/ciphertext.cu
     lib/host/ckks/convolution.cu

@@ -20,6 +20,8 @@ set(EXECUTABLES
     12_basic_tfhe 12_basic_tfhe.cu
     13_poly_convolution_ckks 13_poly_convolution_ckks.cu
     14_basic_convfhe_single 14_basic_convfhe_single.cu
+    demo_batchconv_pack demo_batchconv_pack.cu
+    bench_batchconv_pack bench_batchconv_pack.cu
 )
 
 function(add_example exe source)
