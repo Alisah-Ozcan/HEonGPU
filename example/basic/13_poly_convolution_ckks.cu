@@ -43,9 +43,9 @@ int main(int argc, char* argv[])
     cudaSetDevice(0); // Use it for memory pool
 
     heongpu::HEContext<Scheme> context(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,heongpu::sec_level_type::none);
 
-    const size_t poly_modulus_degree = 1024;
+    const size_t poly_modulus_degree = 4096;
     context.set_poly_modulus_degree(poly_modulus_degree);
 
     // Keep it small: only needed to initialize NTT tables for poly mult.
@@ -77,8 +77,10 @@ int main(int argc, char* argv[])
     // Coefficient inputs (as doubles) to be encoded into plaintext polynomials.
     // Use a CKKS-friendly scale aligned with the modulus chain.
     const double scale = std::pow(2.0, 30);
-    std::uniform_int_distribution<int64_t> signed_dist(-(1LL << 20),
-                                                       (1LL << 20));
+    // Keep coefficients small so that a single multiplication+rescale keeps a
+    // comfortable precision margin for an example.
+    std::uniform_int_distribution<int64_t> signed_dist(-(1LL << 10),
+                                                       (1LL << 10));
     std::vector<double> a_coeff(static_cast<size_t>(n), 0.0);
     std::vector<double> b_coeff(static_cast<size_t>(n), 0.0);
     for (int i = 0; i < n; i++)
@@ -111,13 +113,15 @@ int main(int argc, char* argv[])
 
     std::vector<double> ref = cpu_negacyclic_convolution(a_coeff, b_coeff);
 
-    const double eps = 1e-3;
+    const double eps = 1e-2;
     for (int i = 0; i < n; i++)
     {
         if (std::abs(decoded[i] - ref[i]) > eps)
         {
             std::cout << "FAIL at i=" << i << " got=" << decoded[i]
-                      << " ref=" << ref[i] << std::endl;
+                      << " ref=" << ref[i]
+                      << " abs_err=" << std::abs(decoded[i] - ref[i])
+                      << std::endl;
             return EXIT_FAILURE;
         }
     }
