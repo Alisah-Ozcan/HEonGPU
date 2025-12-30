@@ -114,10 +114,16 @@ int main(int argc, char* argv[])
 
     // HE setup.
     heongpu::HEContext<Scheme> context(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,heongpu::sec_level_type::none);
+        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+        heongpu::sec_level_type::none);
     context.set_poly_modulus_degree(N);
-    context.set_coeff_modulus_bit_sizes({60, 30, 30, 30, 30, 30}, {60});
+    // Give enough levels for: coeff->slot (4 rescales) + sign-poly eval +
+    // a few multiplies/rescales + slot->coeff (3 rescales).
+    context.set_coeff_modulus_bit_sizes(
+        {60, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30},
+        {60});
     context.generate();
+    const int Q_size = context.get_ciphertext_modulus_count();
 
     heongpu::HEKeyGenerator<Scheme> keygen(context);
     heongpu::Secretkey<Scheme> sk(context);
@@ -146,14 +152,15 @@ int main(int argc, char* argv[])
     gk_pack.store_in_device();
 
     // Bootstrapping matrix params (v2) for coeff<->slot transforms.
-    // Use fixed levels and drop ciphertexts to match.
-    const int cts_level_start = 3;
-    const int stc_level_start = 3;
+    // Choose start levels to keep enough room for activation depth.
+    const int cts_level_start =
+        Q_size - 2; // matches ct_conv right after conv+pack
+    const int stc_level_start = 4;
 
-    heongpu::EncodingMatrixConfig cts_cfg(heongpu::LinearTransformType::COEFFS_TO_SLOTS,
-                                         cts_level_start, 2.0, 4);
-    heongpu::EncodingMatrixConfig stc_cfg(heongpu::LinearTransformType::SLOTS_TO_COEFFS,
-                                         stc_level_start, 2.0, 3);
+    heongpu::EncodingMatrixConfig cts_cfg(
+        heongpu::LinearTransformType::COEFFS_TO_SLOTS, cts_level_start, 2.0, 4);
+    heongpu::EncodingMatrixConfig stc_cfg(
+        heongpu::LinearTransformType::SLOTS_TO_COEFFS, stc_level_start, 2.0, 3);
     heongpu::EvalModConfig eval_mod_cfg(/*level_start=*/0);
     heongpu::ConvReluLayerParams layer_params(stc_cfg, eval_mod_cfg, cts_cfg);
     layer_params.B = B;

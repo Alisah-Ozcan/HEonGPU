@@ -108,8 +108,16 @@ namespace heongpu
                                                        params.boot_cfg_v2);
         }
 
-        // Drop to cts_config_.level_start_ if needed.
+        // Drop to cts_config_.level_start_ if needed. Note: coeff_to_slot_v2
+        // consumes 4 rescale steps internally (piece=4), so you must start with
+        // enough remaining moduli for your activation depth.
         const int cts_level_start = params.boot_cfg_v2.cts_config_.level_start_;
+        if (ct_conv.level() < cts_level_start)
+        {
+            throw std::invalid_argument(
+                "ct_conv level is lower than cts_level_start; increase modulus "
+                "chain or choose a lower cts_level_start.");
+        }
         while (ct_conv.level() > cts_level_start)
         {
             operators.mod_drop_inplace(ct_conv, options);
@@ -180,6 +188,12 @@ namespace heongpu
 
         // Drop to stc_config_.level_start_ if needed.
         const int stc_level_start = params.boot_cfg_v2.stc_config_.level_start_;
+        if (slots[0].level() < stc_level_start || slots[1].level() < stc_level_start)
+        {
+            throw std::invalid_argument(
+                "slot ciphertext level is lower than stc_level_start; increase "
+                "modulus chain or choose a lower stc_level_start.");
+        }
         while (slots[0].level() > stc_level_start)
         {
             operators.mod_drop_inplace(slots[0], options);
