@@ -50,7 +50,9 @@ int main(int argc, char* argv[])
 
     // Keep it small: only needed to initialize NTT tables for poly mult.
     // No rescale is performed in this example.
-    context.set_coeff_modulus_bit_sizes({50, 50, 50}, {50});
+    // Match scale (2^30) with 30-bit primes so that after a single
+    // multiplication and rescale, the scale stays close to 2^30.
+    context.set_coeff_modulus_bit_sizes({60, 30, 30}, {60});
     context.generate();
 
     heongpu::HEKeyGenerator<Scheme> keygen(context);
@@ -77,16 +79,14 @@ int main(int argc, char* argv[])
     // Coefficient inputs (as doubles) to be encoded into plaintext polynomials.
     // Use a CKKS-friendly scale aligned with the modulus chain.
     const double scale = std::pow(2.0, 30);
-    // Keep coefficients small so that a single multiplication+rescale keeps a
-    // comfortable precision margin for an example.
-    std::uniform_int_distribution<int64_t> signed_dist(-(1LL << 10),
-                                                       (1LL << 10));
+    // Use small real values, similar to typical NN inference weights/activations.
+    std::uniform_real_distribution<double> dist(-0.1, 0.1);
     std::vector<double> a_coeff(static_cast<size_t>(n), 0.0);
     std::vector<double> b_coeff(static_cast<size_t>(n), 0.0);
     for (int i = 0; i < n; i++)
     {
-        a_coeff[i] = static_cast<double>(signed_dist(rng));
-        b_coeff[i] = static_cast<double>(signed_dist(rng));
+        a_coeff[i] = dist(rng);
+        b_coeff[i] = dist(rng);
     }
 
     heongpu::Plaintext<Scheme> Pa(context);
@@ -113,14 +113,17 @@ int main(int argc, char* argv[])
 
     std::vector<double> ref = cpu_negacyclic_convolution(a_coeff, b_coeff);
 
-    const double eps = 1e-2;
+    const double abs_eps = 2e-3;
+    const double rel_eps = 1e-6;
     for (int i = 0; i < n; i++)
     {
-        if (std::abs(decoded[i] - ref[i]) > eps)
+        const double abs_err = std::abs(decoded[i] - ref[i]);
+        const double tol = abs_eps + rel_eps * std::max(1.0, std::abs(ref[i]));
+        if (abs_err > tol)
         {
             std::cout << "FAIL at i=" << i << " got=" << decoded[i]
                       << " ref=" << ref[i]
-                      << " abs_err=" << std::abs(decoded[i] - ref[i])
+                      << " abs_err=" << abs_err << " tol=" << tol
                       << std::endl;
             return EXIT_FAILURE;
         }
