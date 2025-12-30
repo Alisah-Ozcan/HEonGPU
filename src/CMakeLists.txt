@@ -172,15 +172,16 @@ set_target_properties(heongpu_host_bfv PROPERTIES
     CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}"
 )
 
-set(HEONGPU_HOST_CKKS_SOURCES
-    lib/host/ckks/batchconv_pack.cu
-    lib/host/ckks/chebyshev_interpolation.cu
-    lib/host/ckks/ciphertext.cu
-    lib/host/ckks/convolution.cu
-    lib/host/ckks/conv_relu_layer.cu
-    lib/host/ckks/context.cu
-    lib/host/ckks/cosine_approx.cu
-    lib/host/ckks/decryptor.cu
+	set(HEONGPU_HOST_CKKS_SOURCES
+	    lib/host/ckks/batchconv_pack.cu
+	    lib/host/ckks/chebyshev_interpolation.cu
+	    lib/host/ckks/ciphertext.cu
+	    lib/host/ckks/convolution.cu
+	    lib/host/ckks/conv_bootstrap.cu
+	    lib/host/ckks/conv_relu_layer.cu
+	    lib/host/ckks/context.cu
+	    lib/host/ckks/cosine_approx.cu
+	    lib/host/ckks/decryptor.cu
     lib/host/ckks/encoder.cu
     lib/host/ckks/encryptor.cu
     lib/host/ckks/evaluationkey.cu

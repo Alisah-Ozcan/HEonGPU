@@ -24,6 +24,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_LOCATION}/examples/basic)
 	    demo_batchconv_pack demo_batchconv_pack.cu
 	    bench_batchconv_pack bench_batchconv_pack.cu
 	    bench_conv_stage bench_conv_stage.cu
+	    conv_bootstrap_no_relu conv_bootstrap_no_relu.cu
 	)
 
 function(add_example exe source)
