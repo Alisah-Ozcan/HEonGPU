@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 
     // HE setup.
     heongpu::HEContext<Scheme> context(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,heongpu::sec_level_type::none);
     context.set_poly_modulus_degree(N);
     context.set_coeff_modulus_bit_sizes({60, 30, 30, 30, 30, 30}, {60});
     context.generate();
