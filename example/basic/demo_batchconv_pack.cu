@@ -9,6 +9,7 @@
 #include <cmath>
 #include <random>
 #include <vector>
+#include <unordered_map>
 
 constexpr auto Scheme = heongpu::Scheme::CKKS;
 
@@ -85,6 +86,21 @@ static std::vector<double> pack_reference_strideB(const std::vector<std::vector<
     return out;
 }
 
+static std::vector<double>
+project_strideB_reference(const std::vector<double>& poly, int B)
+{
+    const int N = static_cast<int>(poly.size());
+    std::vector<double> out(static_cast<size_t>(N), 0.0);
+    for (int i = 0; i < N; i++)
+    {
+        if ((i % B) == 0)
+        {
+            out[i] = static_cast<double>(B) * poly[i]; // projection scales by B
+        }
+    }
+    return out;
+}
+
 int main(int argc, char* argv[])
 {
     cudaSetDevice(0);
@@ -121,6 +137,28 @@ int main(int argc, char* argv[])
     heongpu::HEDecryptor<Scheme> decryptor(context, sk);
     heongpu::HEArithmeticOperator<Scheme> ops(context, encoder);
     heongpu::HEBatchConvPack<Scheme> packer(context);
+
+    // Galois keys for projection subgroup elements.
+    // g_t = 1 + t*(2N/B) mod 2N for each B used in the sweep.
+    std::unordered_map<int, heongpu::Galoiskey<Scheme>> gks;
+    for (int B : Bs)
+    {
+        if ((static_cast<int>(N) % B) != 0)
+            continue;
+
+        const int twoN = static_cast<int>(2 * N);
+        const int step = twoN / B;
+        std::vector<uint32_t> galois_elts;
+        galois_elts.reserve(static_cast<size_t>(B - 1));
+        for (int t = 1; t < B; t++)
+        {
+            galois_elts.push_back(static_cast<uint32_t>(1 + t * step));
+        }
+        heongpu::Galoiskey<Scheme> gk(context, galois_elts);
+        keygen.generate_galois_key(gk, sk);
+        gk.store_in_device();
+        gks.emplace(B, std::move(gk));
+    }
 
     const double abs_eps = 2e-3;
     const double rel_eps = 1e-6;
@@ -196,21 +234,28 @@ int main(int argc, char* argv[])
                     ops.rescale_inplace(ct_b[out]);
                 }
 
-                // PackCoeffs: ct_pack = Σ_b ct_b * X^b (monomial shifts).
-                for (int b = 1; b < B; b++)
+                // PackCoeffs: first project stride-B coefficients (scaled by B),
+                // then shift by b and sum.
+                auto it = gks.find(B);
+                if (it == gks.end())
                 {
-                    packer.monomial_shift_inplace(ct_b[b], b);
-                    ops.add_inplace(ct_b[0], ct_b[b]);
+                    throw std::invalid_argument("Missing galois keys for B");
                 }
-                heongpu::Ciphertext<Scheme> ct_pack = ct_b[0];
+                heongpu::Ciphertext<Scheme> ct_pack =
+                    packer.pack_coeffs_strideB(ops, ct_b, B, it->second);
 
                 heongpu::Plaintext<Scheme> P_out(context);
                 decryptor.decrypt(P_out, ct_pack);
                 std::vector<double> decoded;
                 encoder.decode_coeffs(decoded, P_out);
 
-                // CPU pack simulation for index relation.
-                std::vector<double> pack_cpu = pack_reference_strideB(rb_cpu, B);
+                // CPU pack simulation: project stride-B (scaled by B), shift by b, sum.
+                std::vector<std::vector<double>> rb_proj(static_cast<size_t>(B));
+                for (int b = 0; b < B; b++)
+                {
+                    rb_proj[b] = project_strideB_reference(rb_cpu[b], B);
+                }
+                std::vector<double> pack_cpu = pack_reference_strideB(rb_proj, B);
 
                 // Verify:
                 // packed coeff at (B*(i*w+j) + out) equals R_out[i,j].
@@ -222,7 +267,8 @@ int main(int argc, char* argv[])
                         for (int j = 0; j < d; j++)
                         {
                             const int pos = B * (i * w + j) + out;
-                            const double want = ref_R[out][i * d + j];
+                            const double want =
+                                static_cast<double>(B) * ref_R[out][i * d + j];
                             const double got = decoded[pos];
                             const double abs_err = std::abs(got - want);
                             max_abs_err = std::max(max_abs_err, abs_err);
@@ -235,7 +281,9 @@ int main(int argc, char* argv[])
                                           << " k=" << k << " out=" << out
                                           << " i=" << i << " j=" << j
                                           << " pos=" << pos << " got=" << got
-                                          << " ref=" << want << " abs_err=" << abs_err
+                                          << " ref=" << want
+                                          << " cpu_pack=" << pack_cpu[pos]
+                                          << " abs_err=" << abs_err
                                           << " tol=" << tol << std::endl;
                                 return EXIT_FAILURE;
                             }
@@ -268,4 +316,3 @@ int main(int argc, char* argv[])
 
     return EXIT_SUCCESS;
 }
-

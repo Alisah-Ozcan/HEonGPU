@@ -264,4 +264,71 @@ namespace heongpu
         return acc;
     }
 
+    __host__ Ciphertext<Scheme::CKKS>
+    HEBatchConvPack<Scheme::CKKS>::project_strideB(
+        HEArithmeticOperator<Scheme::CKKS>& operators,
+        Ciphertext<Scheme::CKKS>& ct, int B, Galoiskey<Scheme::CKKS>& gk,
+        const ExecutionOptions& options)
+    {
+        if (B <= 0 || (B & (B - 1)) != 0)
+        {
+            throw std::invalid_argument("B must be a power-of-two positive!");
+        }
+        if (n_ % B != 0)
+        {
+            throw std::invalid_argument("N must be divisible by B!");
+        }
+        if (ct.rescale_required() || ct.relinearization_required())
+        {
+            throw std::invalid_argument(
+                "Ciphertext can not be projected (rescale/relin required)!");
+        }
+
+        Ciphertext<Scheme::CKKS> acc = ct;
+
+        // Subgroup elements: g_t = 1 + t*(2N/B) mod 2N, t=1..B-1.
+        const int twoN = 2 * n_;
+        const int step = twoN / B;
+        for (int t = 1; t < B; t++)
+        {
+            const int g = 1 + t * step;
+            Ciphertext<Scheme::CKKS> tmp;
+            operators.apply_galois(ct, tmp, gk, g, options);
+            operators.add_inplace(acc, tmp, options);
+        }
+
+        // acc is scaled by B; caller may compensate if desired.
+        return acc;
+    }
+
+    __host__ Ciphertext<Scheme::CKKS>
+    HEBatchConvPack<Scheme::CKKS>::pack_coeffs_strideB(
+        HEArithmeticOperator<Scheme::CKKS>& operators,
+        std::vector<Ciphertext<Scheme::CKKS>>& ct_b, int B,
+        Galoiskey<Scheme::CKKS>& gk, const ExecutionOptions& options)
+    {
+        if (static_cast<int>(ct_b.size()) != B)
+        {
+            throw std::invalid_argument("ct_b size must be B!");
+        }
+        if (B <= 0)
+        {
+            throw std::invalid_argument("B must be positive!");
+        }
+
+        // Project and pack.
+        Ciphertext<Scheme::CKKS> out =
+            project_strideB(operators, ct_b[0], B, gk, options);
+
+        for (int b = 1; b < B; b++)
+        {
+            Ciphertext<Scheme::CKKS> proj =
+                project_strideB(operators, ct_b[b], B, gk, options);
+            monomial_shift_inplace(proj, b, options);
+            operators.add_inplace(out, proj, options);
+        }
+
+        return out;
+    }
+
 } // namespace heongpu

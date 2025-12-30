@@ -63,6 +63,19 @@ int main(int argc, char* argv[])
     heongpu::HEArithmeticOperator<Scheme> ops(context, encoder);
     heongpu::HEBatchConvPack<Scheme> packer(context);
 
+    // Galois keys for projection (B subgroup elements).
+    const int twoN = static_cast<int>(2 * N);
+    const int step = twoN / B;
+    std::vector<uint32_t> galois_elts;
+    galois_elts.reserve(static_cast<size_t>(B - 1));
+    for (int t = 1; t < B; t++)
+    {
+        galois_elts.push_back(static_cast<uint32_t>(1 + t * step));
+    }
+    heongpu::Galoiskey<Scheme> gk(context, galois_elts);
+    keygen.generate_galois_key(gk, sk);
+    gk.store_in_device();
+
     cudaEvent_t ev_start, ev_stop;
     cudaEventCreate(&ev_start);
     cudaEventCreate(&ev_stop);
@@ -106,11 +119,8 @@ int main(int argc, char* argv[])
 
     // 3) Benchmark: pack (B-1) monomial shifts + (B-1) adds.
     cudaEventRecord(ev_start);
-    for (int b = 1; b < B; b++)
-    {
-        packer.monomial_shift_inplace(ct_b[b], b);
-        ops.add_inplace(ct_b[0], ct_b[b]);
-    }
+    heongpu::Ciphertext<Scheme> ct_pack =
+        packer.pack_coeffs_strideB(ops, ct_b, B, gk);
     cudaEventRecord(ev_stop);
     cudaEventSynchronize(ev_stop);
     const double ms_pack = elapsed_ms(ev_start, ev_stop);
@@ -120,8 +130,9 @@ int main(int argc, char* argv[])
               << " N=" << N << std::endl;
     std::cout << "Ops:"
               << " mul_plain=" << B << " rescale=" << B
-              << " monomial_shift=" << (B - 1) << " add=" << (B - 1)
-              << " rotate=0" << std::endl;
+              << " galois_apply=" << (B * (B - 1))
+              << " monomial_shift=" << (B - 1)
+              << " add=" << ((B - 1) + B * (B - 1)) << std::endl;
     std::cout << "Time(ms): batchconv=" << ms_batchconv
               << " pack=" << ms_pack << std::endl;
 
@@ -130,4 +141,3 @@ int main(int argc, char* argv[])
 
     return EXIT_SUCCESS;
 }
-
