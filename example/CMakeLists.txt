@@ -5,4 +5,5 @@
 
 add_subdirectory(basic)
 add_subdirectory(bootstrapping)
+add_subdirectory(lowmem_resnet20_slot)
 add_subdirectory(mpc)
