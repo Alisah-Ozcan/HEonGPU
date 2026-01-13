@@ -338,6 +338,14 @@ class FHEController {
                       << " scale=" << c.scale() << std::endl;
         }
         Ctxt tmp = c;
+        if (tmp.rescale_required()) {
+            operators_->rescale_inplace(tmp);
+            if (debug_cuda) {
+                std::cout << "bootstrap rescale depth=" << tmp.depth()
+                          << " level=" << tmp.level()
+                          << " scale=" << tmp.scale() << std::endl;
+            }
+        }
         drop_to_depth(tmp, circuit_depth);
         Ctxt out(context_);
         try {
