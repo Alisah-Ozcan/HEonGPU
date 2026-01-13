@@ -184,6 +184,14 @@ class FHEController {
 
     Ctxt add_plain(const Ctxt& c, const Ptxt& p)
     {
+        if (debug_cuda && p.depth() != c.depth()) {
+            std::cerr << "add_plain depth mismatch c=" << c.depth()
+                      << " p=" << p.depth();
+            if (!debug_label.empty()) {
+                std::cerr << " [" << debug_label << "]";
+            }
+            std::cerr << std::endl;
+        }
         Ctxt out(context_);
         operators_->add_plain(const_cast<Ctxt&>(c), const_cast<Ptxt&>(p), out);
         check_cuda("add_plain");
@@ -329,9 +337,8 @@ class FHEController {
         if (debug_cuda) {
             debug_label = "convbn_initial bias encode";
         }
-        Ptxt bias = encode(utils::read_values_from_file(
-                             weights_dir + "/conv1bn1-bias.bin", scale),
-                           in.depth(), 16384);
+        std::vector<double> bias_values = utils::read_values_from_file(
+            weights_dir + "/conv1bn1-bias.bin", scale);
 
         Ctxt finalsum(context_);
         bool init = false;
@@ -374,6 +381,10 @@ class FHEController {
             }
         }
 
+        if (debug_cuda) {
+            debug_label = "convbn_initial bias encode";
+        }
+        Ptxt bias = encode(bias_values, finalsum.depth(), 16384);
         finalsum = add_plain(finalsum, bias);
 
         if (timing) {
@@ -406,12 +417,10 @@ class FHEController {
         c_rotations.push_back(
             rotate_vector(rotate_vector(in, padding), img_width));
 
-        Ptxt bias = encode(utils::read_values_from_file(
-                             weights_dir + "/layer" + std::to_string(layer) +
-                                 "-conv" + std::to_string(n) + "bn" +
-                                 std::to_string(n) + "-bias.bin",
-                             scale),
-                           in.depth(), 16384);
+        std::vector<double> bias_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias.bin",
+            scale);
 
         Ctxt finalsum(context_);
         bool init = false;
@@ -444,6 +453,10 @@ class FHEController {
             }
         }
 
+        if (debug_cuda) {
+            debug_label = "convbn bias encode";
+        }
+        Ptxt bias = encode(bias_values, finalsum.depth(), 16384);
         finalsum = add_plain(finalsum, bias);
 
         if (timing) {
@@ -477,12 +490,10 @@ class FHEController {
         c_rotations.push_back(
             rotate_vector(rotate_vector(in, padding), img_width));
 
-        Ptxt bias = encode(utils::read_values_from_file(
-                             weights_dir + "/layer" + std::to_string(layer) +
-                                 "-conv" + std::to_string(n) + "bn" +
-                                 std::to_string(n) + "-bias.bin",
-                             scale),
-                           in.depth(), 8192);
+        std::vector<double> bias_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias.bin",
+            scale);
 
         Ctxt finalsum(context_);
         bool init = false;
@@ -515,6 +526,10 @@ class FHEController {
             }
         }
 
+        if (debug_cuda) {
+            debug_label = "convbn2 bias encode";
+        }
+        Ptxt bias = encode(bias_values, finalsum.depth(), 8192);
         finalsum = add_plain(finalsum, bias);
 
         if (timing) {
@@ -548,12 +563,10 @@ class FHEController {
         c_rotations.push_back(
             rotate_vector(rotate_vector(in, padding), img_width));
 
-        Ptxt bias = encode(utils::read_values_from_file(
-                             weights_dir + "/layer" + std::to_string(layer) +
-                                 "-conv" + std::to_string(n) + "bn" +
-                                 std::to_string(n) + "-bias.bin",
-                             scale),
-                           in.depth(), 4096);
+        std::vector<double> bias_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias.bin",
+            scale);
 
         Ctxt finalsum(context_);
         bool init = false;
@@ -586,6 +599,10 @@ class FHEController {
             }
         }
 
+        if (debug_cuda) {
+            debug_label = "convbn3 bias encode";
+        }
+        Ptxt bias = encode(bias_values, finalsum.depth(), 4096);
         finalsum = add_plain(finalsum, bias);
 
         if (timing) {
@@ -619,18 +636,14 @@ class FHEController {
         c_rotations.push_back(
             rotate_vector(rotate_vector(in, (img_width)), padding));
 
-        Ptxt bias1 = encode(utils::read_values_from_file(
-                              weights_dir + "/layer" + std::to_string(layer) +
-                                  "-conv" + std::to_string(n) + "bn" +
-                                  std::to_string(n) + "-bias1.bin",
-                              scale),
-                            in.depth(), 16384);
-        Ptxt bias2 = encode(utils::read_values_from_file(
-                              weights_dir + "/layer" + std::to_string(layer) +
-                                  "-conv" + std::to_string(n) + "bn" +
-                                  std::to_string(n) + "-bias2.bin",
-                              scale),
-                            in.depth(), 16384);
+        std::vector<double> bias1_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias1.bin",
+            scale);
+        std::vector<double> bias2_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias2.bin",
+            scale);
 
         Ctxt finalSum016(context_);
         Ctxt finalSum1632(context_);
@@ -681,6 +694,11 @@ class FHEController {
             }
         }
 
+        if (debug_cuda) {
+            debug_label = "convbn1632sx bias encode";
+        }
+        Ptxt bias1 = encode(bias1_values, finalSum016.depth(), 16384);
+        Ptxt bias2 = encode(bias2_values, finalSum1632.depth(), 16384);
         finalSum016 = add_plain(finalSum016, bias1);
         finalSum1632 = add_plain(finalSum1632, bias2);
 
@@ -697,18 +715,14 @@ class FHEController {
     {
         auto start = utils::start_time();
 
-        Ptxt bias1 = encode(utils::read_values_from_file(
-                              weights_dir + "/layer" + std::to_string(layer) +
-                                  "dx-conv" + std::to_string(n) + "bn" +
-                                  std::to_string(n) + "-bias1.bin",
-                              scale),
-                            in.depth(), 16384);
-        Ptxt bias2 = encode(utils::read_values_from_file(
-                              weights_dir + "/layer" + std::to_string(layer) +
-                                  "dx-conv" + std::to_string(n) + "bn" +
-                                  std::to_string(n) + "-bias2.bin",
-                              scale),
-                            in.depth(), 16384);
+        std::vector<double> bias1_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "dx-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias1.bin",
+            scale);
+        std::vector<double> bias2_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "dx-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias2.bin",
+            scale);
 
         Ctxt finalSum016(context_);
         Ctxt finalSum1632(context_);
@@ -741,6 +755,11 @@ class FHEController {
             }
         }
 
+        if (debug_cuda) {
+            debug_label = "convbn1632dx bias encode";
+        }
+        Ptxt bias1 = encode(bias1_values, finalSum016.depth(), 16384);
+        Ptxt bias2 = encode(bias2_values, finalSum1632.depth(), 16384);
         finalSum016 = add_plain(finalSum016, bias1);
         finalSum1632 = add_plain(finalSum1632, bias2);
 
@@ -776,18 +795,14 @@ class FHEController {
         c_rotations.push_back(
             rotate_vector(rotate_vector(in, (img_width)), padding));
 
-        Ptxt bias1 = encode(utils::read_values_from_file(
-                              weights_dir + "/layer" + std::to_string(layer) +
-                                  "-conv" + std::to_string(n) + "bn" +
-                                  std::to_string(n) + "-bias1.bin",
-                              scale),
-                            in.depth(), 8192);
-        Ptxt bias2 = encode(utils::read_values_from_file(
-                              weights_dir + "/layer" + std::to_string(layer) +
-                                  "-conv" + std::to_string(n) + "bn" +
-                                  std::to_string(n) + "-bias2.bin",
-                              scale),
-                            in.depth(), 8192);
+        std::vector<double> bias1_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias1.bin",
+            scale);
+        std::vector<double> bias2_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias2.bin",
+            scale);
 
         Ctxt finalSum032(context_);
         Ctxt finalSum3264(context_);
@@ -838,6 +853,11 @@ class FHEController {
             }
         }
 
+        if (debug_cuda) {
+            debug_label = "convbn3264sx bias encode";
+        }
+        Ptxt bias1 = encode(bias1_values, finalSum032.depth(), 8192);
+        Ptxt bias2 = encode(bias2_values, finalSum3264.depth(), 8192);
         finalSum032 = add_plain(finalSum032, bias1);
         finalSum3264 = add_plain(finalSum3264, bias2);
 
@@ -855,18 +875,14 @@ class FHEController {
     {
         auto start = utils::start_time();
 
-        Ptxt bias1 = encode(utils::read_values_from_file(
-                              weights_dir + "/layer" + std::to_string(layer) +
-                                  "dx-conv" + std::to_string(n) + "bn" +
-                                  std::to_string(n) + "-bias1.bin",
-                              scale),
-                            in.depth(), 8192);
-        Ptxt bias2 = encode(utils::read_values_from_file(
-                              weights_dir + "/layer" + std::to_string(layer) +
-                                  "dx-conv" + std::to_string(n) + "bn" +
-                                  std::to_string(n) + "-bias2.bin",
-                              scale),
-                            in.depth(), 8192);
+        std::vector<double> bias1_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "dx-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias1.bin",
+            scale);
+        std::vector<double> bias2_values = utils::read_values_from_file(
+            weights_dir + "/layer" + std::to_string(layer) + "dx-conv" +
+                std::to_string(n) + "bn" + std::to_string(n) + "-bias2.bin",
+            scale);
 
         Ctxt finalSum032(context_);
         Ctxt finalSum3264(context_);
@@ -899,6 +915,11 @@ class FHEController {
             }
         }
 
+        if (debug_cuda) {
+            debug_label = "convbn3264dx bias encode";
+        }
+        Ptxt bias1 = encode(bias1_values, finalSum032.depth(), 8192);
+        Ptxt bias2 = encode(bias2_values, finalSum3264.depth(), 8192);
         finalSum032 = add_plain(finalSum032, bias1);
         finalSum3264 = add_plain(finalSum3264, bias2);
 
