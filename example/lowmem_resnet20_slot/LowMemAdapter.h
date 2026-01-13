@@ -274,6 +274,11 @@ class FHEController {
     Ctxt bootstrap(const Ctxt& c, bool timing = false)
     {
         auto start = utils::start_time();
+        if (debug_cuda) {
+            std::cout << "bootstrap input depth=" << c.depth()
+                      << " level=" << c.level()
+                      << " scale=" << c.scale() << std::endl;
+        }
         Ctxt tmp = c;
         drop_to_depth(tmp, circuit_depth);
         Ctxt out(context_);
@@ -283,6 +288,11 @@ class FHEController {
         } catch (const std::exception& ex) {
             report_exception("bootstrap", ex);
             throw;
+        }
+        if (debug_cuda) {
+            std::cout << "bootstrap output depth=" << out.depth()
+                      << " level=" << out.level()
+                      << " scale=" << out.scale() << std::endl;
         }
         boot_count++;
         check_cuda("bootstrap");
