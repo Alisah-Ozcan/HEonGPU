@@ -22,6 +22,7 @@ static std::string weights_dir;
 static std::string input_filename = "luis.png";
 static int verbose = 0;
 static bool plain = false;
+static bool debug_cuda = false;
 
 static void parse_args(int argc, char* argv[])
 {
@@ -37,6 +38,8 @@ static void parse_args(int argc, char* argv[])
             verbose = std::atoi(argv[++i]);
         } else if (arg == "--plain") {
             plain = true;
+        } else if (arg == "--debug_cuda") {
+            debug_cuda = true;
         }
     }
 }
@@ -421,6 +424,7 @@ int main(int argc, char* argv[])
     cfg.relu_degree = controller.relu_degree;
     controller.weights_dir = weights_dir;
     controller.initialize(cfg);
+    controller.debug_cuda = debug_cuda;
 
     execute_resnet20();
 

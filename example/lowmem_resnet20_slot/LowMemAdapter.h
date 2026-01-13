@@ -16,6 +16,7 @@
 #include <heongpu/heongpu.hpp>
 #include <heongpu/host/ckks/chebyshev_interpolation.cuh>
 #include <gpufft/complex.cuh>
+#include <cuda_runtime.h>
 
 #include "Utils.h"
 
@@ -48,6 +49,7 @@ class FHEController {
     int num_slots = 0;
     int relu_degree = 119;
     std::string weights_dir;
+    bool debug_cuda = false;
 
     size_t mul_count = 0;
     size_t rot_count = 0;
@@ -142,11 +144,14 @@ class FHEController {
                  int plaintext_num_slots = 0)
     {
         Ptxt p = encode_full(vec, plaintext_num_slots);
+        check_cuda("encode_full");
         Ctxt c(context_);
         encryptor_->encrypt(c, p);
+        check_cuda("encrypt");
         if (target_depth > 0) {
             drop_to_depth(c, target_depth);
         }
+        check_cuda("drop_to_depth");
         return c;
     }
 
@@ -180,6 +185,7 @@ class FHEController {
     {
         Ctxt out(context_);
         operators_->add(const_cast<Ctxt&>(c1), const_cast<Ctxt&>(c2), out);
+        check_cuda("add");
         return out;
     }
 
@@ -187,6 +193,7 @@ class FHEController {
     {
         Ctxt out(context_);
         operators_->add_plain(const_cast<Ctxt&>(c), const_cast<Ptxt&>(p), out);
+        check_cuda("add_plain");
         return out;
     }
 
@@ -198,6 +205,7 @@ class FHEController {
         operators_->rescale_inplace(out);
         mul_count++;
         rescale_count++;
+        check_cuda("mult_const");
         return out;
     }
 
@@ -209,6 +217,7 @@ class FHEController {
         operators_->rescale_inplace(out);
         mul_count++;
         rescale_count++;
+        check_cuda("mult_plain");
         return out;
     }
 
@@ -217,6 +226,7 @@ class FHEController {
         Ctxt out = c;
         operators_->multiply_plain_mask_inplace(out, const_cast<Ptxt&>(p));
         mul_count++;
+        check_cuda("mult_mask");
         return out;
     }
 
@@ -225,6 +235,7 @@ class FHEController {
         Ctxt out(context_);
         operators_->rotate_rows(const_cast<Ctxt&>(c), out, *galois_key_, steps);
         rot_count++;
+        check_cuda("rotate");
         return out;
     }
 
@@ -234,6 +245,7 @@ class FHEController {
         Ctxt out = operators_->regular_bootstrapping(
             const_cast<Ctxt&>(c), *galois_key_, *relin_key_);
         boot_count++;
+        check_cuda("bootstrap");
         if (timing) {
             utils::print_duration(start, "Bootstrapping");
         }
@@ -247,6 +259,7 @@ class FHEController {
         Ctxt tmp = const_cast<Ctxt&>(c);
         Ctxt out = operators_->evaluate_poly_monomial(tmp, c.scale(), coeffs,
                                                       *relin_key_);
+        check_cuda("relu_poly");
         if (timing) {
             utils::print_duration(start,
                                   "ReLU d = " + std::to_string(relu_degree));
@@ -1313,6 +1326,20 @@ class FHEController {
         while (c.depth() < target_depth) {
             operators_->mod_drop_inplace(c);
         }
+    }
+
+    void check_cuda(const char* label)
+    {
+        if (!debug_cuda) {
+            return;
+        }
+        cudaError_t err = cudaDeviceSynchronize();
+        if (err != cudaSuccess) {
+            std::cerr << "CUDA error after " << label << ": "
+                      << cudaGetErrorString(err) << std::endl;
+            throw std::runtime_error("CUDA failure");
+        }
+        cudaGetLastError();
     }
 };
 
