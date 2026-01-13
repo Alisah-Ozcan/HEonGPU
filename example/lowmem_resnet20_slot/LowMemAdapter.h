@@ -30,7 +30,7 @@ struct HEConfig {
     size_t poly_modulus_degree = 32768;
     std::vector<int> coeff_modulus_bits = {
         60, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
-        50, 50, 50, 50, 50, 50, 50, 50, 50};
+        50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
     std::vector<int> special_primes_bits = {60, 60, 60};
     double scale = std::pow(2.0, 50);
     int relu_degree = 119;
