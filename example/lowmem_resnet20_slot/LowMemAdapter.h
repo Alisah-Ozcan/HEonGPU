@@ -141,9 +141,12 @@ class FHEController {
     Ctxt encrypt(const std::vector<double>& vec, int target_depth = 0,
                  int plaintext_num_slots = 0)
     {
-        Ptxt p = encode(vec, target_depth, plaintext_num_slots);
+        Ptxt p = encode_full(vec, plaintext_num_slots);
         Ctxt c(context_);
         encryptor_->encrypt(c, p);
+        if (target_depth > 0) {
+            drop_to_depth(c, target_depth);
+        }
         return c;
     }
 
@@ -1288,6 +1291,28 @@ class FHEController {
         };
 
         return shifts;
+    }
+
+    Ptxt encode_full(const std::vector<double>& vec, int plaintext_num_slots)
+    {
+        if (plaintext_num_slots <= 0) {
+            plaintext_num_slots = num_slots;
+        }
+        std::vector<double> msg = vec;
+        if (static_cast<int>(msg.size()) < plaintext_num_slots) {
+            msg.resize(static_cast<size_t>(plaintext_num_slots), 0.0);
+        }
+
+        Ptxt plain(context_);
+        encoder_->encode(plain, msg, default_scale_);
+        return plain;
+    }
+
+    void drop_to_depth(Ctxt& c, int target_depth)
+    {
+        while (c.depth() < target_depth) {
+            operators_->mod_drop_inplace(c);
+        }
     }
 };
 
