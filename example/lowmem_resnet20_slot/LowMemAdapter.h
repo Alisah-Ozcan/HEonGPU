@@ -27,7 +27,7 @@ using Ctxt = heongpu::Ciphertext<Scheme>;
 using Ptxt = heongpu::Plaintext<Scheme>;
 
 struct HEConfig {
-    size_t poly_modulus_degree = 32768;
+    size_t poly_modulus_degree = 65536;
     std::vector<int> coeff_modulus_bits = {
         60, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
         50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
