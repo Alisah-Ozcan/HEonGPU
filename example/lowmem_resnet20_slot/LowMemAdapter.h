@@ -126,6 +126,12 @@ class FHEController {
             msg.resize(plaintext_num_slots, 0.0);
         }
 
+        if (debug_cuda) {
+            std::cout << "encode_slots depth=" << target_depth
+                      << " slots=" << plaintext_num_slots
+                      << " msg_size=" << msg.size() << std::endl;
+        }
+
         Ptxt plain(context_);
         operators_->encode_slots_leveled(plain, msg, default_scale_,
                                          target_depth);
@@ -335,6 +341,9 @@ class FHEController {
         c_rotations.push_back(
             rotate_vector(rotate_vector(in, padding), img_width));
 
+        if (debug_cuda) {
+            debug_label = "convbn_initial bias encode";
+        }
         Ptxt bias = encode(utils::read_values_from_file(
                              weights_dir + "/conv1bn1-bias.bin", scale),
                            in.depth(), 16384);
@@ -1299,6 +1308,11 @@ class FHEController {
     Ptxt encode_mask(const std::vector<double>& vec, int target_depth)
     {
         Ptxt plain(context_);
+        if (debug_cuda) {
+            debug_label = "mask encode";
+            std::cout << "encode_mask depth=" << target_depth
+                      << " slots=" << vec.size() << std::endl;
+        }
         operators_->encode_slots_leveled(plain, vec, 1.0, target_depth);
         return plain;
     }
