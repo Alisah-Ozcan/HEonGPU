@@ -176,6 +176,16 @@ class FHEController {
 
     Ctxt add(const Ctxt& c1, const Ctxt& c2)
     {
+        if (debug_cuda && (c1.depth() != c2.depth() || c1.level() != c2.level())) {
+            std::cerr << "add depth/level mismatch c1 depth=" << c1.depth()
+                      << " level=" << c1.level()
+                      << " c2 depth=" << c2.depth()
+                      << " level=" << c2.level();
+            if (!debug_label.empty()) {
+                std::cerr << " [" << debug_label << "]";
+            }
+            std::cerr << std::endl;
+        }
         Ctxt out(context_);
         try {
             operators_->add(const_cast<Ctxt&>(c1), const_cast<Ctxt&>(c2), out);
