@@ -295,6 +295,11 @@ class FHEController {
     Ctxt relu(const Ctxt& c, double scale, bool timing = false)
     {
         auto start = utils::start_time();
+        if (debug_cuda) {
+            std::cout << "relu input depth=" << c.depth()
+                      << " level=" << c.level()
+                      << " scale=" << c.scale() << std::endl;
+        }
         std::vector<double> coeffs = relu_coefficients(scale, relu_degree);
         Ctxt out(context_);
         try {
