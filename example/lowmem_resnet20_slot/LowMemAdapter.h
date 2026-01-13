@@ -27,7 +27,7 @@ using Ctxt = heongpu::Ciphertext<Scheme>;
 using Ptxt = heongpu::Plaintext<Scheme>;
 
 struct HEConfig {
-    size_t poly_modulus_degree = 65536;
+    size_t poly_modulus_degree = 32768;
     std::vector<int> coeff_modulus_bits = {
         60, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
         50, 50, 50, 50, 50, 50, 50, 50, 50};
@@ -177,7 +177,12 @@ class FHEController {
     Ctxt add(const Ctxt& c1, const Ctxt& c2)
     {
         Ctxt out(context_);
-        operators_->add(const_cast<Ctxt&>(c1), const_cast<Ctxt&>(c2), out);
+        try {
+            operators_->add(const_cast<Ctxt&>(c1), const_cast<Ctxt&>(c2), out);
+        } catch (const std::exception& ex) {
+            report_exception("add", ex);
+            throw;
+        }
         check_cuda("add");
         return out;
     }
@@ -193,7 +198,13 @@ class FHEController {
             std::cerr << std::endl;
         }
         Ctxt out(context_);
-        operators_->add_plain(const_cast<Ctxt&>(c), const_cast<Ptxt&>(p), out);
+        try {
+            operators_->add_plain(const_cast<Ctxt&>(c), const_cast<Ptxt&>(p),
+                                  out);
+        } catch (const std::exception& ex) {
+            report_exception("add_plain", ex);
+            throw;
+        }
         check_cuda("add_plain");
         return out;
     }
@@ -201,9 +212,13 @@ class FHEController {
     Ctxt mult(const Ctxt& c, double d)
     {
         Ctxt out(context_);
-        operators_->multiply_plain(const_cast<Ctxt&>(c), d, out,
-                                   c.scale());
-        operators_->rescale_inplace(out);
+        try {
+            operators_->multiply_plain(const_cast<Ctxt&>(c), d, out, c.scale());
+            operators_->rescale_inplace(out);
+        } catch (const std::exception& ex) {
+            report_exception("mult_const", ex);
+            throw;
+        }
         mul_count++;
         rescale_count++;
         check_cuda("mult_const");
@@ -213,9 +228,14 @@ class FHEController {
     Ctxt mult(const Ctxt& c, const Ptxt& p)
     {
         Ctxt out(context_);
-        operators_->multiply_plain(const_cast<Ctxt&>(c),
-                                   const_cast<Ptxt&>(p), out);
-        operators_->rescale_inplace(out);
+        try {
+            operators_->multiply_plain(const_cast<Ctxt&>(c),
+                                       const_cast<Ptxt&>(p), out);
+            operators_->rescale_inplace(out);
+        } catch (const std::exception& ex) {
+            report_exception("mult_plain", ex);
+            throw;
+        }
         mul_count++;
         rescale_count++;
         check_cuda("mult_plain");
@@ -225,7 +245,12 @@ class FHEController {
     Ctxt mult_mask(const Ctxt& c, const Ptxt& p)
     {
         Ctxt out = c;
-        operators_->multiply_plain_mask_inplace(out, const_cast<Ptxt&>(p));
+        try {
+            operators_->multiply_plain_mask_inplace(out, const_cast<Ptxt&>(p));
+        } catch (const std::exception& ex) {
+            report_exception("mult_mask", ex);
+            throw;
+        }
         mul_count++;
         check_cuda("mult_mask");
         return out;
@@ -234,7 +259,13 @@ class FHEController {
     Ctxt rotate_vector(const Ctxt& c, int steps)
     {
         Ctxt out(context_);
-        operators_->rotate_rows(const_cast<Ctxt&>(c), out, *galois_key_, steps);
+        try {
+            operators_->rotate_rows(const_cast<Ctxt&>(c), out, *galois_key_,
+                                    steps);
+        } catch (const std::exception& ex) {
+            report_exception("rotate", ex);
+            throw;
+        }
         rot_count++;
         check_cuda("rotate");
         return out;
@@ -245,8 +276,14 @@ class FHEController {
         auto start = utils::start_time();
         Ctxt tmp = c;
         drop_to_depth(tmp, circuit_depth);
-        Ctxt out =
-            operators_->regular_bootstrapping(tmp, *galois_key_, *relin_key_);
+        Ctxt out(context_);
+        try {
+            out = operators_->regular_bootstrapping(tmp, *galois_key_,
+                                                    *relin_key_);
+        } catch (const std::exception& ex) {
+            report_exception("bootstrap", ex);
+            throw;
+        }
         boot_count++;
         check_cuda("bootstrap");
         if (timing) {
@@ -260,8 +297,14 @@ class FHEController {
         auto start = utils::start_time();
         std::vector<double> coeffs = relu_coefficients(scale, relu_degree);
         Ctxt tmp = const_cast<Ctxt&>(c);
-        Ctxt out = operators_->evaluate_poly_monomial(tmp, c.scale(), coeffs,
-                                                      *relin_key_);
+        Ctxt out(context_);
+        try {
+            out = operators_->evaluate_poly_monomial(tmp, c.scale(), coeffs,
+                                                     *relin_key_);
+        } catch (const std::exception& ex) {
+            report_exception("relu_poly", ex);
+            throw;
+        }
         check_cuda("relu_poly");
         if (timing) {
             utils::print_duration(start,
@@ -1395,6 +1438,15 @@ class FHEController {
             throw std::runtime_error("CUDA failure");
         }
         cudaGetLastError();
+    }
+
+    void report_exception(const char* op, const std::exception& ex) const
+    {
+        std::cerr << "Exception in " << op;
+        if (!debug_label.empty()) {
+            std::cerr << " [" << debug_label << "]";
+        }
+        std::cerr << ": " << ex.what() << std::endl;
     }
 };
 
