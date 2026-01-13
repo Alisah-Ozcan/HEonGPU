@@ -243,8 +243,10 @@ class FHEController {
     Ctxt bootstrap(const Ctxt& c, bool timing = false)
     {
         auto start = utils::start_time();
-        Ctxt out = operators_->regular_bootstrapping(
-            const_cast<Ctxt&>(c), *galois_key_, *relin_key_);
+        Ctxt tmp = c;
+        drop_to_depth(tmp, circuit_depth);
+        Ctxt out =
+            operators_->regular_bootstrapping(tmp, *galois_key_, *relin_key_);
         boot_count++;
         check_cuda("bootstrap");
         if (timing) {
