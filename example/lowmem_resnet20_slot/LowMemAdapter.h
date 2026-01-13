@@ -196,6 +196,10 @@ class FHEController {
             if (rhs.depth() < target_depth) {
                 drop_to_depth(rhs, target_depth);
             }
+            if (debug_cuda) {
+                std::cerr << "add aligned depths lhs=" << lhs.depth()
+                          << " rhs=" << rhs.depth() << std::endl;
+            }
         }
         Ctxt out(context_);
         try {
@@ -248,10 +252,24 @@ class FHEController {
 
     Ctxt mult(const Ctxt& c, const Ptxt& p)
     {
+        Ctxt lhs = c;
+        Ptxt rhs = p;
+        if (lhs.depth() != rhs.depth()) {
+            int target_depth = std::max(lhs.depth(), rhs.depth());
+            if (lhs.depth() < target_depth) {
+                drop_to_depth(lhs, target_depth);
+            }
+            if (rhs.depth() < target_depth) {
+                drop_plain_to_depth(rhs, target_depth);
+            }
+            if (debug_cuda) {
+                std::cerr << "mult_plain aligned depths c=" << lhs.depth()
+                          << " p=" << rhs.depth() << std::endl;
+            }
+        }
         Ctxt out(context_);
         try {
-            operators_->multiply_plain(const_cast<Ctxt&>(c),
-                                       const_cast<Ptxt&>(p), out);
+            operators_->multiply_plain(lhs, rhs, out);
             operators_->rescale_inplace(out);
         } catch (const std::exception& ex) {
             report_exception("mult_plain", ex);
@@ -266,8 +284,22 @@ class FHEController {
     Ctxt mult_mask(const Ctxt& c, const Ptxt& p)
     {
         Ctxt out = c;
+        Ptxt rhs = p;
+        if (out.depth() != rhs.depth()) {
+            int target_depth = std::max(out.depth(), rhs.depth());
+            if (out.depth() < target_depth) {
+                drop_to_depth(out, target_depth);
+            }
+            if (rhs.depth() < target_depth) {
+                drop_plain_to_depth(rhs, target_depth);
+            }
+            if (debug_cuda) {
+                std::cerr << "mult_mask aligned depths c=" << out.depth()
+                          << " p=" << rhs.depth() << std::endl;
+            }
+        }
         try {
-            operators_->multiply_plain_mask_inplace(out, const_cast<Ptxt&>(p));
+            operators_->multiply_plain_mask_inplace(out, rhs);
         } catch (const std::exception& ex) {
             report_exception("mult_mask", ex);
             throw;
