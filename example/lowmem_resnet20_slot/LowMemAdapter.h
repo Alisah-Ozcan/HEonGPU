@@ -50,6 +50,7 @@ class FHEController {
     int relu_degree = 119;
     std::string weights_dir;
     bool debug_cuda = false;
+    bool debug_encode = false;
     std::string debug_label;
 
     size_t mul_count = 0;
@@ -336,8 +337,8 @@ class FHEController {
         drop_to_depth(tmp, circuit_depth);
         Ctxt out(context_);
         try {
-            out = operators_->regular_bootstrapping(tmp, *galois_key_,
-                                                    *relin_key_);
+            out = operators_->regular_bootstrapping_v2(
+                tmp, *galois_key_, *relin_key_, nullptr, nullptr);
         } catch (const std::exception& ex) {
             report_exception("bootstrap", ex);
             throw;
@@ -1479,7 +1480,7 @@ class FHEController {
         if (static_cast<int>(msg.size()) < plaintext_num_slots) {
             msg.resize(static_cast<size_t>(plaintext_num_slots), 0.0);
         }
-        if (debug_cuda) {
+        if (debug_cuda && debug_encode) {
             std::cout << "encode_full scale=" << scale
                       << " slots=" << plaintext_num_slots
                       << " msg_size=" << msg.size() << std::endl;

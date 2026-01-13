@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -23,6 +24,8 @@ static std::string input_filename = "luis.png";
 static int verbose = 0;
 static bool plain = false;
 static bool debug_cuda = false;
+static bool debug_encode = false;
+static bool debug_plain = false;
 
 static void parse_args(int argc, char* argv[])
 {
@@ -40,6 +43,10 @@ static void parse_args(int argc, char* argv[])
             plain = true;
         } else if (arg == "--debug_cuda") {
             debug_cuda = true;
+        } else if (arg == "--debug_encode") {
+            debug_encode = true;
+        } else if (arg == "--debug_plain") {
+            debug_plain = true;
         }
     }
 }
@@ -96,6 +103,20 @@ static Ctxt initial_layer(const Ctxt& in)
     res = controller.bootstrap(res, verbose > 1);
     res = controller.relu(res, scale, verbose > 1);
     return res;
+}
+
+static void debug_decrypt(const std::string& label, const Ctxt& c, int slots)
+{
+    std::vector<double> v = controller.decrypt_tovector(c, slots);
+    std::cout << label << " [";
+    std::cout << std::fixed << std::setprecision(6);
+    for (size_t i = 0; i < v.size(); i++) {
+        if (i > 0) {
+            std::cout << ", ";
+        }
+        std::cout << v[i];
+    }
+    std::cout << "]" << std::endl;
 }
 
 static Ctxt layer1(const Ctxt& in)
@@ -364,28 +385,43 @@ static void execute_resnet20()
     controller.print_level_scale(in, "Input");
     Ctxt firstLayer = initial_layer(in);
     controller.print_level_scale(firstLayer, "Initial layer out");
+    if (debug_plain) {
+        debug_decrypt("Initial layer out", firstLayer, 8);
+    }
 
     auto startLayer = utils::start_time();
     controller.print_level_scale(firstLayer, "Layer 1 in");
     Ctxt resLayer1 = layer1(firstLayer);
     controller.print_level_scale(resLayer1, "Layer 1 out");
+    if (debug_plain) {
+        debug_decrypt("Layer 1 out", resLayer1, 8);
+    }
     utils::print_duration(startLayer, "Layer 1 took:");
 
     startLayer = utils::start_time();
     controller.print_level_scale(resLayer1, "Layer 2 in");
     Ctxt resLayer2 = layer2(resLayer1);
     controller.print_level_scale(resLayer2, "Layer 2 out");
+    if (debug_plain) {
+        debug_decrypt("Layer 2 out", resLayer2, 8);
+    }
     utils::print_duration(startLayer, "Layer 2 took:");
 
     startLayer = utils::start_time();
     controller.print_level_scale(resLayer2, "Layer 3 in");
     Ctxt resLayer3 = layer3(resLayer2);
     controller.print_level_scale(resLayer3, "Layer 3 out");
+    if (debug_plain) {
+        debug_decrypt("Layer 3 out", resLayer3, 8);
+    }
     utils::print_duration(startLayer, "Layer 3 took:");
 
     controller.print_level_scale(resLayer3, "Final layer in");
     Ctxt finalRes = final_layer(resLayer3);
     controller.print_level_scale(finalRes, "Final layer out");
+    if (debug_plain) {
+        debug_decrypt("Final layer out", finalRes, 10);
+    }
 
     utils::print_duration_yellow(start,
                                  "The evaluation of the whole circuit took: ");
@@ -426,6 +462,7 @@ int main(int argc, char* argv[])
     controller.weights_dir = weights_dir;
     controller.initialize(cfg);
     controller.debug_cuda = debug_cuda;
+    controller.debug_encode = debug_encode;
 
     execute_resnet20();
 
