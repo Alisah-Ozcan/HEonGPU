@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#define YELLOW_TEXT "\033[1;33m"
-#define RESET_COLOR "\033[0m"
+#define YELLOW_TEXT ""
+#define RESET_COLOR ""
 
 namespace utils {
 

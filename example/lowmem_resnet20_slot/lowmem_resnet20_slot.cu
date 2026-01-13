@@ -9,7 +9,6 @@
 #include "stb_image.h"
 
 #define GREEN_TEXT ""
-#define RESET_COLOR ""
 
 using lowmem::Ctxt;
 using lowmem::FHEController;

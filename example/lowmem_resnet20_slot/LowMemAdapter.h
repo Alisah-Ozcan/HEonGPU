@@ -15,6 +15,7 @@
 
 #include <heongpu/heongpu.hpp>
 #include <heongpu/host/ckks/chebyshev_interpolation.cuh>
+#include <gpufft/complex.cuh>
 
 #include "Utils.h"
 
@@ -146,7 +147,7 @@ class FHEController {
         return c;
     }
 
-    Ctxt encrypt_ptxt(const Ptxt& p)
+    Ctxt encrypt_ptxt(Ptxt& p)
     {
         Ctxt c(context_);
         encryptor_->encrypt(c, p);
@@ -156,14 +157,14 @@ class FHEController {
     Ptxt decrypt(const Ctxt& c)
     {
         Ptxt p(context_);
-        decryptor_->decrypt(p, c);
+        decryptor_->decrypt(p, const_cast<Ctxt&>(c));
         return p;
     }
 
     std::vector<double> decrypt_tovector(const Ctxt& c, int slots)
     {
         Ptxt p(context_);
-        decryptor_->decrypt(p, c);
+        decryptor_->decrypt(p, const_cast<Ctxt&>(c));
         std::vector<double> vec;
         encoder_->decode(vec, p);
         if (slots > 0 && static_cast<int>(vec.size()) > slots) {
@@ -176,6 +177,13 @@ class FHEController {
     {
         Ctxt out(context_);
         operators_->add(const_cast<Ctxt&>(c1), const_cast<Ctxt&>(c2), out);
+        return out;
+    }
+
+    Ctxt add_plain(const Ctxt& c, const Ptxt& p)
+    {
+        Ctxt out(context_);
+        operators_->add_plain(const_cast<Ctxt&>(c), const_cast<Ptxt&>(p), out);
         return out;
     }
 
@@ -212,7 +220,7 @@ class FHEController {
     Ctxt rotate_vector(const Ctxt& c, int steps)
     {
         Ctxt out(context_);
-        operators_->rotate_rows(const_cast<Ctxt&>(c), *galois_key_, steps, out);
+        operators_->rotate_rows(const_cast<Ctxt&>(c), out, *galois_key_, steps);
         rot_count++;
         return out;
     }
@@ -346,7 +354,7 @@ class FHEController {
             }
         }
 
-        finalsum = add(finalsum, bias);
+        finalsum = add_plain(finalsum, bias);
 
         if (timing) {
             utils::print_duration(start, "Initial layer");
@@ -416,7 +424,7 @@ class FHEController {
             }
         }
 
-        finalsum = add(finalsum, bias);
+        finalsum = add_plain(finalsum, bias);
 
         if (timing) {
             utils::print_duration(start, "Block " + std::to_string(layer) +
@@ -487,7 +495,7 @@ class FHEController {
             }
         }
 
-        finalsum = add(finalsum, bias);
+        finalsum = add_plain(finalsum, bias);
 
         if (timing) {
             utils::print_duration(start, "Block " + std::to_string(layer) +
@@ -558,7 +566,7 @@ class FHEController {
             }
         }
 
-        finalsum = add(finalsum, bias);
+        finalsum = add_plain(finalsum, bias);
 
         if (timing) {
             utils::print_duration(start, "Block" + std::to_string(layer) +
@@ -653,8 +661,8 @@ class FHEController {
             }
         }
 
-        finalSum016 = add(finalSum016, bias1);
-        finalSum1632 = add(finalSum1632, bias2);
+        finalSum016 = add_plain(finalSum016, bias1);
+        finalSum1632 = add_plain(finalSum1632, bias2);
 
         if (timing) {
             utils::print_duration(start, "Block " + std::to_string(layer) +
@@ -713,8 +721,8 @@ class FHEController {
             }
         }
 
-        finalSum016 = add(finalSum016, bias1);
-        finalSum1632 = add(finalSum1632, bias2);
+        finalSum016 = add_plain(finalSum016, bias1);
+        finalSum1632 = add_plain(finalSum1632, bias2);
 
         if (timing) {
             utils::print_duration(start, "Block " + std::to_string(layer) +
@@ -810,8 +818,8 @@ class FHEController {
             }
         }
 
-        finalSum032 = add(finalSum032, bias1);
-        finalSum3264 = add(finalSum3264, bias2);
+        finalSum032 = add_plain(finalSum032, bias1);
+        finalSum3264 = add_plain(finalSum3264, bias2);
 
         if (timing) {
             utils::print_duration(start, "Block " + std::to_string(layer) +
@@ -871,8 +879,8 @@ class FHEController {
             }
         }
 
-        finalSum032 = add(finalSum032, bias1);
-        finalSum3264 = add(finalSum3264, bias2);
+        finalSum032 = add_plain(finalSum032, bias1);
+        finalSum3264 = add_plain(finalSum3264, bias2);
 
         if (timing) {
             utils::print_duration(start, "Block " + std::to_string(layer) +
@@ -1175,7 +1183,7 @@ class FHEController {
     }
 
     static std::vector<double> chebyshev_to_monomial(
-        const std::vector<heongpu::Complex64>& cheb, double a, double b)
+        const std::vector<Complex64>& cheb, double a, double b)
     {
         const int degree = static_cast<int>(cheb.size()) - 1;
         std::vector<double> poly_t(static_cast<size_t>(degree + 1), 0.0);
@@ -1247,15 +1255,15 @@ class FHEController {
             return it->second;
         }
 
-        auto func = [scale](heongpu::Complex64 x) -> heongpu::Complex64 {
+        auto func = [scale](Complex64 x) -> Complex64 {
             double real = x.real();
             if (real < 0) {
-                return heongpu::Complex64(0.0, 0.0);
+                return Complex64(0.0, 0.0);
             }
-            return heongpu::Complex64(real / scale, 0.0);
+            return Complex64(real / scale, 0.0);
         };
 
-        std::vector<heongpu::Complex64> cheb =
+        std::vector<Complex64> cheb =
             heongpu::approximate_function(func, -1.0, 1.0, degree);
         std::vector<double> mono = chebyshev_to_monomial(cheb, -1.0, 1.0);
         relu_cache_[key] = mono;
