@@ -50,6 +50,7 @@ class FHEController {
     int relu_degree = 119;
     std::string weights_dir;
     bool debug_cuda = false;
+    std::string debug_label;
 
     size_t mul_count = 0;
     size_t rot_count = 0;
@@ -128,6 +129,7 @@ class FHEController {
         Ptxt plain(context_);
         operators_->encode_slots_leveled(plain, msg, default_scale_,
                                          target_depth);
+        check_cuda("encode_slots");
         return plain;
     }
 
@@ -344,11 +346,19 @@ class FHEController {
             std::vector<Ctxt> k_rows;
             k_rows.reserve(9);
             for (int k = 0; k < 9; k++) {
+                if (debug_cuda) {
+                    debug_label = "convbn_initial ch=" + std::to_string(j) +
+                                  " k=" + std::to_string(k + 1) + " encode";
+                }
                 std::vector<double> values = utils::read_values_from_file(
                     weights_dir + "/conv1bn1-ch" + std::to_string(j) + "-k" +
                         std::to_string(k + 1) + ".bin",
                     scale);
                 Ptxt encoded = encode(values, in.depth(), 16384);
+                if (debug_cuda) {
+                    debug_label = "convbn_initial ch=" + std::to_string(j) +
+                                  " k=" + std::to_string(k + 1) + " mult";
+                }
                 k_rows.push_back(mult(c_rotations[k], encoded));
             }
 
@@ -1335,7 +1345,11 @@ class FHEController {
         }
         cudaError_t err = cudaDeviceSynchronize();
         if (err != cudaSuccess) {
-            std::cerr << "CUDA error after " << label << ": "
+            std::cerr << "CUDA error after " << label;
+            if (!debug_label.empty()) {
+                std::cerr << " [" << debug_label << "]";
+            }
+            std::cerr << ": "
                       << cudaGetErrorString(err) << std::endl;
             throw std::runtime_error("CUDA failure");
         }
