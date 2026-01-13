@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -16,8 +17,8 @@ using lowmem::HEConfig;
 
 static FHEController controller;
 
-static std::string data_dir = "assets/inputs";
-static std::string weights_dir = "assets/weights";
+static std::string data_dir;
+static std::string weights_dir;
 static std::string input_filename = "luis.png";
 static int verbose = 0;
 static bool plain = false;
@@ -38,6 +39,19 @@ static void parse_args(int argc, char* argv[])
             plain = true;
         }
     }
+}
+
+static std::filesystem::path resolve_path(const std::filesystem::path& base,
+                                          const std::string& path)
+{
+    if (path.empty()) {
+        return {};
+    }
+    std::filesystem::path p(path);
+    if (p.is_absolute()) {
+        return p;
+    }
+    return base / p;
 }
 
 static std::vector<double> read_image(const std::string& filename)
@@ -332,6 +346,11 @@ static void execute_resnet20()
     }
 
     std::vector<double> input_image = read_image(input_path);
+    if (input_image.empty()) {
+        std::cerr << "Input image load failed. Check --data_dir and --input."
+                  << std::endl;
+        return;
+    }
     Ctxt in = controller.encrypt(
         input_image,
         controller.circuit_depth - 4 - utils::get_relu_depth(controller.relu_degree));
@@ -378,6 +397,25 @@ int main(int argc, char* argv[])
     cudaSetDevice(0);
 
     parse_args(argc, argv);
+
+    std::filesystem::path exe_path = std::filesystem::absolute(argv[0]);
+    std::filesystem::path repo_root =
+        exe_path.parent_path() / ".." / ".." / "..";
+    repo_root = std::filesystem::weakly_canonical(repo_root);
+
+    if (data_dir.empty()) {
+        data_dir =
+            (repo_root / "example/lowmem_resnet20_slot/assets/inputs").string();
+    } else {
+        data_dir = resolve_path(repo_root, data_dir).string();
+    }
+
+    if (weights_dir.empty()) {
+        weights_dir =
+            (repo_root / "example/lowmem_resnet20_slot/assets/weights").string();
+    } else {
+        weights_dir = resolve_path(repo_root, weights_dir).string();
+    }
 
     HEConfig cfg;
     cfg.relu_degree = controller.relu_degree;
