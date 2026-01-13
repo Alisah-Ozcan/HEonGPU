@@ -186,9 +186,20 @@ class FHEController {
             }
             std::cerr << std::endl;
         }
+        Ctxt lhs = c1;
+        Ctxt rhs = c2;
+        if (lhs.depth() != rhs.depth()) {
+            int target_depth = std::max(lhs.depth(), rhs.depth());
+            if (lhs.depth() < target_depth) {
+                drop_to_depth(lhs, target_depth);
+            }
+            if (rhs.depth() < target_depth) {
+                drop_to_depth(rhs, target_depth);
+            }
+        }
         Ctxt out(context_);
         try {
-            operators_->add(const_cast<Ctxt&>(c1), const_cast<Ctxt&>(c2), out);
+            operators_->add(lhs, rhs, out);
         } catch (const std::exception& ex) {
             report_exception("add", ex);
             throw;

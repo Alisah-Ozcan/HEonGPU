@@ -398,7 +398,7 @@ static void execute_resnet20()
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0);
+    cudaSetDevice(1);
 
     parse_args(argc, argv);
 
