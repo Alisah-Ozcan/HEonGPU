@@ -75,7 +75,7 @@ class FHEController {
         relu_degree = cfg.relu_degree;
 
         num_slots = static_cast<int>(context_.get_poly_modulus_degree() / 2);
-        circuit_depth = static_cast<int>(cfg.coeff_modulus_bits.size()) - 1;
+        circuit_depth = context_.get_ciphertext_modulus_count() - 1;
 
         keygen_ = std::make_unique<heongpu::HEKeyGenerator<Scheme>>(context_);
         secret_key_ = std::make_unique<heongpu::Secretkey<Scheme>>(context_);
@@ -350,7 +350,24 @@ class FHEController {
                           << std::endl;
             }
         }
-        drop_to_depth(tmp, circuit_depth);
+        drop_to_depth(tmp, context_.get_ciphertext_modulus_count() - 1);
+        while (tmp.rescale_required()) {
+            operators_->rescale_inplace(tmp);
+            if (debug_cuda) {
+                std::cout << "bootstrap rescale (post-drop) depth="
+                          << tmp.depth() << " level=" << tmp.level()
+                          << " scale=" << tmp.scale()
+                          << " rescale_required=" << tmp.rescale_required()
+                          << std::endl;
+            }
+        }
+        if (debug_cuda) {
+            std::cout << "bootstrap pre-v2 depth=" << tmp.depth()
+                      << " level=" << tmp.level()
+                      << " scale=" << tmp.scale()
+                      << " rescale_required=" << tmp.rescale_required()
+                      << std::endl;
+        }
         Ctxt out(context_);
         try {
             out = operators_->regular_bootstrapping_v2(
@@ -1443,7 +1460,7 @@ class FHEController {
 
     Ptxt encode_mask(const std::vector<double>& vec, int target_depth)
     {
-        if (debug_cuda) {
+        if (debug_cuda && debug_encode) {
             debug_label = "mask encode";
             std::cout << "encode_mask depth=" << target_depth
                       << " slots=" << vec.size() << std::endl;
