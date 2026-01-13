@@ -118,24 +118,10 @@ class FHEController {
     Ptxt encode(const std::vector<double>& vec, int target_depth,
                 int plaintext_num_slots)
     {
-        if (plaintext_num_slots <= 0) {
-            plaintext_num_slots = num_slots;
-        }
-        std::vector<double> msg = vec;
-        if (static_cast<int>(msg.size()) < plaintext_num_slots) {
-            msg.resize(plaintext_num_slots, 0.0);
-        }
-
-        if (debug_cuda) {
-            std::cout << "encode_slots depth=" << target_depth
-                      << " slots=" << plaintext_num_slots
-                      << " msg_size=" << msg.size() << std::endl;
-        }
-
-        Ptxt plain(context_);
-        operators_->encode_slots_leveled(plain, msg, default_scale_,
-                                         target_depth);
-        check_cuda("encode_slots");
+        Ptxt plain = encode_full_with_scale(vec, default_scale_,
+                                            plaintext_num_slots);
+        drop_plain_to_depth(plain, target_depth);
+        check_cuda("encode_plain");
         return plain;
     }
 
@@ -152,7 +138,6 @@ class FHEController {
                  int plaintext_num_slots = 0)
     {
         Ptxt p = encode_full(vec, plaintext_num_slots);
-        check_cuda("encode_full");
         Ctxt c(context_);
         encryptor_->encrypt(c, p);
         check_cuda("encrypt");
@@ -1307,13 +1292,14 @@ class FHEController {
 
     Ptxt encode_mask(const std::vector<double>& vec, int target_depth)
     {
-        Ptxt plain(context_);
         if (debug_cuda) {
             debug_label = "mask encode";
             std::cout << "encode_mask depth=" << target_depth
                       << " slots=" << vec.size() << std::endl;
         }
-        operators_->encode_slots_leveled(plain, vec, 1.0, target_depth);
+        Ptxt plain = encode_full_with_scale(vec, 1.0, vec.size());
+        drop_plain_to_depth(plain, target_depth);
+        check_cuda("encode_mask");
         return plain;
     }
 
@@ -1332,17 +1318,7 @@ class FHEController {
 
     Ptxt encode_full(const std::vector<double>& vec, int plaintext_num_slots)
     {
-        if (plaintext_num_slots <= 0) {
-            plaintext_num_slots = num_slots;
-        }
-        std::vector<double> msg = vec;
-        if (static_cast<int>(msg.size()) < plaintext_num_slots) {
-            msg.resize(static_cast<size_t>(plaintext_num_slots), 0.0);
-        }
-
-        Ptxt plain(context_);
-        encoder_->encode(plain, msg, default_scale_);
-        return plain;
+        return encode_full_with_scale(vec, default_scale_, plaintext_num_slots);
     }
 
     void drop_to_depth(Ctxt& c, int target_depth)
@@ -1350,6 +1326,34 @@ class FHEController {
         while (c.depth() < target_depth) {
             operators_->mod_drop_inplace(c);
         }
+    }
+
+    void drop_plain_to_depth(Ptxt& p, int target_depth)
+    {
+        while (p.depth() < target_depth) {
+            operators_->mod_drop_inplace(p);
+        }
+    }
+
+    Ptxt encode_full_with_scale(const std::vector<double>& vec, double scale,
+                                int plaintext_num_slots)
+    {
+        if (plaintext_num_slots <= 0) {
+            plaintext_num_slots = num_slots;
+        }
+        std::vector<double> msg = vec;
+        if (static_cast<int>(msg.size()) < plaintext_num_slots) {
+            msg.resize(static_cast<size_t>(plaintext_num_slots), 0.0);
+        }
+        if (debug_cuda) {
+            std::cout << "encode_full scale=" << scale
+                      << " slots=" << plaintext_num_slots
+                      << " msg_size=" << msg.size() << std::endl;
+        }
+        Ptxt plain(context_);
+        encoder_->encode(plain, msg, scale);
+        check_cuda("encode_full");
+        return plain;
     }
 
     void check_cuda(const char* label)
