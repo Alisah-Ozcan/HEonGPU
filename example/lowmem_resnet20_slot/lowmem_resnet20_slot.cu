@@ -16,8 +16,8 @@ using lowmem::HEConfig;
 
 static FHEController controller;
 
-static std::string data_dir = "../LowMemoryFHEResNet20/inputs";
-static std::string weights_dir = "../LowMemoryFHEResNet20/weights";
+static std::string data_dir = "assets/inputs";
+static std::string weights_dir = "assets/weights";
 static std::string input_filename = "luis.png";
 static int verbose = 0;
 static bool plain = false;
