@@ -93,6 +93,7 @@ static Ctxt initial_layer(const Ctxt& in)
 {
     double scale = 0.90;
     Ctxt res = controller.convbn_initial(in, scale, verbose > 1);
+    res = controller.bootstrap(res, verbose > 1);
     res = controller.relu(res, scale, verbose > 1);
     return res;
 }

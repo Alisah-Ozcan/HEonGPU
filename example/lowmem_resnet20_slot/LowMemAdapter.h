@@ -296,10 +296,10 @@ class FHEController {
     {
         auto start = utils::start_time();
         std::vector<double> coeffs = relu_coefficients(scale, relu_degree);
-        Ctxt tmp = const_cast<Ctxt&>(c);
         Ctxt out(context_);
         try {
-            out = operators_->evaluate_poly_monomial(tmp, c.scale(), coeffs,
+            out = operators_->evaluate_poly_monomial(const_cast<Ctxt&>(c),
+                                                     c.scale(), coeffs,
                                                      *relin_key_);
         } catch (const std::exception& ex) {
             report_exception("relu_poly", ex);
