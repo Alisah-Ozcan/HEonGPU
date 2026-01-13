@@ -28,11 +28,51 @@ using Ptxt = heongpu::Plaintext<Scheme>;
 
 struct HEConfig {
     size_t poly_modulus_degree = 65536;
+    bool use_manual_moduli = true;
+    std::vector<std::uint64_t> q_modulus_values = {
+        0x10000000006e0001ULL, // 60 Q0
+        0x10000140001ULL, // 40
+        0xffffe80001ULL, // 40
+        0xffffc40001ULL, // 40
+        0x100003e0001ULL, // 40
+        0xffffb20001ULL, // 40
+        0x10000500001ULL, // 40
+        0xffff940001ULL, // 40
+        0xffff8a0001ULL, // 40
+        0xffff820001ULL, // 40
+        0x7fffe60001ULL, // 39 StC
+        0x7fffe40001ULL, // 39 StC
+        0x7fffe00001ULL, // 39 StC
+        0xfffffffff840001ULL, // 60 Sine (double angle)
+        0x1000000000860001ULL, // 60 Sine (double angle)
+        0xfffffffff6a0001ULL, // 60 Sine (double angle)
+        0x1000000000980001ULL, // 60 Sine
+        0xfffffffff5a0001ULL, // 60 Sine
+        0x1000000000b00001ULL, // 60 Sine
+        0x1000000000ce0001ULL, // 60 Sine
+        0xfffffffff2a0001ULL, // 60 Sine
+        0x100000000060001ULL, // 56 CtS
+        0xfffffffff00001ULL, // 56 CtS
+        0xffffffffd80001ULL, // 56 CtS
+        0x1000000002a0001ULL, // 56 CtS
+    };
+    std::vector<std::uint64_t> p_modulus_values = {
+        0x1fffffffffe00001ULL, // Pi 61
+        0x1fffffffffc80001ULL, // Pi 61
+        0x1fffffffffb40001ULL, // Pi 61
+        0x1fffffffff500001ULL, // Pi 61
+        0x1fffffffff420001ULL, // Pi 61
+    };
     std::vector<int> coeff_modulus_bits = {
         60, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
         50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
     std::vector<int> special_primes_bits = {60, 60, 60};
-    double scale = std::pow(2.0, 50);
+    double scale = std::pow(2.0, 40);
+    int secret_key_h = 192;
+    int ephemeral_secret_weight = 32;
+    int boot_stc_level = 12;
+    int boot_eval_level = 20;
+    int boot_cts_level = 24;
     int relu_degree = 119;
     int ctos_piece = 3;
     int stoc_piece = 3;
@@ -67,8 +107,14 @@ class FHEController {
     {
         context_ = heongpu::HEContext<Scheme>(cfg.keyswitch, cfg.sec_level);
         context_.set_poly_modulus_degree(cfg.poly_modulus_degree);
-        context_.set_coeff_modulus_bit_sizes(cfg.coeff_modulus_bits,
-                                             cfg.special_primes_bits);
+        if (cfg.use_manual_moduli && !cfg.q_modulus_values.empty() &&
+            !cfg.p_modulus_values.empty()) {
+            context_.set_coeff_modulus_values(cfg.q_modulus_values,
+                                              cfg.p_modulus_values);
+        } else {
+            context_.set_coeff_modulus_bit_sizes(cfg.coeff_modulus_bits,
+                                                 cfg.special_primes_bits);
+        }
         context_.generate();
 
         default_scale_ = cfg.scale;
@@ -78,14 +124,31 @@ class FHEController {
         circuit_depth = context_.get_ciphertext_modulus_count() - 1;
 
         keygen_ = std::make_unique<heongpu::HEKeyGenerator<Scheme>>(context_);
-        secret_key_ = std::make_unique<heongpu::Secretkey<Scheme>>(context_);
-        keygen_->generate_secret_key(*secret_key_);
+        secret_key_ = std::make_unique<heongpu::Secretkey<Scheme>>(context_,
+                                                                   cfg.secret_key_h);
+        keygen_->generate_secret_key_v2(*secret_key_);
 
         public_key_ = std::make_unique<heongpu::Publickey<Scheme>>(context_);
         keygen_->generate_public_key(*public_key_, *secret_key_);
 
         relin_key_ = std::make_unique<heongpu::Relinkey<Scheme>>(context_);
         keygen_->generate_relin_key(*relin_key_, *secret_key_);
+
+        if (cfg.ephemeral_secret_weight > 0) {
+            heongpu::Secretkey<Scheme> sparse_sk(context_,
+                                                 cfg.ephemeral_secret_weight);
+            keygen_->generate_secret_key_v2(sparse_sk);
+
+            swk_dense_to_sparse_ =
+                std::make_unique<heongpu::Switchkey<Scheme>>(context_);
+            keygen_->generate_switch_key(*swk_dense_to_sparse_, sparse_sk,
+                                         *secret_key_);
+
+            swk_sparse_to_dense_ =
+                std::make_unique<heongpu::Switchkey<Scheme>>(context_);
+            keygen_->generate_switch_key(*swk_sparse_to_dense_, *secret_key_,
+                                         sparse_sk);
+        }
 
         encoder_ = std::make_unique<heongpu::HEEncoder<Scheme>>(context_);
         encryptor_ =
@@ -98,11 +161,16 @@ class FHEController {
             context_, *encoder_);
 
         const int q_size = context_.get_ciphertext_modulus_count();
-        heongpu::EncodingMatrixConfig cts_cfg(
-            heongpu::LinearTransformType::COEFFS_TO_SLOTS, q_size - 2, 2.0, 4);
+        if (q_size <= cfg.boot_cts_level) {
+            throw std::runtime_error(
+                "Bootstrapping v2 requires Q_size > 24 for the current "
+                "configuration.");
+        }
         heongpu::EncodingMatrixConfig stc_cfg(
-            heongpu::LinearTransformType::SLOTS_TO_COEFFS, 4, 2.0, 3);
-        heongpu::EvalModConfig eval_mod_cfg(0);
+            heongpu::LinearTransformType::SLOTS_TO_COEFFS, cfg.boot_stc_level);
+        heongpu::EvalModConfig eval_mod_cfg(cfg.boot_eval_level);
+        heongpu::EncodingMatrixConfig cts_cfg(
+            heongpu::LinearTransformType::COEFFS_TO_SLOTS, cfg.boot_cts_level);
         heongpu::BootstrappingConfigV2 boot_cfg_v2(stc_cfg, eval_mod_cfg,
                                                    cts_cfg);
         operators_->generate_bootstrapping_params_v2(default_scale_,
@@ -371,7 +439,8 @@ class FHEController {
         Ctxt out(context_);
         try {
             out = operators_->regular_bootstrapping_v2(
-                tmp, *galois_key_, *relin_key_, nullptr, nullptr);
+                tmp, *galois_key_, *relin_key_, swk_dense_to_sparse_.get(),
+                swk_sparse_to_dense_.get());
         } catch (const std::exception& ex) {
             report_exception("bootstrap", ex);
             throw;
@@ -1359,6 +1428,8 @@ class FHEController {
     std::unique_ptr<heongpu::HEEncryptor<Scheme>> encryptor_;
     std::unique_ptr<heongpu::HEDecryptor<Scheme>> decryptor_;
     std::unique_ptr<heongpu::HEArithmeticOperator<Scheme>> operators_;
+    std::unique_ptr<heongpu::Switchkey<Scheme>> swk_dense_to_sparse_;
+    std::unique_ptr<heongpu::Switchkey<Scheme>> swk_sparse_to_dense_;
 
     double default_scale_ = std::pow(2.0, 50);
     std::unordered_map<std::string, std::vector<double>> relu_cache_;
