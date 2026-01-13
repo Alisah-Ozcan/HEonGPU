@@ -97,12 +97,16 @@ class FHEController {
         operators_ = std::make_unique<heongpu::HEArithmeticOperator<Scheme>>(
             context_, *encoder_);
 
-        heongpu::BootstrappingConfig boot_cfg(cfg.ctos_piece, cfg.stoc_piece,
-                                              cfg.taylor_number,
-                                              cfg.less_key_mode);
-        operators_->generate_bootstrapping_params(
-            default_scale_, boot_cfg,
-            heongpu::arithmetic_bootstrapping_type::REGULAR_BOOTSTRAPPING);
+        const int q_size = context_.get_ciphertext_modulus_count();
+        heongpu::EncodingMatrixConfig cts_cfg(
+            heongpu::LinearTransformType::COEFFS_TO_SLOTS, q_size - 2, 2.0, 4);
+        heongpu::EncodingMatrixConfig stc_cfg(
+            heongpu::LinearTransformType::SLOTS_TO_COEFFS, 4, 2.0, 3);
+        heongpu::EvalModConfig eval_mod_cfg(0);
+        heongpu::BootstrappingConfigV2 boot_cfg_v2(stc_cfg, eval_mod_cfg,
+                                                   cts_cfg);
+        operators_->generate_bootstrapping_params_v2(default_scale_,
+                                                     boot_cfg_v2);
 
         std::vector<int> boot_shifts = operators_->bootstrapping_key_indexs();
         std::vector<int> shifts = collect_required_shifts();
