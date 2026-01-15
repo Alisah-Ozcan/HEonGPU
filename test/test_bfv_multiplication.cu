@@ -8,7 +8,6 @@
 
 TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
 {
-    cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
         int plain_modulus = 1032193;
@@ -424,7 +423,6 @@ TEST(HEonGPU, BFV_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
 
 TEST(HEonGPU, BFV_Ciphertext_Plaintext_Multiplication)
 {
-    cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
         int plain_modulus = 1032193;

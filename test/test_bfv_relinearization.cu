@@ -8,7 +8,6 @@
 
 TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_I)
 {
-    cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
         int plain_modulus = 1032193;
@@ -424,7 +423,6 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_I)
 
 TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_II)
 {
-    cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
         int plain_modulus = 1032193;
@@ -841,7 +839,6 @@ TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_II)
 
 TEST(HEonGPU, BFV_Relinearization_Keyswitching_Method_III)
 {
-    cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
         int plain_modulus = 1032193;

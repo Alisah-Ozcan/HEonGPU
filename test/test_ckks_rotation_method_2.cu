@@ -35,7 +35,6 @@ bool fix_point_array_check(const std::vector<T>& array1,
 
 TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_II_Part_I)
 {
-    cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
         heongpu::HEContext<heongpu::Scheme::CKKS> context(

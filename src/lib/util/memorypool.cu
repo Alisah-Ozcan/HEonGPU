@@ -4,7 +4,8 @@
 // Developer: Alişah Özcan
 
 #include <heongpu/util/memorypool.cuh>
-#include <stdexcept>
+
+using heongpu::CudaException;
 
 std::shared_ptr<MemoryPool::HostResource> MemoryPool::host_base_ = nullptr;
 std::shared_ptr<MemoryPool::HostPoolResource> MemoryPool::host_pool_ = nullptr;
@@ -21,6 +22,11 @@ std::mutex MemoryPool::mutex_;
 
 MemoryPool& MemoryPool::instance()
 {
+    // Initialize CUDA runtime before the singleton is constructed so that
+    // teardown order stays correct at process exit.
+    cudaFree(nullptr);
+    HEONGPU_CUDA_CHECK(cudaGetLastError());
+
     static MemoryPool instance;
     return instance;
 }
@@ -35,8 +41,10 @@ size_t MemoryPool::get_host_avaliable_memory() const
 
 size_t MemoryPool::get_decive_avaliable_memory() const
 {
-    size_t free_mem, total_mem;
+    size_t free_mem = 0;
+    size_t total_mem = 0;
     cudaMemGetInfo(&free_mem, &total_mem);
+    HEONGPU_CUDA_CHECK(cudaGetLastError());
     return free_mem; // total_mem
 }
 

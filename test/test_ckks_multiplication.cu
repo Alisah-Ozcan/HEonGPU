@@ -35,8 +35,6 @@ bool fix_point_array_check(const std::vector<T>& array1,
 
 TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
 {
-    cudaSetDevice(0);
-
     {
         size_t poly_modulus_degree = 4096;
         heongpu::HEContext<heongpu::Scheme::CKKS> context(
@@ -431,7 +429,6 @@ TEST(HEonGPU, CKKS_Ciphertext_Ciphertext_Multiplication_with_Relinearization)
 
 TEST(HEonGPU, CKKS_Ciphertext_Plaintext_Multiplication)
 {
-    cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
         heongpu::HEContext<heongpu::Scheme::CKKS> context(

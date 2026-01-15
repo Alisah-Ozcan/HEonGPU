@@ -11,7 +11,6 @@ constexpr auto Scheme = heongpu::Scheme::TFHE;
 
 TEST(HEonGPU, TFHE_Gate_Boots)
 {
-    cudaSetDevice(0);
     heongpu::HEContext<Scheme> context;
 
     heongpu::HEKeyGenerator<Scheme> keygen(context);

@@ -13,8 +13,6 @@ constexpr auto Scheme = heongpu::Scheme::CKKS;
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0);
-
     std::vector<size_t> poly_modulus_degrees = {4096, 8192, 16384, 32768};
     std::vector<std::vector<int>> log_Q_bit_sizes = {
         {40, 30, 30},

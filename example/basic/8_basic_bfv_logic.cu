@@ -15,8 +15,6 @@ constexpr auto Scheme = heongpu::Scheme::BFV;
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0); // Use it for memory pool
-
     // Initialize encryption parameters for the BFV scheme.
     heongpu::HEContext<Scheme> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);

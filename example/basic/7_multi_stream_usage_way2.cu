@@ -62,8 +62,6 @@ void multi_stream_function_way2(
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0); // Use it for memory pool
-
     // Initialize encryption parameters for the CKKS scheme.
     heongpu::HEContext<Scheme> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);

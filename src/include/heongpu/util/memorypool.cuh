@@ -14,6 +14,7 @@
 #include "gpuntt/common/common.cuh"
 #include "gpuntt/common/nttparameters.cuh"
 #include <heongpu/kernel/defines.h>
+#include <heongpu/util/util.cuh>
 
 #include <thrust/host_vector.h>
 #include <rmm/device_buffer.hpp>

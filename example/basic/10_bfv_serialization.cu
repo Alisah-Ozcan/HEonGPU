@@ -59,9 +59,6 @@ constexpr auto Scheme = heongpu::Scheme::BFV;
 
 int main(int argc, char* argv[])
 {
-    // Use it for memory pool
-    cudaSetDevice(0);
-
     // 2. Set up HE context (BFV scheme with key-switching METHOD_I)
     heongpu::HEContext<Scheme> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);

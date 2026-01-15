@@ -13,8 +13,6 @@ constexpr auto Scheme = heongpu::Scheme::BFV;
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0);
-
     std::vector<size_t> poly_modulus_degrees = {4096, 8192, 16384, 32768,
                                                 65536};
     std::vector<int> plain_modulus = {1032193, 1032193, 786433, 786433, 786433};

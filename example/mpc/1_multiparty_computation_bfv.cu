@@ -9,8 +9,6 @@
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0);
-
     heongpu::HEContext<heongpu::Scheme::BFV> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 

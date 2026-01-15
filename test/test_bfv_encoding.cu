@@ -8,7 +8,6 @@
 
 TEST(HEonGPU, BFV_Encoding_Decoding)
 {
-    cudaSetDevice(0);
     {
         size_t poly_modulus_degree = 4096;
         int plain_modulus = 1032193;

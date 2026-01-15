@@ -8,8 +8,6 @@
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0);
-
     heongpu::HEContext<heongpu::Scheme::CKKS> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
         heongpu::sec_level_type::none);

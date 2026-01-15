@@ -211,9 +211,7 @@ $ Example: ./build/bin/examples/1_basic_bfv
 ```c++
 #include <heongpu/heongpu.hpp>
 
-int main() {
-    cudaSetDevice(0); // Use it for memory pool
-    
+int main() {   
     heongpu::HEContext<heongpu::Scheme::BFV> context(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 

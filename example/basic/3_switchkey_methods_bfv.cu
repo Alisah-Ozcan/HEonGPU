@@ -12,8 +12,6 @@ constexpr auto Scheme = heongpu::Scheme::BFV;
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0); // Use it for memory pool
-
     heongpu::HEContext<Scheme> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
     // heongpu::keyswitching_type::KEYSWITCHING_METHOD_III not supports rotation

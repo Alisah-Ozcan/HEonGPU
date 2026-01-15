@@ -12,9 +12,6 @@ constexpr auto Scheme = heongpu::Scheme::TFHE;
 
 int main(int argc, char* argv[])
 {
-    // Use GPU 0 for memory pool and kernel execution
-    cudaSetDevice(0);
-
     // ========================================
     // 1. Initialize TFHE encryption context
     // ========================================

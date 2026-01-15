@@ -12,7 +12,6 @@ constexpr auto Scheme = heongpu::Scheme::TFHE;
 
 int main()
 {
-    cudaSetDevice(0);
     heongpu::HEContext<Scheme> context;
 
     heongpu::HEKeyGenerator<Scheme> keygen(context);

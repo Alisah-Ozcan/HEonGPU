@@ -8,8 +8,6 @@
 
 int main(int argc, char* argv[])
 {
-    cudaSetDevice(0); // Use it for memory pool
-
     // Initialize encryption parameters for the CKKS scheme.
     heongpu::HEContext<heongpu::Scheme::CKKS> context(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
