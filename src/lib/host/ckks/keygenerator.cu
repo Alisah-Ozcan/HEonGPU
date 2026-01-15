@@ -75,6 +75,9 @@ namespace heongpu
             [&](Secretkey<Scheme::CKKS>& sk_)
             {
                 DeviceVector<int> secret_key_without_rns((n), options.stream_);
+                cudaMemsetAsync(secret_key_without_rns.data(), 0,
+                                n * sizeof(int), options.stream_);
+                HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                 secretkey_gen_kernel<<<dim3((n >> 8), 1, 1), 256, 0,
                                        options.stream_>>>(

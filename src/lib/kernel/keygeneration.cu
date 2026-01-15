@@ -13,19 +13,25 @@ namespace heongpu
     __global__ void secretkey_gen_kernel(int* secret_key, int hamming_weight,
                                          int n_power, int seed)
     {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= hamming_weight)
+            return;
 
-        secret_key[idx] = 0;
+        const int N = 1 << n_power;
+        const int mask = N - 1;
 
         curandState_t state;
         curand_init(seed, idx, 0, &state);
 
-        if (idx < hamming_weight)
+        int value = (curand(&state) & 1U) ? 1 : -1; // // -1 or 1
+
+        int start = (int) (curand(&state) & (unsigned) mask);
+
+        for (int probe = 0; probe < N; ++probe)
         {
-            int mask = (1 << n_power) - 1;
-            int location = curand(&state) & mask;
-            int value = (curand(&state) & 2) * 2 - 1; // -1 or 1
-            atomicExch(&secret_key[location], value);
+            int loc = (start + probe) & mask;
+            if (atomicCAS(&secret_key[loc], 0, value) == 0)
+                return;
         }
     }
 

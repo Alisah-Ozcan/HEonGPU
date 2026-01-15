@@ -16,7 +16,6 @@
 namespace heongpu
 {
     // Secret Key Generation
-
     __global__ void secretkey_gen_kernel(int* secret_key, int hamming_weight,
                                          int n_power, int seed);
 
