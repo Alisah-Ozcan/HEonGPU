@@ -1,4 +1,4 @@
-// Copyright 2025 Yanbin Li
+// Copyright 2025-2026 Yanbin Li
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 // Developer: Yanbin Li
@@ -201,9 +201,8 @@ namespace heongpu
         return get_precision_stats(want_complex, values_test);
     }
 
-    PrecisionStats
-    get_precision_stats(const std::vector<double>& values_want,
-                        const std::vector<double>& values_test)
+    PrecisionStats get_precision_stats(const std::vector<double>& values_want,
+                                       const std::vector<double>& values_test)
     {
         std::vector<Complex64> want_complex(values_want.size());
         std::vector<Complex64> test_complex(values_test.size());
