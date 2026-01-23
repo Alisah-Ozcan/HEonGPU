@@ -347,23 +347,6 @@ namespace heongpu
         int location_output =
             idx + (idy << n_power) + ((gridDim.y * idz) << n_power);
 
-        Data64 input_r = input[location_input];
-        Data64 result = OPERATOR_GPU_64::reduce_forced(input_r, modulus[idy]);
-
-        output[location_output] = result;
-    }
-
-    __global__ void mod_raise_kernel_v2(Data64* input, Data64* output,
-                                        Modulus64* modulus, int n_power)
-    {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x; // ring size
-        int idy = blockIdx.y; // rns count
-        int idz = blockIdx.z; // cipher count
-
-        int location_input = idx + (idz << n_power);
-        int location_output =
-            idx + (idy << n_power) + ((gridDim.y * idz) << n_power);
-
         Data64 q0 = modulus[0].value;
         Data64 qi = modulus[idy].value;
 

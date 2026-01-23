@@ -3313,10 +3313,10 @@ namespace heongpu
             .zero_padding = false,
             .stream = options.stream_};
 
-        mod_raise_kernel_v2<<<dim3((n >> 8), Q_size_, 2), 256, 0,
-                              options.stream_>>>(cipher_intt_poly.data(),
-                                                 c_raised.data(),
-                                                 modulus_->data(), n_power);
+        mod_raise_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+                           options.stream_>>>(cipher_intt_poly.data(),
+                                              c_raised.data(), modulus_->data(),
+                                              n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         gpuntt::GPU_NTT_Inplace(c_raised.data(), ntt_table_->data(),

@@ -70,9 +70,6 @@ namespace heongpu
     __global__ void mod_raise_kernel(Data64* input, Data64* output,
                                      Modulus64* modulus, int n_power);
 
-    __global__ void mod_raise_kernel_v2(Data64* input, Data64* output,
-                                        Modulus64* modulus, int n_power);
-
     ///////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////
