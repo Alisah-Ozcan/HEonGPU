@@ -111,6 +111,13 @@ int main(int argc, char* argv[])
     std::vector<Complex64> decrypted_1;
     encoder.decode(decrypted_1, P_res1);
 
+    // Compute and print precision statistics
+    heongpu::PrecisionStats prec_stats =
+        heongpu::get_precision_stats(message, decrypted_1);
+
+    std::cout << "\n=== Bootstrapping Precision Statistics ===" << std::endl;
+    std::cout << prec_stats.to_string() << std::endl;
+
     // for(int j = 0; j < slot_count; j++){
     for (int j = 0; j < 16; j++)
     {

@@ -127,11 +127,24 @@ int main(int argc, char* argv[])
     std::vector<Complex64> decrypted_1;
     encoder.decode(decrypted_1, P_res1);
 
+    std::vector<double> expected_message(slot_count);
+    for (int i = 0; i < slot_count; i++)
+    {
+        expected_message[i] =
+            static_cast<double>(int(message1[i]) & int(message2[i]));
+    }
+
+    // Compute and print precision statistics
+    heongpu::PrecisionStats prec_stats =
+        heongpu::get_precision_stats(expected_message, decrypted_1);
+
+    std::cout << "\n=== Bootstrapping Precision Statistics ===" << std::endl;
+    std::cout << prec_stats.to_string() << std::endl;
+
     // for(int j = 0; j < slot_count; j++){
     for (int j = 0; j < 16; j++)
     {
-        std::cout << j
-                  << "-> EXPECTED:" << (int(message1[j]) & int(message1[j]))
+        std::cout << j << "-> EXPECTED:" << expected_message[j]
                   << " - ACTUAL:" << decrypted_1[j] << std::endl;
     }
     std::cout << std::endl;

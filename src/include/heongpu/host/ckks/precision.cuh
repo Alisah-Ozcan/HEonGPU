@@ -72,6 +72,12 @@ namespace heongpu
     PrecisionStats
     get_precision_stats(const std::vector<Complex64>& values_want,
                         const std::vector<Complex64>& values_test);
+    PrecisionStats
+    get_precision_stats(const std::vector<double>& values_want,
+                        const std::vector<Complex64>& values_test);
+    PrecisionStats
+    get_precision_stats(const std::vector<double>& values_want,
+                        const std::vector<double>& values_test);
 
     // Helper function: convert delta to precision (log2(1/delta))
     Stats delta_to_precision(const Stats& delta);
