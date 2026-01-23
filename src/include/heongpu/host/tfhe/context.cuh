@@ -13,6 +13,7 @@
 #include <heongpu/util/secstdparams.h>
 #include <heongpu/util/defaultmodulus.hpp>
 #include <heongpu/util/random.cuh>
+#include <heongpu/util/memorypool.cuh>
 #include <gmp.h>
 #include <heongpu/kernel/contextpool.hpp>
 #include <ostream>
@@ -32,6 +33,7 @@ namespace heongpu
 
       public:
         HEContext();
+        HEContext(const MemoryPoolConfig& pool_config);
 
         // HEContext() = default;
 

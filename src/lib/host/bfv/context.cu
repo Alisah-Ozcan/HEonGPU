@@ -398,12 +398,17 @@ namespace heongpu
 
     void HEContext<Scheme::BFV>::generate()
     {
+        generate(MemoryPoolConfig::Defaults());
+    }
+
+    void HEContext<Scheme::BFV>::generate(const MemoryPoolConfig& pool_config)
+    {
         if ((!context_generated_) && (poly_modulus_degree_specified_) &&
             (plain_modulus_specified_) && (coeff_modulus_specified_))
         {
             // Memory pool initialization
-            MemoryPool::instance().initialize();
-            MemoryPool::instance().use_memory_pool(true);
+            MemoryPool::instance().initialize(pool_config);
+            MemoryPool::instance().use_memory_pool(pool_config.use_memory_pool);
             cudaDeviceSynchronize();
 
             // DRNG initialization

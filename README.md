@@ -38,7 +38,7 @@ For more information about HEonGPU:
 The HEonGPU library now delivers `Collective Bootstrapping` for both BFV and CKKS, drawing on the designs introduced by [Mouchet et al.](https://eprint.iacr.org/2020/304.pdf)  and [Balle et al.](https://arxiv.org/pdf/2009.00349) A streamlined CUDA path merges share creation and re-encryption into a single launch, allowing deep multi-party workloads to keep running entirely on the GPU without pausing to reset noise.
 
 
-### 🚨 **New Scheme: [TFHE (Torus Fully Homomorphic Encryption)](example/basic/12_basic_tfhe.cu)**
+### 🚨 **New Scheme: [TFHE (Torus Fully Homomorphic Encryption)](example/basic/13_basic_tfhe.cu)**
 
 The HEonGPU library now includes support for the `TFHE` (Torus Fully Homomorphic Encryption) scheme with GPU acceleration. This enables efficient evaluation of Boolean circuits using fast gate bootstrapping and low-latency parallel execution on modern CUDA-enabled GPUs.
 
@@ -281,13 +281,38 @@ Features in [define.h](src/include/heongpu/kernel/defines.h):
 - **Galois Key Capability:** `MAX_SHIFT` (8) controls the maximum rotation capability for Galois keys. __Don't forget to change it if you need more rotation steps(for default galois key generation)__.
 
 - **Device**:
-  - Initial size (`0.5`): 50% of GPU memory.
-  - Max size (`0.8`): 80% of GPU memory.
+  - Initial size (`0.9`): 90% of available GPU memory.
+  - Max size (`0.95`): 95% of available GPU memory.
 - **Host**:
-  - Initial size (`0.1`): 10% of CPU memory.
-  - Max size (`0.2`): 20% of CPU memory.
+  - Initial size (default): 100 MB when no runtime config is provided.
+  - Max size (`0.4`): 40% of available CPU memory.
 
-If your system allows, you can redefine the memory pool sizes to better suit your use case. 
+If your system allows, you can redefine the memory pool sizes to better suit your use case.
+
+### Memory Pool Configuration (Runtime)
+
+You can also control the memory pool sizes directly at runtime when generating
+a context. Sizes can be given as **percentages** (0.0-1.0 or 0-100) or as
+**absolute bytes**. If you do not provide a config, the defaults above are used.
+
+```cpp
+heongpu::HEContext<heongpu::Scheme::CKKS> context(
+    heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+
+context.set_poly_modulus_degree(8192);
+context.set_coeff_modulus_bit_sizes({60, 30, 30, 30}, {60});
+
+heongpu::MemoryPoolConfig pool_config;
+pool_config.initial_device_fraction = 80.0f; // %80 (0.8f is also valid)
+pool_config.max_device_fraction = 90.0f;     // %90
+pool_config.initial_host_bytes = 256ULL * 1024 * 1024; // 256 MB
+pool_config.max_host_fraction = 50.0f;                 // %50
+
+context.generate(pool_config);
+```
+
+> Note: The memory pool is a process-wide singleton. The **first**
+> initialization sets the pool sizes; subsequent contexts reuse the same pool.
 
 
 ## Storage Management

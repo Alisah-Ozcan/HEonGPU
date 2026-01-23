@@ -8,16 +8,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_LOCATION}/examples/basic)
 set(EXECUTABLES
     1_basic_bfv 1_basic_bfv.cu
     2_basic_ckks 2_basic_ckks.cu
-    3_switchkey_methods_bfv 3_switchkey_methods_bfv.cu
-    4_switchkey_methods_ckks 4_switchkey_methods_ckks.cu
-    5_default_stream_usage 5_default_stream_usage.cu
-    6_multi_stream_usage_way1 6_multi_stream_usage_way1.cu
-    7_multi_stream_usage_way2 7_multi_stream_usage_way2.cu
-    8_basic_bfv_logic 8_basic_bfv_logic.cu
-    9_basic_ckks_logic 9_basic_ckks_logic.cu
-    10_bfv_serialization 10_bfv_serialization.cu
-    11_ckks_serialization 11_ckks_serialization.cu
-    12_basic_tfhe 12_basic_tfhe.cu
+    3_basic_memorypool_config 3_basic_memorypool_config.cu
+    4_switchkey_methods_bfv 4_switchkey_methods_bfv.cu
+    5_switchkey_methods_ckks 5_switchkey_methods_ckks.cu
+    6_default_stream_usage 6_default_stream_usage.cu
+    7_multi_stream_usage_way1 7_multi_stream_usage_way1.cu
+    8_multi_stream_usage_way2 8_multi_stream_usage_way2.cu
+    9_basic_bfv_logic 9_basic_bfv_logic.cu
+    10_basic_ckks_logic 10_basic_ckks_logic.cu
+    11_bfv_serialization 11_bfv_serialization.cu
+    12_ckks_serialization 12_ckks_serialization.cu
+    13_basic_tfhe 13_basic_tfhe.cu
 )
 
 function(add_example exe source)

@@ -13,6 +13,7 @@
 #include <heongpu/util/secstdparams.h>
 #include <heongpu/util/defaultmodulus.hpp>
 #include <heongpu/util/random.cuh>
+#include <heongpu/util/memorypool.cuh>
 #include <gmp.h>
 #include <heongpu/kernel/contextpool.hpp>
 #include <ostream>
@@ -59,6 +60,7 @@ namespace heongpu
         void set_plain_modulus(const int plain_modulus);
 
         void generate();
+        void generate(const MemoryPoolConfig& pool_config);
 
         void print_parameters();
 

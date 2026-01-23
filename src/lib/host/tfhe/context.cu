@@ -8,10 +8,15 @@
 namespace heongpu
 {
     HEContext<Scheme::TFHE>::HEContext()
+        : HEContext(MemoryPoolConfig::Defaults())
+    {
+    }
+
+    HEContext<Scheme::TFHE>::HEContext(const MemoryPoolConfig& pool_config)
     {
         // Memory pool initialization
-        MemoryPool::instance().initialize();
-        MemoryPool::instance().use_memory_pool(true);
+        MemoryPool::instance().initialize(pool_config);
+        MemoryPool::instance().use_memory_pool(pool_config.use_memory_pool);
         cudaDeviceSynchronize();
 
         prime_ = Modulus64(1152921504606877697ULL);
