@@ -169,6 +169,20 @@ $ sudo cmake --install build
 ```
 Available build types: `Debug`, `Release` (default), `RelWithDebInfo`, `MinSizeRel`. Override with `-D CMAKE_BUILD_TYPE=<type>`. These propagate to all bundled libraries (GPU-FFT, GPU-NTT, RNGonGPU).
 
+### Uninstall
+
+To uninstall HEonGPU and thirdparty libraries:
+
+```bash
+$ cd build
+$ sudo make uninstall
+```
+
+The uninstall script will remove:
+- **HEonGPU** library and headers
+- **GPU-NTT**, **GPU-FFT**, **RNGonGPU** libraries and headers
+- All CMake configuration files
+
 ## Testing & Benchmarking
 
 To run tests:

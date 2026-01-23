@@ -46,6 +46,7 @@ function(add_test exe source)
         CUDA_SEPARABLE_COMPILATION ON
         POSITION_INDEPENDENT_CODE OFF
         CUDA_RUNTIME_LIBRARY Static
+        CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}"
     )
     gtest_discover_tests(${exe}
         PROPERTIES

@@ -1,0 +1,221 @@
+if(NOT EXISTS "@CMAKE_BINARY_DIR@/install_manifest.txt")
+    message(WARNING "Cannot find main install manifest: @CMAKE_BINARY_DIR@/install_manifest.txt")
+    set(main_files "")
+else()
+    file(READ "@CMAKE_BINARY_DIR@/install_manifest.txt" main_files)
+endif()
+
+# Collect all install manifests from thirdparty libraries
+set(thirdparty_manifests
+    "@CMAKE_BINARY_DIR@/thirdparty/GPU-NTT/install_manifest.txt"
+    "@CMAKE_BINARY_DIR@/thirdparty/GPU-FFT/install_manifest.txt"
+    "@CMAKE_BINARY_DIR@/thirdparty/RNGonGPU/install_manifest.txt"
+)
+
+set(all_files "${main_files}")
+
+foreach(manifest ${thirdparty_manifests})
+    if(EXISTS "${manifest}")
+        file(READ "${manifest}" thirdparty_files)
+        set(all_files "${all_files}\n${thirdparty_files}")
+    endif()
+endforeach()
+
+if(all_files STREQUAL "")
+    message(FATAL_ERROR "No install manifests found. Please install HEonGPU first using 'cmake --install .'")
+endif()
+
+string(REGEX REPLACE "\n" ";" files "${all_files}")
+list(REMOVE_DUPLICATES files)
+list(REMOVE_ITEM files "")
+
+list(LENGTH files file_count)
+message(STATUS "")
+message(STATUS "╔════════════════════════════════════════════════════════════════╗")
+message(STATUS "║          HEonGPU Uninstallation Tool                          ║")
+message(STATUS "╚════════════════════════════════════════════════════════════════╝")
+message(STATUS "")
+message(STATUS "Found ${file_count} installed files/directories")
+message(STATUS "")
+message(STATUS "Components to be removed:")
+message(STATUS "  • HEonGPU library and headers")
+message(STATUS "  • GPU-NTT library and headers")
+message(STATUS "  • GPU-FFT library and headers")
+message(STATUS "  • RNGonGPU library and headers")
+message(STATUS "")
+message(STATUS "The following files and directories will be removed:")
+message(STATUS "════════════════════════════════════════════════════════════════")
+
+foreach(file ${files})
+    message(STATUS "  ${file}")
+endforeach()
+
+message(STATUS "════════════════════════════════════════════════════════════════")
+message(STATUS "")
+message(STATUS "⚠️  WARNING: This action cannot be undone!")
+message(STATUS "")
+message(STATUS "Do you want to proceed with uninstallation? [yes/no]")
+
+# Read user input
+execute_process(
+    COMMAND bash -c "read -p 'Enter your choice: ' choice && echo $choice"
+    OUTPUT_VARIABLE user_choice
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+string(TOLOWER "${user_choice}" user_choice)
+
+if(user_choice STREQUAL "yes" OR user_choice STREQUAL "y")
+    message(STATUS "")
+    message(STATUS "Proceeding with uninstallation...")
+    message(STATUS "")
+    
+    set(removed_count 0)
+    set(failed_count 0)
+    set(notfound_count 0)
+    
+    foreach(file ${files})
+        set(filepath "$ENV{DESTDIR}${file}")
+        if(IS_SYMLINK "${filepath}" OR EXISTS "${filepath}")
+            message(STATUS "Removing: ${filepath}")
+            execute_process(
+                COMMAND ${CMAKE_COMMAND} -E remove "${filepath}"
+                RESULT_VARIABLE rm_result
+                OUTPUT_VARIABLE rm_out
+                ERROR_VARIABLE rm_err
+            )
+            if(rm_result EQUAL 0)
+                math(EXPR removed_count "${removed_count} + 1")
+            else()
+                message(STATUS "Failed to remove: ${filepath}")
+                message(STATUS "Error: ${rm_err}")
+                math(EXPR failed_count "${failed_count} + 1")
+            endif()
+        else()
+            # message(STATUS "File does not exist: ${filepath}")
+            math(EXPR notfound_count "${notfound_count} + 1")
+        endif()
+    endforeach()
+    
+    # Optional: Clean up empty files
+    message(STATUS "")
+    message(STATUS "Cleaning up empty files...")
+    set(empty_files_removed 0)
+    set(directories "")
+    foreach(file ${files})
+        get_filename_component(dir "${file}" DIRECTORY)
+        list(APPEND directories "$ENV{DESTDIR}${dir}")
+    endforeach()
+    if(directories)
+        list(REMOVE_DUPLICATES directories)
+        foreach(dir ${directories})
+            if(IS_DIRECTORY "${dir}")
+                file(GLOB_RECURSE candidate_files "${dir}/*")
+                foreach(candidate ${candidate_files})
+                    if(EXISTS "${candidate}" AND NOT IS_DIRECTORY "${candidate}" AND NOT IS_SYMLINK "${candidate}")
+                        file(SIZE "${candidate}" candidate_size)
+                        if(candidate_size EQUAL 0)
+                            file(REMOVE "${candidate}")
+                            math(EXPR empty_files_removed "${empty_files_removed} + 1")
+                        endif()
+                    endif()
+                endforeach()
+            endif()
+        endforeach()
+    endif()
+    message(STATUS "Removed empty files: ${empty_files_removed}")
+
+    # Optional: Clean up empty directories
+    message(STATUS "")
+    message(STATUS "Cleaning up empty directories...")
+    
+    if(directories)
+        list(REMOVE_DUPLICATES directories)
+        # Sort directories by length (descending) to remove subdirectories first
+        list(SORT directories COMPARE NATURAL ORDER DESCENDING)
+        
+        foreach(dir ${directories})
+            if(IS_DIRECTORY "${dir}")
+                file(GLOB dir_children "${dir}/*")
+                if(NOT dir_children)
+                    file(REMOVE "${dir}")
+                    message(STATUS "Removed directory: ${dir}")
+                endif()
+            endif()
+        endforeach()
+    endif()
+
+    # Extra cleanup: remove empty directories under known install roots
+    message(STATUS "")
+    message(STATUS "Cleaning up empty directories under known install roots...")
+    set(known_roots
+        "/usr/local/include/HEonGPU-1.1"
+        "/usr/local/include/GPUFFT-1.0"
+        "/usr/local/include/GPUNTT-1.0"
+        "/usr/local/include/RNGonGPU-1.0"
+        "/usr/local/include/rmm"
+        "/usr/local/include/fmt"
+        "/usr/local/include/spdlog"
+        "/usr/local/include/nvtx3"
+        "/usr/local/lib/cmake/HEonGPU-1.1"
+        "/usr/local/lib/cmake/GPUFFT-1.0"
+        "/usr/local/lib/cmake/GPUNTT-1.0"
+        "/usr/local/lib/cmake/RNGonGPU-1.0"
+        "/usr/local/lib/cmake/rmm"
+        "/usr/local/lib/cmake/fmt"
+        "/usr/local/lib/cmake/spdlog"
+        "/usr/local/lib/cmake/nvtx3"
+        "/usr/local/lib/pkgconfig"
+    )
+    foreach(root ${known_roots})
+        if(IS_DIRECTORY "${root}")
+            file(GLOB_RECURSE candidate_dirs LIST_DIRECTORIES true "${root}/*")
+            list(APPEND candidate_dirs "${root}")
+            list(REMOVE_DUPLICATES candidate_dirs)
+            list(SORT candidate_dirs COMPARE NATURAL ORDER DESCENDING)
+            foreach(dir ${candidate_dirs})
+                if(IS_DIRECTORY "${dir}")
+                    file(GLOB root_children "${dir}/*")
+                    if(NOT root_children)
+                        file(REMOVE "${dir}")
+                    endif()
+                endif()
+            endforeach()
+        endif()
+    endforeach()
+
+    message(STATUS "════════════════════════════════════════════════════════════════")
+    message(STATUS "")
+    message(STATUS "Uninstallation Summary:")
+    message(STATUS "  ✓ Successfully removed: ${removed_count} files")
+    if(notfound_count GREATER 0)
+        message(STATUS "  ⓘ Already removed (or not found): ${notfound_count} files")
+    endif()
+    if(failed_count GREATER 0)
+        message(STATUS "  ✗ Failed to remove: ${failed_count} files")
+    endif()
+    
+    # Check if HEonGPU include directory still exists and is not empty (legacy files)
+    set(HEONGPU_INCLUDE_DIR "/usr/local/include/HEonGPU-1.1")
+    if(IS_DIRECTORY "${HEONGPU_INCLUDE_DIR}")
+        file(GLOB HEONGPU_LEFTOVERS "${HEONGPU_INCLUDE_DIR}/*")
+        if(HEONGPU_LEFTOVERS)
+            message(STATUS "")
+            file(REMOVE_RECURSE "${HEONGPU_INCLUDE_DIR}")
+            # Suppress legacy cleanup messages to keep uninstall output concise.
+        else()
+             # Directory exists but empty, try to remove it
+             execute_process(COMMAND ${CMAKE_COMMAND} -E rmdir "${HEONGPU_INCLUDE_DIR}")
+        endif()
+    endif()
+
+    message(STATUS "════════════════════════════════════════════════════════════════")
+    message(STATUS "")
+    message(STATUS "HEonGPU and thirdparty libraries have been uninstalled.")
+    
+else()
+    message(STATUS "")
+    message(STATUS "════════════════════════════════════════════════════════════════")
+    message(STATUS "Uninstallation cancelled by user.")
+    message(STATUS "════════════════════════════════════════════════════════════════")
+endif()
