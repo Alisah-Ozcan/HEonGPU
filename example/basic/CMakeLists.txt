@@ -6,19 +6,19 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_LOCATION}/examples/basic)
 
 set(EXECUTABLES
-    1_basic_bfv 1_basic_bfv.cu
-    2_basic_ckks 2_basic_ckks.cu
-    3_basic_memorypool_config 3_basic_memorypool_config.cu
-    4_switchkey_methods_bfv 4_switchkey_methods_bfv.cu
-    5_switchkey_methods_ckks 5_switchkey_methods_ckks.cu
-    6_default_stream_usage 6_default_stream_usage.cu
-    7_multi_stream_usage_way1 7_multi_stream_usage_way1.cu
-    8_multi_stream_usage_way2 8_multi_stream_usage_way2.cu
-    9_basic_bfv_logic 9_basic_bfv_logic.cu
-    10_basic_ckks_logic 10_basic_ckks_logic.cu
-    11_bfv_serialization 11_bfv_serialization.cu
-    12_ckks_serialization 12_ckks_serialization.cu
-    13_basic_tfhe 13_basic_tfhe.cu
+    1_basic_bfv 1_basic_bfv.cpp
+    2_basic_ckks 2_basic_ckks.cpp
+    3_basic_memorypool_config 3_basic_memorypool_config.cpp
+    4_switchkey_methods_bfv 4_switchkey_methods_bfv.cpp
+    5_switchkey_methods_ckks 5_switchkey_methods_ckks.cpp
+    6_default_stream_usage 6_default_stream_usage.cpp
+    7_multi_stream_usage_way1 7_multi_stream_usage_way1.cpp
+    8_multi_stream_usage_way2 8_multi_stream_usage_way2.cpp
+    9_basic_bfv_logic 9_basic_bfv_logic.cpp
+    10_basic_ckks_logic 10_basic_ckks_logic.cpp
+    11_bfv_serialization 11_bfv_serialization.cpp
+    12_ckks_serialization 12_ckks_serialization.cpp
+    13_basic_tfhe 13_basic_tfhe.cpp
 )
 
 function(add_example exe source)

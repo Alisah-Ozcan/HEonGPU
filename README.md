@@ -38,7 +38,7 @@ For more information about HEonGPU:
 The HEonGPU library now delivers `Collective Bootstrapping` for both BFV and CKKS, drawing on the designs introduced by [Mouchet et al.](https://eprint.iacr.org/2020/304.pdf)  and [Balle et al.](https://arxiv.org/pdf/2009.00349) A streamlined CUDA path merges share creation and re-encryption into a single launch, allowing deep multi-party workloads to keep running entirely on the GPU without pausing to reset noise.
 
 
-### 🚨 **New Scheme: [TFHE (Torus Fully Homomorphic Encryption)](example/basic/13_basic_tfhe.cu)**
+### 🚨 **New Scheme: [TFHE (Torus Fully Homomorphic Encryption)](example/basic/13_basic_tfhe.cpp)**
 
 The HEonGPU library now includes support for the `TFHE` (Torus Fully Homomorphic Encryption) scheme with GPU acceleration. This enables efficient evaluation of Boolean circuits using fast gate bootstrapping and low-latency parallel execution on modern CUDA-enabled GPUs.
 

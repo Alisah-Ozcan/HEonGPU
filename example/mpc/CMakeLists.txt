@@ -6,10 +6,10 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_LOCATION}/examples/mpc)
 
 set(EXECUTABLES
-    1_multiparty_computation_bfv 1_multiparty_computation_bfv.cu
-    2_multiparty_computation_ckks 2_multiparty_computation_ckks.cu
-    3_mpc_collective_bootstrapping_bfv 3_mpc_collective_bootstrapping_bfv.cu
-    4_mpc_collective_bootstrapping_ckks 4_mpc_collective_bootstrapping_ckks.cu
+    1_multiparty_computation_bfv 1_multiparty_computation_bfv.cpp
+    2_multiparty_computation_ckks 2_multiparty_computation_ckks.cpp
+    3_mpc_collective_bootstrapping_bfv 3_mpc_collective_bootstrapping_bfv.cpp
+    4_mpc_collective_bootstrapping_ckks 4_mpc_collective_bootstrapping_ckks.cpp
 )
 
 function(add_example exe source)

@@ -57,9 +57,9 @@ To enable MPC in your project, follow these steps:
 4. **Decrypt and Retrieve Results**  
    Use the decryption APIs to securely retrieve plaintext outputs from the server's results.
 
-For a practical demonstration, refer to the [1_multiparty_computation_bfv.cu](1_multiparty_computation_bfv.cu),[2_multiparty_computation_ckks.cu](2_multiparty_computation_ckks.cu),
-[3_mpc_collective_bootstrapping_bfv.cu](3_mpc_collective_bootstrapping_bfv.cu) and
-[4_mpc_collective_bootstrapping_ckks.cu](4_mpc_collective_bootstrapping_ckks.cu),
+For a practical demonstration, refer to the [1_multiparty_computation_bfv.cpp](1_multiparty_computation_bfv.cpp),[2_multiparty_computation_ckks.cpp](2_multiparty_computation_ckks.cpp),
+[3_mpc_collective_bootstrapping_bfv.cpp](3_mpc_collective_bootstrapping_bfv.cpp) and
+[4_mpc_collective_bootstrapping_ckks.cpp](4_mpc_collective_bootstrapping_ckks.cpp),
 files in the repository. This examples showcase a complete workflow for using HEonGPU's MPC capabilities, including key generation, encryption, computation, decryption and collective bootstrapping. 
 
 ## Upcoming Feature:
