@@ -301,30 +301,36 @@ namespace heongpu
             host_pool_)
         {
             auto device_status = device_stats_adaptor_->get_bytes_counter();
-            std::cout << "Device Memory Pool Statistics:" << std::endl;
-            std::cout << "Total device pool size: " << device_pool_->pool_size()
-                      << " bytes" << std::endl;
-            std::cout << "Current device pool usage: " << device_status.value
-                      << " bytes" << std::endl;
-            std::cout << "Available device pool size: "
-                      << device_pool_->pool_size() - device_status.value
-                      << " bytes" << std::endl
-                      << std::endl;
+            const auto device_total = device_pool_->pool_size();
+            const auto device_used = device_status.value;
+            const auto device_free = device_total - device_used;
 
             auto host_status = host_stats_adaptor_->get_bytes_counter();
-            std::cout << "host Memory Pool Statistics:" << std::endl;
-            std::cout << "Total host pool size: " << host_pool_->pool_size()
-                      << " bytes" << std::endl;
-            std::cout << "Current host pool usage: " << host_status.value
-                      << " bytes" << std::endl;
-            std::cout << "Available host pool size: "
-                      << host_pool_->pool_size() - host_status.value << " bytes"
+            const auto host_total = host_pool_->pool_size();
+            const auto host_used = host_status.value;
+            const auto host_free = host_total - host_used;
+
+            std::cout << "[HEonGPU] Memory Pool Status" << std::endl;
+            std::cout << "  Device Pool:" << std::endl;
+            std::cout << "    Total     : " << device_total << " bytes"
+                      << std::endl;
+            std::cout << "    Used      : " << device_used << " bytes"
+                      << std::endl;
+            std::cout << "    Free      : " << device_free << " bytes"
+                      << std::endl;
+            std::cout << "  Host Pool:" << std::endl;
+            std::cout << "    Total     : " << host_total << " bytes"
+                      << std::endl;
+            std::cout << "    Used      : " << host_used << " bytes"
+                      << std::endl;
+            std::cout << "    Free      : " << host_free << " bytes"
                       << std::endl;
         }
         else
         {
-            std::cout << "Memory pool is not initialized or disabled."
-                      << std::endl;
+            std::cout
+                << "[HEonGPU] Memory pool is not initialized or is disabled."
+                << std::endl;
         }
     }
 
