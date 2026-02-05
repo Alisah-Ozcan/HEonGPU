@@ -153,16 +153,22 @@ namespace heongpu
                 }
                 else
                 {
+                    boot_key_host_location_.resize(
+                        copy.boot_key_host_location_.size());
                     std::memcpy(boot_key_host_location_.data(),
                                 copy.boot_key_host_location_.data(),
                                 copy.boot_key_host_location_.size() *
                                     sizeof(Data64));
 
+                    switch_key_host_location_a_.resize(
+                        copy.switch_key_host_location_a_.size());
                     std::memcpy(switch_key_host_location_a_.data(),
                                 copy.switch_key_host_location_a_.data(),
                                 copy.switch_key_host_location_a_.size() *
                                     sizeof(int32_t));
 
+                    switch_key_host_location_b_.resize(
+                        copy.switch_key_host_location_b_.size());
                     std::memcpy(switch_key_host_location_b_.data(),
                                 copy.switch_key_host_location_b_.data(),
                                 copy.switch_key_host_location_b_.size() *
@@ -275,16 +281,22 @@ namespace heongpu
                     }
                     else
                     {
+                        boot_key_host_location_.resize(
+                            copy.boot_key_host_location_.size());
                         std::memcpy(boot_key_host_location_.data(),
                                     copy.boot_key_host_location_.data(),
                                     copy.boot_key_host_location_.size() *
                                         sizeof(Data64));
 
+                        switch_key_host_location_a_.resize(
+                            copy.switch_key_host_location_a_.size());
                         std::memcpy(switch_key_host_location_a_.data(),
                                     copy.switch_key_host_location_a_.data(),
                                     copy.switch_key_host_location_a_.size() *
                                         sizeof(int32_t));
 
+                        switch_key_host_location_b_.resize(
+                            copy.switch_key_host_location_b_.size());
                         std::memcpy(switch_key_host_location_b_.data(),
                                     copy.switch_key_host_location_b_.data(),
                                     copy.switch_key_host_location_b_.size() *

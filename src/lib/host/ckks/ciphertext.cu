@@ -135,6 +135,7 @@ namespace heongpu
         }
         else
         {
+            cipher.resize(host_locations_.size());
             std::memcpy(cipher.data(), host_locations_.data(),
                         host_locations_.size() * sizeof(Data64));
         }
@@ -160,6 +161,7 @@ namespace heongpu
         }
         else
         {
+            cipher.resize(host_locations_.size());
             std::memcpy(cipher.data(), host_locations_.data(),
                         host_locations_.size() * sizeof(Data64));
         }

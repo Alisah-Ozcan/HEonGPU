@@ -143,11 +143,15 @@ namespace heongpu
                 }
                 else
                 {
+                    lwe_key_host_location_.resize(
+                        copy.lwe_key_host_location_.size());
                     std::memcpy(lwe_key_host_location_.data(),
                                 copy.lwe_key_host_location_.data(),
                                 copy.lwe_key_host_location_.size() *
                                     sizeof(int32_t));
 
+                    tlwe_key_host_location_.resize(
+                        copy.tlwe_key_host_location_.size());
                     std::memcpy(tlwe_key_host_location_.data(),
                                 copy.tlwe_key_host_location_.data(),
                                 copy.tlwe_key_host_location_.size() *
@@ -253,11 +257,15 @@ namespace heongpu
                     }
                     else
                     {
+                        lwe_key_host_location_.resize(
+                            copy.lwe_key_host_location_.size());
                         std::memcpy(lwe_key_host_location_.data(),
                                     copy.lwe_key_host_location_.data(),
                                     copy.lwe_key_host_location_.size() *
                                         sizeof(int32_t));
 
+                        tlwe_key_host_location_.resize(
+                            copy.tlwe_key_host_location_.size());
                         std::memcpy(tlwe_key_host_location_.data(),
                                     copy.tlwe_key_host_location_.data(),
                                     copy.tlwe_key_host_location_.size() *

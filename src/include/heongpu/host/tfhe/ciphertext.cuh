@@ -137,10 +137,12 @@ namespace heongpu
                 }
                 else
                 {
+                    a_host_location_.resize(copy.a_host_location_.size());
                     std::memcpy(a_host_location_.data(),
                                 copy.a_host_location_.data(),
                                 copy.a_host_location_.size() * sizeof(int32_t));
 
+                    b_host_location_.resize(copy.b_host_location_.size());
                     std::memcpy(b_host_location_.data(),
                                 copy.b_host_location_.data(),
                                 copy.b_host_location_.size() * sizeof(int32_t));
@@ -203,11 +205,13 @@ namespace heongpu
                     }
                     else
                     {
+                        a_host_location_.resize(copy.a_host_location_.size());
                         std::memcpy(a_host_location_.data(),
                                     copy.a_host_location_.data(),
                                     copy.a_host_location_.size() *
                                         sizeof(int32_t));
 
+                        b_host_location_.resize(copy.b_host_location_.size());
                         std::memcpy(b_host_location_.data(),
                                     copy.b_host_location_.data(),
                                     copy.b_host_location_.size() *

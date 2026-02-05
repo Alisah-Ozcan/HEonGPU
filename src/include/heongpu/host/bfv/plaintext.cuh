@@ -129,6 +129,7 @@ namespace heongpu
             }
             else
             {
+                host_locations_.resize(copy.host_locations_.size());
                 std::memcpy(host_locations_.data(), copy.host_locations_.data(),
                             copy.host_locations_.size() * sizeof(Data64));
             }
@@ -168,6 +169,7 @@ namespace heongpu
                 }
                 else
                 {
+                    host_locations_.resize(copy.host_locations_.size());
                     std::memcpy(host_locations_.data(),
                                 copy.host_locations_.data(),
                                 copy.host_locations_.size() * sizeof(Data64));
