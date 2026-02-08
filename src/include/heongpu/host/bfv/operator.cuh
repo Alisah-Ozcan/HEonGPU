@@ -552,18 +552,6 @@ namespace heongpu
                                 input1_, relin_key, options.stream_);
 
                             break;
-                        case 3: // KEYSWITCHING_METHOD_III
-
-                            if (input1_.in_ntt_domain_ != false)
-                            {
-                                throw std::invalid_argument(
-                                    "Ciphertext should be in intt domain");
-                            }
-
-                            relinearize_external_product_method_inplace(
-                                input1_, relin_key, options.stream_);
-
-                            break;
                         default:
                             throw std::invalid_argument(
                                 "Invalid Key Switching Type");
@@ -642,15 +630,6 @@ namespace heongpu
                                     rotate_method_II(input1_, output_,
                                                      galois_key, shift,
                                                      options.stream_);
-
-                                    break;
-                                case 3: // KEYSWITCHING_METHOD_III
-
-                                    throw std::invalid_argument(
-                                        "KEYSWITCHING_METHOD_III are not "
-                                        "supported because of "
-                                        "high memory consumption for rotation "
-                                        "operation!");
 
                                     break;
                                 default:
@@ -748,15 +727,6 @@ namespace heongpu
                                                              options.stream_);
 
                                     break;
-                                case 3: // KEYSWITCHING_METHOD_III
-
-                                    throw std::invalid_argument(
-                                        "KEYSWITCHING_METHOD_III are not "
-                                        "supported because of "
-                                        "high memory consumption for rotation "
-                                        "operation!");
-
-                                    break;
                                 default:
                                     throw std::invalid_argument(
                                         "Invalid Key Switching Type");
@@ -840,15 +810,6 @@ namespace heongpu
                                     apply_galois_method_II(
                                         input1_, output_, galois_key,
                                         galois_elt, options.stream_);
-
-                                    break;
-                                case 3: // KEYSWITCHING_METHOD_III
-
-                                    throw std::invalid_argument(
-                                        "KEYSWITCHING_METHOD_III are not "
-                                        "supported because of "
-                                        "high memory consumption for rotation "
-                                        "operation!");
 
                                     break;
                                 default:
@@ -949,15 +910,6 @@ namespace heongpu
                                     switchkey_method_II(input1_, output_,
                                                         switch_key,
                                                         options.stream_);
-
-                                    break;
-                                case 3: // KEYSWITCHING_METHOD_III
-
-                                    throw std::invalid_argument(
-                                        "KEYSWITCHING_METHOD_III are not "
-                                        "supported because of "
-                                        "high memory consumption for keyswitch "
-                                        "operation!");
 
                                     break;
                                 default:
@@ -1251,10 +1203,6 @@ namespace heongpu
         relinearize_seal_method_inplace(Ciphertext<Scheme::BFV>& input1,
                                         Relinkey<Scheme::BFV>& relin_key,
                                         const cudaStream_t stream);
-
-        __host__ void relinearize_external_product_method_inplace(
-            Ciphertext<Scheme::BFV>& input1, Relinkey<Scheme::BFV>& relin_key,
-            const cudaStream_t stream);
 
         __host__ void relinearize_external_product_method2_inplace(
             Ciphertext<Scheme::BFV>& input1, Relinkey<Scheme::BFV>& relin_key,

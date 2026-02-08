@@ -108,7 +108,6 @@ namespace heongpu
         NONE = 0x0,
         KEYSWITCHING_METHOD_I = 0x1, // SEALMETHOD = 0x1,
         KEYSWITCHING_METHOD_II = 0x2, // EXTERNALPRODUCT = 0x2,
-        KEYSWITCHING_METHOD_III = 0x3, // EXTERNALPRODUCT_2 = 0x3
     };
 
     enum class arithmetic_bootstrapping_type : std::uint8_t

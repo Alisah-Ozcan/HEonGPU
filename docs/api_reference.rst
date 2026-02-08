@@ -30,7 +30,6 @@ Core Enumerations
             enum class keyswitching_type {
                 KEYSWITCHING_METHOD_I,  // Based on Fan-Vercauteren
                 KEYSWITCHING_METHOD_II, // Hybrid method
-                KEYSWITCHING_METHOD_III // Key decomposition method (relinearization only)
             };
         }
 

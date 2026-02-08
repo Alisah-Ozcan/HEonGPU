@@ -35,11 +35,10 @@ The NTT implementation in HEonGPU is not a direct port of CPU algorithms but a g
 Key-Switching Optimizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Key-switching is a fundamental primitive used in operations like relinearization (after multiplication) and rotations. It is computationally expensive and has been a major focus of optimization. The library implements and compares three different key-switching methods, with detailed analysis in `ePrint 2025/124 <https://eprint.iacr.org/2025/124>`_:
+Key-switching is a fundamental primitive used in operations like relinearization (after multiplication) and rotations. It is computationally expensive and has been a major focus of optimization. The library implements and compares two key-switching methods, with detailed analysis in `ePrint 2025/124 <https://eprint.iacr.org/2025/124>`_:
 
 * **Method I (Fan-Vercauteren)**: The classical approach.
 * **Method II (Hybrid Key Switching)**: Reduces the number of NTTs and Hadamard products compared to Method I, at the cost of extra base conversion operations. This method is generally faster on GPUs where the NTT acceleration is significant.
-* **Method III (Key Decomposition)**: Further reduces NTTs but can significantly increase other operations. Due to its substantially larger key sizes and the architectural choice to store keys in GPU memory, this method was found to be impractical for HEonGPU and is not recommended.
 
 Memory Management with RAPIDS Memory Manager (RMM)
 ----------------------------------------------------

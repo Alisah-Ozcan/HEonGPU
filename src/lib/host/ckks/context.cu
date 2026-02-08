@@ -74,13 +74,10 @@ namespace heongpu
 
             if ((log_P_bases_bit_sizes.size() < 2) &&
                 (keyswitching_type_ ==
-                     keyswitching_type::KEYSWITCHING_METHOD_II ||
-                 keyswitching_type_ ==
-                     keyswitching_type::KEYSWITCHING_METHOD_III))
+                 keyswitching_type::KEYSWITCHING_METHOD_II))
             {
                 throw std::logic_error("log_P_bases_bit_sizes cannot be lower "
-                                       "than 2 for KEYSWITCHING_METHOD_II and!"
-                                       "KEYSWITCHING_METHOD_III");
+                                       "than 2 for KEYSWITCHING_METHOD_II!");
             }
 
             if (!coefficient_validator(log_Q_bases_bit_sizes,
@@ -529,133 +526,6 @@ namespace heongpu
                         DeviceVector<int> Sk_pair_new_vec_inner(
                             Sk_pair_new_vec[pool_lp]);
 
-                        I_j_leveled->push_back(std::move(I_j_vec_inner));
-                        I_location_leveled->push_back(
-                            std::move(I_location_vec_inner));
-                        Sk_pair_leveled->push_back(
-                            std::move(Sk_pair_new_vec_inner));
-                    }
-                }
-                break;
-                case 3: // KEYSWITCHING_METHOD_III
-                {
-                    KeySwitchParameterGenerator pool_ckks(
-                        n, base_q, P_size, scheme_, keyswitching_type_);
-
-                    m_leveled = pool_ckks.m;
-                    l_leveled =
-                        std::make_shared<std::vector<int>>(pool_ckks.level_Q_);
-                    l_tilda_leveled = std::make_shared<std::vector<int>>(
-                        pool_ckks.level_Qtilda_);
-
-                    d_leveled =
-                        std::make_shared<std::vector<int>>(pool_ckks.level_d_);
-                    d_tilda_leveled = std::make_shared<std::vector<int>>(
-                        pool_ckks.level_d_tilda_);
-                    r_prime_leveled = pool_ckks.r_prime_;
-
-                    std::vector<Modulus64> B_prime_inner = pool_ckks.B_prime;
-                    B_prime_leveled = std::make_shared<DeviceVector<Modulus64>>(
-                        B_prime_inner);
-
-                    std::vector<Root64> B_prime_ntt_tables_leveled_inner =
-                        pool_ckks.B_prime_ntt_tables();
-                    B_prime_ntt_tables_leveled =
-                        std::make_shared<DeviceVector<Root64>>(
-                            B_prime_ntt_tables_leveled_inner);
-
-                    std::vector<Root64> B_prime_intt_tables_leveled_inner =
-                        pool_ckks.B_prime_intt_tables();
-                    B_prime_intt_tables_leveled =
-                        std::make_shared<DeviceVector<Root64>>(
-                            B_prime_intt_tables_leveled_inner);
-
-                    std::vector<Ninverse64> B_prime_n_inverse_leveled_inner =
-                        pool_ckks.B_prime_n_inverse();
-                    B_prime_n_inverse_leveled =
-                        std::make_shared<DeviceVector<Ninverse64>>(
-                            B_prime_n_inverse_leveled_inner);
-
-                    std::vector<std::vector<Data64>>
-                        base_change_matrix_D_to_B_vec =
-                            pool_ckks.level_base_change_matrix_D_to_B();
-
-                    std::vector<std::vector<Data64>>
-                        base_change_matrix_B_to_D_vec =
-                            pool_ckks.level_base_change_matrix_B_to_D();
-
-                    std::vector<std::vector<Data64>> Mi_inv_D_to_B_vec =
-                        pool_ckks.level_Mi_inv_D_to_B();
-                    std::vector<Data64> Mi_inv_B_to_D_vec =
-                        pool_ckks.level_Mi_inv_B_to_D();
-
-                    Mi_inv_B_to_D_leveled =
-                        std::make_shared<DeviceVector<Data64>>(
-                            Mi_inv_B_to_D_vec);
-
-                    std::vector<std::vector<Data64>> prod_D_to_B_vec =
-                        pool_ckks.level_prod_D_to_B();
-                    std::vector<std::vector<Data64>> prod_B_to_D_vec =
-                        pool_ckks.level_prod_B_to_D();
-
-                    std::vector<std::vector<int>> I_j_vec =
-                        pool_ckks.level_I_j_2();
-                    std::vector<std::vector<int>> I_location_vec =
-                        pool_ckks.level_I_location_2();
-                    std::vector<std::vector<int>> Sk_pair_new_vec =
-                        pool_ckks.level_sk_pair();
-
-                    base_change_matrix_D_to_B_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data64>>>();
-                    base_change_matrix_B_to_D_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data64>>>();
-                    Mi_inv_D_to_B_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data64>>>();
-                    prod_D_to_B_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data64>>>();
-                    prod_B_to_D_leveled =
-                        std::make_shared<std::vector<DeviceVector<Data64>>>();
-
-                    I_j_leveled =
-                        std::make_shared<std::vector<DeviceVector<int>>>();
-                    I_location_leveled =
-                        std::make_shared<std::vector<DeviceVector<int>>>();
-                    Sk_pair_leveled =
-                        std::make_shared<std::vector<DeviceVector<int>>>();
-
-                    for (int pool_lp = 0;
-                         pool_lp < base_change_matrix_D_to_B_vec.size();
-                         pool_lp++)
-                    {
-                        DeviceVector<Data64>
-                            base_change_matrix_D_to_B_leveled_inner(
-                                base_change_matrix_D_to_B_vec[pool_lp]);
-                        DeviceVector<Data64>
-                            base_change_matrix_B_to_D_leveled_inner(
-                                base_change_matrix_B_to_D_vec[pool_lp]);
-                        DeviceVector<Data64> Mi_inv_D_to_B_leveled_inner(
-                            Mi_inv_D_to_B_vec[pool_lp]);
-                        DeviceVector<Data64> prod_D_to_B_leveled_inner(
-                            prod_D_to_B_vec[pool_lp]);
-                        DeviceVector<Data64> prod_B_to_D_leveled_inner(
-                            prod_B_to_D_vec[pool_lp]);
-
-                        base_change_matrix_D_to_B_leveled->push_back(
-                            std::move(base_change_matrix_D_to_B_leveled_inner));
-                        base_change_matrix_B_to_D_leveled->push_back(
-                            std::move(base_change_matrix_B_to_D_leveled_inner));
-                        Mi_inv_D_to_B_leveled->push_back(
-                            std::move(Mi_inv_D_to_B_leveled_inner));
-                        prod_D_to_B_leveled->push_back(
-                            std::move(prod_D_to_B_leveled_inner));
-                        prod_B_to_D_leveled->push_back(
-                            std::move(prod_B_to_D_leveled_inner));
-
-                        DeviceVector<int> I_j_vec_inner(I_j_vec[pool_lp]);
-                        DeviceVector<int> I_location_vec_inner(
-                            I_location_vec[pool_lp]);
-                        DeviceVector<int> Sk_pair_new_vec_inner(
-                            Sk_pair_new_vec[pool_lp]);
                         I_j_leveled->push_back(std::move(I_j_vec_inner));
                         I_location_leveled->push_back(
                             std::move(I_location_vec_inner));

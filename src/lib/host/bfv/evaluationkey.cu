@@ -35,14 +35,6 @@ namespace heongpu
                 relinkey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III
-            {
-                d_ = context->d;
-                d_tilda_ = context->d_tilda;
-                r_prime_ = context->r_prime;
-                relinkey_size_ = 2 * d_ * d_tilda_ * r_prime_ * ring_size;
-            }
-            break;
             default:
                 break;
         }
@@ -352,10 +344,6 @@ namespace heongpu
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;
@@ -413,10 +401,6 @@ namespace heongpu
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III Galoiskey
-                throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;
@@ -463,10 +447,6 @@ namespace heongpu
                 custom_galois_elt = galois_elts;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III Galoiskey
-                throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;
@@ -798,10 +778,6 @@ namespace heongpu
                 switchkey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Switchkey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;

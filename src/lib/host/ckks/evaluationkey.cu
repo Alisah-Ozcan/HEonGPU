@@ -36,22 +36,6 @@ namespace heongpu
                 relinkey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III
-            {
-                d_ = context->d_leveled->operator[](0);
-                d_tilda_ = context->d_tilda_leveled->operator[](0);
-                r_prime_ = context->r_prime_leveled;
-
-                int max_depth = Q_size_ - 1;
-                for (int i = 0; i < max_depth; i++)
-                {
-                    relinkey_size_leveled_.push_back(
-                        2 * context->d_leveled->operator[](i) *
-                        context->d_tilda_leveled->operator[](i) * r_prime_ *
-                        ring_size);
-                }
-            }
-            break;
             default:
                 break;
         }
@@ -65,27 +49,9 @@ namespace heongpu
         }
         else
         {
-            if ((key_type == keyswitching_type::KEYSWITCHING_METHOD_III) &&
-                scheme_ == scheme_type::ckks)
-            {
-                int max_depth = Q_size_ - 1;
-                for (int i = 0; i < max_depth; i++)
-                {
-                    device_location_leveled_.push_back(
-                        std::move(DeviceVector<Data64>(
-                            host_location_leveled_[i], stream)));
-                    host_location_leveled_[i].resize(0);
-                    host_location_leveled_[i].shrink_to_fit();
-                }
-                host_location_leveled_.resize(0);
-                host_location_leveled_.shrink_to_fit();
-            }
-            else
-            {
-                device_location_ = DeviceVector<Data64>(host_location_, stream);
-                host_location_.resize(0);
-                host_location_.shrink_to_fit();
-            }
+            device_location_ = DeviceVector<Data64>(host_location_, stream);
+            host_location_.resize(0);
+            host_location_.shrink_to_fit();
 
             storage_type_ = storage_type::DEVICE;
         }
@@ -95,36 +61,13 @@ namespace heongpu
     {
         if (storage_type_ == storage_type::DEVICE)
         {
-            if ((key_type == keyswitching_type::KEYSWITCHING_METHOD_III) &&
-                scheme_ == scheme_type::ckks)
-            {
-                int max_depth = Q_size_ - 1;
-                for (int i = 0; i < max_depth; i++)
-                {
-                    host_location_leveled_.push_back(
-                        HostVector<Data64>(relinkey_size_leveled_[i]));
+            host_location_ = HostVector<Data64>(relinkey_size_);
+            cudaMemcpyAsync(host_location_.data(), device_location_.data(),
+                            relinkey_size_ * sizeof(Data64),
+                            cudaMemcpyDeviceToHost, stream);
+            HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                    cudaMemcpyAsync(host_location_leveled_[i].data(),
-                                    device_location_leveled_[i].data(),
-                                    relinkey_size_leveled_[i] * sizeof(Data64),
-                                    cudaMemcpyDeviceToHost, stream);
-                    HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-                    device_location_leveled_[i].resize(0, stream);
-                }
-                device_location_leveled_.resize(0);
-                device_location_leveled_.shrink_to_fit();
-            }
-            else
-            {
-                host_location_ = HostVector<Data64>(relinkey_size_);
-                cudaMemcpyAsync(host_location_.data(), device_location_.data(),
-                                relinkey_size_ * sizeof(Data64),
-                                cudaMemcpyDeviceToHost, stream);
-                HEONGPU_CUDA_CHECK(cudaGetLastError());
-
-                device_location_.resize(0, stream);
-            }
+            device_location_.resize(0, stream);
 
             storage_type_ = storage_type::HOST;
         }
@@ -159,12 +102,6 @@ namespace heongpu
 
     void Relinkey<Scheme::CKKS>::save(std::ostream& os) const
     {
-        if (key_type == keyswitching_type::KEYSWITCHING_METHOD_III)
-        {
-            throw std::runtime_error(
-                "Relinkey has not serialization for KEYSWITCHING_METHOD_III!");
-        }
-
         if (relin_key_generated_)
         {
             os.write((char*) &scheme_, sizeof(scheme_));
@@ -513,10 +450,6 @@ namespace heongpu
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;
@@ -586,10 +519,6 @@ namespace heongpu
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;
@@ -648,10 +577,6 @@ namespace heongpu
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;
@@ -698,10 +623,6 @@ namespace heongpu
                 custom_galois_elt = galois_elts;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Galoiskey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;
@@ -1035,10 +956,6 @@ namespace heongpu
                 switchkey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
-            case 3: // KEYSWITCHING_METHOD_III Galoiskey
-                throw std::invalid_argument(
-                    "Switchkey does not support KEYSWITCHING_METHOD_III");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;

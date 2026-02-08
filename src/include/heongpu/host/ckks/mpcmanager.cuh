@@ -169,11 +169,6 @@ namespace heongpu
                 case 2: // KEYSWITCHING_METHOD_II
                     generate_ckks_relin_key_method_II_stage_1(rk, sk, options);
                     break;
-                case 3: // KEYSWITCHING_METHOD_III
-                    throw std::invalid_argument(
-                        "Key Switching Type III is not supported for multi "
-                        "party key generation.");
-                    break;
                 default:
                     throw std::invalid_argument("Invalid Key Switching Type");
                     break;
@@ -216,11 +211,6 @@ namespace heongpu
                 case 2: // KEYSWITCHING_METHOD_II
                     generate_ckks_relin_key_method_II_stage_3(
                         rk_s1_common, rk_new, sk, options);
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-                    throw std::invalid_argument(
-                        "Key Switching Type III is not supported for multi "
-                        "party key generation.");
                     break;
                 default:
                     throw std::invalid_argument("Invalid Key Switching Type");
@@ -292,11 +282,6 @@ namespace heongpu
                     break;
                 case 2: // KEYSWITCHING_METHOD_II
                     generate_galois_key_method_II_stage_1(gk, sk, options);
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-                    throw std::invalid_argument(
-                        "Key Switching Type III is not supported for multi "
-                        "party key generation.");
                     break;
                 default:
                     throw std::invalid_argument("Invalid Key Switching Type");

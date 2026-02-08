@@ -89,9 +89,6 @@ namespace heongpu
                 case 2: // KEYSWITCHING_METHOD_II
                     generate_bfv_relin_key_method_II(rk, sk, options);
                     break;
-                case 3: // KEYSWITCHING_METHOD_III
-                    generate_bfv_relin_key_method_III(rk, sk, options);
-                    break;
                 default:
                     throw std::invalid_argument("Invalid Key Switching Type");
                     break;
@@ -117,13 +114,6 @@ namespace heongpu
                     break;
                 case 2: // KEYSWITCHING_METHOD_II
                     generate_bfv_galois_key_method_II(gk, sk, options);
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for galois key generation!");
-
                     break;
                 default:
                     throw std::invalid_argument("Invalid Key Switching Type");
@@ -153,11 +143,6 @@ namespace heongpu
                 case 2: // KEYSWITCHING_METHOD_II
                     generate_bfv_switch_key_method_II(swk, new_sk, old_sk,
                                                       options);
-                    break;
-                case 3: // KEYSWITCHING_METHOD_III
-                    throw std::invalid_argument(
-                        "KEYSWITCHING_METHOD_III are not supported because of "
-                        "high memory consumption for galois key generation!");
                     break;
                 default:
                     throw std::invalid_argument("Invalid Key Switching Type");
@@ -205,11 +190,6 @@ namespace heongpu
         generate_bfv_relin_key_method_II(Relinkey<Scheme::BFV>& rk,
                                          Secretkey<Scheme::BFV>& sk,
                                          const ExecutionOptions& options);
-
-        __host__ void
-        generate_bfv_relin_key_method_III(Relinkey<Scheme::BFV>& rk,
-                                          Secretkey<Scheme::BFV>& sk,
-                                          const ExecutionOptions& options);
 
         __host__ void
         generate_galois_key_method_I(Galoiskey<Scheme::BFV>& gk,

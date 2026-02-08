@@ -90,31 +90,6 @@ namespace heongpu
 
                     d_ = d_vector_.size();
                 }
-                else if (static_cast<int>(method) == 3)
-                {
-                    n_ = poly_degree;
-
-                    first_Qtilda_ = modulus.size();
-                    first_Q_ = first_Qtilda_ - P_size;
-                    first_P_ = P_size;
-
-                    for (int i = 0; i < first_Qtilda_; i++)
-                    {
-                        modulus_vector.push_back((Modulus64) modulus[i]);
-                    }
-
-                    d_vector_ = d_counter(first_Q_, m);
-                    dtilda_vector_ = d_counter(first_Qtilda_, m); // new
-
-                    d_ = d_vector_.size();
-                    d_tilda_ = dtilda_vector_.size();
-
-                    r_prime_ = B_counter(n_, m, dtilda_vector_);
-
-                    B_prime = generate_internal_primes(n_, r_prime_);
-
-                    B_prime_psi = generate_primitive_root_of_unity(n_, B_prime);
-                }
                 else
                 {
                     throw std::invalid_argument("Invalid Key Switching Type");
@@ -155,57 +130,6 @@ namespace heongpu
                     {
                         level_d_.push_back(level_d_vector_[i].size());
                     }
-                }
-                else if (static_cast<int>(method) == 3)
-                {
-                    n_ = poly_degree;
-
-                    first_Qtilda_ = modulus.size();
-                    first_Q_ = first_Qtilda_ - P_size;
-                    first_P_ = P_size;
-
-                    for (int i = 0; i < first_Qtilda_; i++)
-                    {
-                        modulus_vector.push_back((Modulus64) modulus[i]);
-                    }
-
-                    for (int i = 0; i < first_Q_; i++)
-                    {
-                        level_Q_.push_back(first_Q_ - i);
-                        level_Qtilda_.push_back(first_Qtilda_ - i);
-                    }
-
-                    for (int i = 0; i < first_Q_; i++)
-                    {
-                        std::vector<int> d_vector_inner =
-                            d_counter(level_Q_[i], m);
-                        std::vector<int> dtilda_vector_inner =
-                            d_counter(level_Qtilda_[i], m); // new
-
-                        level_d_vector_.push_back(d_vector_inner);
-                        level_dtilda_vector_.push_back(dtilda_vector_inner);
-                    }
-
-                    for (int i = 0; i < first_Q_; i++)
-                    {
-                        level_d_.push_back(level_d_vector_[i].size());
-                        level_d_tilda_.push_back(
-                            level_dtilda_vector_[i].size());
-                    }
-
-                    r_prime_ = 0;
-                    for (int i = 0; i < first_Q_; i++)
-                    {
-                        int r_prime_inner =
-                            B_counter(n_, m, level_dtilda_vector_[i]);
-
-                        if (r_prime_ < r_prime_inner)
-                            r_prime_ = r_prime_inner;
-                    }
-
-                    B_prime = generate_internal_primes(n_, r_prime_);
-
-                    B_prime_psi = generate_primitive_root_of_unity(n_, B_prime);
                 }
                 else
                 {

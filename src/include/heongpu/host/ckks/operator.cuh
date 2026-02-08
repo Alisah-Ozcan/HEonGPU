@@ -983,10 +983,6 @@ namespace heongpu
                             relinearize_external_product_method2_inplace_ckks(
                                 input1_, relin_key, options.stream_);
                             break;
-                        case 3: // KEYSWITCHING_METHOD_III
-                            relinearize_external_product_method_inplace_ckks(
-                                input1_, relin_key, options.stream_);
-                            break;
                         default:
                             throw std::invalid_argument(
                                 "Invalid Key Switching Type");
@@ -1050,15 +1046,6 @@ namespace heongpu
                                     rotate_ckks_method_II(input1_, output_,
                                                           galois_key, shift,
                                                           options.stream_);
-                                    break;
-                                case 3: // KEYSWITCHING_METHOD_III
-
-                                    throw std::invalid_argument(
-                                        "KEYSWITCHING_METHOD_III are not "
-                                        "supported because of "
-                                        "high memory consumption for rotation "
-                                        "operation!");
-
                                     break;
                                 default:
                                     throw std::invalid_argument(
@@ -1140,15 +1127,6 @@ namespace heongpu
                                     apply_galois_ckks_method_II(
                                         input1_, output_, galois_key,
                                         galois_elt, options.stream_);
-                                    break;
-                                case 3: // KEYSWITCHING_METHOD_III
-
-                                    throw std::invalid_argument(
-                                        "KEYSWITCHING_METHOD_III are not "
-                                        "supported because of "
-                                        "high memory consumption for rotation "
-                                        "operation!");
-
                                     break;
                                 default:
                                     throw std::invalid_argument(
@@ -1238,15 +1216,6 @@ namespace heongpu
                                                              switch_key,
                                                              options.stream_);
                                     break;
-                                case 3: // KEYSWITCHING_METHOD_III
-
-                                    throw std::invalid_argument(
-                                        "KEYSWITCHING_METHOD_III are not "
-                                        "supported because of "
-                                        "high memory consumption for keyswitch "
-                                        "operation!");
-
-                                    break;
                                 default:
                                     throw std::invalid_argument(
                                         "Invalid Key Switching Type");
@@ -1317,15 +1286,6 @@ namespace heongpu
                                     conjugate_ckks_method_II(input1_, output_,
                                                              conjugate_key,
                                                              options.stream_);
-                                    break;
-                                case 3: // KEYSWITHING_METHOD_III
-
-                                    throw std::invalid_argument(
-                                        "KEYSWITHING_METHOD_III are not "
-                                        "supported because of "
-                                        "high memory consumption for keyswitch "
-                                        "operation!");
-
                                     break;
                                 default:
                                     throw std::invalid_argument(
@@ -1617,10 +1577,6 @@ namespace heongpu
         relinearize_seal_method_inplace_ckks(Ciphertext<Scheme::CKKS>& input1,
                                              Relinkey<Scheme::CKKS>& relin_key,
                                              const cudaStream_t stream);
-
-        __host__ void relinearize_external_product_method_inplace_ckks(
-            Ciphertext<Scheme::CKKS>& input1, Relinkey<Scheme::CKKS>& relin_key,
-            const cudaStream_t stream);
 
         __host__ void relinearize_external_product_method2_inplace_ckks(
             Ciphertext<Scheme::CKKS>& input1, Relinkey<Scheme::CKKS>& relin_key,
@@ -2103,13 +2059,6 @@ namespace heongpu
                     {
                         throw std::invalid_argument("Invalid Scheme Type");
                     }
-                    break;
-                case 3: // KEYSWITHING_METHOD_III
-
-                    throw std::invalid_argument(
-                        "KEYSWITHING_METHOD_III are not supported because of "
-                        "high memory consumption for rotation operation!");
-
                     break;
                 default:
                     throw std::invalid_argument("Invalid Key Switching Type");

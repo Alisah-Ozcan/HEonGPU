@@ -187,6 +187,7 @@ The uninstall script will remove:
 
 To run tests:
 
+```bash
 $ cmake -S . -D HEonGPU_BUILD_TESTS=ON -B build -D CMAKE_BUILD_TYPE=Debug
 $ cmake --build ./build/
 
@@ -194,13 +195,14 @@ $ ./build/bin/test/<...>
 $ Example: ./build/bin/test/bfv_addition_testcases
 ```
 Or:
+```
 $ cmake -S . -D HEonGPU_BUILD_TESTS=ON -B build -D CMAKE_BUILD_TYPE=Debug
 $ cmake --build ./build/
 $ cmake --build build --target test
 ```
 
 To run benchmarks:
-
+```bash
 $ cmake -S . -D HEonGPU_BUILD_BENCHMARKS=ON -D CMAKE_CUDA_ARCHITECTURES=89 -B build -D CMAKE_BUILD_TYPE=Release
 $ cmake --build ./build/
 
@@ -394,6 +396,8 @@ Please use the below BibTeX, to cite HEonGPU in academic papers.
 ```
 
 Please use the below BibTeX, to cite key-switching optimizations in academic papers.
+
+Note: `heongpu::keyswitching_type::KEYSWITCHING_METHOD_III` is available only in release [`v1.1.3`](https://github.com/Alisah-Ozcan/HEonGPU/releases/tag/v1.1.3) and earlier.
 
 ```
 @misc{cryptoeprint:2025/124,

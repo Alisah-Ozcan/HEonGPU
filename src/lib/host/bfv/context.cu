@@ -74,13 +74,10 @@ namespace heongpu
 
             if ((log_P_bases_bit_sizes.size() < 2) &&
                 (keyswitching_type_ ==
-                     keyswitching_type::KEYSWITCHING_METHOD_II ||
-                 keyswitching_type_ ==
-                     keyswitching_type::KEYSWITCHING_METHOD_III))
+                 keyswitching_type::KEYSWITCHING_METHOD_II))
             {
                 throw std::logic_error("log_P_bases_bit_sizes cannot be lower "
-                                       "than 2 for KEYSWITCHING_METHOD_II and!"
-                                       "KEYSWITCHING_METHOD_III");
+                                       "than 2 for KEYSWITCHING_METHOD_II!");
             }
 
             if (!coefficient_validator(log_Q_bases_bit_sizes,
@@ -757,83 +754,6 @@ namespace heongpu
                     std::vector<int> Sk_pair_inner = pool.sk_pair();
                     Sk_pair_ =
                         std::make_shared<DeviceVector<int>>(Sk_pair_inner);
-                }
-                break;
-                case 3: // KEYSWITCHING_METHOD_III
-                {
-                    KeySwitchParameterGenerator pool(n, base_q, P_size, scheme_,
-                                                     keyswitching_type_);
-
-                    m = pool.m;
-                    l = pool.first_Q_;
-                    l_tilda = pool.first_Qtilda_;
-
-                    d = pool.d_;
-                    d_tilda = pool.d_tilda_;
-                    r_prime = pool.r_prime_;
-
-                    std::vector<Modulus64> B_prime_inner = pool.B_prime;
-                    B_prime_ = std::make_shared<DeviceVector<Modulus64>>(
-                        B_prime_inner);
-
-                    std::vector<Root64> B_prime_ntt_tables_inner =
-                        pool.B_prime_ntt_tables();
-                    B_prime_ntt_tables_ =
-                        std::make_shared<DeviceVector<Root64>>(
-                            B_prime_ntt_tables_inner);
-
-                    std::vector<Root64> B_prime_intt_tables_inner =
-                        pool.B_prime_intt_tables();
-                    B_prime_intt_tables_ =
-                        std::make_shared<DeviceVector<Root64>>(
-                            B_prime_intt_tables_inner);
-
-                    std::vector<Ninverse64> B_prime_n_inverse_inner =
-                        pool.B_prime_n_inverse();
-                    B_prime_n_inverse_ =
-                        std::make_shared<DeviceVector<Ninverse64>>(
-                            B_prime_n_inverse_inner);
-
-                    std::vector<Data64> base_change_matrix_D_to_B_inner =
-                        pool.base_change_matrix_D_to_B();
-                    base_change_matrix_D_to_B_ =
-                        std::make_shared<DeviceVector<Data64>>(
-                            base_change_matrix_D_to_B_inner);
-
-                    std::vector<Data64> base_change_matrix_B_to_D_inner =
-                        pool.base_change_matrix_B_to_D();
-                    base_change_matrix_B_to_D_ =
-                        std::make_shared<DeviceVector<Data64>>(
-                            base_change_matrix_B_to_D_inner);
-
-                    std::vector<Data64> Mi_inv_D_to_B_inner =
-                        pool.Mi_inv_D_to_B();
-                    Mi_inv_D_to_B_ = std::make_shared<DeviceVector<Data64>>(
-                        Mi_inv_D_to_B_inner);
-
-                    std::vector<Data64> Mi_inv_B_to_D_inner =
-                        pool.Mi_inv_B_to_D();
-                    Mi_inv_B_to_D_ = std::make_shared<DeviceVector<Data64>>(
-                        Mi_inv_B_to_D_inner);
-
-                    std::vector<Data64> prod_D_to_B_inner = pool.prod_D_to_B();
-                    prod_D_to_B_ = std::make_shared<DeviceVector<Data64>>(
-                        prod_D_to_B_inner);
-
-                    std::vector<Data64> prod_B_to_D_inner = pool.prod_B_to_D();
-                    prod_B_to_D_ = std::make_shared<DeviceVector<Data64>>(
-                        prod_B_to_D_inner);
-
-                    std::vector<int> I_j_inner = pool.I_j_2();
-                    I_j_ = std::make_shared<DeviceVector<int>>(I_j_inner);
-
-                    std::vector<int> I_location_inner = pool.I_location_2();
-                    I_location_ =
-                        std::make_shared<DeviceVector<int>>(I_location_inner);
-
-                    std::vector<int> sk_pair_inner = pool.sk_pair();
-                    Sk_pair_ =
-                        std::make_shared<DeviceVector<int>>(sk_pair_inner);
                 }
                 break;
                 default:

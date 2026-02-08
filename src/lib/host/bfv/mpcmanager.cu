@@ -582,11 +582,6 @@ namespace heongpu
             case 2: // KEYSWITCHING_METHOD_II
                 dimension = rk.d_;
                 break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Key Switching Type III is not supported for multi "
-                    "party key generation.");
-                break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
                 break;
@@ -667,11 +662,6 @@ namespace heongpu
                 break;
             case 2: // KEYSWITCHING_METHOD_II
                 dimension = rk.d_;
-                break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Key Switching Type III is not supported for multi "
-                    "party key generation.");
                 break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
@@ -1345,11 +1335,6 @@ namespace heongpu
                 break;
             case 2: // KEYSWITCHING_METHOD_II
                 dimension = gk.d_;
-                break;
-            case 3: // KEYSWITCHING_METHOD_III
-                throw std::invalid_argument(
-                    "Key Switching Type III is not supported for multi "
-                    "party key generation.");
                 break;
             default:
                 throw std::invalid_argument("Invalid Key Switching Type");
