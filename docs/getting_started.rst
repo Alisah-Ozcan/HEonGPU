@@ -111,8 +111,8 @@ The following "toy example" from the repository demonstrates a complete FHE work
 
     int main() {     
         // 1. Set up the HEContext for the BFV scheme
-        heongpu::HEContext<heongpu::Scheme::BFV> context(
-                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+        heongpu::HEContext<heongpu::Scheme::BFV> context =
+                heongpu::GenHEContext<heongpu::Scheme::BFV>();
 
         // 2. Define and set encryption parameters
         size_t poly_modulus_degree = 8192;

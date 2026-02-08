@@ -15,8 +15,7 @@ constexpr auto Scheme = heongpu::Scheme::CKKS;
 int main(int argc, char* argv[])
 {
     // Initialize encryption parameters for the CKKS scheme.
-    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>();
 
     // Set the polynomial modulus degree. Larger values allow deeper
     // computations but increase memory use and runtime.

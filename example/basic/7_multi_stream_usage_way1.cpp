@@ -68,8 +68,7 @@ void multi_stream_function_way1(
 int main(int argc, char* argv[])
 {
     // Initialize encryption parameters for the CKKS scheme.
-    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>();
 
     size_t poly_modulus_degree = 8192;
     int plain_modulus = 786433;

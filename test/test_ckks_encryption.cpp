@@ -39,7 +39,6 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
         size_t poly_modulus_degree = 4096;
         heongpu::HEContext<heongpu::Scheme::CKKS> context =
             heongpu::GenHEContext<heongpu::Scheme::CKKS>(
-                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
                 heongpu::sec_level_type::none);
         context->set_poly_modulus_degree(poly_modulus_degree);
         context->set_coeff_modulus_bit_sizes({40, 30, 30}, {40});
@@ -92,7 +91,6 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
         size_t poly_modulus_degree = 8192;
         heongpu::HEContext<heongpu::Scheme::CKKS> context =
             heongpu::GenHEContext<heongpu::Scheme::CKKS>(
-                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
                 heongpu::sec_level_type::none);
         context->set_poly_modulus_degree(poly_modulus_degree);
         context->set_coeff_modulus_bit_sizes({40, 30, 30, 30, 30}, {40});
@@ -145,7 +143,6 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
         size_t poly_modulus_degree = 16384;
         heongpu::HEContext<heongpu::Scheme::CKKS> context =
             heongpu::GenHEContext<heongpu::Scheme::CKKS>(
-                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
                 heongpu::sec_level_type::none);
         context->set_poly_modulus_degree(poly_modulus_degree);
         context->set_coeff_modulus_bit_sizes(
@@ -199,7 +196,6 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
         size_t poly_modulus_degree = 32768;
         heongpu::HEContext<heongpu::Scheme::CKKS> context =
             heongpu::GenHEContext<heongpu::Scheme::CKKS>(
-                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
                 heongpu::sec_level_type::none);
         context->set_poly_modulus_degree(poly_modulus_degree);
         context->set_coeff_modulus_bit_sizes({59, 40, 40, 40, 40, 40, 40, 40,
@@ -255,7 +251,6 @@ TEST(HEonGPU, CKKS_Encryption_Decryption)
         size_t poly_modulus_degree = 65536;
         heongpu::HEContext<heongpu::Scheme::CKKS> context =
             heongpu::GenHEContext<heongpu::Scheme::CKKS>(
-                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
                 heongpu::sec_level_type::none);
         context->set_poly_modulus_degree(poly_modulus_degree);
         context->set_coeff_modulus_bit_sizes(

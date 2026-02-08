@@ -10,7 +10,6 @@ int main(int argc, char* argv[])
 {
     heongpu::HEContext<heongpu::Scheme::CKKS> context =
         heongpu::GenHEContext<heongpu::Scheme::CKKS>(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
             heongpu::sec_level_type::none);
     size_t poly_modulus_degree = 1 << 16;
     context->set_poly_modulus_degree(poly_modulus_degree);

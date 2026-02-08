@@ -228,8 +228,8 @@ $ Example: ./build/bin/examples/1_basic_bfv
 #include <heongpu/heongpu.hpp>
 
 int main() {   
-    heongpu::HEContext<heongpu::Scheme::BFV> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+    heongpu::HEContext<heongpu::Scheme::BFV> context =
+        heongpu::GenHEContext<heongpu::Scheme::BFV>();
 
     size_t poly_modulus_degree = 8192;
     context.set_poly_modulus_degree(poly_modulus_degree);
@@ -298,8 +298,8 @@ a context. Sizes can be given as **percentages** (0.0-1.0 or 0-100) or as
 **absolute bytes**. If you do not provide a config, the defaults above are used.
 
 ```cpp
-heongpu::HEContext<heongpu::Scheme::CKKS> context(
-    heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+heongpu::HEContext<heongpu::Scheme::CKKS> context =
+    heongpu::GenHEContext<heongpu::Scheme::CKKS>();
 
 context.set_poly_modulus_degree(8192);
 context.set_coeff_modulus_bit_sizes({60, 30, 30, 30}, {60});

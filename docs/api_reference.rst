@@ -22,7 +22,10 @@ Core Enumerations
         }
 
 **Key-Switching Method**
-    Selects the algorithm used for key-switching operations like relinearization and rotation.
+    The algorithm used for key-switching operations like relinearization and
+    rotation is selected automatically from the P modulus base count:
+    `P_size == 1` -> `KEYSWITCHING_METHOD_I`, `P_size > 1` ->
+    `KEYSWITCHING_METHOD_II`. `P_size == 0` is invalid.
 
     .. code-block:: cpp
 
@@ -45,8 +48,8 @@ Context and Parameter Classes
         template <Scheme scheme_type>
         class HEContext {
         public:
-            // Constructor requires selecting a key-switching method.
-            HEContext(keyswitching_type method);
+            // Constructor optionally takes security level.
+            HEContext(sec_level_type sec_level = sec_level_type::sec128);
 
             // Setters for core encryption parameters.
             void set_poly_modulus_degree(size_t degree);

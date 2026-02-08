@@ -7,19 +7,13 @@
 
 namespace heongpu
 {
-    HEContextImpl<Scheme::BFV>::HEContextImpl(const keyswitching_type ks_type,
-                                              const sec_level_type sec_level)
+    HEContextImpl<Scheme::BFV>::HEContextImpl(const sec_level_type sec_level)
     {
         if (!coeff_modulus_specified_)
         {
             scheme_ = scheme_type::bfv;
             sec_level_ = sec_level;
-
-            if (ks_type == keyswitching_type::NONE)
-            {
-                throw std::logic_error("Key switching type can not be NONE!");
-            }
-            keyswitching_type_ = ks_type;
+            keyswitching_type_ = keyswitching_type::NONE;
         }
         else
         {
@@ -64,21 +58,16 @@ namespace heongpu
         if ((!coeff_modulus_specified_) && (!context_generated_) &&
             (poly_modulus_degree_specified_))
         {
-            if ((log_P_bases_bit_sizes.size() > 1) &&
-                (keyswitching_type_ ==
-                 keyswitching_type::KEYSWITCHING_METHOD_I))
+            if (log_P_bases_bit_sizes.empty())
             {
-                throw std::logic_error("log_P_bases_bit_sizes cannot be higher "
-                                       "than 1 for KEYSWITCHING_METHOD_I!");
+                throw std::logic_error(
+                    "log_P_bases_bit_sizes cannot be empty!");
             }
 
-            if ((log_P_bases_bit_sizes.size() < 2) &&
-                (keyswitching_type_ ==
-                 keyswitching_type::KEYSWITCHING_METHOD_II))
-            {
-                throw std::logic_error("log_P_bases_bit_sizes cannot be lower "
-                                       "than 2 for KEYSWITCHING_METHOD_II!");
-            }
+            keyswitching_type_ =
+                (log_P_bases_bit_sizes.size() == 1)
+                    ? keyswitching_type::KEYSWITCHING_METHOD_I
+                    : keyswitching_type::KEYSWITCHING_METHOD_II;
 
             if (!coefficient_validator(log_Q_bases_bit_sizes,
                                        log_P_bases_bit_sizes))
@@ -178,13 +167,16 @@ namespace heongpu
                     calculate_bit_size(log_P_bases[i]));
             }
 
-            if ((log_P_bases_bit_sizes.size() > 1) &&
-                (keyswitching_type_ ==
-                 keyswitching_type::KEYSWITCHING_METHOD_I))
+            if (log_P_bases_bit_sizes.empty())
             {
-                throw std::logic_error("log_P_bases_bit_sizes cannot be higher "
-                                       "than 1 for KEYSWITCHING_METHOD_I!");
+                throw std::logic_error(
+                    "log_P_bases_bit_sizes cannot be empty!");
             }
+
+            keyswitching_type_ =
+                (log_P_bases_bit_sizes.size() == 1)
+                    ? keyswitching_type::KEYSWITCHING_METHOD_I
+                    : keyswitching_type::KEYSWITCHING_METHOD_II;
 
             if (!coefficient_validator(log_Q_bases_bit_sizes,
                                        log_P_bases_bit_sizes))
@@ -278,13 +270,16 @@ namespace heongpu
         if ((!coeff_modulus_specified_) && (!context_generated_) &&
             (poly_modulus_degree_specified_))
         {
-            if ((P_modulus_size > 1) &&
-                (keyswitching_type_ ==
-                 keyswitching_type::KEYSWITCHING_METHOD_I))
+            if (P_modulus_size < 1)
             {
-                throw std::logic_error("log_P_bases_bit_sizes cannot be higher "
-                                       "than 1 for KEYSWITCHING_METHOD_I!");
+                throw std::logic_error(
+                    "P_modulus_size cannot be lower than 1!");
             }
+
+            keyswitching_type_ =
+                (P_modulus_size == 1)
+                    ? keyswitching_type::KEYSWITCHING_METHOD_I
+                    : keyswitching_type::KEYSWITCHING_METHOD_II;
 
             total_coeff_bit_count = 0;
             switch (sec_level_)

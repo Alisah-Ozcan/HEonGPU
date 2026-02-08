@@ -12,8 +12,7 @@ constexpr auto Scheme = heongpu::Scheme::BFV;
 
 int main(int argc, char* argv[])
 {
-    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>();
     // because of key size, only supports relinearization!
 
     size_t poly_modulus_degree = 16384;

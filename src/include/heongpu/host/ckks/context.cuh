@@ -44,8 +44,7 @@ namespace heongpu
         template <Scheme S> friend class HEMultiPartyManager;
 
       public:
-        HEContextImpl(const keyswitching_type ks_type,
-                      const sec_level_type = sec_level_type::sec128);
+        HEContextImpl(const sec_level_type = sec_level_type::sec128);
 
         void set_poly_modulus_degree(size_t poly_modulus_degree);
 
@@ -82,8 +81,6 @@ namespace heongpu
         {
             return prime_vector_;
         }
-
-        HEContextImpl() = default;
 
         void save(std::ostream& os) const;
 
