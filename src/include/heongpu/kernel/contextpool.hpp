@@ -16,7 +16,7 @@ namespace heongpu
     class KeySwitchParameterGenerator
     {
         friend class Parameters;
-        template <Scheme S> friend class HEContext;
+        template <Scheme S> friend class HEContextImpl;
 
       public:
         KeySwitchParameterGenerator(int poly_degree,

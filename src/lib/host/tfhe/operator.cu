@@ -8,35 +8,15 @@
 namespace heongpu
 {
     HELogicOperator<Scheme::TFHE>::HELogicOperator(
-        HEContext<Scheme::TFHE>& context)
+        HEContext<Scheme::TFHE> context)
     {
-        prime_ = context.prime_;
-        ntt_table_ = context.ntt_table_;
-        intt_table_ = context.intt_table_;
-        n_inverse_ = context.n_inverse_;
+        if (!context)
+        {
+            throw std::invalid_argument("HEContext is not set!");
+        }
 
-        ks_base_bit_ = context.ks_base_bit_;
-        ks_length_ = context.ks_length_;
-
-        ks_stdev_ = context.ks_stdev_;
-        bk_stdev_ = context.bk_stdev_;
-        max_stdev_ = context.max_stdev_;
-
-        // LWE Context
-        n_ = context.n_;
-
-        // TLWE Context
-        N_ = context.N_;
-        Npower_ = int(log2l(N_));
-        k_ = context.k_;
-
-        // TGSW Context
-        bk_l_ = context.bk_l_;
-        bk_bg_bit_ = context.bk_bg_bit_;
-
-        bk_half_ = context.half_bg_;
-        bk_mask_ = context.mask_mod_;
-        bk_offset_ = context.offset_;
+        context_ = std::move(context);
+        Npower_ = int(log2l(context_->N_));
 
         encode_mu = encode_to_torus32(1, 8);
     }
@@ -223,57 +203,69 @@ namespace heongpu
     {
         int shape_ = input.shape_;
 
-        Data64 total_temp_boot_size = (Data64) shape_ * (Data64) (k_ + 1) *
-                                      (Data64) (bk_l_ + 1) * (Data64) (k_ + 1) *
-                                      (Data64) N_;
+        Data64 total_temp_boot_size =
+            (Data64) shape_ * (Data64) (context_->k_ + 1) *
+            (Data64) (context_->bk_l_ + 1) * (Data64) (context_->k_ + 1) *
+            (Data64) context_->N_;
         DeviceVector<Data64> temp_boot(total_temp_boot_size, stream);
 
-        Data64 total_temp_boot_size2 =
-            (Data64) shape_ * (Data64) (k_ + 1) * (Data64) N_;
+        Data64 total_temp_boot_size2 = (Data64) shape_ *
+                                       (Data64) (context_->k_ + 1) *
+                                       (Data64) context_->N_;
         DeviceVector<int32_t> temp_boot2(total_temp_boot_size2, stream);
 
-        tfhe_bootstrapping_kernel_unique_step1<<<dim3(shape_, (k_ + 1), bk_l_),
-                                                 512, 0, stream>>>(
-            input.a_device_location_.data(), input.b_device_location_.data(),
-            temp_boot.data(), boot_key.boot_key_device_location_.data(),
-            ntt_table_->data(), prime_, encode_mu, bk_offset_, bk_mask_,
-            bk_half_, n_, N_, Npower_, k_, bk_bg_bit_, bk_l_);
+        tfhe_bootstrapping_kernel_unique_step1<<<
+            dim3(shape_, (context_->k_ + 1), context_->bk_l_), 512, 0,
+            stream>>>(input.a_device_location_.data(),
+                      input.b_device_location_.data(), temp_boot.data(),
+                      boot_key.boot_key_device_location_.data(),
+                      context_->ntt_table_->data(), context_->prime_, encode_mu,
+                      context_->offset_, context_->mask_mod_,
+                      context_->half_bg_, context_->n_, context_->N_, Npower_,
+                      context_->k_, context_->bk_bg_bit_, context_->bk_l_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        tfhe_bootstrapping_kernel_unique_step2<<<dim3(shape_, (k_ + 1)), 512, 0,
-                                                 stream>>>(
+        tfhe_bootstrapping_kernel_unique_step2<<<
+            dim3(shape_, (context_->k_ + 1)), 512, 0, stream>>>(
             temp_boot.data(), input.b_device_location_.data(),
-            temp_boot2.data(), intt_table_->data(), n_inverse_, prime_,
-            encode_mu, n_, N_, Npower_, k_, bk_l_);
+            temp_boot2.data(), context_->intt_table_->data(),
+            context_->n_inverse_, context_->prime_, encode_mu, context_->n_,
+            context_->N_, Npower_, context_->k_, context_->bk_l_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        for (int i = 1; i < n_; i++)
+        for (int i = 1; i < context_->n_; i++)
         {
             tfhe_bootstrapping_kernel_regular_step1<<<
-                dim3(shape_, (k_ + 1), bk_l_), 512, 0, stream>>>(
+                dim3(shape_, (context_->k_ + 1), context_->bk_l_), 512, 0,
+                stream>>>(
                 input.a_device_location_.data(),
                 input.b_device_location_.data(), temp_boot2.data(),
                 temp_boot.data(), boot_key.boot_key_device_location_.data(), i,
-                ntt_table_->data(), prime_, bk_offset_, bk_mask_, bk_half_, n_,
-                N_, Npower_, k_, bk_bg_bit_, bk_l_);
+                context_->ntt_table_->data(), context_->prime_,
+                context_->offset_, context_->mask_mod_, context_->half_bg_,
+                context_->n_, context_->N_, Npower_, context_->k_,
+                context_->bk_bg_bit_, context_->bk_l_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-            tfhe_bootstrapping_kernel_regular_step2<<<dim3(shape_, (k_ + 1)),
-                                                      512, 0, stream>>>(
-                temp_boot.data(), temp_boot2.data(), intt_table_->data(),
-                n_inverse_, prime_, n_, N_, k_, bk_l_);
+            tfhe_bootstrapping_kernel_regular_step2<<<
+                dim3(shape_, (context_->k_ + 1)), 512, 0, stream>>>(
+                temp_boot.data(), temp_boot2.data(),
+                context_->intt_table_->data(), context_->n_inverse_,
+                context_->prime_, context_->n_, context_->N_, context_->k_,
+                context_->bk_l_);
             HEONGPU_CUDA_CHECK(cudaGetLastError());
         }
 
         for (size_t i = 0; i < shape_; i++)
         {
             output.variances_[i] =
-                output.variances_[i] + (n_ * input.variances_[i]);
+                output.variances_[i] + (context_->n_ * input.variances_[i]);
         }
 
-        tfhe_sample_extraction_kernel<<<dim3(shape_, k_), 512, 0, stream>>>(
+        tfhe_sample_extraction_kernel<<<dim3(shape_, context_->k_), 512, 0,
+                                        stream>>>(
             temp_boot2.data(), output.a_device_location_.data(),
-            output.b_device_location_.data(), N_, k_, 0);
+            output.b_device_location_.data(), context_->N_, context_->k_, 0);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
 
@@ -288,15 +280,16 @@ namespace heongpu
             output.a_device_location_.data(), output.b_device_location_.data(),
             boot_key.switch_key_device_location_a_.data(),
             boot_key.switch_key_device_location_b_.data(),
-            boot_key.ks_base_bit_, boot_key.ks_length_, n_, N_, k_);
+            boot_key.ks_base_bit_, boot_key.ks_length_, context_->n_,
+            context_->N_, context_->k_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         for (size_t i = 0; i < shape_; i++)
         {
             output.variances_[i] =
-                output.variances_[i] +
-                ((N_ * ks_length_ * ((1 << ks_base_bit_) - 1)) *
-                 boot_key.switch_key_variances_[0]);
+                output.variances_[i] + ((context_->N_ * context_->ks_length_ *
+                                         ((1 << context_->ks_base_bit_) - 1)) *
+                                        boot_key.switch_key_variances_[0]);
         }
     }
 
@@ -307,8 +300,8 @@ namespace heongpu
         Ciphertext<Scheme::TFHE> cipher;
 
         cipher.n_ = n;
-        cipher.alpha_min_ = ks_stdev_;
-        cipher.alpha_max_ = max_stdev_;
+        cipher.alpha_min_ = context_->ks_stdev_;
+        cipher.alpha_max_ = context_->max_stdev_;
 
         cipher.shape_ = shape;
 

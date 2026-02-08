@@ -34,13 +34,13 @@ int main(int argc, char* argv[])
 
     for (int i = 0; i < poly_modulus_degrees.size(); i++)
     {
-        heongpu::HEContext<Scheme> context(
+        heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
             heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degrees[i]);
-        context.set_coeff_modulus_bit_sizes(log_Q_bit_sizes[i],
-                                            log_P_bit_sizes[i]);
-        context.generate();
+        context->set_poly_modulus_degree(poly_modulus_degrees[i]);
+        context->set_coeff_modulus_bit_sizes(log_Q_bit_sizes[i],
+                                             log_P_bit_sizes[i]);
+        context->generate();
 
         heongpu::HEKeyGenerator<Scheme> keygen(context);
         heongpu::Secretkey<Scheme> secret_key(context);
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
         }
 
         std::cout
-            << "=================== Benchmark BFV with poly_modulus_degrees: "
+            << "=================== Benchmark CKKS with poly_modulus_degrees: "
             << poly_modulus_degrees[i] << " ===================" << std::endl;
         std::cout << "Average encode timing: " << (time_encode / repeat_count)
                   << " ms" << std::endl;

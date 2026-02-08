@@ -8,13 +8,14 @@
 
 int main(int argc, char* argv[])
 {
-    heongpu::HEContext<heongpu::Scheme::CKKS> context(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
-        heongpu::sec_level_type::none);
+    heongpu::HEContext<heongpu::Scheme::CKKS> context =
+        heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
+            heongpu::sec_level_type::none);
     size_t poly_modulus_degree = 1 << 16;
-    context.set_poly_modulus_degree(poly_modulus_degree);
+    context->set_poly_modulus_degree(poly_modulus_degree);
 
-    context.set_coeff_modulus_values(
+    context->set_coeff_modulus_values(
         {
             0x10000000006e0001, // 60 Q0
             0x10000140001, // 40
@@ -50,8 +51,8 @@ int main(int argc, char* argv[])
             0x1fffffffff420001, // Pi 61
         });
 
-    context.generate();
-    context.print_parameters();
+    context->generate();
+    context->print_parameters();
 
     int h = 192;
     int ephemeral_secret_weight = 32;

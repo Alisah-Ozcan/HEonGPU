@@ -9,18 +9,19 @@
 int main(int argc, char* argv[])
 {
     // Initialize encryption parameters for the CKKS scheme.
-    heongpu::HEContext<heongpu::Scheme::CKKS> context(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
-        heongpu::sec_level_type::none);
+    heongpu::HEContext<heongpu::Scheme::CKKS> context =
+        heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_II,
+            heongpu::sec_level_type::none);
     size_t poly_modulus_degree = 4096;
-    context.set_poly_modulus_degree(poly_modulus_degree);
+    context->set_poly_modulus_degree(poly_modulus_degree);
 
-    context.set_coeff_modulus_bit_sizes(
+    context->set_coeff_modulus_bit_sizes(
         {60, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
          50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50},
         {60, 60, 60});
-    context.generate();
-    context.print_parameters();
+    context->generate();
+    context->print_parameters();
 
     // The scale is set to 2^50, resulting in 50 bits of precision before the
     // decimal point.

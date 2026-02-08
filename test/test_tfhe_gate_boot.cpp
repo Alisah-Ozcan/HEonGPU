@@ -11,7 +11,7 @@ constexpr auto Scheme = heongpu::Scheme::TFHE;
 
 TEST(HEonGPU, TFHE_Gate_Boots)
 {
-    heongpu::HEContext<Scheme> context;
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>();
 
     heongpu::HEKeyGenerator<Scheme> keygen(context);
     heongpu::Secretkey<Scheme> secret_key(context);

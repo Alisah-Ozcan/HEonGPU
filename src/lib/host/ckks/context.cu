@@ -7,8 +7,8 @@
 
 namespace heongpu
 {
-    HEContext<Scheme::CKKS>::HEContext(const keyswitching_type ks_type,
-                                       const sec_level_type sec_level)
+    HEContextImpl<Scheme::CKKS>::HEContextImpl(const keyswitching_type ks_type,
+                                               const sec_level_type sec_level)
     {
         if (!coeff_modulus_specified_)
         {
@@ -28,8 +28,8 @@ namespace heongpu
         }
     }
 
-    void
-    HEContext<Scheme::CKKS>::set_poly_modulus_degree(size_t poly_modulus_degree)
+    void HEContextImpl<Scheme::CKKS>::set_poly_modulus_degree(
+        size_t poly_modulus_degree)
     {
         if ((!coeff_modulus_specified_) && (!poly_modulus_degree_specified_))
         {
@@ -57,7 +57,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::CKKS>::set_coeff_modulus_bit_sizes(
+    void HEContextImpl<Scheme::CKKS>::set_coeff_modulus_bit_sizes(
         const std::vector<int>& log_Q_bases_bit_sizes,
         const std::vector<int>& log_P_bases_bit_sizes)
     {
@@ -160,7 +160,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::CKKS>::set_coeff_modulus_values(
+    void HEContextImpl<Scheme::CKKS>::set_coeff_modulus_values(
         const std::vector<Data64>& log_Q_bases,
         const std::vector<Data64>& log_P_bases)
     {
@@ -275,12 +275,13 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::CKKS>::generate()
+    void HEContextImpl<Scheme::CKKS>::generate()
     {
         generate(MemoryPoolConfig::Defaults());
     }
 
-    void HEContext<Scheme::CKKS>::generate(const MemoryPoolConfig& pool_config)
+    void
+    HEContextImpl<Scheme::CKKS>::generate(const MemoryPoolConfig& pool_config)
     {
         if ((!context_generated_) && (poly_modulus_degree_specified_) &&
             (coeff_modulus_specified_))
@@ -675,7 +676,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::CKKS>::print_parameters()
+    void HEContextImpl<Scheme::CKKS>::print_parameters()
     {
         if (context_generated_)
         {
@@ -710,7 +711,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::CKKS>::save(std::ostream& os) const
+    void HEContextImpl<Scheme::CKKS>::save(std::ostream& os) const
     {
         if ((poly_modulus_degree_specified_) && (coeff_modulus_specified_))
         {
@@ -769,7 +770,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::CKKS>::load(std::istream& is)
+    void HEContextImpl<Scheme::CKKS>::load(std::istream& is)
     {
         if ((!context_generated_))
         {
@@ -838,6 +839,6 @@ namespace heongpu
         }
     }
 
-    template class HEContext<Scheme::CKKS>;
+    template class HEContextImpl<Scheme::CKKS>;
 
 } // namespace heongpu

@@ -8,10 +8,15 @@
 namespace heongpu
 {
     __host__
-    HEDecryptor<Scheme::TFHE>::HEDecryptor(HEContext<Scheme::TFHE>& context,
+    HEDecryptor<Scheme::TFHE>::HEDecryptor(HEContext<Scheme::TFHE> context,
                                            Secretkey<Scheme::TFHE>& secret_key)
     {
-        n_ = context.n_;
+        if (!context)
+        {
+            throw std::invalid_argument("HEContext is not set!");
+        }
+
+        context_ = std::move(context);
 
         lwe_key_device_location_ = secret_key.lwe_key_device_location_;
     }
@@ -30,8 +35,8 @@ namespace heongpu
         decrypt_lwe_kernel<<<block_count, THREADS, smem>>>(
             lwe_key_device_location_.data(),
             ciphertext.a_device_location_.data(),
-            ciphertext.b_device_location_.data(), messages_gpu.data(), n_,
-            ciphertext.shape_);
+            ciphertext.b_device_location_.data(), messages_gpu.data(),
+            context_->n_, ciphertext.shape_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         std::vector<int32_t> messages_encoded(ciphertext.shape_);

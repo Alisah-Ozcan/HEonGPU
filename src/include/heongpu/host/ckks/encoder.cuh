@@ -40,7 +40,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encode parameters.
          */
-        __host__ HEEncoder(HEContext<Scheme::CKKS>& context);
+        __host__ HEEncoder(HEContext<Scheme::CKKS> context);
 
         /**
          * @brief Encodes a message of double values into a plaintext.
@@ -57,8 +57,8 @@ namespace heongpu
                const std::vector<double>& message, double scale,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if ((scale <= 0) ||
-                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                 context_->total_coeff_bit_count))
             {
                 throw std::invalid_argument("Scale out of bounds");
             }
@@ -73,8 +73,8 @@ namespace heongpu
                 {
                     encode_ckks(plain_, message, scale, options.stream_);
 
-                    plain.plain_size_ = n * Q_size_;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n * context_->Q_size;
+                    plain.scheme_ = context_->scheme_;
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
@@ -100,8 +100,8 @@ namespace heongpu
                const HostVector<double>& message, double scale,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if ((scale <= 0) ||
-                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                 context_->total_coeff_bit_count))
             {
                 throw std::invalid_argument("Scale out of bounds");
             }
@@ -116,8 +116,8 @@ namespace heongpu
                 {
                     encode_ckks(plain_, message, scale, options.stream_);
 
-                    plain.plain_size_ = n * Q_size_;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n * context_->Q_size;
+                    plain.scheme_ = context_->scheme_;
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
@@ -143,8 +143,8 @@ namespace heongpu
                const std::vector<Complex64>& message, double scale,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if ((scale <= 0) ||
-                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                 context_->total_coeff_bit_count))
             {
                 throw std::invalid_argument("Scale out of bounds");
             }
@@ -159,8 +159,8 @@ namespace heongpu
                 {
                     encode_ckks(plain_, message, scale, options.stream_);
 
-                    plain.plain_size_ = n * Q_size_;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n * context_->Q_size;
+                    plain.scheme_ = context_->scheme_;
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
@@ -186,8 +186,8 @@ namespace heongpu
                const HostVector<Complex64>& message, double scale,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if ((scale <= 0) ||
-                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                 context_->total_coeff_bit_count))
             {
                 throw std::invalid_argument("Scale out of bounds");
             }
@@ -202,8 +202,8 @@ namespace heongpu
                 {
                     encode_ckks(plain_, message, scale, options.stream_);
 
-                    plain.plain_size_ = n * Q_size_;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n * context_->Q_size;
+                    plain.scheme_ = context_->scheme_;
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
@@ -229,14 +229,14 @@ namespace heongpu
                double scale,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if ((scale <= 0) ||
-                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                 context_->total_coeff_bit_count))
             {
                 throw std::invalid_argument("Scale out of bounds");
             }
 
             if ((static_cast<int>(log2(fabs(message))) + 2) >=
-                total_coeff_bit_count_)
+                context_->total_coeff_bit_count)
             {
                 throw std::invalid_argument("Encoded value is too large");
             }
@@ -247,8 +247,8 @@ namespace heongpu
                 {
                     encode_ckks(plain_, message, scale, options.stream_);
 
-                    plain.plain_size_ = n * Q_size_;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n * context_->Q_size;
+                    plain.scheme_ = context_->scheme_;
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
@@ -272,14 +272,14 @@ namespace heongpu
                double scale,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if ((scale <= 0) ||
-                (static_cast<int>(log2(scale)) >= total_coeff_bit_count_))
+            if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
+                                 context_->total_coeff_bit_count))
             {
                 throw std::invalid_argument("Scale out of bounds");
             }
 
             if ((static_cast<int>(log2(fabs(message))) + 2) >=
-                total_coeff_bit_count_)
+                context_->total_coeff_bit_count)
             {
                 throw std::invalid_argument("Encoded value is too large");
             }
@@ -290,8 +290,8 @@ namespace heongpu
                 {
                     encode_ckks(plain_, message, scale, options.stream_);
 
-                    plain.plain_size_ = n * Q_size_;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n * context_->Q_size;
+                    plain.scheme_ = context_->scheme_;
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
@@ -440,10 +440,7 @@ namespace heongpu
                                   const cudaStream_t stream);
 
       private:
-        scheme_type scheme_;
-
-        int n;
-        int n_power;
+        HEContext<Scheme::CKKS> context_;
         int slot_count_;
 
         double two_pow_64;
@@ -454,18 +451,6 @@ namespace heongpu
         std::shared_ptr<DeviceVector<Complex64>> special_fft_roots_table_;
         std::shared_ptr<DeviceVector<Complex64>> special_ifft_roots_table_;
         std::shared_ptr<DeviceVector<int>> reverse_order;
-
-        int Q_size_;
-        int total_coeff_bit_count_;
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
-
-        std::shared_ptr<DeviceVector<Data64>> Mi_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_;
-        std::shared_ptr<DeviceVector<Data64>> upper_half_threshold_;
-        std::shared_ptr<DeviceVector<Data64>> decryption_modulus_;
     };
 
 } // namespace heongpu

@@ -7,8 +7,8 @@
 
 namespace heongpu
 {
-    HEContext<Scheme::BFV>::HEContext(const keyswitching_type ks_type,
-                                      const sec_level_type sec_level)
+    HEContextImpl<Scheme::BFV>::HEContextImpl(const keyswitching_type ks_type,
+                                              const sec_level_type sec_level)
     {
         if (!coeff_modulus_specified_)
         {
@@ -28,8 +28,8 @@ namespace heongpu
         }
     }
 
-    void
-    HEContext<Scheme::BFV>::set_poly_modulus_degree(size_t poly_modulus_degree)
+    void HEContextImpl<Scheme::BFV>::set_poly_modulus_degree(
+        size_t poly_modulus_degree)
     {
         if ((!coeff_modulus_specified_) && (!poly_modulus_degree_specified_))
         {
@@ -57,7 +57,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::BFV>::set_coeff_modulus_bit_sizes(
+    void HEContextImpl<Scheme::BFV>::set_coeff_modulus_bit_sizes(
         const std::vector<int>& log_Q_bases_bit_sizes,
         const std::vector<int>& log_P_bases_bit_sizes)
     {
@@ -160,7 +160,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::BFV>::set_coeff_modulus_values(
+    void HEContextImpl<Scheme::BFV>::set_coeff_modulus_values(
         const std::vector<Data64>& log_Q_bases,
         const std::vector<Data64>& log_P_bases)
     {
@@ -275,8 +275,8 @@ namespace heongpu
         }
     }
 
-    void
-    HEContext<Scheme::BFV>::set_coeff_modulus_default_values(int P_modulus_size)
+    void HEContextImpl<Scheme::BFV>::set_coeff_modulus_default_values(
+        int P_modulus_size)
     {
         if ((!coeff_modulus_specified_) && (!context_generated_) &&
             (poly_modulus_degree_specified_))
@@ -381,7 +381,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::BFV>::set_plain_modulus(const int plain_modulus)
+    void HEContextImpl<Scheme::BFV>::set_plain_modulus(const int plain_modulus)
     {
         if ((!context_generated_) && (!plain_modulus_specified_))
         {
@@ -396,12 +396,13 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::BFV>::generate()
+    void HEContextImpl<Scheme::BFV>::generate()
     {
         generate(MemoryPoolConfig::Defaults());
     }
 
-    void HEContext<Scheme::BFV>::generate(const MemoryPoolConfig& pool_config)
+    void
+    HEContextImpl<Scheme::BFV>::generate(const MemoryPoolConfig& pool_config)
     {
         if ((!context_generated_) && (poly_modulus_degree_specified_) &&
             (plain_modulus_specified_) && (coeff_modulus_specified_))
@@ -848,7 +849,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::BFV>::print_parameters()
+    void HEContextImpl<Scheme::BFV>::print_parameters()
     {
         if (context_generated_)
         {
@@ -885,7 +886,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::BFV>::save(std::ostream& os) const
+    void HEContextImpl<Scheme::BFV>::save(std::ostream& os) const
     {
         if ((poly_modulus_degree_specified_) && (coeff_modulus_specified_) &&
             (plain_modulus_specified_))
@@ -947,7 +948,7 @@ namespace heongpu
         }
     }
 
-    void HEContext<Scheme::BFV>::load(std::istream& is)
+    void HEContextImpl<Scheme::BFV>::load(std::istream& is)
     {
         if ((!context_generated_))
         {
@@ -1020,8 +1021,8 @@ namespace heongpu
     }
 
     Data64
-    HEContext<Scheme::BFV>::generate_Q_mod_t(std::vector<Modulus64> primes,
-                                             Modulus64& plain_mod, int size)
+    HEContextImpl<Scheme::BFV>::generate_Q_mod_t(std::vector<Modulus64> primes,
+                                                 Modulus64& plain_mod, int size)
     {
         Data64 result = 1;
         for (int i = 0; i < size; i++)
@@ -1034,7 +1035,7 @@ namespace heongpu
     }
 
     std::vector<Data64>
-    HEContext<Scheme::BFV>::generate_coeff_div_plain_modulus(
+    HEContextImpl<Scheme::BFV>::generate_coeff_div_plain_modulus(
         std::vector<Modulus64> primes, Modulus64& plain_mod, int size)
     {
         std::vector<Data64> result_M(size, 0ULL);
@@ -1071,7 +1072,7 @@ namespace heongpu
         return result_M;
     }
 
-    std::vector<Data64> HEContext<Scheme::BFV>::generate_base_matrix_q_Bsk(
+    std::vector<Data64> HEContextImpl<Scheme::BFV>::generate_base_matrix_q_Bsk(
         std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
         std::vector<Data64> base_matrix_q_Bsk;
@@ -1096,7 +1097,7 @@ namespace heongpu
     }
 
     std::vector<Data64>
-    HEContext<Scheme::BFV>::generate_base_change_matrix_m_tilde(
+    HEContextImpl<Scheme::BFV>::generate_base_change_matrix_m_tilde(
         std::vector<Modulus64> primes, Modulus64 mtilda, int size)
     {
         std::vector<Data64> base_change_matrix_m_tilde;
@@ -1117,7 +1118,7 @@ namespace heongpu
         return base_change_matrix_m_tilde;
     }
 
-    Data64 HEContext<Scheme::BFV>::generate_inv_prod_q_mod_m_tilde(
+    Data64 HEContextImpl<Scheme::BFV>::generate_inv_prod_q_mod_m_tilde(
         std::vector<Modulus64> primes, Modulus64 mtilda, int size)
     {
         Data64 inv_prod_q_mod_m_tilde = 1;
@@ -1134,7 +1135,8 @@ namespace heongpu
         return inv_prod_q_mod_m_tilde;
     }
 
-    std::vector<Data64> HEContext<Scheme::BFV>::generate_inv_m_tilde_mod_Bsk(
+    std::vector<Data64>
+    HEContextImpl<Scheme::BFV>::generate_inv_m_tilde_mod_Bsk(
         std::vector<Modulus64> bsk_mod, Modulus64 mtilda)
     {
         std::vector<Data64> inv_m_tilde_mod_Bsk;
@@ -1147,7 +1149,7 @@ namespace heongpu
         return inv_m_tilde_mod_Bsk;
     }
 
-    std::vector<Data64> HEContext<Scheme::BFV>::generate_prod_q_mod_Bsk(
+    std::vector<Data64> HEContextImpl<Scheme::BFV>::generate_prod_q_mod_Bsk(
         std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
         std::vector<Data64> prod_q_mod_Bsk;
@@ -1164,7 +1166,7 @@ namespace heongpu
         return prod_q_mod_Bsk;
     }
 
-    std::vector<Data64> HEContext<Scheme::BFV>::generate_inv_prod_q_mod_Bsk(
+    std::vector<Data64> HEContextImpl<Scheme::BFV>::generate_inv_prod_q_mod_Bsk(
         std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
         std::vector<Data64> inv_prod_q_mod_Bsk;
@@ -1181,7 +1183,7 @@ namespace heongpu
         return inv_prod_q_mod_Bsk;
     }
 
-    std::vector<Data64> HEContext<Scheme::BFV>::generate_base_matrix_Bsk_q(
+    std::vector<Data64> HEContextImpl<Scheme::BFV>::generate_base_matrix_Bsk_q(
         std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
         std::vector<Data64> base_matrix_Bsk_q;
@@ -1205,7 +1207,8 @@ namespace heongpu
         return base_matrix_Bsk_q;
     }
 
-    std::vector<Data64> HEContext<Scheme::BFV>::generate_base_change_matrix_msk(
+    std::vector<Data64>
+    HEContextImpl<Scheme::BFV>::generate_base_change_matrix_msk(
         std::vector<Modulus64> bsk_mod)
     {
         std::vector<Data64> base_change_matrix_msk;
@@ -1227,7 +1230,7 @@ namespace heongpu
     }
 
     std::vector<Data64>
-    HEContext<Scheme::BFV>::generate_inv_punctured_prod_mod_B_array(
+    HEContextImpl<Scheme::BFV>::generate_inv_punctured_prod_mod_B_array(
         std::vector<Modulus64> bsk_mod)
     {
         std::vector<Data64> inv_punctured_prod_mod_B_array;
@@ -1248,7 +1251,7 @@ namespace heongpu
         return inv_punctured_prod_mod_B_array;
     }
 
-    Data64 HEContext<Scheme::BFV>::generate_inv_prod_B_mod_m_sk(
+    Data64 HEContextImpl<Scheme::BFV>::generate_inv_prod_B_mod_m_sk(
         std::vector<Modulus64> bsk_mod)
     {
         Data64 inv_prod_B_mod_m_sk = 1;
@@ -1265,7 +1268,7 @@ namespace heongpu
         return inv_prod_B_mod_m_sk;
     }
 
-    std::vector<Data64> HEContext<Scheme::BFV>::generate_prod_B_mod_q(
+    std::vector<Data64> HEContextImpl<Scheme::BFV>::generate_prod_B_mod_q(
         std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
         std::vector<Data64> prod_B_mod_q;
@@ -1283,7 +1286,8 @@ namespace heongpu
         return prod_B_mod_q;
     }
 
-    std::vector<Modulus64> HEContext<Scheme::BFV>::generate_q_Bsk_merge_modulus(
+    std::vector<Modulus64>
+    HEContextImpl<Scheme::BFV>::generate_q_Bsk_merge_modulus(
         std::vector<Modulus64> primes, std::vector<Modulus64> bsk_mod, int size)
     {
         std::vector<Modulus64> q_Bsk_merge_modulus;
@@ -1299,7 +1303,7 @@ namespace heongpu
         return q_Bsk_merge_modulus;
     }
 
-    std::vector<Data64> HEContext<Scheme::BFV>::generate_q_Bsk_merge_root(
+    std::vector<Data64> HEContextImpl<Scheme::BFV>::generate_q_Bsk_merge_root(
         std::vector<Data64> primes_psi, std::vector<Data64> bsk_mod_psi,
         int size)
     {
@@ -1317,8 +1321,8 @@ namespace heongpu
     }
 
     std::vector<Data64>
-    HEContext<Scheme::BFV>::generate_Qi_t(std::vector<Modulus64> primes,
-                                          Modulus64& plain_mod, int size)
+    HEContextImpl<Scheme::BFV>::generate_Qi_t(std::vector<Modulus64> primes,
+                                              Modulus64& plain_mod, int size)
     {
         std::vector<Data64> Qi_t;
         for (int i = 0; i < size; i++)
@@ -1339,8 +1343,8 @@ namespace heongpu
     }
 
     std::vector<Data64>
-    HEContext<Scheme::BFV>::generate_Qi_gamma(std::vector<Modulus64> primes,
-                                              Modulus64& gamma, int size)
+    HEContextImpl<Scheme::BFV>::generate_Qi_gamma(std::vector<Modulus64> primes,
+                                                  Modulus64& gamma, int size)
     {
         std::vector<Data64> Qi_gamma;
         for (int i = 0; i < size; i++)
@@ -1360,9 +1364,8 @@ namespace heongpu
         return Qi_gamma;
     }
 
-    std::vector<Data64>
-    HEContext<Scheme::BFV>::generate_Qi_inverse(std::vector<Modulus64> primes,
-                                                int size)
+    std::vector<Data64> HEContextImpl<Scheme::BFV>::generate_Qi_inverse(
+        std::vector<Modulus64> primes, int size)
     {
         std::vector<Data64> Qi_inverse;
         for (int i = 0; i < size; i++)
@@ -1383,9 +1386,8 @@ namespace heongpu
         return Qi_inverse;
     }
 
-    Data64
-    HEContext<Scheme::BFV>::generate_mulq_inv_t(std::vector<Modulus64> primes,
-                                                Modulus64& plain_mod, int size)
+    Data64 HEContextImpl<Scheme::BFV>::generate_mulq_inv_t(
+        std::vector<Modulus64> primes, Modulus64& plain_mod, int size)
     {
         Data64 mulq_inv_t = 1;
         for (int i = 0; i < size; i++)
@@ -1400,7 +1402,7 @@ namespace heongpu
         return mulq_inv_t;
     }
 
-    Data64 HEContext<Scheme::BFV>::generate_mulq_inv_gamma(
+    Data64 HEContextImpl<Scheme::BFV>::generate_mulq_inv_gamma(
         std::vector<Modulus64> primes, Modulus64& gamma, int size)
     {
         Data64 mulq_inv_gamma = 1;
@@ -1416,8 +1418,8 @@ namespace heongpu
         return mulq_inv_gamma;
     }
 
-    Data64 HEContext<Scheme::BFV>::generate_inv_gamma(Modulus64& plain_mod,
-                                                      Modulus64& gamma)
+    Data64 HEContextImpl<Scheme::BFV>::generate_inv_gamma(Modulus64& plain_mod,
+                                                          Modulus64& gamma)
     {
         Data64 mod_ = gamma.value % plain_mod.value;
         Data64 inv_gamma = OPERATOR64::modinv(mod_, plain_mod);
@@ -1425,6 +1427,6 @@ namespace heongpu
         return inv_gamma;
     }
 
-    template class HEContext<Scheme::BFV>;
+    template class HEContextImpl<Scheme::BFV>;
 
 } // namespace heongpu

@@ -37,12 +37,13 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_I_Part_I)
 {
     {
         size_t poly_modulus_degree = 4096;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({40, 30, 30}, {40});
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({40, 30, 30}, {40});
+        context->generate();
 
         heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
         heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
@@ -128,12 +129,13 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_I_Part_I)
 
     {
         size_t poly_modulus_degree = 8192;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({40, 30, 30, 30, 30}, {40});
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({40, 30, 30, 30, 30}, {40});
+        context->generate();
 
         heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
         heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
@@ -219,13 +221,14 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_I_Part_I)
 
     {
         size_t poly_modulus_degree = 16384;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes(
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes(
             {45, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35}, {45});
-        context.generate();
+        context->generate();
 
         heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
         heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
@@ -311,15 +314,16 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_I_Part_I)
 
     {
         size_t poly_modulus_degree = 32768;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({59, 40, 40, 40, 40, 40, 40, 40, 40,
-                                             40, 40, 40, 40, 40, 40, 40, 40, 40,
-                                             40},
-                                            {59});
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({59, 40, 40, 40, 40, 40, 40, 40,
+                                              40, 40, 40, 40, 40, 40, 40, 40,
+                                              40, 40, 40},
+                                             {59});
+        context->generate();
 
         heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
         heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);
@@ -411,21 +415,22 @@ TEST(HEonGPU, CKKS_Ciphertext_Rotation_Keyswitching_Method_I_Part_I)
         // context(heongpu::scheme_type::ckks,
         // heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
         // heongpu::sec_level_type::none);
-        // context.set_poly_modulus_degree(poly_modulus_degree);
-        // context.set_coeff_modulus_bit_sizes({59, 45, 45, 45, 45, 45, 45, 45,
+        // context->set_poly_modulus_degree(poly_modulus_degree);
+        // context->set_coeff_modulus_bit_sizes({59, 45, 45, 45, 45, 45, 45, 45,
         // 45, 45, 45, 45, 45,
         //     45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
         //     45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45},
         //    {59});
-        // context.generate();
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes(
+        // context->generate();
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes(
             {59, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40},
             {59});
-        context.generate();
+        context->generate();
 
         heongpu::HEKeyGenerator<heongpu::Scheme::CKKS> keygen(context);
         heongpu::Secretkey<heongpu::Scheme::CKKS> secret_key(context);

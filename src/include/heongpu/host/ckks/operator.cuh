@@ -46,7 +46,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters for the operator.
          */
-        __host__ HEOperator(HEContext<Scheme::CKKS>& context,
+        __host__ HEOperator(HEContext<Scheme::CKKS> context,
                             HEEncoder<Scheme::CKKS>& encoder);
 
       public:
@@ -171,9 +171,10 @@ namespace heongpu
                                     add_plain_ckks(input1_, input2_, output_,
                                                    options.stream_);
 
-                                    output_.scheme_ = scheme_;
-                                    output_.ring_size_ = n;
-                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.scheme_ = context_->scheme_;
+                                    output_.ring_size_ = context_->n;
+                                    output_.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.depth_ = input1_.depth_;
                                     output_.in_ntt_domain_ =
@@ -265,9 +266,9 @@ namespace heongpu
                                                     input2 * input1_.scale_,
                                                     output_, options.stream_);
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
@@ -353,9 +354,10 @@ namespace heongpu
                                     sub_plain_ckks(input1_, input2_, output_,
                                                    options.stream_);
 
-                                    output_.scheme_ = scheme_;
-                                    output_.ring_size_ = n;
-                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.scheme_ = context_->scheme_;
+                                    output_.ring_size_ = context_->n;
+                                    output_.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.depth_ = input1_.depth_;
                                     output_.in_ntt_domain_ =
@@ -446,9 +448,9 @@ namespace heongpu
                                                     input2 * input1_.scale_,
                                                     output_, options.stream_);
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
@@ -516,9 +518,9 @@ namespace heongpu
                             add_constant_plain_ckks_v2(input1_, c, output_,
                                                        options.stream_);
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ =
                                 input1_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input1_.depth_;
@@ -582,9 +584,10 @@ namespace heongpu
                                                   options.stream_);
                                     output_.rescale_required_ = true;
 
-                                    output_.scheme_ = scheme_;
-                                    output_.ring_size_ = n;
-                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.scheme_ = context_->scheme_;
+                                    output_.ring_size_ = context_->n;
+                                    output_.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output_.cipher_size_ = 3;
                                     output_.depth_ = input1_.depth_;
                                     output_.in_ntt_domain_ =
@@ -638,9 +641,9 @@ namespace heongpu
                     "operation!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -658,7 +661,7 @@ namespace heongpu
                                 [&](Ciphertext<Scheme::CKKS>& output_)
                                 {
                                     if (input2_.size() <
-                                        (n * current_decomp_count))
+                                        (context_->n * current_decomp_count))
                                     {
                                         throw std::invalid_argument(
                                             "Invalid Plaintext size!");
@@ -669,9 +672,10 @@ namespace heongpu
                                                         options.stream_);
                                     output_.rescale_required_ = true;
 
-                                    output_.scheme_ = scheme_;
-                                    output_.ring_size_ = n;
-                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.scheme_ = context_->scheme_;
+                                    output_.ring_size_ = context_->n;
+                                    output_.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.depth_ = input1_.depth_;
                                     output_.in_ntt_domain_ =
@@ -724,9 +728,9 @@ namespace heongpu
                     "operation!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -743,9 +747,9 @@ namespace heongpu
                                                       scale, options.stream_);
                             output_.rescale_required_ = true;
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
@@ -798,9 +802,9 @@ namespace heongpu
                             multiply_const_plain_ckks_v2(input1_, c, output_,
                                                          options.stream_);
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ =
                                 input1_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input1_.depth_;
@@ -840,9 +844,9 @@ namespace heongpu
                             scale_up_ckks(input_, scale, output_,
                                           options.stream_);
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ =
                                 input_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input_.depth_;
@@ -880,9 +884,9 @@ namespace heongpu
                         {
                             mult_i_ckks(input1_, output_, options.stream_);
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ =
                                 input1_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input1_.depth_;
@@ -921,9 +925,9 @@ namespace heongpu
                         {
                             div_i_ckks(input1_, output_, options.stream_);
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ =
                                 input1_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input1_.depth_;
@@ -958,9 +962,9 @@ namespace heongpu
                     "non-linear part!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (3 * n * current_decomp_count))
+            if (input1.memory_size() < (3 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1014,9 +1018,9 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1110,9 +1114,9 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1152,9 +1156,9 @@ namespace heongpu
                                     break;
                             }
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.scale_ = input1_.scale_;
@@ -1207,9 +1211,9 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1249,9 +1253,9 @@ namespace heongpu
                                     break;
                             }
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.scale_ = input1_.scale_;
@@ -1287,9 +1291,9 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1329,9 +1333,9 @@ namespace heongpu
                                     break;
                             }
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.scale_ = input1_.scale_;
@@ -1362,9 +1366,9 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertexts can not be rescaled!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1398,9 +1402,9 @@ namespace heongpu
                     "Ciphertext's modulus can not be dropped!!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1416,9 +1420,9 @@ namespace heongpu
                             mod_drop_ckks_leveled(input1_, output_,
                                                   options.stream_);
 
-                            output.scheme_ = scheme_;
-                            output.ring_size_ = n;
-                            output.coeff_modulus_count_ = Q_size_;
+                            output.scheme_ = context_->scheme_;
+                            output.ring_size_ = context_->n;
+                            output.coeff_modulus_count_ = context_->Q_size;
                             output.cipher_size_ = 2;
                             output.depth_ = input1.depth_ + 1;
                             output.scale_ = input1.scale_;
@@ -1446,9 +1450,9 @@ namespace heongpu
                  Plaintext<Scheme::CKKS>& output,
                  const ExecutionOptions& options = ExecutionOptions())
         {
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.size() < (n * current_decomp_count))
+            if (input1.size() < (context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Plaintext size!");
             }
@@ -1466,7 +1470,7 @@ namespace heongpu
 
                             output.scheme_ = input1.scheme_;
                             output.plain_size_ =
-                                (n * (current_decomp_count - 1));
+                                (context_->n * (current_decomp_count - 1));
                             output.depth_ = input1.depth_ + 1;
                             output.scale_ = input1.scale_;
                             output.in_ntt_domain_ = input1.in_ntt_domain_;
@@ -1487,9 +1491,9 @@ namespace heongpu
         mod_drop_inplace(Plaintext<Scheme::CKKS>& input1,
                          const ExecutionOptions& options = ExecutionOptions())
         {
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.size() < (n * current_decomp_count))
+            if (input1.size() < (context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Plaintext size!");
             }
@@ -1511,9 +1515,9 @@ namespace heongpu
         mod_drop_inplace(Ciphertext<Scheme::CKKS>& input1,
                          const ExecutionOptions& options = ExecutionOptions())
         {
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -1696,75 +1700,9 @@ namespace heongpu
                                       const cudaStream_t stream);
 
       protected:
-        scheme_type scheme_;
-
-        int n;
-
-        int n_power;
-
-        // New
-        int Q_prime_size_;
-        int Q_size_;
-        int P_size_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data64>> last_q_modinv_;
-
-        std::shared_ptr<DeviceVector<Data64>> half_p_;
-        std::shared_ptr<DeviceVector<Data64>> half_mod_;
-
-        // !!! LEVELED !!!
-
-        std::shared_ptr<std::vector<int>> l_leveled_;
-        std::shared_ptr<std::vector<int>> l_tilda_leveled_;
-        std::shared_ptr<std::vector<int>> d_leveled_;
-        std::shared_ptr<std::vector<int>> d_tilda_leveled_;
-        int r_prime_leveled_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> B_prime_leveled_;
-        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_leveled_;
-        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_leveled_;
-        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_leveled_;
-
-        std::shared_ptr<std::vector<DeviceVector<Data64>>>
-            base_change_matrix_D_to_B_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>>
-            base_change_matrix_B_to_D_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>>
-            Mi_inv_D_to_B_leveled_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_D_to_B_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>> prod_B_to_D_leveled_;
-
-        // Method2
-        std::shared_ptr<std::vector<DeviceVector<Data64>>>
-            base_change_matrix_D_to_Qtilda_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>>
-            Mi_inv_D_to_Qtilda_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<Data64>>>
-            prod_D_to_Qtilda_leveled_;
-
-        std::shared_ptr<std::vector<DeviceVector<int>>> I_j_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<int>>> I_location_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<int>>> Sk_pair_leveled_;
-
-        std::shared_ptr<DeviceVector<int>> prime_location_leveled_;
-
-        /////////
-
-        // Leveled Rescale
-        std::shared_ptr<DeviceVector<Data64>> rescaled_last_q_modinv_;
-        std::shared_ptr<DeviceVector<Data64>> rescaled_half_;
-        std::shared_ptr<DeviceVector<Data64>> rescaled_half_mod_;
-
-        std::vector<Modulus64> prime_vector_; // in CPU
+        HEContext<Scheme::CKKS> context_;
 
         // Temp(to avoid allocation time)
-
-        // new method
         DeviceVector<int> new_prime_locations_;
         DeviceVector<int> new_input_locations_;
         int* new_prime_locations;
@@ -2131,9 +2069,9 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            int current_decomp_count = Q_size_ - input1.depth_;
+            int current_decomp_count = context_->Q_size - input1.depth_;
 
-            if (input1.memory_size() < (2 * n * current_decomp_count))
+            if (input1.memory_size() < (2 * context_->n * current_decomp_count))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -2141,7 +2079,7 @@ namespace heongpu
             switch (static_cast<int>(galois_key.key_type))
             {
                 case 1: // KEYSWITHING_METHOD_I
-                    if (scheme_ == scheme_type::ckks)
+                    if (context_->scheme_ == scheme_type::ckks)
                     {
                         DeviceVector<Data64> result =
                             fast_single_hoisting_rotation_ckks_method_I(
@@ -2154,7 +2092,7 @@ namespace heongpu
                     }
                     break;
                 case 2: // KEYSWITHING_METHOD_II
-                    if (scheme_ == scheme_type::ckks)
+                    if (context_->scheme_ == scheme_type::ckks)
                     {
                         DeviceVector<Data64> result =
                             fast_single_hoisting_rotation_ckks_method_II(
@@ -2217,7 +2155,7 @@ namespace heongpu
          * @param context Encryption parameters.
          * @param encoder Encoder for arithmetic operations.
          */
-        HEArithmeticOperator(HEContext<Scheme::CKKS>& context,
+        HEArithmeticOperator(HEContext<Scheme::CKKS> context,
                              HEEncoder<Scheme::CKKS>& encoder);
 
         /**
@@ -2326,7 +2264,7 @@ namespace heongpu
          * @param context Encryption parameters.
          * @param encoder Encoder for homomorphic operations.
          */
-        HELogicOperator(HEContext<Scheme::CKKS>& context,
+        HELogicOperator(HEContext<Scheme::CKKS> context,
                         HEEncoder<Scheme::CKKS>& encoder, double scale);
 
         /**

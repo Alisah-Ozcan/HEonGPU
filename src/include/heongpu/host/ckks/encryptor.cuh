@@ -37,7 +37,7 @@ namespace heongpu
          * @param public_key Reference to the Publickey object used for
          * encryption.
          */
-        __host__ HEEncryptor(HEContext<Scheme::CKKS>& context,
+        __host__ HEEncryptor(HEContext<Scheme::CKKS> context,
                              Publickey<Scheme::CKKS>& public_key);
 
         /**
@@ -53,7 +53,7 @@ namespace heongpu
                 Plaintext<Scheme::CKKS>& plaintext,
                 const ExecutionOptions& options = ExecutionOptions())
         {
-            if (plaintext.size() < (n * Q_size_))
+            if (plaintext.size() < (context_->n * context_->Q_size))
             {
                 throw std::invalid_argument("Invalid plaintext size.");
             }
@@ -75,9 +75,9 @@ namespace heongpu
                             encrypt_ckks(ciphertext_, plaintext,
                                          options.stream_);
 
-                            ciphertext.scheme_ = scheme_;
-                            ciphertext.ring_size_ = n;
-                            ciphertext.coeff_modulus_count_ = Q_size_;
+                            ciphertext.scheme_ = context_->scheme_;
+                            ciphertext.ring_size_ = context_->n;
+                            ciphertext.coeff_modulus_count_ = context_->Q_size;
                             ciphertext.cipher_size_ = 2;
                             ciphertext.depth_ = 0;
                             ciphertext.in_ntt_domain_ = true;
@@ -127,27 +127,11 @@ namespace heongpu
                                    const cudaStream_t stream);
 
       private:
-        scheme_type scheme_;
+        HEContext<Scheme::CKKS> context_;
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
 
         DeviceVector<Data64> public_key_;
-
-        int n;
-
-        int n_power;
-
-        int Q_prime_size_;
-        int Q_size_;
-        int P_size_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data64>> last_q_modinv_;
-        std::shared_ptr<DeviceVector<Data64>> half_;
-        std::shared_ptr<DeviceVector<Data64>> half_mod_;
     };
 
 } // namespace heongpu

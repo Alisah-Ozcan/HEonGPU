@@ -37,12 +37,13 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 {
     {
         size_t poly_modulus_degree = 4096;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({40, 30, 30}, {40});
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({40, 30, 30}, {40});
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
@@ -83,12 +84,13 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
     {
         size_t poly_modulus_degree = 8192;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({40, 30, 30, 30, 30}, {40});
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({40, 30, 30, 30, 30}, {40});
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
@@ -129,13 +131,14 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
     {
         size_t poly_modulus_degree = 16384;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes(
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes(
             {45, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35}, {45});
-        context.generate();
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
@@ -176,15 +179,16 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
     {
         size_t poly_modulus_degree = 32768;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({59, 40, 40, 40, 40, 40, 40, 40, 40,
-                                             40, 40, 40, 40, 40, 40, 40, 40, 40,
-                                             40},
-                                            {59});
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({59, 40, 40, 40, 40, 40, 40, 40,
+                                              40, 40, 40, 40, 40, 40, 40, 40,
+                                              40, 40, 40},
+                                             {59});
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 
@@ -225,16 +229,17 @@ TEST(HEonGPU, CKKS_Encoding_Decoding)
 
     {
         size_t poly_modulus_degree = 65536;
-        heongpu::HEContext<heongpu::Scheme::CKKS> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes(
+        heongpu::HEContext<heongpu::Scheme::CKKS> context =
+            heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes(
             {59, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
              45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45,
              45, 45, 45, 45, 45, 45, 45, 45, 45, 45, 45},
             {59});
-        context.generate();
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::CKKS> encoder(context);
 

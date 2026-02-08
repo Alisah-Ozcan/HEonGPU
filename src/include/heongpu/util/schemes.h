@@ -7,6 +7,8 @@
 #define HEONGPU_SCHEMES_H
 
 #include <heongpu/kernel/defines.h>
+#include <memory>
+#include <utility>
 
 namespace heongpu
 {
@@ -19,7 +21,14 @@ namespace heongpu
 
     template <Scheme S> class Ciphertext;
 
-    template <Scheme S> class HEContext;
+    template <Scheme S> class HEContextImpl;
+    template <Scheme S> using HEContext = std::shared_ptr<HEContextImpl<S>>;
+
+    template <Scheme S, typename... Args>
+    inline HEContext<S> GenHEContext(Args&&... args)
+    {
+        return std::make_shared<HEContextImpl<S>>(std::forward<Args>(args)...);
+    }
 
     template <Scheme S> class HEDecryptor;
 

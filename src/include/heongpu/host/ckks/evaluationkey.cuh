@@ -50,7 +50,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ Relinkey(HEContext<Scheme::CKKS>& context);
+        __host__ Relinkey(HEContext<Scheme::CKKS> context);
 
         /**
          * @brief Stores the relinearization key in the device (GPU) memory.
@@ -98,10 +98,11 @@ namespace heongpu
          * @param copy The source Relinkey object to copy from.
          */
         Relinkey(const Relinkey& copy)
-            : scheme_(copy.scheme_), key_type(copy.key_type),
-              ring_size(copy.ring_size), Q_prime_size_(copy.Q_prime_size_),
-              Q_size_(copy.Q_size_), d_(copy.d_), d_tilda_(copy.d_tilda_),
-              r_prime_(copy.r_prime_), storage_type_(copy.storage_type_),
+            : context_(copy.context_), scheme_(copy.scheme_),
+              key_type(copy.key_type), ring_size(copy.ring_size),
+              Q_prime_size_(copy.Q_prime_size_), Q_size_(copy.Q_size_),
+              d_(copy.d_), d_tilda_(copy.d_tilda_), r_prime_(copy.r_prime_),
+              storage_type_(copy.storage_type_),
               relinkey_size_(copy.relinkey_size_),
               relinkey_size_leveled_(copy.relinkey_size_leveled_),
               relin_key_generated_(copy.relin_key_generated_)
@@ -170,7 +171,8 @@ namespace heongpu
          * @param assign The source Relinkey object to move from.
          */
         Relinkey(Relinkey&& assign) noexcept
-            : scheme_(std::move(assign.scheme_)),
+            : context_(std::move(assign.context_)),
+              scheme_(std::move(assign.scheme_)),
               key_type(std::move(assign.key_type)),
               ring_size(std::move(assign.ring_size)),
               Q_prime_size_(std::move(assign.Q_prime_size_)),
@@ -235,6 +237,7 @@ namespace heongpu
         {
             if (this != &copy)
             {
+                context_ = copy.context_;
                 scheme_ = copy.scheme_;
                 key_type = copy.key_type;
                 ring_size = copy.ring_size;
@@ -321,6 +324,7 @@ namespace heongpu
         {
             if (this != &assign)
             {
+                context_ = std::move(assign.context_);
                 scheme_ = std::move(assign.scheme_);
                 key_type = std::move(assign.key_type);
                 ring_size = std::move(assign.ring_size);
@@ -385,7 +389,13 @@ namespace heongpu
 
         void load(std::istream& is);
 
+        void set_context(HEContext<Scheme::CKKS> context)
+        {
+            context_ = std::move(context);
+        }
+
       private:
+        HEContext<Scheme::CKKS> context_;
         scheme_type scheme_;
         keyswitching_type key_type;
 
@@ -448,7 +458,7 @@ namespace heongpu
                                            ExecutionOptions options);
 
       public:
-        __host__ MultipartyRelinkey(HEContext<Scheme::CKKS>& context,
+        __host__ MultipartyRelinkey(HEContext<Scheme::CKKS> context,
                                     const RNGSeed seed);
 
         /**
@@ -492,7 +502,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ Galoiskey(HEContext<Scheme::CKKS>& context);
+        __host__ Galoiskey(HEContext<Scheme::CKKS> context);
 
         /**
          * @brief Constructs a new Galoiskey object with in the range
@@ -505,7 +515,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ Galoiskey(HEContext<Scheme::CKKS>& context, int max_shift);
+        __host__ Galoiskey(HEContext<Scheme::CKKS> context, int max_shift);
 
         /**
          * @brief Constructs a new Galoiskey object allowing specific rotations
@@ -516,7 +526,7 @@ namespace heongpu
          * @param shift_vec Vector of integers representing the allowed shifts
          * for rotations.
          */
-        __host__ Galoiskey(HEContext<Scheme::CKKS>& context,
+        __host__ Galoiskey(HEContext<Scheme::CKKS> context,
                            std::vector<int>& shift_vec);
 
         /**
@@ -528,7 +538,7 @@ namespace heongpu
          * @param galois_elts Vector of Galois elements (represented as unsigned
          * 32-bit integers) specifying the rotations allowed.
          */
-        __host__ Galoiskey(HEContext<Scheme::CKKS>& context,
+        __host__ Galoiskey(HEContext<Scheme::CKKS> context,
                            std::vector<uint32_t>& galois_elts);
 
         /**
@@ -577,9 +587,10 @@ namespace heongpu
          * @param copy The source Galoiskey object to copy from.
          */
         Galoiskey(const Galoiskey& copy)
-            : scheme_(copy.scheme_), key_type(copy.key_type),
-              ring_size(copy.ring_size), Q_prime_size_(copy.Q_prime_size_),
-              Q_size_(copy.Q_size_), d_(copy.d_), customized(copy.customized),
+            : context_(copy.context_), scheme_(copy.scheme_),
+              key_type(copy.key_type), ring_size(copy.ring_size),
+              Q_prime_size_(copy.Q_prime_size_), Q_size_(copy.Q_size_),
+              d_(copy.d_), customized(copy.customized),
               group_order_(copy.group_order_),
               storage_type_(copy.storage_type_),
               galoiskey_size_(copy.galoiskey_size_),
@@ -633,7 +644,8 @@ namespace heongpu
          * @param assign The source Galoiskey object to move from.
          */
         Galoiskey(Galoiskey&& assign) noexcept
-            : scheme_(std::move(assign.scheme_)),
+            : context_(std::move(assign.context_)),
+              scheme_(std::move(assign.scheme_)),
               key_type(std::move(assign.key_type)),
               ring_size(std::move(assign.ring_size)),
               Q_prime_size_(std::move(assign.Q_prime_size_)),
@@ -686,6 +698,7 @@ namespace heongpu
         {
             if (this != &copy)
             {
+                context_ = copy.context_;
                 scheme_ = copy.scheme_;
                 key_type = copy.key_type;
                 ring_size = copy.ring_size;
@@ -754,6 +767,7 @@ namespace heongpu
         {
             if (this != &assign)
             {
+                context_ = std::move(assign.context_);
                 scheme_ = std::move(assign.scheme_);
                 key_type = std::move(assign.key_type);
                 ring_size = std::move(assign.ring_size);
@@ -808,7 +822,13 @@ namespace heongpu
 
         void load(std::istream& is);
 
+        void set_context(HEContext<Scheme::CKKS> context)
+        {
+            context_ = std::move(context);
+        }
+
       private:
+        HEContext<Scheme::CKKS> context_;
         scheme_type scheme_;
         keyswitching_type key_type;
 
@@ -856,14 +876,14 @@ namespace heongpu
         template <Scheme S> friend class HEKeyGenerator;
 
       public:
-        __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS>& context,
+        __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS> context,
                                      const RNGSeed seed);
 
-        __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS>& context,
+        __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS> context,
                                      std::vector<int>& shift_vec,
                                      const RNGSeed seed);
 
-        __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS>& context,
+        __host__ MultipartyGaloiskey(HEContext<Scheme::CKKS> context,
                                      std::vector<uint32_t>& galois_elts,
                                      const RNGSeed seed);
 
@@ -914,7 +934,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ Switchkey(HEContext<Scheme::CKKS>& context);
+        __host__ Switchkey(HEContext<Scheme::CKKS> context);
 
         /**
          * @brief Stores the switch key in the device (GPU) memory.
@@ -951,7 +971,13 @@ namespace heongpu
 
         void load(std::istream& is);
 
+        void set_context(HEContext<Scheme::CKKS> context)
+        {
+            context_ = std::move(context);
+        }
+
       private:
+        HEContext<Scheme::CKKS> context_;
         scheme_type scheme_;
         keyswitching_type key_type;
 

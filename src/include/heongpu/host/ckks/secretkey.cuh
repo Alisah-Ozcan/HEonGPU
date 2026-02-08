@@ -44,7 +44,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ Secretkey(HEContext<Scheme::CKKS>& context);
+        __host__ Secretkey(HEContext<Scheme::CKKS> context);
 
         /**
          * @brief Constructs a new Secretkey object with specified parameters.
@@ -54,7 +54,7 @@ namespace heongpu
          * @param hamming_weight Parameter defining hamming weight of secret
          * key, try to use it as (ring size / 2) for maximum security.
          */
-        __host__ Secretkey(HEContext<Scheme::CKKS>& context,
+        __host__ Secretkey(HEContext<Scheme::CKKS> context,
                            const int hamming_weight);
 
         /**
@@ -65,7 +65,7 @@ namespace heongpu
          * Defaults to `cudaStreamDefault`.
          */
         __host__ Secretkey(const std::vector<int>& secret_key,
-                           HEContext<Scheme::CKKS>& context,
+                           HEContext<Scheme::CKKS> context,
                            cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -76,7 +76,7 @@ namespace heongpu
          * Defaults to `cudaStreamDefault`.
          */
         __host__ Secretkey(const HostVector<int>& secret_key,
-                           HEContext<Scheme::CKKS>& context,
+                           HEContext<Scheme::CKKS> context,
                            cudaStream_t stream = cudaStreamDefault);
 
         /**
@@ -162,7 +162,8 @@ namespace heongpu
          * @param copy The source Secretkey object to copy from.
          */
         Secretkey(const Secretkey& copy)
-            : scheme_(copy.scheme_), ring_size_(copy.ring_size_),
+            : context_(copy.context_), scheme_(copy.scheme_),
+              ring_size_(copy.ring_size_),
               coeff_modulus_count_(copy.coeff_modulus_count_),
               n_power_(copy.n_power_), in_ntt_domain_(copy.in_ntt_domain_),
               secret_key_generated_(copy.secret_key_generated_),
@@ -198,7 +199,8 @@ namespace heongpu
          * @param assign The source Secretkey object to move from.
          */
         Secretkey(Secretkey&& assign) noexcept
-            : scheme_(std::move(assign.scheme_)),
+            : context_(std::move(assign.context_)),
+              scheme_(std::move(assign.scheme_)),
               ring_size_(std::move(assign.ring_size_)),
               coeff_modulus_count_(std::move(assign.coeff_modulus_count_)),
               n_power_(std::move(assign.n_power_)),
@@ -226,6 +228,7 @@ namespace heongpu
         {
             if (this != &copy)
             {
+                context_ = copy.context_;
                 scheme_ = copy.scheme_;
                 ring_size_ = copy.ring_size_;
                 coeff_modulus_count_ = copy.coeff_modulus_count_;
@@ -273,6 +276,7 @@ namespace heongpu
         {
             if (this != &assign)
             {
+                context_ = std::move(assign.context_);
                 scheme_ = std::move(assign.scheme_);
                 ring_size_ = std::move(assign.ring_size_);
                 coeff_modulus_count_ = std::move(assign.coeff_modulus_count_);
@@ -301,7 +305,13 @@ namespace heongpu
 
         void load(std::istream& is);
 
+        void set_context(HEContext<Scheme::CKKS> context)
+        {
+            context_ = std::move(context);
+        }
+
       private:
+        HEContext<Scheme::CKKS> context_;
         scheme_type scheme_;
         int ring_size_;
         int coeff_modulus_count_;

@@ -8,15 +8,15 @@
 namespace heongpu
 {
     __host__
-    HEEncryptor<Scheme::CKKS>::HEEncryptor(HEContext<Scheme::CKKS>& context,
+    HEEncryptor<Scheme::CKKS>::HEEncryptor(HEContext<Scheme::CKKS> context,
                                            Publickey<Scheme::CKKS>& public_key)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
+        context_ = std::move(context);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -32,50 +32,34 @@ namespace heongpu
             public_key.store_in_device();
             public_key_ = public_key.device_locations_;
         }
-
-        n = context.n;
-        n_power = context.n_power;
-
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
-        P_size_ = context.P_size;
-
-        modulus_ = context.modulus_;
-
-        last_q_modinv_ = context.last_q_modinv_;
-
-        ntt_table_ = context.ntt_table_;
-        intt_table_ = context.intt_table_;
-
-        n_inverse_ = context.n_inverse_;
-
-        half_ = context.half_p_;
-
-        half_mod_ = context.half_mod_;
-
-        n = context.n;
-        n_power = context.n_power;
     }
 
     __host__ void HEEncryptor<Scheme::CKKS>::encrypt_ckks(
         Ciphertext<Scheme::CKKS>& ciphertext,
         Plaintext<Scheme::CKKS>& plaintext, const cudaStream_t stream)
     {
-        DeviceVector<Data64> output_memory((2 * n * Q_size_), stream);
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int Q_prime_size = ctx->Q_prime_size;
+        const int Q_size = ctx->Q_size;
 
-        DeviceVector<Data64> gpu_space(5 * Q_prime_size_ * n, stream);
+        DeviceVector<Data64> output_memory((2 * n * Q_size), stream);
+
+        DeviceVector<Data64> gpu_space(5 * Q_prime_size * n, stream);
         Data64* u_poly = gpu_space.data();
-        Data64* error_poly = u_poly + (Q_prime_size_ * n);
-        Data64* pk_u_poly = error_poly + (2 * Q_prime_size_ * n);
+        Data64* error_poly = u_poly + (Q_prime_size * n);
+        Data64* pk_u_poly = error_poly + (2 * Q_prime_size * n);
 
         RandomNumberGenerator::instance()
             .modular_ternary_random_number_generation(
-                u_poly, modulus_->data(), n_power, Q_prime_size_, 1, stream);
+                u_poly, ctx->modulus_->data(), n_power, Q_prime_size, 1,
+                stream);
 
         RandomNumberGenerator::instance()
             .modular_gaussian_random_number_generation(
-                error_std_dev, error_poly, modulus_->data(), n_power,
-                Q_prime_size_, 2, stream);
+                error_std_dev, error_poly, ctx->modulus_->data(), n_power,
+                Q_prime_size, 2, stream);
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -85,12 +69,13 @@ namespace heongpu
             .zero_padding = false,
             .stream = stream};
 
-        gpuntt::GPU_NTT_Inplace(u_poly, ntt_table_->data(), modulus_->data(),
-                                cfg_ntt, Q_prime_size_, Q_prime_size_);
+        gpuntt::GPU_NTT_Inplace(u_poly, ctx->ntt_table_->data(),
+                                ctx->modulus_->data(), cfg_ntt, Q_prime_size,
+                                Q_prime_size);
 
-        pk_u_kernel<<<dim3((n >> 8), Q_prime_size_, 2), 256, 0, stream>>>(
-            public_key_.data(), u_poly, pk_u_poly, modulus_->data(), n_power,
-            Q_prime_size_);
+        pk_u_kernel<<<dim3((n >> 8), Q_prime_size, 2), 256, 0, stream>>>(
+            public_key_.data(), u_poly, pk_u_poly, ctx->modulus_->data(),
+            n_power, Q_prime_size);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
@@ -99,27 +84,29 @@ namespace heongpu
             .ntt_layout = gpuntt::PerPolynomial,
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
-            .mod_inverse = n_inverse_->data(),
+            .mod_inverse = ctx->n_inverse_->data(),
             .stream = stream};
 
-        gpuntt::GPU_INTT_Inplace(pk_u_poly, intt_table_->data(),
-                                 modulus_->data(), cfg_intt, 2 * Q_prime_size_,
-                                 Q_prime_size_);
+        gpuntt::GPU_INTT_Inplace(pk_u_poly, ctx->intt_table_->data(),
+                                 ctx->modulus_->data(), cfg_intt,
+                                 2 * Q_prime_size, Q_prime_size);
 
-        enc_div_lastq_ckks_kernel<<<dim3((n >> 8), Q_size_, 2), 256, 0,
+        enc_div_lastq_ckks_kernel<<<dim3((n >> 8), Q_size, 2), 256, 0,
                                     stream>>>(
-            pk_u_poly, error_poly, output_memory.data(), modulus_->data(),
-            half_->data(), half_mod_->data(), last_q_modinv_->data(), n_power,
-            Q_prime_size_, Q_size_, P_size_);
+            pk_u_poly, error_poly, output_memory.data(), ctx->modulus_->data(),
+            ctx->half_p_->data(), ctx->half_mod_->data(),
+            ctx->last_q_modinv_->data(), n_power, Q_prime_size, Q_size,
+            ctx->P_size);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        gpuntt::GPU_NTT_Inplace(output_memory.data(), ntt_table_->data(),
-                                modulus_->data(), cfg_ntt, 2 * Q_size_,
-                                Q_size_);
+        gpuntt::GPU_NTT_Inplace(output_memory.data(), ctx->ntt_table_->data(),
+                                ctx->modulus_->data(), cfg_ntt, 2 * Q_size,
+                                Q_size);
 
-        cipher_message_add_kernel<<<dim3((n >> 8), Q_size_, 1), 256, 0,
-                                    stream>>>(
-            output_memory.data(), plaintext.data(), modulus_->data(), n_power);
+        cipher_message_add_kernel<<<dim3((n >> 8), Q_size, 1), 256, 0,
+                                    stream>>>(output_memory.data(),
+                                              plaintext.data(),
+                                              ctx->modulus_->data(), n_power);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ciphertext.memory_set(std::move(output_memory));

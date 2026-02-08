@@ -27,7 +27,7 @@ namespace heongpu
                                                  bool is_input_output_same);
 
       public:
-        __host__ Bootstrappingkey(HEContext<Scheme::TFHE>& context,
+        __host__ Bootstrappingkey(HEContext<Scheme::TFHE> context,
                                   bool store_in_gpu = true);
 
         /**
@@ -92,6 +92,11 @@ namespace heongpu
 
         Bootstrappingkey() = default;
 
+        void set_context(HEContext<Scheme::TFHE> context)
+        {
+            context_ = std::move(context);
+        }
+
         /**
          * @brief Copy constructor for creating a new Bootstrappingkey object by
          * copying an existing one.
@@ -104,8 +109,9 @@ namespace heongpu
          * @param copy The source Bootstrappingkey object to copy from.
          */
         Bootstrappingkey(const Bootstrappingkey& copy)
-            : bk_k_(copy.bk_k_), bk_base_bit_(copy.bk_base_bit_),
-              bk_length_(copy.bk_length_), bk_stdev_(copy.bk_stdev_),
+            : context_(copy.context_), bk_k_(copy.bk_k_),
+              bk_base_bit_(copy.bk_base_bit_), bk_length_(copy.bk_length_),
+              bk_stdev_(copy.bk_stdev_),
               boot_key_variances_(copy.boot_key_variances_),
               ks_base_bit_(copy.ks_base_bit_), ks_length_(copy.ks_length_),
               switch_key_variances_(copy.switch_key_variances_),
@@ -188,7 +194,8 @@ namespace heongpu
          * @param assign The source Bootstrappingkey object to move from.
          */
         Bootstrappingkey(Bootstrappingkey&& assign) noexcept
-            : bk_k_(std::move(assign.bk_k_)),
+            : context_(std::move(assign.context_)),
+              bk_k_(std::move(assign.bk_k_)),
               bk_base_bit_(std::move(assign.bk_base_bit_)),
               bk_length_(std::move(assign.bk_length_)),
               bk_stdev_(std::move(assign.bk_stdev_)),
@@ -228,6 +235,7 @@ namespace heongpu
         {
             if (this != &copy)
             {
+                context_ = copy.context_;
                 bk_k_ = copy.bk_k_;
                 bk_base_bit_ = copy.bk_base_bit_;
                 bk_length_ = copy.bk_length_;
@@ -322,6 +330,7 @@ namespace heongpu
         {
             if (this != &assign)
             {
+                context_ = std::move(assign.context_);
                 bk_k_ = std::move(assign.bk_k_);
                 bk_base_bit_ = std::move(assign.bk_base_bit_);
                 bk_length_ = std::move(assign.bk_length_);
@@ -349,6 +358,7 @@ namespace heongpu
         }
 
       private:
+        HEContext<Scheme::TFHE> context_;
         const scheme_type scheme_ = scheme_type::tfhe;
 
         // Boot Key Context

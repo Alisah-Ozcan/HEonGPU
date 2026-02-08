@@ -21,12 +21,12 @@ int main(int argc, char* argv[])
 
     for (int i = 0; i < poly_modulus_degrees.size(); i++)
     {
-        heongpu::HEContext<Scheme> context(
+        heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
             heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
-        context.set_poly_modulus_degree(poly_modulus_degrees[i]);
-        context.set_coeff_modulus_default_values(1);
-        context.set_plain_modulus(plain_modulus[i]);
-        context.generate();
+        context->set_poly_modulus_degree(poly_modulus_degrees[i]);
+        context->set_coeff_modulus_default_values(1);
+        context->set_plain_modulus(plain_modulus[i]);
+        context->generate();
 
         heongpu::HEKeyGenerator<Scheme> keygen(context);
         heongpu::Secretkey<Scheme> secret_key(context);

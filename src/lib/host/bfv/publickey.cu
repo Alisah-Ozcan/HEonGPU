@@ -7,16 +7,17 @@
 
 namespace heongpu
 {
-    __host__ Publickey<Scheme::BFV>::Publickey(HEContext<Scheme::BFV>& context)
+    __host__ Publickey<Scheme::BFV>::Publickey(HEContext<Scheme::BFV> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        coeff_modulus_count_ = context.Q_prime_size;
-        ring_size_ = context.n; // n
+        context_ = context;
+        scheme_ = context->scheme_;
+        coeff_modulus_count_ = context->Q_prime_size;
+        ring_size_ = context->n; // n
         in_ntt_domain_ = false;
 
         storage_type_ = storage_type::DEVICE;
@@ -285,7 +286,7 @@ namespace heongpu
     }
 
     __host__ MultipartyPublickey<Scheme::BFV>::MultipartyPublickey(
-        HEContext<Scheme::BFV>& context, RNGSeed seed)
+        HEContext<Scheme::BFV> context, RNGSeed seed)
         : Publickey<Scheme::BFV>(context), seed_(seed)
     {
     }

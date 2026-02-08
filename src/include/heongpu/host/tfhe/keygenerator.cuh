@@ -25,7 +25,7 @@ namespace heongpu
          *
          * @param context TFHE encryption context.
          */
-        __host__ HEKeyGenerator(HEContext<Scheme::TFHE>& context);
+        __host__ HEKeyGenerator(HEContext<Scheme::TFHE> context);
 
         /**
          * @brief Generates a TFHE secret key.
@@ -54,45 +54,9 @@ namespace heongpu
             const ExecutionOptions& options = ExecutionOptions());
 
       private:
+        HEContext<Scheme::TFHE> context_;
         int rng_seed_;
         int rng_offset_;
-
-        const scheme_type scheme_ = scheme_type::tfhe;
-
-        Modulus64 prime_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        Ninverse64 n_inverse_;
-
-        int ks_base_bit_;
-        int ks_length_;
-
-        double ks_stdev_;
-        double bk_stdev_;
-        double max_stdev_;
-
-        // LWE Context
-        int n_;
-        // alpha_min = ks_stdev_
-        // alpha_max = max_stdev_
-
-        // TLWE Context
-        int N_;
-        int k_;
-        // alpha_min = bk_stdev_
-        // alpha_max = max_stdev_
-        // extracted_lwe_params -> LWE {n = N*k, alpha_min, alpha_max}
-
-        // TGSW Context
-        int bk_l_;
-        int bk_bg_bit_;
-        int bg_;
-        int half_bg_;
-        int mask_mod_;
-        // tlwe_params = TLWE Context
-        int kpl_;
-        std::vector<int> h_;
-        int offset_;
     };
 
 } // namespace heongpu

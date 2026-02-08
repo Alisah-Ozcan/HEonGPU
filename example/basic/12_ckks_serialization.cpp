@@ -60,20 +60,20 @@ constexpr auto Scheme = heongpu::Scheme::CKKS;
 int main(int argc, char* argv[])
 {
     // 2. Set up HE context (BFV scheme with key-switching METHOD_I)
-    heongpu::HEContext<Scheme> context(
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
     const size_t poly_modulus_degree = 8192;
-    context.set_poly_modulus_degree(poly_modulus_degree);
-    context.set_coeff_modulus_bit_sizes({60, 30, 30, 30}, {60});
+    context->set_poly_modulus_degree(poly_modulus_degree);
+    context->set_coeff_modulus_bit_sizes({60, 30, 30, 30}, {60});
 
     double scale = pow(2.0, 30);
 
     // 3. Serialize / deserialize the context
     std::stringstream ctx_stream;
-    context.save(ctx_stream);
-    heongpu::HEContext<Scheme> loaded_context;
-    loaded_context.load(ctx_stream);
-    loaded_context.print_parameters();
+    context->save(ctx_stream);
+    heongpu::HEContext<Scheme> loaded_context = heongpu::GenHEContext<Scheme>();
+    loaded_context->load(ctx_stream);
+    loaded_context->print_parameters();
 
     // 4. Generate secret key
     heongpu::HEKeyGenerator<Scheme> keygen(loaded_context);

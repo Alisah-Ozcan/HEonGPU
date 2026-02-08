@@ -9,16 +9,17 @@
 
 int main(int argc, char* argv[])
 {
-    heongpu::HEContext<heongpu::Scheme::BFV> context(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
+    heongpu::HEContext<heongpu::Scheme::BFV> context =
+        heongpu::GenHEContext<heongpu::Scheme::BFV>(
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     size_t poly_modulus_degree = 8192;
-    context.set_poly_modulus_degree(poly_modulus_degree);
-    context.set_coeff_modulus_default_values(1);
+    context->set_poly_modulus_degree(poly_modulus_degree);
+    context->set_coeff_modulus_default_values(1);
     int plain_modulus = 1032193;
-    context.set_plain_modulus(plain_modulus);
-    context.generate();
-    context.print_parameters();
+    context->set_plain_modulus(plain_modulus);
+    context->generate();
+    context->print_parameters();
 
     heongpu::RNGSeed common_seed; // automatically generate itself
 

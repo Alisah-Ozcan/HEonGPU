@@ -8,26 +8,17 @@
 namespace heongpu
 {
 
-    __host__ HEEncoder<Scheme::BFV>::HEEncoder(HEContext<Scheme::BFV>& context)
+    __host__ HEEncoder<Scheme::BFV>::HEEncoder(HEContext<Scheme::BFV> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-
-        n = context.n;
-        n_power = context.n_power;
-
-        slot_count_ = n;
-
-        plain_modulus_ = context.plain_modulus2_;
-
-        plain_ntt_tables_ = context.plain_ntt_tables_;
-        plain_intt_tables_ = context.plain_intt_tables_;
-
-        n_plain_inverse_ = context.n_plain_inverse_;
+        context_ = std::move(context);
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
 
         // Encode - Decode Index
         std::vector<Data64> encode_index;
@@ -63,9 +54,14 @@ namespace heongpu
                                        const std::vector<uint64_t>& message,
                                        const cudaStream_t stream)
     {
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int slot_count = ctx->n;
+
         DeviceVector<Data64> output_memory(n, stream);
 
-        DeviceVector<Data64> message_gpu(slot_count_, stream);
+        DeviceVector<Data64> message_gpu(slot_count, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data64), cudaMemcpyHostToDevice,
                         stream);
@@ -73,7 +69,8 @@ namespace heongpu
 
         encode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             output_memory.data(), message_gpu.data(),
-            encoding_location_->data(), plain_modulus_->data(), message.size());
+            encoding_location_->data(), ctx->plain_modulus2_->data(),
+            message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
@@ -82,12 +79,12 @@ namespace heongpu
             .ntt_layout = gpuntt::PerPolynomial,
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
-            .mod_inverse = n_plain_inverse_->data(),
+            .mod_inverse = ctx->n_plain_inverse_->data(),
             .stream = stream};
 
         gpuntt::GPU_INTT_Inplace(output_memory.data(),
-                                 plain_intt_tables_->data(),
-                                 plain_modulus_->data(), cfg_intt, 1, 1);
+                                 ctx->plain_intt_tables_->data(),
+                                 ctx->plain_modulus2_->data(), cfg_intt, 1, 1);
 
         plain.memory_set(std::move(output_memory));
     }
@@ -97,9 +94,14 @@ namespace heongpu
                                        const std::vector<int64_t>& message,
                                        const cudaStream_t stream)
     {
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int slot_count = ctx->n;
+
         DeviceVector<Data64> output_memory(n, stream);
 
-        DeviceVector<Data64> message_gpu(slot_count_, stream);
+        DeviceVector<Data64> message_gpu(slot_count, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data64), cudaMemcpyHostToDevice,
                         stream);
@@ -107,7 +109,8 @@ namespace heongpu
 
         encode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             output_memory.data(), message_gpu.data(),
-            encoding_location_->data(), plain_modulus_->data(), message.size());
+            encoding_location_->data(), ctx->plain_modulus2_->data(),
+            message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
@@ -116,12 +119,12 @@ namespace heongpu
             .ntt_layout = gpuntt::PerPolynomial,
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
-            .mod_inverse = n_plain_inverse_->data(),
+            .mod_inverse = ctx->n_plain_inverse_->data(),
             .stream = stream};
 
         gpuntt::GPU_INTT_Inplace(output_memory.data(),
-                                 plain_intt_tables_->data(),
-                                 plain_modulus_->data(), cfg_intt, 1, 1);
+                                 ctx->plain_intt_tables_->data(),
+                                 ctx->plain_modulus2_->data(), cfg_intt, 1, 1);
 
         plain.memory_set(std::move(output_memory));
     }
@@ -131,9 +134,14 @@ namespace heongpu
                                        const HostVector<uint64_t>& message,
                                        const cudaStream_t stream)
     {
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int slot_count = ctx->n;
+
         DeviceVector<Data64> output_memory(n, stream);
 
-        DeviceVector<Data64> message_gpu(slot_count_, stream);
+        DeviceVector<Data64> message_gpu(slot_count, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data64), cudaMemcpyHostToDevice,
                         stream);
@@ -141,7 +149,8 @@ namespace heongpu
 
         encode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             output_memory.data(), message_gpu.data(),
-            encoding_location_->data(), plain_modulus_->data(), message.size());
+            encoding_location_->data(), ctx->plain_modulus2_->data(),
+            message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
@@ -150,12 +159,12 @@ namespace heongpu
             .ntt_layout = gpuntt::PerPolynomial,
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
-            .mod_inverse = n_plain_inverse_->data(),
+            .mod_inverse = ctx->n_plain_inverse_->data(),
             .stream = stream};
 
         gpuntt::GPU_INTT_Inplace(output_memory.data(),
-                                 plain_intt_tables_->data(),
-                                 plain_modulus_->data(), cfg_intt, 1, 1);
+                                 ctx->plain_intt_tables_->data(),
+                                 ctx->plain_modulus2_->data(), cfg_intt, 1, 1);
 
         plain.memory_set(std::move(output_memory));
     }
@@ -165,9 +174,14 @@ namespace heongpu
                                        const HostVector<int64_t>& message,
                                        const cudaStream_t stream)
     {
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int slot_count = ctx->n;
+
         DeviceVector<Data64> output_memory(n, stream);
 
-        DeviceVector<Data64> message_gpu(slot_count_, stream);
+        DeviceVector<Data64> message_gpu(slot_count, stream);
         cudaMemcpyAsync(message_gpu.data(), message.data(),
                         message.size() * sizeof(Data64), cudaMemcpyHostToDevice,
                         stream);
@@ -175,7 +189,8 @@ namespace heongpu
 
         encode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             output_memory.data(), message_gpu.data(),
-            encoding_location_->data(), plain_modulus_->data(), message.size());
+            encoding_location_->data(), ctx->plain_modulus2_->data(),
+            message.size());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         gpuntt::ntt_rns_configuration<Data64> cfg_intt = {
@@ -184,12 +199,12 @@ namespace heongpu
             .ntt_layout = gpuntt::PerPolynomial,
             .reduction_poly = gpuntt::ReductionPolynomial::X_N_plus,
             .zero_padding = false,
-            .mod_inverse = n_plain_inverse_->data(),
+            .mod_inverse = ctx->n_plain_inverse_->data(),
             .stream = stream};
 
         gpuntt::GPU_INTT_Inplace(output_memory.data(),
-                                 plain_intt_tables_->data(),
-                                 plain_modulus_->data(), cfg_intt, 1, 1);
+                                 ctx->plain_intt_tables_->data(),
+                                 ctx->plain_modulus2_->data(), cfg_intt, 1, 1);
 
         plain.memory_set(std::move(output_memory));
     }
@@ -199,9 +214,14 @@ namespace heongpu
                                        Plaintext<Scheme::BFV>& plain,
                                        const cudaStream_t stream)
     {
-        DeviceVector<Data64> temp_memory(slot_count_ + n, stream);
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int slot_count = ctx->n;
+
+        DeviceVector<Data64> temp_memory(slot_count + n, stream);
         Data64* message_gpu = temp_memory.data();
-        Data64* temp_plain = message_gpu + slot_count_;
+        Data64* temp_plain = message_gpu + slot_count;
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -211,18 +231,19 @@ namespace heongpu
             .zero_padding = false,
             .stream = stream};
 
-        gpuntt::GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
-                        plain_modulus_->data(), cfg_ntt, 1, 1);
+        gpuntt::GPU_NTT(plain.data(), temp_plain,
+                        ctx->plain_ntt_tables_->data(),
+                        ctx->plain_modulus2_->data(), cfg_ntt, 1, 1);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         decode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             message_gpu, temp_plain, encoding_location_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        message.resize(slot_count_);
+        message.resize(slot_count);
 
         cudaMemcpyAsync(message.data(), message_gpu,
-                        slot_count_ * sizeof(uint64_t), cudaMemcpyDeviceToHost,
+                        slot_count * sizeof(uint64_t), cudaMemcpyDeviceToHost,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
@@ -232,9 +253,14 @@ namespace heongpu
                                        Plaintext<Scheme::BFV>& plain,
                                        const cudaStream_t stream)
     {
-        DeviceVector<Data64> temp_memory(slot_count_ + n, stream);
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int slot_count = ctx->n;
+
+        DeviceVector<Data64> temp_memory(slot_count + n, stream);
         Data64* message_gpu = temp_memory.data();
-        Data64* temp_plain = message_gpu + slot_count_;
+        Data64* temp_plain = message_gpu + slot_count;
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -244,22 +270,23 @@ namespace heongpu
             .zero_padding = false,
             .stream = stream};
 
-        gpuntt::GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
-                        plain_modulus_->data(), cfg_ntt, 1, 1);
+        gpuntt::GPU_NTT(plain.data(), temp_plain,
+                        ctx->plain_ntt_tables_->data(),
+                        ctx->plain_modulus2_->data(), cfg_ntt, 1, 1);
 
         decode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             message_gpu, temp_plain, encoding_location_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        unsigned_signed_convert<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
+        unsigned_signed_convert<<<dim3((slot_count >> 8), 1, 1), 256, 0,
                                   stream>>>(message_gpu, message_gpu,
-                                            plain_modulus_->data());
+                                            ctx->plain_modulus2_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        message.resize(slot_count_);
+        message.resize(slot_count);
 
         cudaMemcpyAsync(message.data(), message_gpu,
-                        slot_count_ * sizeof(int64_t), cudaMemcpyDeviceToHost,
+                        slot_count * sizeof(int64_t), cudaMemcpyDeviceToHost,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
@@ -269,9 +296,14 @@ namespace heongpu
                                        Plaintext<Scheme::BFV>& plain,
                                        const cudaStream_t stream)
     {
-        DeviceVector<Data64> temp_memory(slot_count_ + n, stream);
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int slot_count = ctx->n;
+
+        DeviceVector<Data64> temp_memory(slot_count + n, stream);
         Data64* message_gpu = temp_memory.data();
-        Data64* temp_plain = message_gpu + slot_count_;
+        Data64* temp_plain = message_gpu + slot_count;
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -281,17 +313,18 @@ namespace heongpu
             .zero_padding = false,
             .stream = stream};
 
-        gpuntt::GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
-                        plain_modulus_->data(), cfg_ntt, 1, 1);
+        gpuntt::GPU_NTT(plain.data(), temp_plain,
+                        ctx->plain_ntt_tables_->data(),
+                        ctx->plain_modulus2_->data(), cfg_ntt, 1, 1);
 
         decode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             message_gpu, temp_plain, encoding_location_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        message.resize(slot_count_);
+        message.resize(slot_count);
 
         cudaMemcpyAsync(message.data(), message_gpu,
-                        slot_count_ * sizeof(uint64_t), cudaMemcpyDeviceToHost,
+                        slot_count * sizeof(uint64_t), cudaMemcpyDeviceToHost,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }
@@ -301,9 +334,14 @@ namespace heongpu
                                        Plaintext<Scheme::BFV>& plain,
                                        const cudaStream_t stream)
     {
-        DeviceVector<Data64> temp_memory(slot_count_ + n, stream);
+        const auto* ctx = context_.get();
+        const int n = ctx->n;
+        const int n_power = ctx->n_power;
+        const int slot_count = ctx->n;
+
+        DeviceVector<Data64> temp_memory(slot_count + n, stream);
         Data64* message_gpu = temp_memory.data();
-        Data64* temp_plain = message_gpu + slot_count_;
+        Data64* temp_plain = message_gpu + slot_count;
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
             .n_power = n_power,
@@ -313,22 +351,23 @@ namespace heongpu
             .zero_padding = false,
             .stream = stream};
 
-        gpuntt::GPU_NTT(plain.data(), temp_plain, plain_ntt_tables_->data(),
-                        plain_modulus_->data(), cfg_ntt, 1, 1);
+        gpuntt::GPU_NTT(plain.data(), temp_plain,
+                        ctx->plain_ntt_tables_->data(),
+                        ctx->plain_modulus2_->data(), cfg_ntt, 1, 1);
 
         decode_kernel_bfv<<<dim3((n >> 8), 1, 1), 256, 0, stream>>>(
             message_gpu, temp_plain, encoding_location_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        unsigned_signed_convert<<<dim3((slot_count_ >> 8), 1, 1), 256, 0,
+        unsigned_signed_convert<<<dim3((slot_count >> 8), 1, 1), 256, 0,
                                   stream>>>(message_gpu, message_gpu,
-                                            plain_modulus_->data());
+                                            ctx->plain_modulus2_->data());
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-        message.resize(slot_count_);
+        message.resize(slot_count);
 
         cudaMemcpyAsync(message.data(), message_gpu,
-                        slot_count_ * sizeof(int64_t), cudaMemcpyDeviceToHost,
+                        slot_count * sizeof(int64_t), cudaMemcpyDeviceToHost,
                         stream);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
     }

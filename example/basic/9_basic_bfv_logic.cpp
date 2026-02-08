@@ -16,7 +16,7 @@ constexpr auto Scheme = heongpu::Scheme::BFV;
 int main(int argc, char* argv[])
 {
     // Initialize encryption parameters for the BFV scheme.
-    heongpu::HEContext<Scheme> context(
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     // Set the polynomial modulus degree. This controls the complexity
@@ -24,11 +24,11 @@ int main(int argc, char* argv[])
     // allow more complex operations but increase computational cost.
     // Here, we choose 8192, a moderate value.
     size_t poly_modulus_degree = 8192;
-    context.set_poly_modulus_degree(poly_modulus_degree);
+    context->set_poly_modulus_degree(poly_modulus_degree);
 
     // Alternative -> select sec_level_type as sec128(default), sec192,
     // sec256, none
-    // heongpu::HEContext<Scheme> context(
+    // heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
     //    heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
     //    heongpu::sec_level_type::sec128);
 
@@ -37,23 +37,23 @@ int main(int argc, char* argv[])
     // operations that can be performed before the ciphertext becomes too
     // noisy to decrypt. We use a default setting suitable for our chosen
     // polynomial modulus degree.
-    context.set_coeff_modulus_default_values(1);
+    context->set_coeff_modulus_default_values(1);
 
     // Alternative -> first input is Q (ciphertext modulus), second one
     // is P and it determines to Q_tilda which is key modulus.(Q_tilda = QxP)
-    // context.set_coeff_modulus({40, 40, 40, 40}, {40});
+    // context->set_coeff_modulus({40, 40, 40, 40}, {40});
 
     // Set the plaintext modulus, which affects the range of plaintext values
     // and the noise budget usage during multiplications. Choosing a smaller
     // value can help in maintaining a larger noise budget.
     int plain_modulus = 1032193;
-    context.set_plain_modulus(plain_modulus);
+    context->set_plain_modulus(plain_modulus);
 
     // Generate a HEonGPU context with these parameters. The context checks the
     // validity of the parameters and provides various utilities needed for
     // encryption, decryption, and evaluation.
-    context.generate();
-    context.print_parameters();
+    context->generate();
+    context->print_parameters();
 
     // Generate keys: the public key for encryption, the secret key for
     // decryption and evaluation key(relinkey) for relinearization..

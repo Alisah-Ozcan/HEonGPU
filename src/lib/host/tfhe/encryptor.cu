@@ -8,9 +8,16 @@
 namespace heongpu
 {
     __host__
-    HEEncryptor<Scheme::TFHE>::HEEncryptor(HEContext<Scheme::TFHE>& context,
+    HEEncryptor<Scheme::TFHE>::HEEncryptor(HEContext<Scheme::TFHE> context,
                                            Secretkey<Scheme::TFHE>& secret_key)
     {
+        if (!context)
+        {
+            throw std::invalid_argument("HEContext is not set!");
+        }
+
+        context_ = std::move(context);
+
         if (!secret_key.secret_key_generated_)
         {
             throw std::runtime_error("Secretkey was not generated!");
@@ -19,7 +26,6 @@ namespace heongpu
         std::random_device rd;
         rng = std::mt19937(rd());
 
-        n_ = context.n_;
         alpha_min_ = secret_key.lwe_alpha_min;
         alpha_max_ = secret_key.lwe_alpha_max;
 
@@ -35,7 +41,7 @@ namespace heongpu
 
         std::uniform_int_distribution<uint64_t> dist64(0, UINT64_MAX);
         cuda_seed = dist64(rng);
-        cudaMalloc(&cuda_rng, n_ * sizeof(curandState));
+        cudaMalloc(&cuda_rng, context_->n_ * sizeof(curandState));
 
         total_state = 512 * 32;
         initialize_random_states_kernel<<<((total_state + 511) >> 9), 512>>>(
@@ -70,13 +76,13 @@ namespace heongpu
                               : ciphertext.shape_; // 32 come from rng states!
         size_t smem = (THREADS / 32 + 1) * sizeof(uint32_t);
 
-        ciphertext.a_device_location_.resize(n_ * ciphertext.shape_);
+        ciphertext.a_device_location_.resize(context_->n_ * ciphertext.shape_);
         ciphertext.b_device_location_ = DeviceVector<int32_t>(b);
         encrypt_lwe_kernel<<<block_count, THREADS, smem>>>(
             cuda_rng, lwe_key_device_location_.data(),
             ciphertext.a_device_location_.data(),
-            ciphertext.b_device_location_.data(), n_, ciphertext.shape_,
-            total_state);
+            ciphertext.b_device_location_.data(), context_->n_,
+            ciphertext.shape_, total_state);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         ciphertext.variances_ =

@@ -7,16 +7,16 @@
 
 namespace heongpu
 {
-    __host__ Plaintext<Scheme::BFV>::Plaintext(HEContext<Scheme::BFV>& context,
+    __host__ Plaintext<Scheme::BFV>::Plaintext(HEContext<Scheme::BFV> context,
                                                const ExecutionOptions& options)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        plain_size_ = context.n;
+        scheme_ = context->scheme_;
+        plain_size_ = context->n;
         storage_type_ = options.storage_;
     }
 

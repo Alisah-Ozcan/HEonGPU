@@ -45,7 +45,7 @@ namespace heongpu
          * @param secret_key Reference to the Secretkey object used for
          * decryption.
          */
-        __host__ HEDecryptor(HEContext<Scheme::CKKS>& context,
+        __host__ HEDecryptor(HEContext<Scheme::CKKS> context,
                              Secretkey<Scheme::CKKS>& secret_key);
 
         /**
@@ -72,8 +72,9 @@ namespace heongpu
                             decrypt_ckks(plaintext_, ciphertext,
                                          options.stream_);
 
-                            plaintext.plain_size_ = n * Q_size_;
-                            plaintext.scheme_ = scheme_;
+                            plaintext.plain_size_ =
+                                context_->n * context_->Q_size;
+                            plaintext.scheme_ = context_->scheme_;
                             plaintext.depth_ = ciphertext.depth_;
                             plaintext.scale_ = ciphertext.scale_;
                             plaintext.in_ntt_domain_ = true;
@@ -130,23 +131,11 @@ namespace heongpu
                             const cudaStream_t stream);
 
       private:
-        scheme_type scheme_;
+        HEContext<Scheme::CKKS> context_;
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
 
         DeviceVector<Data64> secret_key_;
-
-        int n;
-
-        int n_power;
-
-        int Q_size_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
     };
 
 } // namespace heongpu

@@ -7,21 +7,22 @@
 
 namespace heongpu
 {
-    __host__ Relinkey<Scheme::BFV>::Relinkey(HEContext<Scheme::BFV>& context)
+    __host__ Relinkey<Scheme::BFV>::Relinkey(HEContext<Scheme::BFV> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -30,15 +31,15 @@ namespace heongpu
             break;
             case 2: // KEYSWITCHING_METHOD_II
             {
-                d_ = context.d;
+                d_ = context->d;
                 relinkey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
             case 3: // KEYSWITCHING_METHOD_III
             {
-                d_ = context.d;
-                d_tilda_ = context.d_tilda;
-                r_prime_ = context.r_prime;
+                d_ = context->d;
+                d_tilda_ = context->d_tilda;
+                r_prime_ = context->r_prime;
                 relinkey_size_ = 2 * d_ * d_tilda_ * r_prime_ * ring_size;
             }
             break;
@@ -290,30 +291,31 @@ namespace heongpu
     }
 
     __host__ MultipartyRelinkey<Scheme::BFV>::MultipartyRelinkey(
-        HEContext<Scheme::BFV>& context, const RNGSeed seed)
+        HEContext<Scheme::BFV> context, const RNGSeed seed)
         : Relinkey(context), seed_(seed)
     {
     }
 
-    __host__ Galoiskey<Scheme::BFV>::Galoiskey(HEContext<Scheme::BFV>& context)
+    __host__ Galoiskey<Scheme::BFV>::Galoiskey(HEContext<Scheme::BFV> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
         customized = false;
 
         group_order_ = 3;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -346,7 +348,7 @@ namespace heongpu
                 galois_elt_zero =
                     steps_to_galois_elt(0, ring_size, group_order_);
 
-                d_ = context.d;
+                d_ = context->d;
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
@@ -360,26 +362,27 @@ namespace heongpu
         }
     }
 
-    __host__ Galoiskey<Scheme::BFV>::Galoiskey(HEContext<Scheme::BFV>& context,
+    __host__ Galoiskey<Scheme::BFV>::Galoiskey(HEContext<Scheme::BFV> context,
                                                std::vector<int>& shift_vec)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
         customized = false;
 
         group_order_ = 3;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -406,7 +409,7 @@ namespace heongpu
                 galois_elt_zero =
                     steps_to_galois_elt(0, ring_size, group_order_);
 
-                d_ = context.d;
+                d_ = context->d;
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
@@ -421,26 +424,27 @@ namespace heongpu
     }
 
     __host__
-    Galoiskey<Scheme::BFV>::Galoiskey(HEContext<Scheme::BFV>& context,
+    Galoiskey<Scheme::BFV>::Galoiskey(HEContext<Scheme::BFV> context,
                                       std::vector<uint32_t>& galois_elts)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
         customized = true;
 
         group_order_ = 3;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -452,7 +456,7 @@ namespace heongpu
             break;
             case 2: // KEYSWITCHING_METHOD_II
             {
-                d_ = context.d;
+                d_ = context->d;
                 galois_elt_zero =
                     steps_to_galois_elt(0, ring_size, group_order_);
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
@@ -749,47 +753,48 @@ namespace heongpu
     }
 
     __host__ MultipartyGaloiskey<Scheme::BFV>::MultipartyGaloiskey(
-        HEContext<Scheme::BFV>& context, const RNGSeed seed)
+        HEContext<Scheme::BFV> context, const RNGSeed seed)
         : Galoiskey(context), seed_(seed)
     {
     }
 
     __host__ MultipartyGaloiskey<Scheme::BFV>::MultipartyGaloiskey(
-        HEContext<Scheme::BFV>& context, std::vector<int>& shift_vec,
+        HEContext<Scheme::BFV> context, std::vector<int>& shift_vec,
         const RNGSeed seed)
         : Galoiskey(context, shift_vec), seed_(seed)
     {
     }
 
     __host__ MultipartyGaloiskey<Scheme::BFV>::MultipartyGaloiskey(
-        HEContext<Scheme::BFV>& context, std::vector<uint32_t>& galois_elts,
+        HEContext<Scheme::BFV> context, std::vector<uint32_t>& galois_elts,
         const RNGSeed seed)
         : Galoiskey(context, galois_elts), seed_(seed)
     {
     }
 
-    __host__ Switchkey<Scheme::BFV>::Switchkey(HEContext<Scheme::BFV>& context)
+    __host__ Switchkey<Scheme::BFV>::Switchkey(HEContext<Scheme::BFV> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
                 switchkey_size_ = 2 * Q_size_ * Q_prime_size_ * ring_size;
                 break;
             case 2: // KEYSWITCHING_METHOD_II
             {
-                d_ = context.d;
+                d_ = context->d;
                 switchkey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;

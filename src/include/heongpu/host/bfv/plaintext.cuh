@@ -52,7 +52,7 @@ namespace heongpu
          * Defaults to `cudaStreamDefault`.
          */
         explicit __host__
-        Plaintext(HEContext<Scheme::BFV>& context,
+        Plaintext(HEContext<Scheme::BFV> context,
                   const ExecutionOptions& options = ExecutionOptions());
 
         /**

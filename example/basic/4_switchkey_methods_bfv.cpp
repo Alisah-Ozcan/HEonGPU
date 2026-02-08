@@ -12,28 +12,28 @@ constexpr auto Scheme = heongpu::Scheme::BFV;
 
 int main(int argc, char* argv[])
 {
-    heongpu::HEContext<Scheme> context(
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
     // heongpu::keyswitching_type::KEYSWITCHING_METHOD_III not supports rotation
     // because of key size, only supports relinearization!
 
     size_t poly_modulus_degree = 16384;
-    context.set_poly_modulus_degree(poly_modulus_degree);
+    context->set_poly_modulus_degree(poly_modulus_degree);
 
-    context.set_coeff_modulus_default_values(
+    context->set_coeff_modulus_default_values(
         1); // Pair size = 2, that is why P size should be 2.
     // Increasing the pair size improves performance(n >= 16384), but it also
     // reduces the noise budget.
 
     // Alternative -> first input is Q (ciphertext modulus), second one
     // is P and it determines to Q_tilda which is key modulus.(Q_tilda = QxP)
-    // context.set_coeff_modulus({50, 50, 50, 50, 50, 50}, {50, 50});
+    // context->set_coeff_modulus({50, 50, 50, 50, 50, 50}, {50, 50});
 
     int plain_modulus = 786433;
-    context.set_plain_modulus(plain_modulus);
+    context->set_plain_modulus(plain_modulus);
 
-    context.generate();
-    context.print_parameters();
+    context->generate();
+    context->print_parameters();
 
     // Generate keys: the public key for encryption, the secret key for
     // decryption, and evaluation keys(relinkey, galoiskey, switchkey).

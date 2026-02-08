@@ -16,7 +16,7 @@ constexpr auto Scheme = heongpu::Scheme::CKKS;
 int main(int argc, char* argv[])
 {
     // Initialize encryption parameters for the CKKS scheme.
-    heongpu::HEContext<Scheme> context(
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     // Set the polynomial modulus degree. This controls the complexity
@@ -24,11 +24,12 @@ int main(int argc, char* argv[])
     // allow more complex operations but increase computational cost.
     // Here, we choose 8192, a moderate value.
     size_t poly_modulus_degree = 8192;
-    context.set_poly_modulus_degree(poly_modulus_degree);
+    context->set_poly_modulus_degree(poly_modulus_degree);
 
     // Alternative -> select sec_level_type as sec128(default), sec192,
     // sec256, none
-    // heongpu::HEContext<heongpu::Scheme::BFV> context(
+    // heongpu::HEContext<heongpu::Scheme::BFV> context =
+    // heongpu::GenHEContext<heongpu::Scheme::BFV>(
     //    heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
     //    heongpu::sec_level_type::sec128);
 
@@ -43,13 +44,13 @@ int main(int argc, char* argv[])
     // Q(ciphertext modulus) for maximum decryption precision. Use 60-bit prime
     // for P, ensuring it matches the size of the others (Q_tilda = QxP). Select
     // intermediate primes that are similar in value.
-    context.set_coeff_modulus_bit_sizes({60, 30, 30, 30}, {60});
+    context->set_coeff_modulus_bit_sizes({60, 30, 30, 30}, {60});
 
     // Generate a HEonGPU context with these parameters. The context checks the
     // validity of the parameters and provides various utilities needed for
     // encryption, decryption, and evaluation.
-    context.generate();
-    context.print_parameters();
+    context->generate();
+    context->print_parameters();
 
     // The scale is set to 2^30, resulting in 30 bits of precision before the
     // decimal point and approximately 20-30 bits after at the final level.

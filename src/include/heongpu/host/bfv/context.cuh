@@ -21,7 +21,7 @@
 
 namespace heongpu
 {
-    template <> class HEContext<Scheme::BFV>
+    template <> class HEContextImpl<Scheme::BFV>
     {
         template <Scheme S> friend class Secretkey;
         template <Scheme S> friend class Publickey;
@@ -43,8 +43,8 @@ namespace heongpu
         template <Scheme S> friend class HEMultiPartyManager;
 
       public:
-        HEContext(const keyswitching_type ks_type,
-                  const sec_level_type = sec_level_type::sec128);
+        HEContextImpl(const keyswitching_type ks_type,
+                      const sec_level_type = sec_level_type::sec128);
 
         void set_poly_modulus_degree(size_t poly_modulus_degree);
 
@@ -91,7 +91,7 @@ namespace heongpu
             return prime_vector_;
         }
 
-        HEContext() = default;
+        HEContextImpl() = default;
 
         void save(std::ostream& os) const;
 

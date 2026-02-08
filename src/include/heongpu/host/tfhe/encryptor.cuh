@@ -31,7 +31,7 @@ namespace heongpu
          * @param secret_key Reference to the Secretkey object used for
          * encryption.
          */
-        __host__ HEEncryptor(HEContext<Scheme::TFHE>& context,
+        __host__ HEEncryptor(HEContext<Scheme::TFHE> context,
                              Secretkey<Scheme::TFHE>& secret_key);
 
         /**
@@ -69,7 +69,7 @@ namespace heongpu
                     encrypt_lwe_symmetric(ciphertext, encoded_messages,
                                           options.stream_);
 
-                    ciphertext.n_ = n_;
+                    ciphertext.n_ = context_->n_;
                     ciphertext.alpha_min_ = alpha_min_;
                     ciphertext.alpha_max_ = alpha_max_;
                     ciphertext.ciphertext_generated_ = true;
@@ -93,7 +93,7 @@ namespace heongpu
         double_to_torus32(const std::vector<double>& input);
 
       private:
-        const scheme_type scheme_ = scheme_type::tfhe;
+        HEContext<Scheme::TFHE> context_;
 
         std::mt19937 rng;
 
@@ -101,7 +101,6 @@ namespace heongpu
         int total_state;
         curandState* cuda_rng;
 
-        int n_;
         double alpha_min_;
         double alpha_max_;
 

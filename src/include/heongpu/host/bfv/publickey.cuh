@@ -43,7 +43,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ Publickey(HEContext<Scheme::BFV>& context);
+        __host__ Publickey(HEContext<Scheme::BFV> context);
 
         /**
          * @brief Returns a pointer to the underlying public key data.
@@ -128,7 +128,8 @@ namespace heongpu
          * @param copy The source Publickey object to copy from.
          */
         Publickey(const Publickey& copy)
-            : scheme_(copy.scheme_), ring_size_(copy.ring_size_),
+            : context_(copy.context_), scheme_(copy.scheme_),
+              ring_size_(copy.ring_size_),
               coeff_modulus_count_(copy.coeff_modulus_count_),
               in_ntt_domain_(copy.in_ntt_domain_),
               public_key_generated_(copy.public_key_generated_),
@@ -164,7 +165,8 @@ namespace heongpu
          * @param assign The source Publickey object to move from.
          */
         Publickey(Publickey&& assign) noexcept
-            : scheme_(std::move(assign.scheme_)),
+            : context_(std::move(assign.context_)),
+              scheme_(std::move(assign.scheme_)),
               ring_size_(std::move(assign.ring_size_)),
               coeff_modulus_count_(std::move(assign.coeff_modulus_count_)),
               in_ntt_domain_(std::move(assign.in_ntt_domain_)),
@@ -190,6 +192,7 @@ namespace heongpu
         {
             if (this != &copy)
             {
+                context_ = copy.context_;
                 scheme_ = copy.scheme_;
                 ring_size_ = copy.ring_size_;
                 coeff_modulus_count_ = copy.coeff_modulus_count_;
@@ -236,6 +239,7 @@ namespace heongpu
         {
             if (this != &assign)
             {
+                context_ = std::move(assign.context_);
                 scheme_ = std::move(assign.scheme_);
                 ring_size_ = std::move(assign.ring_size_);
                 coeff_modulus_count_ = std::move(assign.coeff_modulus_count_);
@@ -263,7 +267,13 @@ namespace heongpu
 
         void load(std::istream& is);
 
+        void set_context(HEContext<Scheme::BFV> context)
+        {
+            context_ = std::move(context);
+        }
+
       private:
+        HEContext<Scheme::BFV> context_;
         scheme_type scheme_;
         int ring_size_;
         int coeff_modulus_count_;
@@ -301,7 +311,7 @@ namespace heongpu
         template <Scheme S> friend class HEKeyGenerator;
 
       public:
-        __host__ MultipartyPublickey(HEContext<Scheme::BFV>& context,
+        __host__ MultipartyPublickey(HEContext<Scheme::BFV> context,
                                      const RNGSeed seed);
 
         inline RNGSeed seed() const noexcept { return seed_; }

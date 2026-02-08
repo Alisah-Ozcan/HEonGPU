@@ -8,21 +8,22 @@
 namespace heongpu
 {
 
-    __host__ Relinkey<Scheme::CKKS>::Relinkey(HEContext<Scheme::CKKS>& context)
+    __host__ Relinkey<Scheme::CKKS>::Relinkey(HEContext<Scheme::CKKS> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -31,22 +32,22 @@ namespace heongpu
             break;
             case 2: // KEYSWITCHING_METHOD_II
             {
-                d_ = context.d_leveled->operator[](0);
+                d_ = context->d_leveled->operator[](0);
                 relinkey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
             case 3: // KEYSWITCHING_METHOD_III
             {
-                d_ = context.d_leveled->operator[](0);
-                d_tilda_ = context.d_tilda_leveled->operator[](0);
-                r_prime_ = context.r_prime_leveled;
+                d_ = context->d_leveled->operator[](0);
+                d_tilda_ = context->d_tilda_leveled->operator[](0);
+                r_prime_ = context->r_prime_leveled;
 
                 int max_depth = Q_size_ - 1;
                 for (int i = 0; i < max_depth; i++)
                 {
                     relinkey_size_leveled_.push_back(
-                        2 * context.d_leveled->operator[](i) *
-                        context.d_tilda_leveled->operator[](i) * r_prime_ *
+                        2 * context->d_leveled->operator[](i) *
+                        context->d_tilda_leveled->operator[](i) * r_prime_ *
                         ring_size);
                 }
             }
@@ -445,31 +446,31 @@ namespace heongpu
     }
 
     __host__ MultipartyRelinkey<Scheme::CKKS>::MultipartyRelinkey(
-        HEContext<Scheme::CKKS>& context, const RNGSeed seed)
+        HEContext<Scheme::CKKS> context, const RNGSeed seed)
         : Relinkey(context), seed_(seed)
     {
     }
 
-    __host__
-    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context)
+    __host__ Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
         customized = false;
 
         group_order_ = 5;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -508,7 +509,7 @@ namespace heongpu
                 max_shift_ = MAX_SHIFT - 1;
                 max_log_slot_ = int(std::log2(ring_size >> 1));
 
-                d_ = context.d_leveled->operator[](0);
+                d_ = context->d_leveled->operator[](0);
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
@@ -522,27 +523,27 @@ namespace heongpu
         }
     }
 
-    __host__
-    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context,
-                                       int max_shift)
+    __host__ Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS> context,
+                                                int max_shift)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
         customized = false;
 
         group_order_ = 5;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -581,7 +582,7 @@ namespace heongpu
                 max_shift_ = max_shift;
                 max_log_slot_ = int(std::log2(ring_size >> 1));
 
-                d_ = context.d_leveled->operator[](0);
+                d_ = context->d_leveled->operator[](0);
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
@@ -595,27 +596,27 @@ namespace heongpu
         }
     }
 
-    __host__
-    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context,
-                                       std::vector<int>& shift_vec)
+    __host__ Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS> context,
+                                                std::vector<int>& shift_vec)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
         customized = false;
 
         group_order_ = 5;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -643,7 +644,7 @@ namespace heongpu
                 galois_elt_zero =
                     steps_to_galois_elt(0, ring_size, group_order_);
 
-                d_ = context.d_leveled->operator[](0);
+                d_ = context->d_leveled->operator[](0);
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;
@@ -658,26 +659,27 @@ namespace heongpu
     }
 
     __host__
-    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS>& context,
+    Galoiskey<Scheme::CKKS>::Galoiskey(HEContext<Scheme::CKKS> context,
                                        std::vector<uint32_t>& galois_elts)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
         customized = true;
 
         group_order_ = 5;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -689,7 +691,7 @@ namespace heongpu
             break;
             case 2: // KEYSWITCHING_METHOD_II
             {
-                d_ = context.d_leveled->operator[](0);
+                d_ = context->d_leveled->operator[](0);
                 galois_elt_zero =
                     steps_to_galois_elt(0, ring_size, group_order_);
                 galoiskey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
@@ -986,41 +988,41 @@ namespace heongpu
     }
 
     __host__ MultipartyGaloiskey<Scheme::CKKS>::MultipartyGaloiskey(
-        HEContext<Scheme::CKKS>& context, const RNGSeed seed)
+        HEContext<Scheme::CKKS> context, const RNGSeed seed)
         : Galoiskey(context), seed_(seed)
     {
     }
 
     __host__ MultipartyGaloiskey<Scheme::CKKS>::MultipartyGaloiskey(
-        HEContext<Scheme::CKKS>& context, std::vector<int>& shift_vec,
+        HEContext<Scheme::CKKS> context, std::vector<int>& shift_vec,
         const RNGSeed seed)
         : Galoiskey(context, shift_vec), seed_(seed)
     {
     }
 
     __host__ MultipartyGaloiskey<Scheme::CKKS>::MultipartyGaloiskey(
-        HEContext<Scheme::CKKS>& context, std::vector<uint32_t>& galois_elts,
+        HEContext<Scheme::CKKS> context, std::vector<uint32_t>& galois_elts,
         const RNGSeed seed)
         : Galoiskey(context, galois_elts), seed_(seed)
     {
     }
 
-    __host__
-    Switchkey<Scheme::CKKS>::Switchkey(HEContext<Scheme::CKKS>& context)
+    __host__ Switchkey<Scheme::CKKS>::Switchkey(HEContext<Scheme::CKKS> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        key_type = context.keyswitching_type_;
+        context_ = context;
+        scheme_ = context->scheme_;
+        key_type = context->keyswitching_type_;
 
-        ring_size = context.n;
-        Q_prime_size_ = context.Q_prime_size;
-        Q_size_ = context.Q_size;
+        ring_size = context->n;
+        Q_prime_size_ = context->Q_prime_size;
+        Q_size_ = context->Q_size;
 
-        switch (static_cast<int>(context.keyswitching_type_))
+        switch (static_cast<int>(context->keyswitching_type_))
         {
             case 1: // KEYSWITCHING_METHOD_I
             {
@@ -1029,7 +1031,7 @@ namespace heongpu
             break;
             case 2: // KEYSWITCHING_METHOD_II
             {
-                d_ = context.d_leveled->operator[](0);
+                d_ = context->d_leveled->operator[](0);
                 switchkey_size_ = 2 * d_ * Q_prime_size_ * ring_size;
             }
             break;

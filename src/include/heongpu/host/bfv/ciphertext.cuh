@@ -41,7 +41,7 @@ namespace heongpu
          * Defaults to `cudaStreamDefault`.
          */
         __host__
-        Ciphertext(HEContext<Scheme::BFV>& context,
+        Ciphertext(HEContext<Scheme::BFV> context,
                    const ExecutionOptions& options = ExecutionOptions());
 
         /**

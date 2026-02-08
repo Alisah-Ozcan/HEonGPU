@@ -21,7 +21,7 @@
 
 namespace heongpu
 {
-    template <> class HEContext<Scheme::TFHE>
+    template <> class HEContextImpl<Scheme::TFHE>
     {
         template <Scheme S> friend class Secretkey;
         template <Scheme S> friend class Bootstrappingkey;
@@ -32,10 +32,10 @@ namespace heongpu
         template <Scheme S> friend class HELogicOperator;
 
       public:
-        HEContext();
-        HEContext(const MemoryPoolConfig& pool_config);
+        HEContextImpl();
+        HEContextImpl(const MemoryPoolConfig& pool_config);
 
-        // HEContext() = default;
+        // HEContextImpl() = default;
 
       private:
         const scheme_type scheme_ = scheme_type::tfhe;

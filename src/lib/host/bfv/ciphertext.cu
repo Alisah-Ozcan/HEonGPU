@@ -8,18 +8,18 @@
 namespace heongpu
 {
     __host__
-    Ciphertext<Scheme::BFV>::Ciphertext(HEContext<Scheme::BFV>& context,
+    Ciphertext<Scheme::BFV>::Ciphertext(HEContext<Scheme::BFV> context,
                                         const ExecutionOptions& options)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        coeff_modulus_count_ = context.Q_size;
+        scheme_ = context->scheme_;
+        coeff_modulus_count_ = context->Q_size;
         cipher_size_ = 2;
-        ring_size_ = context.n;
+        ring_size_ = context->n;
 
         int cipher_memory_size =
             cipher_size_ * coeff_modulus_count_ * ring_size_;

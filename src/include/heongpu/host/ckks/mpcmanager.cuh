@@ -41,7 +41,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ HEMultiPartyManager(HEContext<Scheme::CKKS>& context,
+        __host__ HEMultiPartyManager(HEContext<Scheme::CKKS> context,
                                      HEEncoder<Scheme::CKKS>& encoder,
                                      double& scale);
 
@@ -351,9 +351,9 @@ namespace heongpu
             partial_decrypt_stage_1(ciphertext, sk, partial_ciphertext,
                                     options.stream_);
 
-            partial_ciphertext.scheme_ = scheme_;
-            partial_ciphertext.ring_size_ = n;
-            partial_ciphertext.coeff_modulus_count_ = Q_size_;
+            partial_ciphertext.scheme_ = context_->scheme_;
+            partial_ciphertext.ring_size_ = context_->n;
+            partial_ciphertext.coeff_modulus_count_ = context_->Q_size;
             partial_ciphertext.cipher_size_ = 2;
             partial_ciphertext.depth_ = ciphertext.depth_;
             partial_ciphertext.in_ntt_domain_ = ciphertext.in_ntt_domain_;
@@ -424,8 +424,9 @@ namespace heongpu
                             partial_decrypt_stage_2(ciphertexts_, plaintext_,
                                                     options.stream_);
 
-                            plaintext_.plain_size_ = n * Q_size_;
-                            plaintext_.scheme_ = scheme_;
+                            plaintext_.plain_size_ =
+                                context_->n * context_->Q_size;
+                            plaintext_.scheme_ = context_->scheme_;
                             plaintext_.depth_ = depth_check;
                             plaintext_.scale_ = scale_check;
                             plaintext_.in_ntt_domain_ = true;
@@ -475,9 +476,10 @@ namespace heongpu
                                         common_, output_, secret_key_, seed,
                                         options.stream_);
 
-                                    output.scheme_ = scheme_;
-                                    output.ring_size_ = n;
-                                    output.coeff_modulus_count_ = Q_size_;
+                                    output.scheme_ = context_->scheme_;
+                                    output.ring_size_ = context_->n;
+                                    output.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output.cipher_size_ = 2;
                                     output.depth_ = common.depth_;
                                     output.in_ntt_domain_ = true;
@@ -535,9 +537,10 @@ namespace heongpu
                                         ciphertexts_, common_, output_, seed,
                                         options.stream_);
 
-                                    output.scheme_ = scheme_;
-                                    output.ring_size_ = n;
-                                    output.coeff_modulus_count_ = Q_size_;
+                                    output.scheme_ = context_->scheme_;
+                                    output.ring_size_ = context_->n;
+                                    output.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output.cipher_size_ = 2;
                                     output.depth_ = 0;
                                     output.in_ntt_domain_ = true;
@@ -631,24 +634,8 @@ namespace heongpu
             const RNGSeed& seed, const cudaStream_t stream);
 
       private:
-        const scheme_type scheme_ = scheme_type::ckks;
-
-        int n;
-        int n_power;
+        HEContext<Scheme::CKKS> context_;
         int slot_count_;
-
-        int Q_prime_size_;
-        int Q_size_;
-        int P_size_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
-
-        std::shared_ptr<DeviceVector<Data64>> factor_;
-        std::shared_ptr<std::vector<int>> d_leveled_;
-        std::shared_ptr<std::vector<DeviceVector<int>>> Sk_pair_leveled_;
 
         double scale_;
         double two_pow_64;
@@ -659,12 +646,6 @@ namespace heongpu
         std::shared_ptr<DeviceVector<Complex64>> special_fft_roots_table_;
         std::shared_ptr<DeviceVector<Complex64>> special_ifft_roots_table_;
         std::shared_ptr<DeviceVector<int>> reverse_order;
-
-        int total_coeff_bit_count_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_;
-        std::shared_ptr<DeviceVector<Data64>> upper_half_threshold_;
-        std::shared_ptr<DeviceVector<Data64>> decryption_modulus_;
 
         std::mt19937 engine_;
         std::normal_distribution<double> distribution_;

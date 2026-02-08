@@ -8,12 +8,17 @@
 namespace heongpu
 {
     __host__
-    Ciphertext<Scheme::TFHE>::Ciphertext(HEContext<Scheme::TFHE>& context,
+    Ciphertext<Scheme::TFHE>::Ciphertext(HEContext<Scheme::TFHE> context,
                                          const ExecutionOptions& options)
     {
-        n_ = context.n_;
-        alpha_min_ = context.ks_stdev_;
-        alpha_max_ = context.max_stdev_;
+        if (!context)
+        {
+            throw std::invalid_argument("HEContext is not set!");
+        }
+
+        n_ = context->n_;
+        alpha_min_ = context->ks_stdev_;
+        alpha_max_ = context->max_stdev_;
 
         storage_type_ = options.storage_;
     }

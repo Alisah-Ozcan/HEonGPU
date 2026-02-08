@@ -45,7 +45,7 @@ namespace heongpu
          * @param secret_key Reference to the Secretkey object used for
          * decryption.
          */
-        __host__ HEDecryptor(HEContext<Scheme::BFV>& context,
+        __host__ HEDecryptor(HEContext<Scheme::BFV> context,
                              Secretkey<Scheme::BFV>& secret_key);
 
         /**
@@ -72,8 +72,8 @@ namespace heongpu
                             decrypt_bfv(plaintext_, ciphertext_,
                                         options.stream_);
 
-                            plaintext.plain_size_ = n;
-                            plaintext.scheme_ = scheme_;
+                            plaintext.plain_size_ = context_->n;
+                            plaintext.scheme_ = context_->scheme_;
                             plaintext.in_ntt_domain_ = false;
                         },
                         options);
@@ -150,49 +150,11 @@ namespace heongpu
                            const cudaStream_t stream);
 
       private:
-        scheme_type scheme_;
+        HEContext<Scheme::BFV> context_;
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
 
         DeviceVector<Data64> secret_key_;
-
-        int n;
-
-        int n_power;
-
-        int Q_size_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
-
-        // BFV
-        Modulus64 plain_modulus_;
-
-        Modulus64 gamma_;
-
-        std::shared_ptr<DeviceVector<Data64>> Qi_t_;
-
-        std::shared_ptr<DeviceVector<Data64>> Qi_gamma_;
-
-        std::shared_ptr<DeviceVector<Data64>> Qi_inverse_;
-
-        Data64 mulq_inv_t_;
-
-        Data64 mulq_inv_gamma_;
-
-        Data64 inv_gamma_;
-
-        // Noise Budget Calculation
-
-        std::shared_ptr<DeviceVector<Data64>> Mi_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_;
-        std::shared_ptr<DeviceVector<Data64>> upper_half_threshold_;
-        std::shared_ptr<DeviceVector<Data64>> decryption_modulus_;
-
-        int total_bit_count_;
     };
 
 } // namespace heongpu

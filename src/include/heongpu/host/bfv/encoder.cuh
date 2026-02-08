@@ -39,7 +39,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encode parameters.
          */
-        __host__ HEEncoder(HEContext<Scheme::BFV>& context);
+        __host__ HEEncoder(HEContext<Scheme::BFV> context);
 
         /**
          * @brief Encodes a message into a plaintext.
@@ -56,7 +56,7 @@ namespace heongpu
                const std::vector<uint64_t>& message,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if (message.size() > slot_count_)
+            if (message.size() > slot_count())
                 throw std::invalid_argument(
                     "Vector size can not be higher than slot count!");
 
@@ -66,8 +66,8 @@ namespace heongpu
                 {
                     encode_bfv(plain_, message, options.stream_);
 
-                    plain.plain_size_ = n;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n;
+                    plain.scheme_ = context_->scheme_;
                     plain.in_ntt_domain_ = false;
                     plain.plaintext_generated_ = true;
                 },
@@ -89,7 +89,7 @@ namespace heongpu
                const std::vector<int64_t>& message,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if (message.size() > slot_count_)
+            if (message.size() > slot_count())
                 throw std::invalid_argument(
                     "Vector size can not be higher than slot count!");
 
@@ -99,8 +99,8 @@ namespace heongpu
                 {
                     encode_bfv(plain_, message, options.stream_);
 
-                    plain.plain_size_ = n;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n;
+                    plain.scheme_ = context_->scheme_;
                     plain.in_ntt_domain_ = false;
                     plain.plaintext_generated_ = true;
                 },
@@ -122,7 +122,7 @@ namespace heongpu
                const HostVector<uint64_t>& message,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if (message.size() > slot_count_)
+            if (message.size() > slot_count())
                 throw std::invalid_argument(
                     "Vector size can not be higher than slot count!");
 
@@ -132,8 +132,8 @@ namespace heongpu
                 {
                     encode_bfv(plain_, message, options.stream_);
 
-                    plain.plain_size_ = n;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n;
+                    plain.scheme_ = context_->scheme_;
                     plain.in_ntt_domain_ = false;
                     plain.plaintext_generated_ = true;
                 },
@@ -155,7 +155,7 @@ namespace heongpu
                const HostVector<int64_t>& message,
                const ExecutionOptions& options = ExecutionOptions())
         {
-            if (message.size() > slot_count_)
+            if (message.size() > slot_count())
                 throw std::invalid_argument(
                     "Vector size can not be higher than slot count!");
 
@@ -165,8 +165,8 @@ namespace heongpu
                 {
                     encode_bfv(plain_, message, options.stream_);
 
-                    plain.plain_size_ = n;
-                    plain.scheme_ = scheme_;
+                    plain.plain_size_ = context_->n;
+                    plain.scheme_ = context_->scheme_;
                     plain.in_ntt_domain_ = false;
                     plain.plaintext_generated_ = true;
                 },
@@ -250,7 +250,10 @@ namespace heongpu
          *
          * @return int Number of slots.
          */
-        inline int slot_count() const noexcept { return slot_count_; }
+        inline int slot_count() const noexcept
+        {
+            return context_ ? context_->n : 0;
+        }
 
         HEEncoder() = default;
         HEEncoder(const HEEncoder& copy) = default;
@@ -292,16 +295,7 @@ namespace heongpu
                                  const cudaStream_t stream);
 
       private:
-        scheme_type scheme_;
-
-        int n;
-        int n_power;
-        int slot_count_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> plain_modulus_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_plain_inverse_;
-        std::shared_ptr<DeviceVector<Root64>> plain_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root64>> plain_intt_tables_;
+        HEContext<Scheme::BFV> context_;
         std::shared_ptr<DeviceVector<Data64>> encoding_location_;
     };
 

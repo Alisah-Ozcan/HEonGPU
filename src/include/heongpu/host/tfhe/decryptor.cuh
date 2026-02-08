@@ -31,7 +31,7 @@ namespace heongpu
          * @param secret_key Reference to the Secretkey object associated with
          *                   the TFHE encryption scheme.
          */
-        __host__ HEDecryptor(HEContext<Scheme::TFHE>& context,
+        __host__ HEDecryptor(HEContext<Scheme::TFHE> context,
                              Secretkey<Scheme::TFHE>& secret_key);
 
         /**
@@ -67,9 +67,7 @@ namespace heongpu
                                   const cudaStream_t stream);
 
       private:
-        const scheme_type scheme_ = scheme_type::tfhe;
-
-        int n_;
+        HEContext<Scheme::TFHE> context_;
 
         DeviceVector<int32_t> lwe_key_device_location_;
     };

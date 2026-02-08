@@ -7,12 +7,13 @@
 
 namespace heongpu
 {
-    HEContext<Scheme::TFHE>::HEContext()
-        : HEContext(MemoryPoolConfig::Defaults())
+    HEContextImpl<Scheme::TFHE>::HEContextImpl()
+        : HEContextImpl(MemoryPoolConfig::Defaults())
     {
     }
 
-    HEContext<Scheme::TFHE>::HEContext(const MemoryPoolConfig& pool_config)
+    HEContextImpl<Scheme::TFHE>::HEContextImpl(
+        const MemoryPoolConfig& pool_config)
     {
         // Memory pool initialization
         MemoryPool::instance().initialize(pool_config);
@@ -55,7 +56,7 @@ namespace heongpu
         offset_ = compute_offset(bk_l_, bk_bg_bit_, half_bg_);
     }
 
-    std::vector<int> HEContext<Scheme::TFHE>::compute_h(int l, int bg_bit)
+    std::vector<int> HEContextImpl<Scheme::TFHE>::compute_h(int l, int bg_bit)
     {
         std::vector<int> h(l);
         for (int i = 0; i < l; ++i)
@@ -66,7 +67,8 @@ namespace heongpu
         return h;
     }
 
-    int HEContext<Scheme::TFHE>::compute_offset(int l, int bg_bit, int half_bg)
+    int HEContextImpl<Scheme::TFHE>::compute_offset(int l, int bg_bit,
+                                                    int half_bg)
     {
         int64_t sum = 0;
         for (int i = 1; i <= l; ++i)
@@ -79,8 +81,8 @@ namespace heongpu
     }
 
     std::vector<Root64>
-    HEContext<Scheme::TFHE>::compute_ntt_table(Data64 psi, Modulus64 primes,
-                                               int n_power)
+    HEContextImpl<Scheme::TFHE>::compute_ntt_table(Data64 psi, Modulus64 primes,
+                                                   int n_power)
     {
         int n = 1 << n_power;
         std::vector<Root64> forward_table; // bit reverse order
@@ -102,6 +104,6 @@ namespace heongpu
         return forward_table;
     }
 
-    template class HEContext<Scheme::TFHE>;
+    template class HEContextImpl<Scheme::TFHE>;
 
 } // namespace heongpu

@@ -41,7 +41,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ HEMultiPartyManager(HEContext<Scheme::BFV>& context);
+        __host__ HEMultiPartyManager(HEContext<Scheme::BFV> context);
 
         /**
          * @brief Generates a partial public key for multiparty computation
@@ -349,9 +349,9 @@ namespace heongpu
             partial_decrypt_stage_1(ciphertext, sk, partial_ciphertext,
                                     options.stream_);
 
-            partial_ciphertext.scheme_ = scheme_;
-            partial_ciphertext.ring_size_ = n;
-            partial_ciphertext.coeff_modulus_count_ = Q_size_;
+            partial_ciphertext.scheme_ = context_->scheme_;
+            partial_ciphertext.ring_size_ = context_->n;
+            partial_ciphertext.coeff_modulus_count_ = context_->Q_size;
             partial_ciphertext.cipher_size_ = 2;
             partial_ciphertext.in_ntt_domain_ = ciphertext.in_ntt_domain_;
             partial_ciphertext.relinearization_required_ =
@@ -405,8 +405,8 @@ namespace heongpu
                             partial_decrypt_stage_2(ciphertexts_, plaintext_,
                                                     options.stream_);
 
-                            plaintext.plain_size_ = n;
-                            plaintext.scheme_ = scheme_;
+                            plaintext.plain_size_ = context_->n;
+                            plaintext.scheme_ = context_->scheme_;
                             plaintext.in_ntt_domain_ = false;
                         },
                         options);
@@ -454,9 +454,10 @@ namespace heongpu
                                         common_, output_, secret_key_, seed,
                                         options.stream_);
 
-                                    output.scheme_ = scheme_;
-                                    output.ring_size_ = n;
-                                    output.coeff_modulus_count_ = Q_size_;
+                                    output.scheme_ = context_->scheme_;
+                                    output.ring_size_ = context_->n;
+                                    output.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output.cipher_size_ = 2;
                                     output.in_ntt_domain_ = false;
                                     output.relinearization_required_ = false;
@@ -511,9 +512,10 @@ namespace heongpu
                                         ciphertexts_, common_, output_, seed,
                                         options.stream_);
 
-                                    output.scheme_ = scheme_;
-                                    output.ring_size_ = n;
-                                    output.coeff_modulus_count_ = Q_size_;
+                                    output.scheme_ = context_->scheme_;
+                                    output.ring_size_ = context_->n;
+                                    output.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output.cipher_size_ = 2;
                                     output.in_ntt_domain_ = false;
                                     output.relinearization_required_ = false;
@@ -605,49 +607,7 @@ namespace heongpu
             const RNGSeed& seed, const cudaStream_t stream);
 
       private:
-        const scheme_type scheme_ = scheme_type::bfv;
-
-        int n;
-        int n_power;
-
-        int Q_prime_size_;
-        int Q_size_;
-        int P_size_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data64>> last_q_modinv_;
-        std::shared_ptr<DeviceVector<Data64>> half_;
-        std::shared_ptr<DeviceVector<Data64>> half_mod_;
-        std::shared_ptr<DeviceVector<Data64>> factor_;
-        std::shared_ptr<DeviceVector<int>> Sk_pair_;
-        int d_;
-
-        Modulus64 plain_modulus_;
-        std::shared_ptr<DeviceVector<Modulus64>> plain_modulus2_;
-
-        Data64 Q_mod_t_;
-
-        Data64 upper_threshold_;
-
-        std::shared_ptr<DeviceVector<Data64>> coeeff_div_plainmod_;
-
-        Modulus64 gamma_;
-
-        std::shared_ptr<DeviceVector<Data64>> Qi_t_;
-
-        std::shared_ptr<DeviceVector<Data64>> Qi_gamma_;
-
-        std::shared_ptr<DeviceVector<Data64>> Qi_inverse_;
-
-        Data64 mulq_inv_t_;
-
-        Data64 mulq_inv_gamma_;
-
-        Data64 inv_gamma_;
-
+        HEContext<Scheme::BFV> context_;
         RNGSeed new_seed_;
     };
 

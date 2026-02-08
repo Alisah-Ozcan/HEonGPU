@@ -8,15 +8,21 @@
 namespace heongpu
 {
     __host__ Bootstrappingkey<Scheme::TFHE>::Bootstrappingkey(
-        HEContext<Scheme::TFHE>& context, bool store_in_gpu)
+        HEContext<Scheme::TFHE> context, bool store_in_gpu)
     {
-        bk_k_ = context.k_;
-        bk_base_bit_ = context.bk_bg_bit_;
-        bk_length_ = context.bk_l_;
-        bk_stdev_ = context.bk_stdev_;
+        if (!context)
+        {
+            throw std::invalid_argument("HEContext is not set!");
+        }
 
-        ks_length_ = context.ks_length_;
-        ks_base_bit_ = context.ks_base_bit_;
+        context_ = context;
+        bk_k_ = context->k_;
+        bk_base_bit_ = context->bk_bg_bit_;
+        bk_length_ = context->bk_l_;
+        bk_stdev_ = context->bk_stdev_;
+
+        ks_length_ = context->ks_length_;
+        ks_base_bit_ = context->ks_base_bit_;
 
         storage_type_ =
             store_in_gpu ? storage_type::DEVICE : storage_type::HOST;

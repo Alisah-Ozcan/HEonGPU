@@ -29,7 +29,7 @@ namespace heongpu
                                                  bool is_input_output_same);
 
       public:
-        __host__ Secretkey(HEContext<Scheme::TFHE>& context,
+        __host__ Secretkey(HEContext<Scheme::TFHE> context,
                            bool store_in_gpu = true);
 
         /**
@@ -93,6 +93,11 @@ namespace heongpu
 
         Secretkey() = default;
 
+        void set_context(HEContext<Scheme::TFHE> context)
+        {
+            context_ = std::move(context);
+        }
+
         /**
          * @brief Copy constructor for creating a new Secretkey object by
          * copying an existing one.
@@ -105,7 +110,8 @@ namespace heongpu
          * @param copy The source Secretkey object to copy from.
          */
         Secretkey(const Secretkey& copy)
-            : n_(copy.n_), lwe_alpha_min(copy.lwe_alpha_min),
+            : context_(copy.context_), n_(copy.n_),
+              lwe_alpha_min(copy.lwe_alpha_min),
               lwe_alpha_max(copy.lwe_alpha_max), N_(copy.N_), k_(copy.k_),
               tlwe_alpha_min(copy.tlwe_alpha_min),
               tlwe_alpha_max(copy.tlwe_alpha_max), bk_l_(copy.bk_l_),
@@ -171,7 +177,7 @@ namespace heongpu
          * @param assign The source Secretkey object to move from.
          */
         Secretkey(Secretkey&& assign) noexcept
-            : n_(std::move(assign.n_)),
+            : context_(std::move(assign.context_)), n_(std::move(assign.n_)),
               lwe_alpha_min(std::move(assign.lwe_alpha_min)),
               lwe_alpha_max(std::move(assign.lwe_alpha_max)),
               N_(std::move(assign.N_)), k_(std::move(assign.k_)),
@@ -209,6 +215,7 @@ namespace heongpu
         {
             if (this != &copy)
             {
+                context_ = copy.context_;
                 n_ = copy.n_;
                 lwe_alpha_min = copy.lwe_alpha_min;
                 lwe_alpha_max = copy.lwe_alpha_max;
@@ -291,6 +298,7 @@ namespace heongpu
         {
             if (this != &assign)
             {
+                context_ = std::move(assign.context_);
                 n_ = std::move(assign.n_);
                 lwe_alpha_min = std::move(assign.lwe_alpha_min);
                 lwe_alpha_max = std::move(assign.lwe_alpha_max);
@@ -321,6 +329,7 @@ namespace heongpu
         }
 
       private:
+        HEContext<Scheme::TFHE> context_;
         const scheme_type scheme_ = scheme_type::tfhe;
 
         // LWE Context

@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     // providing 128-bit security. In future releases, configurable
     // and lattice-estimator-based parameter sets targeting 128, 192,
     // and 256-bit security levels will also be supported.
-    heongpu::HEContext<Scheme> context;
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>();
 
     // ========================================
     // 2. Key Generation

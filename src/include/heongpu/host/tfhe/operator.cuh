@@ -36,7 +36,7 @@ namespace heongpu
          *
          * @param context TFHE encryption context.
          */
-        HELogicOperator(HEContext<Scheme::TFHE>& context);
+        HELogicOperator(HEContext<Scheme::TFHE> context);
 
         /**
          * @brief Evaluates the NAND gate on two TFHE ciphertexts.
@@ -86,7 +86,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher =
                                                     generate_empty_ciphertext(
-                                                        n_, input1.shape_,
+                                                        context_->n_,
+                                                        input1.shape_,
                                                         options.stream_);
 
                                             NAND_pre_computation(
@@ -96,7 +97,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher2 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -105,7 +107,7 @@ namespace heongpu
                                                 boot_key, options.stream_);
 
                                             output.a_device_location_.resize(
-                                                input1.shape_ * n_,
+                                                input1.shape_ * context_->n_,
                                                 options.stream_);
                                             output.b_device_location_.resize(
                                                 input1.shape_, options.stream_);
@@ -182,7 +184,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher =
                                                     generate_empty_ciphertext(
-                                                        n_, input1.shape_,
+                                                        context_->n_,
+                                                        input1.shape_,
                                                         options.stream_);
 
                                             AND_pre_computation(
@@ -192,7 +195,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher2 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -201,7 +205,7 @@ namespace heongpu
                                                 boot_key, options.stream_);
 
                                             output.a_device_location_.resize(
-                                                input1.shape_ * n_,
+                                                input1.shape_ * context_->n_,
                                                 options.stream_);
                                             output.b_device_location_.resize(
                                                 input1.shape_, options.stream_);
@@ -278,7 +282,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher =
                                                     generate_empty_ciphertext(
-                                                        n_, input1.shape_,
+                                                        context_->n_,
+                                                        input1.shape_,
                                                         options.stream_);
 
                                             NOR_pre_computation(
@@ -288,7 +293,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher2 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -297,7 +303,7 @@ namespace heongpu
                                                 boot_key, options.stream_);
 
                                             output.a_device_location_.resize(
-                                                input1.shape_ * n_,
+                                                input1.shape_ * context_->n_,
                                                 options.stream_);
                                             output.b_device_location_.resize(
                                                 input1.shape_, options.stream_);
@@ -374,7 +380,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher =
                                                     generate_empty_ciphertext(
-                                                        n_, input1.shape_,
+                                                        context_->n_,
+                                                        input1.shape_,
                                                         options.stream_);
 
                                             OR_pre_computation(input1, input2,
@@ -384,7 +391,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher2 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -393,7 +401,7 @@ namespace heongpu
                                                 boot_key, options.stream_);
 
                                             output.a_device_location_.resize(
-                                                input1.shape_ * n_,
+                                                input1.shape_ * context_->n_,
                                                 options.stream_);
                                             output.b_device_location_.resize(
                                                 input1.shape_, options.stream_);
@@ -470,7 +478,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher =
                                                     generate_empty_ciphertext(
-                                                        n_, input1.shape_,
+                                                        context_->n_,
+                                                        input1.shape_,
                                                         options.stream_);
 
                                             XNOR_pre_computation(
@@ -480,7 +489,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher2 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -489,7 +499,7 @@ namespace heongpu
                                                 boot_key, options.stream_);
 
                                             output.a_device_location_.resize(
-                                                input1.shape_ * n_,
+                                                input1.shape_ * context_->n_,
                                                 options.stream_);
                                             output.b_device_location_.resize(
                                                 input1.shape_, options.stream_);
@@ -566,7 +576,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher =
                                                     generate_empty_ciphertext(
-                                                        n_, input1.shape_,
+                                                        context_->n_,
+                                                        input1.shape_,
                                                         options.stream_);
 
                                             XOR_pre_computation(
@@ -576,7 +587,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher2 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -585,7 +597,7 @@ namespace heongpu
                                                 boot_key, options.stream_);
 
                                             output.a_device_location_.resize(
-                                                input1.shape_ * n_,
+                                                input1.shape_ * context_->n_,
                                                 options.stream_);
                                             output.b_device_location_.resize(
                                                 input1.shape_, options.stream_);
@@ -642,8 +654,8 @@ namespace heongpu
                         output,
                         [&](Ciphertext<Scheme::TFHE>& output_)
                         {
-                            output.a_device_location_.resize(input1.shape_ * n_,
-                                                             options.stream_);
+                            output.a_device_location_.resize(
+                                input1.shape_ * context_->n_, options.stream_);
                             output.b_device_location_.resize(input1.shape_,
                                                              options.stream_);
                             output.n_ = input1.n_;
@@ -710,7 +722,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher1 =
                                                     generate_empty_ciphertext(
-                                                        n_, input1.shape_,
+                                                        context_->n_,
+                                                        input1.shape_,
                                                         options.stream_);
 
                                             AND_pre_computation(
@@ -720,7 +733,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher2 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -733,7 +747,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher3 =
                                                     generate_empty_ciphertext(
-                                                        n_, input1.shape_,
+                                                        context_->n_,
+                                                        input1.shape_,
                                                         options.stream_);
 
                                             AND_N_pre_computation(
@@ -743,7 +758,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher4 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -756,7 +772,8 @@ namespace heongpu
                                             Ciphertext<Scheme::TFHE>
                                                 temp_cipher5 =
                                                     generate_empty_ciphertext(
-                                                        (k_ * N_),
+                                                        (context_->k_ *
+                                                         context_->N_),
                                                         input1.shape_,
                                                         options.stream_);
 
@@ -765,7 +782,7 @@ namespace heongpu
                                                 temp_cipher5, options.stream_);
 
                                             output.a_device_location_.resize(
-                                                input1.shape_ * n_,
+                                                input1.shape_ * context_->n_,
                                                 options.stream_);
                                             output.b_device_location_.resize(
                                                 input1.shape_, options.stream_);
@@ -850,35 +867,9 @@ namespace heongpu
         __host__ int32_t encode_to_torus32(uint32_t mu, uint32_t m_size);
 
       private:
-        const scheme_type scheme_ = scheme_type::tfhe;
+        HEContext<Scheme::TFHE> context_;
 
-        Modulus64 prime_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        Ninverse64 n_inverse_;
-
-        int ks_base_bit_;
-        int ks_length_;
-
-        double ks_stdev_;
-        double bk_stdev_;
-        double max_stdev_;
-
-        // LWE Context
-        int n_;
-
-        // TLWE Context
-        int N_; // a power of 2: degree of the polynomials
         int Npower_;
-        int k_; // number of polynomials in the mask
-
-        // TGSW Context
-        int bk_l_; // l
-        int bk_bg_bit_; // bg_bit
-        int32_t bk_half_;
-        int32_t bk_mask_;
-        int32_t bk_offset_;
-
         int32_t encode_mu;
     };
 

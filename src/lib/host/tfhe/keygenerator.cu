@@ -8,39 +8,20 @@
 namespace heongpu
 {
     __host__ HEKeyGenerator<Scheme::TFHE>::HEKeyGenerator(
-        HEContext<Scheme::TFHE>& context)
+        HEContext<Scheme::TFHE> context)
     {
+        if (!context)
+        {
+            throw std::invalid_argument("HEContext is not set!");
+        }
+
+        context_ = std::move(context);
+
         std::random_device rd;
         std::mt19937 gen(rd());
 
         rng_seed_ = gen();
         rng_offset_ = gen();
-
-        prime_ = context.prime_;
-        ntt_table_ = context.ntt_table_;
-        intt_table_ = context.intt_table_;
-        n_inverse_ = context.n_inverse_;
-
-        ks_base_bit_ = context.ks_base_bit_;
-        ks_length_ = context.ks_length_;
-
-        ks_stdev_ = context.ks_stdev_;
-        bk_stdev_ = context.bk_stdev_;
-        max_stdev_ = context.max_stdev_;
-
-        n_ = context.n_;
-
-        N_ = context.N_;
-        k_ = context.k_;
-
-        bk_l_ = context.bk_l_;
-        bk_bg_bit_ = context.bk_bg_bit_;
-        bg_ = context.bg_;
-        half_bg_ = context.half_bg_;
-        mask_mod_ = context.mask_mod_;
-        kpl_ = context.kpl_;
-        h_ = context.h_;
-        offset_ = context.offset_;
     }
 
     __host__ void HEKeyGenerator<Scheme::TFHE>::generate_secret_key(
@@ -55,17 +36,20 @@ namespace heongpu
             sk,
             [&](Secretkey<Scheme::TFHE>& sk_)
             {
-                sk.lwe_key_device_location_.resize(n_);
+                sk.lwe_key_device_location_.resize(context_->n_);
 
                 tfhe_secretkey_gen_kernel<<<1, 512, 0, options.stream_>>>(
-                    sk.lwe_key_device_location_.data(), n_, rng_seed_);
+                    sk.lwe_key_device_location_.data(), context_->n_,
+                    rng_seed_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                sk.tlwe_key_device_location_.resize(k_ * N_);
+                sk.tlwe_key_device_location_.resize(context_->k_ *
+                                                    context_->N_);
 
-                tfhe_secretkey_gen_kernel<<<(k_ * (N_ >> 9)), 512, 0,
-                                            options.stream_>>>(
-                    sk.tlwe_key_device_location_.data(), n_, rng_seed_);
+                tfhe_secretkey_gen_kernel<<<
+                    (context_->k_ * (context_->N_ >> 9)), 512, 0,
+                    options.stream_>>>(sk.tlwe_key_device_location_.data(),
+                                       context_->n_, rng_seed_);
                 HEONGPU_CUDA_CHECK(cudaGetLastError());
                 sk.storage_type_ = storage_type::DEVICE;
             },
@@ -97,8 +81,8 @@ namespace heongpu
                     [&](Bootstrappingkey<Scheme::TFHE>& bk_)
                     {
                         // Boot Key
-                        int bk_n = n_;
-                        int bk_N = N_;
+                        int bk_n = context_->n_;
+                        int bk_N = context_->N_;
                         int bk_k = bk.bk_k_;
                         int bk_base_bit_size = bk.bk_base_bit_;
                         int bk_length = bk.bk_length_;
@@ -124,7 +108,8 @@ namespace heongpu
                             options.stream_>>>(
                             tlwe_key_ntt.data(),
                             sk.tlwe_key_device_location_.data(),
-                            ntt_table_->data(), prime_, bk_N);
+                            context_->ntt_table_->data(), context_->prime_,
+                            bk_N);
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                         tfhe_generate_bootkey_kernel<<<bk_n, 512,
@@ -132,9 +117,10 @@ namespace heongpu
                                                        options.stream_>>>(
                             tlwe_key_ntt.data(),
                             sk.lwe_key_device_location_.data(),
-                            temp_boot_key.data(), ntt_table_->data(),
-                            intt_table_->data(), n_inverse_, prime_, bk_N, bk_k,
-                            bk_base_bit_size, bk_length);
+                            temp_boot_key.data(), context_->ntt_table_->data(),
+                            context_->intt_table_->data(), context_->n_inverse_,
+                            context_->prime_, bk_N, bk_k, bk_base_bit_size,
+                            bk_length);
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                         bk.boot_key_device_location_.resize(total_bootkey_size,
@@ -143,17 +129,17 @@ namespace heongpu
                             bk_n, 512, sizeof(Data64) * bk_N,
                             options.stream_>>>(
                             bk.boot_key_device_location_.data(),
-                            temp_boot_key.data(), ntt_table_->data(), prime_,
-                            bk_N, bk_k, bk_length);
+                            temp_boot_key.data(), context_->ntt_table_->data(),
+                            context_->prime_, bk_N, bk_k, bk_length);
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
-                        bk.switch_key_variances_ =
-                            std::vector<double>(bk_n * (bk_k + 1) * bk_length,
-                                                bk_stdev_ * bk_stdev_);
+                        bk.switch_key_variances_ = std::vector<double>(
+                            bk_n * (bk_k + 1) * bk_length,
+                            context_->bk_stdev_ * context_->bk_stdev_);
 
                         // Switch Key
-                        int ks_n = n_;
-                        int ks_N = k_ * N_;
+                        int ks_n = context_->n_;
+                        int ks_N = context_->k_ * context_->N_;
                         int ks_base_bit_size = bk.ks_base_bit_;
                         int ks_length = bk.ks_length_;
                         int ks_base = 1 << ks_base_bit_size;
@@ -167,7 +153,8 @@ namespace heongpu
                         tfhe_generate_noise_kernel<<<
                             ((total_noise_size + 511) >> 9), 512, 0,
                             options.stream_>>>(noise.data(), 0,
-                                               total_noise_size, ks_stdev_);
+                                               total_noise_size,
+                                               context_->ks_stdev_);
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                         Data64 total_random_number_size =
@@ -195,7 +182,8 @@ namespace heongpu
                         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
                         bk.switch_key_variances_ = std::vector<double>(
-                            total_noise_size, ks_stdev_ * ks_stdev_);
+                            total_noise_size,
+                            context_->ks_stdev_ * context_->ks_stdev_);
                         bk.storage_type_ = storage_type::DEVICE;
                     },
                     options);

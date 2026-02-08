@@ -43,7 +43,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters for the operator.
          */
-        __host__ HEOperator(HEContext<Scheme::BFV>& context,
+        __host__ HEOperator(HEContext<Scheme::BFV> context,
                             HEEncoder<Scheme::BFV>& encoder);
 
       public:
@@ -171,9 +171,10 @@ namespace heongpu
                                     add_plain_bfv(input1_, input2_, output_,
                                                   options.stream_);
 
-                                    output_.scheme_ = scheme_;
-                                    output_.ring_size_ = n;
-                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.scheme_ = context_->scheme_;
+                                    output_.ring_size_ = context_->n;
+                                    output_.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.in_ntt_domain_ =
                                         input1_.in_ntt_domain_;
@@ -275,9 +276,10 @@ namespace heongpu
                                     sub_plain_bfv(input1_, input2_, output_,
                                                   options.stream_);
 
-                                    output_.scheme_ = scheme_;
-                                    output_.ring_size_ = n;
-                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.scheme_ = context_->scheme_;
+                                    output_.ring_size_ = context_->n;
+                                    output_.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.in_ntt_domain_ =
                                         input1_.in_ntt_domain_;
@@ -371,9 +373,10 @@ namespace heongpu
                                     multiply_bfv(input1_, input2_, output_,
                                                  options.stream_);
 
-                                    output_.scheme_ = scheme_;
-                                    output_.ring_size_ = n;
-                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.scheme_ = context_->scheme_;
+                                    output_.ring_size_ = context_->n;
+                                    output_.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output_.cipher_size_ = 3;
                                     output_.in_ntt_domain_ =
                                         input1_.in_ntt_domain_;
@@ -426,7 +429,7 @@ namespace heongpu
                     "operation!");
             }
 
-            if (input1.memory_size() < (2 * n * Q_size_))
+            if (input1.memory_size() < (2 * context_->n * context_->Q_size))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -453,7 +456,7 @@ namespace heongpu
                                             "domain");
                                     }
 
-                                    if (input2_.size() < n)
+                                    if (input2_.size() < context_->n)
                                     {
                                         throw std::invalid_argument(
                                             "Invalid Plaintext size!");
@@ -463,9 +466,10 @@ namespace heongpu
                                                        output_,
                                                        options.stream_);
 
-                                    output_.scheme_ = scheme_;
-                                    output_.ring_size_ = n;
-                                    output_.coeff_modulus_count_ = Q_size_;
+                                    output_.scheme_ = context_->scheme_;
+                                    output_.ring_size_ = context_->n;
+                                    output_.coeff_modulus_count_ =
+                                        context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.in_ntt_domain_ =
                                         input1_.in_ntt_domain_;
@@ -513,7 +517,7 @@ namespace heongpu
                     "non-linear part!");
             }
 
-            if (input1.memory_size() < (3 * n * Q_size_))
+            if (input1.memory_size() < (3 * context_->n * context_->Q_size))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -591,7 +595,7 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            if (input1.memory_size() < (2 * n * Q_size_))
+            if (input1.memory_size() < (2 * context_->n * context_->Q_size))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -655,9 +659,9 @@ namespace heongpu
                                     break;
                             }
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
                             output_.relinearization_required_ =
@@ -708,7 +712,7 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            if (input1.memory_size() < (2 * n * Q_size_))
+            if (input1.memory_size() < (2 * context_->n * context_->Q_size))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -759,9 +763,9 @@ namespace heongpu
                                     break;
                             }
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
                             output_.relinearization_required_ =
@@ -795,7 +799,7 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            if (input1.memory_size() < (2 * n * Q_size_))
+            if (input1.memory_size() < (2 * context_->n * context_->Q_size))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -853,9 +857,9 @@ namespace heongpu
                                     break;
                             }
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
                             output_.relinearization_required_ =
@@ -904,7 +908,7 @@ namespace heongpu
                 throw std::invalid_argument("Ciphertext can not be rotated!");
             }
 
-            if (input1.memory_size() < (2 * n * Q_size_))
+            if (input1.memory_size() < (2 * context_->n * context_->Q_size))
             {
                 throw std::invalid_argument("Invalid Ciphertexts size!");
             }
@@ -962,9 +966,9 @@ namespace heongpu
                                     break;
                             }
 
-                            output_.scheme_ = scheme_;
-                            output_.ring_size_ = n;
-                            output_.coeff_modulus_count_ = Q_size_;
+                            output_.scheme_ = context_->scheme_;
+                            output_.ring_size_ = context_->n;
+                            output_.coeff_modulus_count_ = context_->Q_size;
                             output_.cipher_size_ = 2;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
                             output_.relinearization_required_ =
@@ -988,7 +992,7 @@ namespace heongpu
                         "Ciphertext should be in intt domain");
                 }
 
-                if (input1.memory_size() < (2 * n * Q_size_))
+                if (input1.memory_size() < (2 * context_->n * context_->Q_size))
                 {
                     throw std::invalid_argument("Invalid Ciphertexts size!");
                 }
@@ -1004,9 +1008,9 @@ namespace heongpu
                                 negacyclic_shift_poly_coeffmod(
                                     input1_, output_, index, options.stream_);
 
-                                output.scheme_ = scheme_;
-                                output.ring_size_ = n;
-                                output.coeff_modulus_count_ = Q_size_;
+                                output.scheme_ = context_->scheme_;
+                                output.ring_size_ = context_->n;
+                                output.coeff_modulus_count_ = context_->Q_size;
                                 output.cipher_size_ = 2;
                                 output.in_ntt_domain_ = input1.in_ntt_domain_;
                                 output.relinearization_required_ =
@@ -1034,7 +1038,7 @@ namespace heongpu
         {
             if (!input1.in_ntt_domain_)
             {
-                if (input1.size() < n)
+                if (input1.size() < context_->n)
                 {
                     throw std::invalid_argument("Invalid Ciphertexts size!");
                 }
@@ -1051,7 +1055,8 @@ namespace heongpu
                                                            options.stream_);
 
                                 output.scheme_ = input1.scheme_;
-                                output.plain_size_ = (n * Q_size_);
+                                output.plain_size_ =
+                                    (context_->n * context_->Q_size);
                                 output.in_ntt_domain_ = true;
                                 output_.plaintext_generated_ = true;
                             },
@@ -1095,7 +1100,7 @@ namespace heongpu
 
             if (!input1.in_ntt_domain_)
             {
-                if (input1.memory_size() < (2 * n * Q_size_))
+                if (input1.memory_size() < (2 * context_->n * context_->Q_size))
                 {
                     throw std::invalid_argument("Invalid Ciphertexts size!");
                 }
@@ -1111,9 +1116,9 @@ namespace heongpu
                                 transform_to_ntt_bfv_cipher(input1_, output_,
                                                             options.stream_);
 
-                                output.scheme_ = scheme_;
-                                output.ring_size_ = n;
-                                output.coeff_modulus_count_ = Q_size_;
+                                output.scheme_ = context_->scheme_;
+                                output.ring_size_ = context_->n;
+                                output.coeff_modulus_count_ = context_->Q_size;
                                 output.cipher_size_ = 2;
                                 output.in_ntt_domain_ = true;
                                 output.relinearization_required_ =
@@ -1160,7 +1165,7 @@ namespace heongpu
 
             if (input1.in_ntt_domain_)
             {
-                if (input1.memory_size() < (2 * n * Q_size_))
+                if (input1.memory_size() < (2 * context_->n * context_->Q_size))
                 {
                     throw std::invalid_argument("Invalid Ciphertexts size!");
                 }
@@ -1176,9 +1181,9 @@ namespace heongpu
                                 transform_from_ntt_bfv_cipher(input1_, output_,
                                                               options.stream_);
 
-                                output.scheme_ = scheme_;
-                                output.ring_size_ = n;
-                                output.coeff_modulus_count_ = Q_size_;
+                                output.scheme_ = context_->scheme_;
+                                output.ring_size_ = context_->n;
+                                output.coeff_modulus_count_ = context_->Q_size;
                                 output.cipher_size_ = 2;
                                 output.in_ntt_domain_ = false;
                                 output.relinearization_required_ =
@@ -1329,110 +1334,14 @@ namespace heongpu
 
         // private:
       protected:
-        scheme_type scheme_;
-
-        int n;
-
-        int n_power;
-
-        int bsk_mod_count_;
-
-        // New
-        int Q_prime_size_;
-        int Q_size_;
-        int P_size_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data64>> last_q_modinv_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> base_Bsk_;
-        std::shared_ptr<DeviceVector<Root64>> bsk_ntt_tables_; // check
-        std::shared_ptr<DeviceVector<Root64>> bsk_intt_tables_; // check
-        std::shared_ptr<DeviceVector<Ninverse64>> bsk_n_inverse_; // check
-
-        Modulus64 m_tilde_;
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_Bsk_;
-        std::shared_ptr<DeviceVector<Data64>>
-            inv_punctured_prod_mod_base_array_;
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_m_tilde_;
-
-        Data64 inv_prod_q_mod_m_tilde_;
-        std::shared_ptr<DeviceVector<Data64>> inv_m_tilde_mod_Bsk_;
-        std::shared_ptr<DeviceVector<Data64>> prod_q_mod_Bsk_;
-        std::shared_ptr<DeviceVector<Data64>> inv_prod_q_mod_Bsk_;
-
-        Modulus64 plain_modulus_;
-
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_q_;
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_msk_;
-
-        std::shared_ptr<DeviceVector<Data64>> inv_punctured_prod_mod_B_array_;
-        Data64 inv_prod_B_mod_m_sk_;
-        std::shared_ptr<DeviceVector<Data64>> prod_B_mod_q_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> q_Bsk_merge_modulus_;
-        std::shared_ptr<DeviceVector<Root64>> q_Bsk_merge_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root64>> q_Bsk_merge_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse64>> q_Bsk_n_inverse_;
-
-        std::shared_ptr<DeviceVector<Data64>> half_p_;
-        std::shared_ptr<DeviceVector<Data64>> half_mod_;
-
-        Data64 upper_threshold_;
-        std::shared_ptr<DeviceVector<Data64>> upper_halfincrement_;
-
-        Data64 Q_mod_t_;
-        std::shared_ptr<DeviceVector<Data64>> coeeff_div_plainmod_;
-
-        /////////
-
-        int d;
-        int d_tilda;
-        int r_prime;
-
-        std::shared_ptr<DeviceVector<Modulus64>> B_prime_;
-        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_;
-
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_D_to_B_;
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_B_to_D_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_D_to_B_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_;
-        std::shared_ptr<DeviceVector<Data64>> prod_D_to_B_;
-        std::shared_ptr<DeviceVector<Data64>> prod_B_to_D_;
-
-        // Method2
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_D_to_Q_tilda_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_D_to_Q_tilda_;
-        std::shared_ptr<DeviceVector<Data64>> prod_D_to_Q_tilda_;
-
-        std::shared_ptr<DeviceVector<int>> I_j_;
-        std::shared_ptr<DeviceVector<int>> I_location_;
-        std::shared_ptr<DeviceVector<int>> Sk_pair_;
-
-        /////////
-
-        std::vector<Modulus64> prime_vector_; // in CPU
+        HEContext<Scheme::BFV> context_;
+        std::shared_ptr<DeviceVector<Data64>> encoding_location_;
 
         // Temp(to avoid allocation time)
-
-        // new method
         DeviceVector<int> new_prime_locations_;
         DeviceVector<int> new_input_locations_;
-        int* new_prime_locations;
-        int* new_input_locations;
-
-        // Encode params
-        int slot_count_;
-        std::shared_ptr<DeviceVector<Modulus64>>
-            plain_modulus_pointer_; // we already have it
-        std::shared_ptr<DeviceVector<Ninverse64>> n_plain_inverse_;
-        std::shared_ptr<DeviceVector<Root64>> plain_intt_tables_;
-        std::shared_ptr<DeviceVector<Data64>> encoding_location_;
+        int* new_prime_locations = nullptr;
+        int* new_input_locations = nullptr;
 
       protected:
         // Just for copy parameters, not memory!
@@ -1455,7 +1364,7 @@ namespace heongpu
          * @param context Encryption parameters.
          * @param encoder Encoder for arithmetic operations.
          */
-        HEArithmeticOperator(HEContext<Scheme::BFV>& context,
+        HEArithmeticOperator(HEContext<Scheme::BFV> context,
                              HEEncoder<Scheme::BFV>& encoder);
     };
 
@@ -1473,7 +1382,7 @@ namespace heongpu
          * @param context Encryption parameters.
          * @param encoder Encoder for homomorphic operations.
          */
-        HELogicOperator(HEContext<Scheme::BFV>& context,
+        HELogicOperator(HEContext<Scheme::BFV> context,
                         HEEncoder<Scheme::BFV>& encoder);
 
         /**

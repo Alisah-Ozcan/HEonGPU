@@ -7,30 +7,35 @@
 
 namespace heongpu
 {
-    __host__
-    Secretkey<Scheme::TFHE>::Secretkey(HEContext<Scheme::TFHE>& context,
-                                       bool store_in_gpu)
+    __host__ Secretkey<Scheme::TFHE>::Secretkey(HEContext<Scheme::TFHE> context,
+                                                bool store_in_gpu)
     {
+        if (!context)
+        {
+            throw std::invalid_argument("HEContext is not set!");
+        }
+
+        context_ = context;
         // LWE Context
-        n_ = context.n_;
-        lwe_alpha_min = context.ks_stdev_;
-        lwe_alpha_max = context.max_stdev_;
+        n_ = context->n_;
+        lwe_alpha_min = context->ks_stdev_;
+        lwe_alpha_max = context->max_stdev_;
 
         // TLWE Context
-        N_ = context.N_;
-        k_ = context.k_;
-        tlwe_alpha_min = context.bk_stdev_;
-        tlwe_alpha_max = context.max_stdev_;
+        N_ = context->N_;
+        k_ = context->k_;
+        tlwe_alpha_min = context->bk_stdev_;
+        tlwe_alpha_max = context->max_stdev_;
 
         // TGSW Context
-        bk_l_ = context.bk_l_;
-        bk_bg_bit_ = context.bk_bg_bit_;
-        bg_ = context.bg_;
-        half_bg_ = context.half_bg_;
-        mask_mod_ = context.mask_mod_;
-        kpl_ = context.kpl_;
-        h_ = context.h_;
-        offset_ = context.offset_;
+        bk_l_ = context->bk_l_;
+        bk_bg_bit_ = context->bk_bg_bit_;
+        bg_ = context->bg_;
+        half_bg_ = context->half_bg_;
+        mask_mod_ = context->mask_mod_;
+        kpl_ = context->kpl_;
+        h_ = context->h_;
+        offset_ = context->offset_;
 
         storage_type_ =
             store_in_gpu ? storage_type::DEVICE : storage_type::HOST;

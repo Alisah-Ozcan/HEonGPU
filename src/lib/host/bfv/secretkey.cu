@@ -7,17 +7,18 @@
 
 namespace heongpu
 {
-    __host__ Secretkey<Scheme::BFV>::Secretkey(HEContext<Scheme::BFV>& context)
+    __host__ Secretkey<Scheme::BFV>::Secretkey(HEContext<Scheme::BFV> context)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        coeff_modulus_count_ = context.Q_prime_size;
-        ring_size_ = context.n; // n
-        n_power_ = context.n_power;
+        context_ = context;
+        scheme_ = context->scheme_;
+        coeff_modulus_count_ = context->Q_prime_size;
+        ring_size_ = context->n; // n
+        n_power_ = context->n_power;
 
         hamming_weight_ = ring_size_ >> 1; // default
         in_ntt_domain_ = false;
@@ -25,17 +26,18 @@ namespace heongpu
         storage_type_ = storage_type::DEVICE;
     }
 
-    __host__ Secretkey<Scheme::BFV>::Secretkey(HEContext<Scheme::BFV>& context,
+    __host__ Secretkey<Scheme::BFV>::Secretkey(HEContext<Scheme::BFV> context,
                                                int hamming_weight)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        coeff_modulus_count_ = context.Q_prime_size;
-        ring_size_ = context.n; // n
+        context_ = context;
+        scheme_ = context->scheme_;
+        coeff_modulus_count_ = context->Q_prime_size;
+        ring_size_ = context->n; // n
 
         hamming_weight_ = hamming_weight;
         if ((hamming_weight_ <= 0) || (hamming_weight_ > ring_size_))
@@ -51,18 +53,19 @@ namespace heongpu
 
     __host__
     Secretkey<Scheme::BFV>::Secretkey(const std::vector<int>& secret_key,
-                                      HEContext<Scheme::BFV>& context,
+                                      HEContext<Scheme::BFV> context,
                                       cudaStream_t stream)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        coeff_modulus_count_ = context.Q_prime_size;
-        ring_size_ = context.n; // n
-        n_power_ = context.n_power;
+        context_ = context;
+        scheme_ = context->scheme_;
+        coeff_modulus_count_ = context->Q_prime_size;
+        ring_size_ = context->n; // n
+        n_power_ = context->n_power;
 
         hamming_weight_ = ring_size_ >> 1; // default
 
@@ -85,7 +88,7 @@ namespace heongpu
 
         secretkey_rns_kernel<<<dim3((ring_size_ >> 8), 1, 1), 256, 0, stream>>>(
             secret_key_device.data(), device_locations_.data(),
-            context.modulus_->data(), n_power_, coeff_modulus_count_);
+            context->modulus_->data(), n_power_, coeff_modulus_count_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
@@ -97,8 +100,8 @@ namespace heongpu
             .stream = stream};
 
         gpuntt::GPU_NTT_Inplace(device_locations_.data(),
-                                context.ntt_table_->data(),
-                                context.modulus_->data(), cfg_ntt,
+                                context->ntt_table_->data(),
+                                context->modulus_->data(), cfg_ntt,
                                 coeff_modulus_count_, coeff_modulus_count_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
@@ -109,18 +112,19 @@ namespace heongpu
 
     __host__
     Secretkey<Scheme::BFV>::Secretkey(const HostVector<int>& secret_key,
-                                      HEContext<Scheme::BFV>& context,
+                                      HEContext<Scheme::BFV> context,
                                       cudaStream_t stream)
     {
-        if (!context.context_generated_)
+        if (!context || !context->context_generated_)
         {
             throw std::invalid_argument("HEContext is not generated!");
         }
 
-        scheme_ = context.scheme_;
-        coeff_modulus_count_ = context.Q_prime_size;
-        ring_size_ = context.n; // n
-        n_power_ = context.n_power;
+        context_ = context;
+        scheme_ = context->scheme_;
+        coeff_modulus_count_ = context->Q_prime_size;
+        ring_size_ = context->n; // n
+        n_power_ = context->n_power;
 
         hamming_weight_ = ring_size_ >> 1; // default
 
@@ -140,7 +144,7 @@ namespace heongpu
 
         secretkey_rns_kernel<<<dim3((ring_size_ >> 8), 1, 1), 256, 0, stream>>>(
             secret_key_device.data(), device_locations_.data(),
-            context.modulus_->data(), n_power_, coeff_modulus_count_);
+            context->modulus_->data(), n_power_, coeff_modulus_count_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 
         gpuntt::ntt_rns_configuration<Data64> cfg_ntt = {
@@ -152,8 +156,8 @@ namespace heongpu
             .stream = stream};
 
         gpuntt::GPU_NTT_Inplace(device_locations_.data(),
-                                context.ntt_table_->data(),
-                                context.modulus_->data(), cfg_ntt,
+                                context->ntt_table_->data(),
+                                context->modulus_->data(), cfg_ntt,
                                 coeff_modulus_count_, coeff_modulus_count_);
         HEONGPU_CUDA_CHECK(cudaGetLastError());
 

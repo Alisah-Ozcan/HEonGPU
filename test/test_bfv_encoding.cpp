@@ -11,13 +11,14 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
     {
         size_t poly_modulus_degree = 4096;
         int plain_modulus = 1032193;
-        heongpu::HEContext<heongpu::Scheme::BFV> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({36, 36}, {37});
-        context.set_plain_modulus(plain_modulus);
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::BFV> context =
+            heongpu::GenHEContext<heongpu::Scheme::BFV>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({36, 36}, {37});
+        context->set_plain_modulus(plain_modulus);
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
 
@@ -48,13 +49,14 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
     {
         size_t poly_modulus_degree = 8192;
         int plain_modulus = 1032193;
-        heongpu::HEContext<heongpu::Scheme::BFV> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({54, 54, 54}, {55});
-        context.set_plain_modulus(plain_modulus);
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::BFV> context =
+            heongpu::GenHEContext<heongpu::Scheme::BFV>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({54, 54, 54}, {55});
+        context->set_plain_modulus(plain_modulus);
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
 
@@ -85,13 +87,15 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
     {
         size_t poly_modulus_degree = 16384;
         int plain_modulus = 786433;
-        heongpu::HEContext<heongpu::Scheme::BFV> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes({54, 54, 54, 54, 55, 55, 55}, {55});
-        context.set_plain_modulus(plain_modulus);
-        context.generate();
+        heongpu::HEContext<heongpu::Scheme::BFV> context =
+            heongpu::GenHEContext<heongpu::Scheme::BFV>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes({54, 54, 54, 54, 55, 55, 55},
+                                             {55});
+        context->set_plain_modulus(plain_modulus);
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
 
@@ -122,14 +126,15 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
     {
         size_t poly_modulus_degree = 32768;
         int plain_modulus = 786433;
-        heongpu::HEContext<heongpu::Scheme::BFV> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes(
+        heongpu::HEContext<heongpu::Scheme::BFV> context =
+            heongpu::GenHEContext<heongpu::Scheme::BFV>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes(
             {58, 58, 58, 58, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59}, {59});
-        context.set_plain_modulus(plain_modulus);
-        context.generate();
+        context->set_plain_modulus(plain_modulus);
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
 
@@ -160,16 +165,17 @@ TEST(HEonGPU, BFV_Encoding_Decoding)
     {
         size_t poly_modulus_degree = 65536;
         int plain_modulus = 786433;
-        heongpu::HEContext<heongpu::Scheme::BFV> context(
-            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-            heongpu::sec_level_type::none);
-        context.set_poly_modulus_degree(poly_modulus_degree);
-        context.set_coeff_modulus_bit_sizes(
+        heongpu::HEContext<heongpu::Scheme::BFV> context =
+            heongpu::GenHEContext<heongpu::Scheme::BFV>(
+                heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+                heongpu::sec_level_type::none);
+        context->set_poly_modulus_degree(poly_modulus_degree);
+        context->set_coeff_modulus_bit_sizes(
             {58, 58, 58, 58, 58, 58, 58, 58, 58, 59, 59, 59, 59, 59, 59,
              59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59},
             {59});
-        context.set_plain_modulus(plain_modulus);
-        context.generate();
+        context->set_plain_modulus(plain_modulus);
+        context->generate();
 
         heongpu::HEEncoder<heongpu::Scheme::BFV> encoder(context);
 

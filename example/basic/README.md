@@ -8,7 +8,7 @@ The basic example directory in the HEonGPU repository contains sample programs t
 
 - [2_basic_ckks.cpp](2_basic_ckks.cpp): Introduces the CKKS scheme for approximate arithmetic on real and complex numbers, showing encoding, encryption, evaluation, and decryption.
 
-- [3_basic_memorypool_config.cpp](3_basic_memorypool_config.cpp): Shows how to configure the memory pool (host/device size via percentages or bytes) before generating a context.
+- [3_basic_memorypool_config.cpp](3_basic_memorypool_config.cpp): Shows how to configure the memory pool (host/device size via percentages or bytes) before generating a context->
 
 - [4_switchkey_methods_bfv.cpp](4_switchkey_methods_bfv.cpp): Explores different key switching methods in the BFV scheme, illustrating how to manage and switch between keys during encrypted computations.
 

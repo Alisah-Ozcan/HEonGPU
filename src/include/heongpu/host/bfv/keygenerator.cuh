@@ -44,7 +44,7 @@ namespace heongpu
          * @param context Reference to the Parameters object that sets the
          * encryption parameters.
          */
-        __host__ HEKeyGenerator(HEContext<Scheme::BFV>& context);
+        __host__ HEKeyGenerator(HEContext<Scheme::BFV> context);
 
         /**
          * @brief Generates a secret key.
@@ -230,45 +230,11 @@ namespace heongpu
             Secretkey<Scheme::BFV>& old_sk, const ExecutionOptions& options);
 
       private:
-        scheme_type scheme;
+        HEContext<Scheme::BFV> context_;
         int seed_;
         int offset_; // Absolute offset into sequence (curand)
 
         RNGSeed new_seed_;
-
-        int n;
-
-        int n_power;
-
-        int Q_prime_size_;
-        int Q_size_;
-        int P_size_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> modulus_;
-        std::shared_ptr<DeviceVector<Root64>> ntt_table_;
-        std::shared_ptr<DeviceVector<Root64>> intt_table_;
-        std::shared_ptr<DeviceVector<Ninverse64>> n_inverse_;
-        std::shared_ptr<DeviceVector<Data64>> factor_;
-
-        int d_;
-        int d_tilda_;
-        int r_prime_;
-
-        std::shared_ptr<DeviceVector<Modulus64>> B_prime_;
-        std::shared_ptr<DeviceVector<Root64>> B_prime_ntt_tables_;
-        std::shared_ptr<DeviceVector<Root64>> B_prime_intt_tables_;
-        std::shared_ptr<DeviceVector<Ninverse64>> B_prime_n_inverse_;
-
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_D_to_B_;
-        std::shared_ptr<DeviceVector<Data64>> base_change_matrix_B_to_D_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_D_to_B_;
-        std::shared_ptr<DeviceVector<Data64>> Mi_inv_B_to_D_;
-        std::shared_ptr<DeviceVector<Data64>> prod_D_to_B_;
-        std::shared_ptr<DeviceVector<Data64>> prod_B_to_D_;
-
-        std::shared_ptr<DeviceVector<int>> I_j_;
-        std::shared_ptr<DeviceVector<int>> I_location_;
-        std::shared_ptr<DeviceVector<int>> Sk_pair_;
     };
 
 } // namespace heongpu

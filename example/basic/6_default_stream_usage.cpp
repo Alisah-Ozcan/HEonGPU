@@ -11,7 +11,7 @@
 constexpr auto Scheme = heongpu::Scheme::BFV;
 
 void default_stream_function(
-    heongpu::HEContext<Scheme>& context,
+    heongpu::HEContext<Scheme> context,
     heongpu::HEArithmeticOperator<Scheme>& operators,
     heongpu::Relinkey<Scheme>& relinkeys,
     heongpu::Galoiskey<Scheme>& galoiskeys,
@@ -55,16 +55,16 @@ void default_stream_function(
 int main(int argc, char* argv[])
 {
     // Initialize encryption parameters for the CKKS scheme.
-    heongpu::HEContext<Scheme> context(
+    heongpu::HEContext<Scheme> context = heongpu::GenHEContext<Scheme>(
         heongpu::keyswitching_type::KEYSWITCHING_METHOD_I);
 
     size_t poly_modulus_degree = 8192;
     int plain_modulus = 786433;
-    context.set_poly_modulus_degree(poly_modulus_degree);
-    context.set_coeff_modulus_default_values(1);
-    context.set_plain_modulus(plain_modulus);
-    context.generate();
-    context.print_parameters();
+    context->set_poly_modulus_degree(poly_modulus_degree);
+    context->set_coeff_modulus_default_values(1);
+    context->set_plain_modulus(plain_modulus);
+    context->generate();
+    context->print_parameters();
 
     // Generate keys: the public key for encryption, the secret key for
     // decryption, and evaluation keys(relinkey, galoiskey, switchkey).
@@ -94,14 +94,14 @@ int main(int argc, char* argv[])
     std::vector<heongpu::Plaintext<Scheme>> plaintext_in_cpu;
 
     // we know ciphetext and plaintext size
-    int cipher_size = 2 * context.get_poly_modulus_degree() *
-                      context.get_ciphertext_modulus_count();
-    int plain_size = context.get_poly_modulus_degree();
+    int cipher_size = 2 * context->get_poly_modulus_degree() *
+                      context->get_ciphertext_modulus_count();
+    int plain_size = context->get_poly_modulus_degree();
 
     for (int i = 0; i < total_size; i++)
     {
         std::vector<uint64_t> message1 =
-            random_vector_generator(context.get_poly_modulus_degree());
+            random_vector_generator(context->get_poly_modulus_degree());
         heongpu::Plaintext<Scheme> P1(context);
         encoder.encode(P1, message1);
         heongpu::Ciphertext<Scheme> C1(context);
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
         ciphertext1_in_cpu.push_back(std::move(C1));
 
         std::vector<uint64_t> message2 =
-            random_vector_generator(context.get_poly_modulus_degree());
+            random_vector_generator(context->get_poly_modulus_degree());
         heongpu::Plaintext<Scheme> P2(context);
         encoder.encode(P2, message2);
         heongpu::Ciphertext<Scheme> C2(context);
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
         ciphertext2_in_cpu.push_back(std::move(C2));
 
         std::vector<uint64_t> message3 =
-            random_vector_generator(context.get_poly_modulus_degree());
+            random_vector_generator(context->get_poly_modulus_degree());
         heongpu::Plaintext<Scheme> P3(context);
         encoder.encode(P3, message3);
         heongpu::Ciphertext<Scheme> C3(context);
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
         ciphertext3_in_cpu.push_back(std::move(C3));
 
         std::vector<uint64_t> message4 =
-            random_vector_generator(context.get_poly_modulus_degree());
+            random_vector_generator(context->get_poly_modulus_degree());
         heongpu::Plaintext<Scheme> P4(context);
         encoder.encode(P4, message4);
         P4.store_in_host();

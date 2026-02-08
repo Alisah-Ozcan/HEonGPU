@@ -9,15 +9,16 @@
 
 int main(int argc, char* argv[])
 {
-    heongpu::HEContext<heongpu::Scheme::CKKS> context(
-        heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
-        heongpu::sec_level_type::none);
+    heongpu::HEContext<heongpu::Scheme::CKKS> context =
+        heongpu::GenHEContext<heongpu::Scheme::CKKS>(
+            heongpu::keyswitching_type::KEYSWITCHING_METHOD_I,
+            heongpu::sec_level_type::none);
 
     size_t poly_modulus_degree = 8192;
-    context.set_poly_modulus_degree(poly_modulus_degree);
-    context.set_coeff_modulus_bit_sizes({60, 50, 50, 50}, {60});
-    context.generate();
-    context.print_parameters();
+    context->set_poly_modulus_degree(poly_modulus_degree);
+    context->set_coeff_modulus_bit_sizes({60, 50, 50, 50}, {60});
+    context->generate();
+    context->print_parameters();
 
     double scale = pow(2.0, 50);
 
