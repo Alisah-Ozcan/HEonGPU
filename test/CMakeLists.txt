@@ -44,7 +44,7 @@ function(add_test exe source)
     target_link_libraries(${exe} PRIVATE heongpu CUDA::cudart gtest_main)
     set_target_properties(${exe} PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
-        POSITION_INDEPENDENT_CODE OFF
+        POSITION_INDEPENDENT_CODE ON
         CUDA_RUNTIME_LIBRARY Static
         CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}"
     )

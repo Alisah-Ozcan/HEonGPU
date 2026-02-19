@@ -22,7 +22,8 @@ include(FetchContent)
 FetchContent_Declare(
     rmm
     GIT_REPOSITORY https://github.com/rapidsai/rmm
-    GIT_TAG        branch-24.08
+    GIT_TAG        branch-25.08
+    SOURCE_SUBDIR  cpp
 )
 
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)

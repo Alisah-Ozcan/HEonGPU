@@ -130,7 +130,7 @@ HEonGPU now includes support for **Multiparty Computation (MPC)** protocols, pro
 
 ### Requirements
 
-- [CMake](https://cmake.org/download/) >=3.26.4
+- [CMake](https://cmake.org/download/) >=3.30.4
 - [GCC](https://gcc.gnu.org/)
 - [GMP](https://gmplib.org/)
 - [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) >=11.4
@@ -378,6 +378,7 @@ find_package(HEonGPU)
 target_link_libraries(<your-target> (PRIVATE|PUBLIC|INTERFACE) HEonGPU::heongpu CUDA::cudart)
 # ...
 set_target_properties(<your-target> PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(<your-target> PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ...
 ```
 

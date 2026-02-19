@@ -18,7 +18,7 @@ function(add_example exe source)
     target_compile_options(${exe} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-fopenmp>)
     set_target_properties(${exe} PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
-        POSITION_INDEPENDENT_CODE OFF
+        POSITION_INDEPENDENT_CODE ON
         CUDA_RUNTIME_LIBRARY Static
         CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}"
     )
