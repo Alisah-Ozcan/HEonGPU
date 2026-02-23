@@ -19,6 +19,7 @@ namespace heongpu
         plain_size_ = context->n;
         depth_ = 0;
         scale_ = 0;
+        encoding_ = encoding::SLOT;
         storage_type_ = options.storage_;
     }
 
@@ -101,6 +102,8 @@ namespace heongpu
 
             os.write((char*) &in_ntt_domain_, sizeof(in_ntt_domain_));
 
+            os.write((char*) &encoding_, sizeof(encoding_));
+
             os.write((char*) &plaintext_generated_,
                      sizeof(plaintext_generated_));
 
@@ -151,6 +154,8 @@ namespace heongpu
             is.read((char*) &scale_, sizeof(scale_));
 
             is.read((char*) &in_ntt_domain_, sizeof(in_ntt_domain_));
+
+            is.read((char*) &encoding_, sizeof(encoding_));
 
             is.read((char*) &plaintext_generated_,
                     sizeof(plaintext_generated_));

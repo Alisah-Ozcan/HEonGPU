@@ -126,5 +126,11 @@ namespace heongpu
                                   // https://eprint.iacr.org/2024/767.pdf
     };
 
+    enum class encoding : std::uint8_t
+    {
+        SLOT = 0x0,
+        COEFFICIENT = 0x1
+    };
+
 } // namespace heongpu
 #endif // HEONGPU_SCHEMES_H

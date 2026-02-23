@@ -14,18 +14,22 @@ The basic example directory in the HEonGPU repository contains sample programs t
 
 - [5_switchkey_methods_ckks.cpp](5_switchkey_methods_ckks.cpp): Examines key switching methods within the CKKS scheme, demonstrating the process of changing keys in homomorphic operations.
 
-- [6_default_stream_usage.cpp](6_default_stream_usage.cpp): Shows how to perform encrypted computations using the default CUDA stream, highlighting the integration of GPU processing in homomorphic encryption.
+- [6_ckks_coefficient_encoding.cpp](6_ckks_coefficient_encoding.cpp): Demonstrates CKKS coefficient encoding (`encoding::COEFFICIENT`) end-to-end, including encode/encrypt/decrypt/decode and encoding-mismatch validation.
 
-- [7_multi_stream_usage_way1.cpp](7_multi_stream_usage_way1.cpp): Uses OpenMP to assign a CUDA stream to each CPU thread, demonstrating a multi-stream approach for executing parallel encrypted operations efficiently.
+- [7_ckks_coeff_to_slot_roundtrip.cpp](7_ckks_coeff_to_slot_roundtrip.cpp): Demonstrates dedicated `generate_encoding_transform_context(...)` API with explicit `CtoS_start_level` / `StoC_start_level` inputs (where `StoC_start_level` is the input level of `slot_to_coeff`), then passes that context into public `coeff_to_slot` / `slot_to_coeff` APIs and validates roundtrip correctness.
 
-- [8_multi_stream_usage_way2.cpp](8_multi_stream_usage_way2.cpp): Implements a basic encrypted operation using multiple CUDA streams, where each stream is invoked by a single CPU thread. This example highlights an alternative method to leverage multi-stream functionality for concurrent GPU processing.
+- [8_default_stream_usage.cpp](8_default_stream_usage.cpp): Shows how to perform encrypted computations using the default CUDA stream, highlighting the integration of GPU processing in homomorphic encryption.
 
-- [9_basic_bfv_logic.cpp](9_basic_bfv_logic.cpp): Demonstrates basic logic operations on encrypted binarys using the BFV scheme, including encryption, evaluation, and decryption.
+- [9_multi_stream_usage_way1.cpp](9_multi_stream_usage_way1.cpp): Uses OpenMP to assign a CUDA stream to each CPU thread, demonstrating a multi-stream approach for executing parallel encrypted operations efficiently.
 
-- [10_basic_ckks_logic.cpp](10_basic_ckks_logic.cpp): Demonstrates basic logic operations on encrypted binarys using the CKKS scheme, including encryption, evaluation, and decryption.
+- [10_multi_stream_usage_way2.cpp](10_multi_stream_usage_way2.cpp): Implements a basic encrypted operation using multiple CUDA streams, where each stream is invoked by a single CPU thread. This example highlights an alternative method to leverage multi-stream functionality for concurrent GPU processing.
 
-- [11_bfv_serialization.cpp](11_bfv_serialization.cpp): Demonstrates serialization and deserialization workflows for BFV context and keys.
+- [11_basic_bfv_logic.cpp](11_basic_bfv_logic.cpp): Demonstrates basic logic operations on encrypted binarys using the BFV scheme, including encryption, evaluation, and decryption.
 
-- [12_ckks_serialization.cpp](12_ckks_serialization.cpp): Demonstrates serialization and deserialization workflows for CKKS context and keys.
+- [12_basic_ckks_logic.cpp](12_basic_ckks_logic.cpp): Demonstrates basic logic operations on encrypted binarys using the CKKS scheme, including encryption, evaluation, and decryption.
 
-- [13_basic_tfhe.cpp](13_basic_tfhe.cpp): Introduces the TFHE scheme basics and shows simple Boolean gate operations.
+- [13_bfv_serialization.cpp](13_bfv_serialization.cpp): Demonstrates serialization and deserialization workflows for BFV context and keys.
+
+- [14_ckks_serialization.cpp](14_ckks_serialization.cpp): Demonstrates serialization and deserialization workflows for CKKS context and keys.
+
+- [15_basic_tfhe.cpp](15_basic_tfhe.cpp): Introduces the TFHE scheme basics and shows simple Boolean gate operations.

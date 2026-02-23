@@ -55,7 +55,8 @@ namespace heongpu
         __host__ void
         encode(Plaintext<Scheme::CKKS>& plain,
                const std::vector<double>& message, double scale,
-               const ExecutionOptions& options = ExecutionOptions())
+               const ExecutionOptions& options = ExecutionOptions(),
+               encoding type = encoding::SLOT)
         {
             if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
                                  context_->total_coeff_bit_count))
@@ -63,21 +64,43 @@ namespace heongpu
                 throw std::invalid_argument("Scale out of bounds");
             }
 
-            if (message.size() > slot_count_)
-                throw std::invalid_argument(
-                    "Vector size can not be higher than slot count!");
+            if (type == encoding::SLOT)
+            {
+                if (message.size() > slot_count_)
+                {
+                    throw std::invalid_argument(
+                        "Vector size can not be higher than slot count!");
+                }
+            }
+            else
+            {
+                if (message.size() > static_cast<std::size_t>(context_->n))
+                {
+                    throw std::invalid_argument(
+                        "Vector size can not be higher than polynomial degree!");
+                }
+            }
 
             output_storage_manager(
                 plain,
                 [&](Plaintext<Scheme::CKKS>& plain_)
                 {
-                    encode_ckks(plain_, message, scale, options.stream_);
+                    if (type == encoding::SLOT)
+                    {
+                        encode_ckks(plain_, message, scale, options.stream_);
+                    }
+                    else
+                    {
+                        encode_ckks_coeff(plain_, message, scale,
+                                          options.stream_);
+                    }
 
                     plain.plain_size_ = context_->n * context_->Q_size;
                     plain.scheme_ = context_->scheme_;
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
+                    plain.encoding_ = type;
                     plain.plaintext_generated_ = true;
                 },
                 options);
@@ -98,7 +121,8 @@ namespace heongpu
         __host__ void
         encode(Plaintext<Scheme::CKKS>& plain,
                const HostVector<double>& message, double scale,
-               const ExecutionOptions& options = ExecutionOptions())
+               const ExecutionOptions& options = ExecutionOptions(),
+               encoding type = encoding::SLOT)
         {
             if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
                                  context_->total_coeff_bit_count))
@@ -106,21 +130,43 @@ namespace heongpu
                 throw std::invalid_argument("Scale out of bounds");
             }
 
-            if (message.size() > slot_count_)
-                throw std::invalid_argument(
-                    "Vector size can not be higher than slot count!");
+            if (type == encoding::SLOT)
+            {
+                if (message.size() > slot_count_)
+                {
+                    throw std::invalid_argument(
+                        "Vector size can not be higher than slot count!");
+                }
+            }
+            else
+            {
+                if (message.size() > static_cast<std::size_t>(context_->n))
+                {
+                    throw std::invalid_argument(
+                        "Vector size can not be higher than polynomial degree!");
+                }
+            }
 
             output_storage_manager(
                 plain,
                 [&](Plaintext<Scheme::CKKS>& plain_)
                 {
-                    encode_ckks(plain_, message, scale, options.stream_);
+                    if (type == encoding::SLOT)
+                    {
+                        encode_ckks(plain_, message, scale, options.stream_);
+                    }
+                    else
+                    {
+                        encode_ckks_coeff(plain_, message, scale,
+                                          options.stream_);
+                    }
 
                     plain.plain_size_ = context_->n * context_->Q_size;
                     plain.scheme_ = context_->scheme_;
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
+                    plain.encoding_ = type;
                     plain.plaintext_generated_ = true;
                 },
                 options);
@@ -141,12 +187,19 @@ namespace heongpu
         __host__ void
         encode(Plaintext<Scheme::CKKS>& plain,
                const std::vector<Complex64>& message, double scale,
-               const ExecutionOptions& options = ExecutionOptions())
+               const ExecutionOptions& options = ExecutionOptions(),
+               encoding type = encoding::SLOT)
         {
             if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
                                  context_->total_coeff_bit_count))
             {
                 throw std::invalid_argument("Scale out of bounds");
+            }
+
+            if (type == encoding::COEFFICIENT)
+            {
+                throw std::invalid_argument(
+                    "Complex coefficient encoding is not supported for CKKS.");
             }
 
             if (message.size() > slot_count_)
@@ -164,6 +217,7 @@ namespace heongpu
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
+                    plain.encoding_ = type;
                     plain.plaintext_generated_ = true;
                 },
                 options);
@@ -184,12 +238,19 @@ namespace heongpu
         __host__ void
         encode(Plaintext<Scheme::CKKS>& plain,
                const HostVector<Complex64>& message, double scale,
-               const ExecutionOptions& options = ExecutionOptions())
+               const ExecutionOptions& options = ExecutionOptions(),
+               encoding type = encoding::SLOT)
         {
             if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
                                  context_->total_coeff_bit_count))
             {
                 throw std::invalid_argument("Scale out of bounds");
+            }
+
+            if (type == encoding::COEFFICIENT)
+            {
+                throw std::invalid_argument(
+                    "Complex coefficient encoding is not supported for CKKS.");
             }
 
             if (message.size() > slot_count_)
@@ -207,6 +268,7 @@ namespace heongpu
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
+                    plain.encoding_ = type;
                     plain.plaintext_generated_ = true;
                 },
                 options);
@@ -227,7 +289,8 @@ namespace heongpu
         __host__ void
         encode(Plaintext<Scheme::CKKS>& plain, const double& message,
                double scale,
-               const ExecutionOptions& options = ExecutionOptions())
+               const ExecutionOptions& options = ExecutionOptions(),
+               encoding type = encoding::SLOT)
         {
             if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
                                  context_->total_coeff_bit_count))
@@ -252,6 +315,7 @@ namespace heongpu
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
+                    plain.encoding_ = type;
                     plain.plaintext_generated_ = true;
                 },
                 options);
@@ -270,7 +334,8 @@ namespace heongpu
         __host__ void
         encode(Plaintext<Scheme::CKKS>& plain, const std::int64_t& message,
                double scale,
-               const ExecutionOptions& options = ExecutionOptions())
+               const ExecutionOptions& options = ExecutionOptions(),
+               encoding type = encoding::SLOT)
         {
             if ((scale <= 0) || (static_cast<int>(log2(scale)) >=
                                  context_->total_coeff_bit_count))
@@ -295,6 +360,7 @@ namespace heongpu
                     plain.depth_ = 0;
                     plain.scale_ = scale;
                     plain.in_ntt_domain_ = true;
+                    plain.encoding_ = type;
                     plain.plaintext_generated_ = true;
                 },
                 options);
@@ -313,7 +379,16 @@ namespace heongpu
             input_storage_manager(
                 plain,
                 [&](Plaintext<Scheme::CKKS> plain_)
-                { decode_ckks(message, plain_, options.stream_); },
+                {
+                    if (plain_.encoding_ == encoding::COEFFICIENT)
+                    {
+                        decode_ckks_coeff(message, plain_, options.stream_);
+                    }
+                    else
+                    {
+                        decode_ckks(message, plain_, options.stream_);
+                    }
+                },
                 options, false);
         }
 
@@ -332,7 +407,16 @@ namespace heongpu
             input_storage_manager(
                 plain,
                 [&](Plaintext<Scheme::CKKS> plain_)
-                { decode_ckks(message, plain_, options.stream_); },
+                {
+                    if (plain_.encoding_ == encoding::COEFFICIENT)
+                    {
+                        decode_ckks_coeff(message, plain_, options.stream_);
+                    }
+                    else
+                    {
+                        decode_ckks(message, plain_, options.stream_);
+                    }
+                },
                 options, false);
         }
 
@@ -349,7 +433,15 @@ namespace heongpu
             input_storage_manager(
                 plain,
                 [&](Plaintext<Scheme::CKKS> plain_)
-                { decode_ckks(message, plain_, options.stream_); },
+                {
+                    if (plain_.encoding_ == encoding::COEFFICIENT)
+                    {
+                        throw std::invalid_argument(
+                            "Coefficient encoded CKKS plaintext can not be "
+                            "decoded to complex slots.");
+                    }
+                    decode_ckks(message, plain_, options.stream_);
+                },
                 options, false);
         }
 
@@ -368,7 +460,15 @@ namespace heongpu
             input_storage_manager(
                 plain,
                 [&](Plaintext<Scheme::CKKS> plain_)
-                { decode_ckks(message, plain_, options.stream_); },
+                {
+                    if (plain_.encoding_ == encoding::COEFFICIENT)
+                    {
+                        throw std::invalid_argument(
+                            "Coefficient encoded CKKS plaintext can not be "
+                            "decoded to complex slots.");
+                    }
+                    decode_ckks(message, plain_, options.stream_);
+                },
                 options, false);
         }
 
@@ -395,6 +495,16 @@ namespace heongpu
                                   const HostVector<double>& message,
                                   const double scale,
                                   const cudaStream_t stream);
+
+        __host__ void encode_ckks_coeff(Plaintext<Scheme::CKKS>& plain,
+                                        const std::vector<double>& message,
+                                        const double scale,
+                                        const cudaStream_t stream);
+
+        __host__ void encode_ckks_coeff(Plaintext<Scheme::CKKS>& plain,
+                                        const HostVector<double>& message,
+                                        const double scale,
+                                        const cudaStream_t stream);
 
         //
 
@@ -428,6 +538,14 @@ namespace heongpu
         __host__ void decode_ckks(HostVector<double>& message,
                                   Plaintext<Scheme::CKKS>& plain,
                                   const cudaStream_t stream);
+
+        __host__ void decode_ckks_coeff(std::vector<double>& message,
+                                        Plaintext<Scheme::CKKS>& plain,
+                                        const cudaStream_t stream);
+
+        __host__ void decode_ckks_coeff(HostVector<double>& message,
+                                        Plaintext<Scheme::CKKS>& plain,
+                                        const cudaStream_t stream);
 
         //
 

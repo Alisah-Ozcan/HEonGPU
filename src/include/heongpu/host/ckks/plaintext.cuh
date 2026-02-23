@@ -117,6 +117,13 @@ namespace heongpu
         inline bool in_ntt_domain() const noexcept { return in_ntt_domain_; }
 
         /**
+         * @brief Returns the semantic encoding mode of the plaintext.
+         *
+         * @return encoding The encoding mode (`SLOT` or `COEFFICIENT`).
+         */
+        inline encoding encoding_type() const noexcept { return encoding_; }
+
+        /**
          * @brief Default constructor for Plaintext.
          *
          * Initializes an empty Plaintext object. All members will have their
@@ -127,7 +134,7 @@ namespace heongpu
         Plaintext(const Plaintext& copy)
             : scheme_(copy.scheme_), plain_size_(copy.plain_size_),
               depth_(copy.depth_), scale_(copy.scale_),
-              in_ntt_domain_(copy.in_ntt_domain_),
+              in_ntt_domain_(copy.in_ntt_domain_), encoding_(copy.encoding_),
               storage_type_(copy.storage_type_),
               plaintext_generated_(copy.plaintext_generated_)
         {
@@ -156,6 +163,7 @@ namespace heongpu
               depth_(std::move(assign.depth_)),
               scale_(std::move(assign.scale_)),
               in_ntt_domain_(std::move(assign.in_ntt_domain_)),
+              encoding_(std::move(assign.encoding_)),
               storage_type_(std::move(assign.storage_type_)),
               plaintext_generated_(std::move(assign.plaintext_generated_)),
               device_locations_(std::move(assign.device_locations_)),
@@ -172,6 +180,7 @@ namespace heongpu
                 depth_ = copy.depth_;
                 scale_ = copy.scale_;
                 in_ntt_domain_ = copy.in_ntt_domain_;
+                encoding_ = copy.encoding_;
                 storage_type_ = copy.storage_type_;
                 plaintext_generated_ = copy.plaintext_generated_;
 
@@ -204,6 +213,7 @@ namespace heongpu
                 scheme_ = std::move(assign.scheme_);
                 plain_size_ = std::move(assign.plain_size_);
                 in_ntt_domain_ = std::move(assign.in_ntt_domain_);
+                encoding_ = std::move(assign.encoding_);
                 storage_type_ = std::move(assign.storage_type_);
                 plaintext_generated_ = std::move(assign.plaintext_generated_);
                 depth_ = std::move(assign.depth_);
@@ -226,6 +236,7 @@ namespace heongpu
         double scale_;
 
         bool in_ntt_domain_ = false;
+        encoding encoding_ = encoding::SLOT;
         storage_type storage_type_;
 
         bool plaintext_generated_ = false;

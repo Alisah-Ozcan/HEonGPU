@@ -34,6 +34,7 @@ namespace heongpu
         rescale_required_ = false;
         relinearization_required_ = false;
         scale_ = 0;
+        encoding_ = encoding::SLOT;
 
         storage_type_ = options.storage_;
 
@@ -188,6 +189,8 @@ namespace heongpu
 
             os.write((char*) &scale_, sizeof(scale_));
 
+            os.write((char*) &encoding_, sizeof(encoding_));
+
             os.write((char*) &rescale_required_, sizeof(rescale_required_));
 
             os.write((char*) &relinearization_required_,
@@ -253,6 +256,8 @@ namespace heongpu
             is.read((char*) &storage_type_, sizeof(storage_type_));
 
             is.read((char*) &scale_, sizeof(scale_));
+
+            is.read((char*) &encoding_, sizeof(encoding_));
 
             is.read((char*) &rescale_required_, sizeof(rescale_required_));
 

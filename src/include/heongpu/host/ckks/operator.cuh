@@ -26,6 +26,61 @@
 
 namespace heongpu
 {
+    struct CKKSEncodingTransformConfig
+    {
+        int CtoS_piece_; // [2, 5]
+        int StoC_piece_; // [2, 5]
+        int CtoS_start_level_; // ciphertext level where CoeffToSlot starts
+        int StoC_start_level_; // ciphertext level where SlotToCoeff starts
+        bool less_key_mode_;
+
+        CKKSEncodingTransformConfig(int CtoS_piece = 3, int StoC_piece = 3,
+                                    bool less_key_mode = true)
+            : CtoS_piece_(CtoS_piece), StoC_piece_(StoC_piece),
+              CtoS_start_level_(-1), StoC_start_level_(-1),
+              less_key_mode_(less_key_mode)
+        {
+        }
+
+        CKKSEncodingTransformConfig(int CtoS_piece, int StoC_piece,
+                                    int CtoS_start_level,
+                                    int StoC_start_level,
+                                    bool less_key_mode = true)
+            : CtoS_piece_(CtoS_piece), StoC_piece_(StoC_piece),
+              CtoS_start_level_(CtoS_start_level),
+              StoC_start_level_(StoC_start_level),
+              less_key_mode_(less_key_mode)
+        {
+        }
+    };
+
+    struct CKKSEncodingTransformContext
+    {
+        bool generated_ = false;
+        bool less_key_mode_ = false;
+        double scale_boot_ = 0.0;
+
+        int CtoS_piece_ = 0;
+        int StoC_piece_ = 0;
+        int CtoS_level_ = 0;
+        int StoC_level_ = 0;
+
+        std::vector<int> key_indexs_;
+
+        std::vector<heongpu::DeviceVector<Data64>> V_matrixs_rotated_encoded_;
+        std::vector<heongpu::DeviceVector<Data64>>
+            V_inv_matrixs_rotated_encoded_;
+
+        std::vector<std::vector<std::vector<int>>> diags_matrices_bsgs_;
+        std::vector<std::vector<std::vector<int>>> diags_matrices_inv_bsgs_;
+
+        std::vector<std::vector<std::vector<int>>> real_shift_n2_bsgs_;
+        std::vector<std::vector<std::vector<int>>> real_shift_n2_inv_bsgs_;
+
+        DeviceVector<Data64> encoded_complex_minus_iover2_;
+        DeviceVector<Data64> encoded_complex_i_;
+    };
+
     /**
      * @brief HEOperator is responsible for performing homomorphic operations on
      * encrypted data, such as addition, subtraction, multiplication, and other
@@ -149,6 +204,12 @@ namespace heongpu
                 throw std::logic_error("Ciphertexts leveled are not equal");
             }
 
+            if (input1.encoding_ != input2.encoding_)
+            {
+                throw std::invalid_argument(
+                    "Ciphertext and Plaintext should have same encoding type");
+            }
+
             if (input1.relinearization_required_)
             {
                 throw std::invalid_argument(
@@ -177,8 +238,8 @@ namespace heongpu
                                         context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.depth_ = input1_.depth_;
-                                    output_.in_ntt_domain_ =
-                                        input1_.in_ntt_domain_;
+                                    output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                                     output_.scale_ = input1_.scale_;
                                     output_.rescale_required_ =
                                         input1_.rescale_required_;
@@ -208,6 +269,12 @@ namespace heongpu
             if (input1.depth_ != input2.depth_)
             {
                 throw std::logic_error("Ciphertexts leveled are not equal");
+            }
+
+            if (input1.encoding_ != input2.encoding_)
+            {
+                throw std::invalid_argument(
+                    "Ciphertext and Plaintext should have same encoding type");
             }
 
             if (input1.relinearization_required_)
@@ -272,6 +339,7 @@ namespace heongpu
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.scale_ = input1_.scale_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
@@ -332,6 +400,12 @@ namespace heongpu
                 throw std::logic_error("Ciphertexts leveled are not equal");
             }
 
+            if (input1.encoding_ != input2.encoding_)
+            {
+                throw std::invalid_argument(
+                    "Ciphertext and Plaintext should have same encoding type");
+            }
+
             if (input1.relinearization_required_)
             {
                 throw std::invalid_argument(
@@ -360,8 +434,8 @@ namespace heongpu
                                         context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.depth_ = input1_.depth_;
-                                    output_.in_ntt_domain_ =
-                                        input1_.in_ntt_domain_;
+                                    output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                                     output_.scale_ = input1_.scale_;
                                     output_.rescale_required_ =
                                         input1_.rescale_required_;
@@ -391,6 +465,12 @@ namespace heongpu
             if (input1.depth_ != input2.depth_)
             {
                 throw std::logic_error("Ciphertexts leveled are not equal");
+            }
+
+            if (input1.encoding_ != input2.encoding_)
+            {
+                throw std::invalid_argument(
+                    "Ciphertext and Plaintext should have same encoding type");
             }
 
             if (input1.relinearization_required_)
@@ -454,6 +534,7 @@ namespace heongpu
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.scale_ = input1_.scale_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
@@ -525,6 +606,7 @@ namespace heongpu
                                 input1_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.scale_ = input1_.scale_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
@@ -560,6 +642,12 @@ namespace heongpu
                     "non-linear part! Please use relinearization operation!");
             }
 
+            if (input1.encoding_ != input2.encoding_)
+            {
+                throw std::invalid_argument(
+                    "Both Ciphertexts should have same encoding type");
+            }
+
             if (input1.rescale_required_ || input2.rescale_required_)
             {
                 throw std::invalid_argument(
@@ -590,8 +678,8 @@ namespace heongpu
                                         context_->Q_size;
                                     output_.cipher_size_ = 3;
                                     output_.depth_ = input1_.depth_;
-                                    output_.in_ntt_domain_ =
-                                        input1_.in_ntt_domain_;
+                                    output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                                     output_.relinearization_required_ = true;
                                     output_.ciphertext_generated_ = true;
                                 },
@@ -641,6 +729,12 @@ namespace heongpu
                     "operation!");
             }
 
+            if (input1.encoding_ != input2.encoding_)
+            {
+                throw std::invalid_argument(
+                    "Ciphertext and Plaintext should have same encoding type");
+            }
+
             int current_decomp_count = context_->Q_size - input1.depth_;
 
             if (input1.memory_size() < (2 * context_->n * current_decomp_count))
@@ -678,8 +772,8 @@ namespace heongpu
                                         context_->Q_size;
                                     output_.cipher_size_ = 2;
                                     output_.depth_ = input1_.depth_;
-                                    output_.in_ntt_domain_ =
-                                        input1_.in_ntt_domain_;
+                                    output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                                     output_.relinearization_required_ =
                                         input1_.relinearization_required_;
                                     output_.ciphertext_generated_ = true;
@@ -753,6 +847,7 @@ namespace heongpu
                             output_.cipher_size_ = 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.relinearization_required_ =
                                 input1_.relinearization_required_;
                             output_.ciphertext_generated_ = true;
@@ -809,6 +904,7 @@ namespace heongpu
                                 input1_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
                             output_.relinearization_required_ =
@@ -851,6 +947,7 @@ namespace heongpu
                                 input_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input_.depth_;
                             output_.in_ntt_domain_ = input_.in_ntt_domain_;
+                            output_.encoding_ = input_.encoding_;
                             output_.rescale_required_ =
                                 input_.rescale_required_;
                             output_.relinearization_required_ =
@@ -891,6 +988,7 @@ namespace heongpu
                                 input1_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.scale_ = input1_.scale_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
@@ -932,6 +1030,7 @@ namespace heongpu
                                 input1_.relinearization_required_ ? 3 : 2;
                             output_.depth_ = input1_.depth_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.scale_ = input1_.scale_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
@@ -1141,6 +1240,7 @@ namespace heongpu
                             output_.depth_ = input1_.depth_;
                             output_.scale_ = input1_.scale_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
                             output_.relinearization_required_ =
@@ -1229,6 +1329,7 @@ namespace heongpu
                             output_.depth_ = input1_.depth_;
                             output_.scale_ = input1_.scale_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
                             output_.relinearization_required_ =
@@ -1300,6 +1401,7 @@ namespace heongpu
                             output_.depth_ = input1_.depth_;
                             output_.scale_ = input1_.scale_;
                             output_.in_ntt_domain_ = input1_.in_ntt_domain_;
+                                    output_.encoding_ = input1_.encoding_;
                             output_.rescale_required_ =
                                 input1_.rescale_required_;
                             output_.relinearization_required_ =
@@ -1387,6 +1489,7 @@ namespace heongpu
                             output.depth_ = input1.depth_ + 1;
                             output.scale_ = input1.scale_;
                             output.in_ntt_domain_ = input1.in_ntt_domain_;
+                            output.encoding_ = input1.encoding_;
                             output.rescale_required_ = input1.rescale_required_;
                             output.relinearization_required_ =
                                 input1.relinearization_required_;
@@ -1434,6 +1537,7 @@ namespace heongpu
                             output.depth_ = input1.depth_ + 1;
                             output.scale_ = input1.scale_;
                             output.in_ntt_domain_ = input1.in_ntt_domain_;
+                            output.encoding_ = input1.encoding_;
                             output.plaintext_generated_ = true;
                         },
                         options);
@@ -1945,6 +2049,12 @@ namespace heongpu
                       const ExecutionOptions& options = ExecutionOptions());
 
         __host__ std::vector<Ciphertext<Scheme::CKKS>>
+        coeff_to_slot(Ciphertext<Scheme::CKKS>& cipher,
+                      Galoiskey<Scheme::CKKS>& galois_key,
+                      CKKSEncodingTransformContext& transform_context,
+                      const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ std::vector<Ciphertext<Scheme::CKKS>>
         coeff_to_slot_v2(Ciphertext<Scheme::CKKS>& cipher,
                          Galoiskey<Scheme::CKKS>& galois_key,
                          const ExecutionOptions& options = ExecutionOptions());
@@ -1958,6 +2068,13 @@ namespace heongpu
         slot_to_coeff(Ciphertext<Scheme::CKKS>& cipher0,
                       Ciphertext<Scheme::CKKS>& cipher1,
                       Galoiskey<Scheme::CKKS>& galois_key,
+                      const ExecutionOptions& options = ExecutionOptions());
+
+        __host__ Ciphertext<Scheme::CKKS>
+        slot_to_coeff(Ciphertext<Scheme::CKKS>& cipher0,
+                      Ciphertext<Scheme::CKKS>& cipher1,
+                      Galoiskey<Scheme::CKKS>& galois_key,
+                      CKKSEncodingTransformContext& transform_context,
                       const ExecutionOptions& options = ExecutionOptions());
 
         __host__ Ciphertext<Scheme::CKKS>
@@ -2107,6 +2224,12 @@ namespace heongpu
         HEArithmeticOperator(HEContext<Scheme::CKKS> context,
                              HEEncoder<Scheme::CKKS>& encoder);
 
+        __host__ void generate_encoding_transform_context(
+            CKKSEncodingTransformContext& transform_context,
+            const double scale,
+            const CKKSEncodingTransformConfig& config =
+                CKKSEncodingTransformConfig());
+
         /**
          * @brief Generates bootstrapping parameters.
          *
@@ -2197,6 +2320,9 @@ namespace heongpu
             Galoiskey<Scheme::CKKS>& galois_key,
             Relinkey<Scheme::CKKS>& relin_key,
             const ExecutionOptions& options = ExecutionOptions());
+
+        using HEOperator<Scheme::CKKS>::coeff_to_slot;
+        using HEOperator<Scheme::CKKS>::slot_to_coeff;
     };
 
     /**

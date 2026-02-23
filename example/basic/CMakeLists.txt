@@ -11,14 +11,16 @@ set(EXECUTABLES
     3_basic_memorypool_config 3_basic_memorypool_config.cpp
     4_switchkey_methods_bfv 4_switchkey_methods_bfv.cpp
     5_switchkey_methods_ckks 5_switchkey_methods_ckks.cpp
-    6_default_stream_usage 6_default_stream_usage.cpp
-    7_multi_stream_usage_way1 7_multi_stream_usage_way1.cpp
-    8_multi_stream_usage_way2 8_multi_stream_usage_way2.cpp
-    9_basic_bfv_logic 9_basic_bfv_logic.cpp
-    10_basic_ckks_logic 10_basic_ckks_logic.cpp
-    11_bfv_serialization 11_bfv_serialization.cpp
-    12_ckks_serialization 12_ckks_serialization.cpp
-    13_basic_tfhe 13_basic_tfhe.cpp
+    6_ckks_coefficient_encoding 6_ckks_coefficient_encoding.cpp
+    7_ckks_coeff_to_slot_roundtrip 7_ckks_coeff_to_slot_roundtrip.cpp
+    8_default_stream_usage 8_default_stream_usage.cpp
+    9_multi_stream_usage_way1 9_multi_stream_usage_way1.cpp
+    10_multi_stream_usage_way2 10_multi_stream_usage_way2.cpp
+    11_basic_bfv_logic 11_basic_bfv_logic.cpp
+    12_basic_ckks_logic 12_basic_ckks_logic.cpp
+    13_bfv_serialization 13_bfv_serialization.cpp
+    14_ckks_serialization 14_ckks_serialization.cpp
+    15_basic_tfhe 15_basic_tfhe.cpp
 )
 
 function(add_example exe source)

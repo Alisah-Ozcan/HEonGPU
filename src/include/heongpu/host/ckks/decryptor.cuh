@@ -78,6 +78,8 @@ namespace heongpu
                             plaintext.depth_ = ciphertext.depth_;
                             plaintext.scale_ = ciphertext.scale_;
                             plaintext.in_ntt_domain_ = true;
+                            plaintext.encoding_ = ciphertext.encoding_;
+                            plaintext.plaintext_generated_ = true;
                         },
                         options);
                 },

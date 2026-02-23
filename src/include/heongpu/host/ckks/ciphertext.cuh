@@ -180,6 +180,13 @@ namespace heongpu
         inline double scale() const noexcept { return scale_; }
 
         /**
+         * @brief Returns the semantic encoding mode carried by ciphertext.
+         *
+         * @return encoding The encoding mode (`SLOT` or `COEFFICIENT`).
+         */
+        inline encoding encoding_type() const noexcept { return encoding_; }
+
+        /**
          * @brief Indicates whether rescaling is required for the ciphertext.
          *
          * @return bool True if rescaling is required, false otherwise.
@@ -208,6 +215,7 @@ namespace heongpu
               cipher_size_(copy.cipher_size_), depth_(copy.depth_),
               scheme_(copy.scheme_), in_ntt_domain_(copy.in_ntt_domain_),
               storage_type_(copy.storage_type_), scale_(copy.scale_),
+              encoding_(copy.encoding_),
               rescale_required_(copy.rescale_required_),
               relinearization_required_(copy.relinearization_required_),
               ciphertext_generated_(copy.ciphertext_generated_)
@@ -241,6 +249,7 @@ namespace heongpu
               in_ntt_domain_(std::move(assign.in_ntt_domain_)),
               storage_type_(std::move(assign.storage_type_)),
               scale_(std::move(assign.scale_)),
+              encoding_(std::move(assign.encoding_)),
               rescale_required_(std::move(assign.rescale_required_)),
               relinearization_required_(
                   std::move(assign.relinearization_required_)),
@@ -263,6 +272,7 @@ namespace heongpu
                 storage_type_ = copy.storage_type_;
 
                 scale_ = copy.scale_;
+                encoding_ = copy.encoding_;
                 rescale_required_ = copy.rescale_required_;
                 relinearization_required_ = copy.relinearization_required_;
                 ciphertext_generated_ = copy.ciphertext_generated_;
@@ -302,6 +312,7 @@ namespace heongpu
                 storage_type_ = std::move(assign.storage_type_);
 
                 scale_ = std::move(assign.scale_);
+                encoding_ = std::move(assign.encoding_);
                 rescale_required_ = std::move(assign.rescale_required_);
                 relinearization_required_ =
                     std::move(assign.relinearization_required_);
@@ -328,6 +339,7 @@ namespace heongpu
         storage_type storage_type_;
 
         double scale_;
+        encoding encoding_ = encoding::SLOT;
         bool rescale_required_;
         bool relinearization_required_;
 

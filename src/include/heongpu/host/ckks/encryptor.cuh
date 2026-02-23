@@ -81,6 +81,7 @@ namespace heongpu
                             ciphertext.cipher_size_ = 2;
                             ciphertext.depth_ = 0;
                             ciphertext.in_ntt_domain_ = true;
+                            ciphertext.encoding_ = plaintext.encoding_;
                             ciphertext.scale_ = plaintext.scale_;
                             ciphertext.rescale_required_ = false;
                             ciphertext.relinearization_required_ = false;

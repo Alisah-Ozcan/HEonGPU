@@ -342,10 +342,12 @@ namespace heongpu
             partial_ciphertext.cipher_size_ = 2;
             partial_ciphertext.depth_ = ciphertext.depth_;
             partial_ciphertext.in_ntt_domain_ = ciphertext.in_ntt_domain_;
+            partial_ciphertext.encoding_ = ciphertext.encoding_;
             partial_ciphertext.scale_ = ciphertext.scale_;
             partial_ciphertext.rescale_required_ = ciphertext.rescale_required_;
             partial_ciphertext.relinearization_required_ =
                 ciphertext.relinearization_required_;
+            partial_ciphertext.ciphertext_generated_ = true;
         }
 
         /**
@@ -376,6 +378,7 @@ namespace heongpu
             scheme_type scheme_check = ciphertexts[0].scheme_;
             int depth_check = ciphertexts[0].depth_;
             double scale_check = ciphertexts[0].scale_;
+            encoding encoding_check = ciphertexts[0].encoding_;
 
             for (int i = 1; i < cipher_count; i++)
             {
@@ -396,6 +399,12 @@ namespace heongpu
                     throw std::invalid_argument(
                         "Ciphertext scales should be same!");
                 }
+
+                if (encoding_check != ciphertexts[i].encoding_)
+                {
+                    throw std::invalid_argument(
+                        "Ciphertext encoding types should be same!");
+                }
             }
 
             input_vector_storage_manager(
@@ -415,6 +424,8 @@ namespace heongpu
                             plaintext_.depth_ = depth_check;
                             plaintext_.scale_ = scale_check;
                             plaintext_.in_ntt_domain_ = true;
+                            plaintext_.encoding_ = encoding_check;
+                            plaintext_.plaintext_generated_ = true;
                         },
                         options);
                 },
@@ -468,6 +479,7 @@ namespace heongpu
                                     output.cipher_size_ = 2;
                                     output.depth_ = common.depth_;
                                     output.in_ntt_domain_ = true;
+                                    output.encoding_ = common.encoding_;
                                     output.scale_ = common.scale_;
                                     output.rescale_required_ = false;
                                     output.relinearization_required_ = false;
@@ -529,6 +541,7 @@ namespace heongpu
                                     output.cipher_size_ = 2;
                                     output.depth_ = 0;
                                     output.in_ntt_domain_ = true;
+                                    output.encoding_ = encoding::SLOT;
                                     output.scale_ = scale_;
                                     output.rescale_required_ = false;
                                     output.relinearization_required_ = false;
