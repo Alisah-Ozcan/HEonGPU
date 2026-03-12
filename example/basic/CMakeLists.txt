@@ -21,6 +21,7 @@ set(EXECUTABLES
     13_bfv_serialization 13_bfv_serialization.cpp
     14_ckks_serialization 14_ckks_serialization.cpp
     15_basic_tfhe 15_basic_tfhe.cpp
+    16_ckks_rotation_parallel 16_ckks_rotation_parallel.cpp
 )
 
 function(add_example exe source)

@@ -118,7 +118,7 @@ add_subdirectory(src)
 ############################################################################
 
 option(HEonGPU_BUILD_TESTS "Build HEonGPU Tests" OFF)
-option(HEonGPU_BUILD_EXAMPLES "Build HEonGPU Examples" OFF)
+option(HEonGPU_BUILD_EXAMPLES "Build HEonGPU Examples" ON)
 option(HEonGPU_BUILD_BENCHMARKS "Build HEonGPU Benchmarks" OFF)
 
 message(STATUS "HEonGPU_BUILD_TESTS: ${HEonGPU_BUILD_TESTS}")
