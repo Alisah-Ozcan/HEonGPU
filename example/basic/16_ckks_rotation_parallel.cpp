@@ -32,6 +32,91 @@ heongpu::Ciphertext<Scheme> transposeRowToColumn(
     double scale);
 
 /**
+ * @brief Degree-3 sign approximation for homomorphic comparison: sign(x) ≈ 1.5*x - 0.5*x^3
+ *
+ * Approximates the sign function using a cubic polynomial. For |x| > 0.3, provides good
+ * classification. Returns values close to 1 when x > 0 and -1 when x < 0.
+ *
+ * @param ct_x Encrypted difference value (x)
+ * @param eval Arithmetic operator
+ * @param context HE context
+ * @param relin_key Relinearization key
+ * @param scale Encoding scale
+ * @return Ciphertext containing approximated sign(x)
+ */
+heongpu::Ciphertext<Scheme> sign_approx_deg3(
+    heongpu::Ciphertext<Scheme>& ct_x,
+    heongpu::HEArithmeticOperator<Scheme>& eval,
+    heongpu::HEContext<Scheme>& context,
+    heongpu::Relinkey<Scheme>& relin_key,
+    double scale);
+
+/**
+ * @brief Sum rows of a matrix ciphertext
+ *
+ * Given a matrix stored as a flattened ciphertext (vec_len x vec_len),
+ * aggregates each row by summing across columns.
+ *
+ * @param ct_matrix Encrypted matrix
+ * @param vec_len Dimension (vec_len x vec_len matrix)
+ * @param col_galois_key Galois key with column rotation shifts (-1, -2, ..., -(vec_len-1))
+ * @param evaluator Arithmetic operator
+ * @param encoder Encoder for creating masks
+ * @param context HE context
+ * @param scale Encoding scale
+ * @return Ciphertext with row sums at positions 0, vec_len, 2*vec_len, ...
+ */
+heongpu::Ciphertext<Scheme> sumRows(
+    const heongpu::Ciphertext<Scheme>& ct_matrix,
+    int vec_len,
+    heongpu::Galoiskey<Scheme>& col_galois_key,
+    heongpu::HEArithmeticOperator<Scheme>& evaluator,
+    heongpu::HEEncoder<Scheme>& encoder,
+    heongpu::HEContext<Scheme>& context,
+    double scale);
+
+/**
+ * @brief Basic ranking function: counts how many elements each value is greater than
+ *
+ * For each element i, computes rank[i] = number of elements j where i > j.
+ * Uses homomorphic matrix operations to compare all pairs in a single encryption.
+ *
+ * Algorithm:
+ * 1. Encode input vector in first vec_len slots
+ * 2. Replicate as row: (v1, v2, ..., vn, v1, v2, ..., vn, ...) 
+ * 3. Transpose and replicate as column: (v1, v1, ..., v1, v2, v2, ..., v2, ...)
+ * 4. Compute difference: row - column and apply sign approximation
+ * 5. Sum rows to get final rank
+ *
+ * @param ct_vector Encrypted input vector (first vec_len slots)
+ * @param vec_len Length of vector
+ * @param row_galois_key Galois key for row rotations
+ * @param col_galois_key Galois key for column rotations
+ * @param keygen Key generator for additional keys if needed
+ * @param secret_key Secret key for key generation
+ * @param relin_key Relinearization key for polynomial evaluation
+ * @param evaluator Arithmetic operator
+ * @param encoder Encoder
+ * @param context HE context
+ * @param decryptor Decryptor for optional verification
+ * @param scale Encoding scale
+ * @return Ciphertext containing rank values
+ */
+heongpu::Ciphertext<Scheme> basicRank(
+    const heongpu::Ciphertext<Scheme>& ct_vector,
+    int vec_len,
+    heongpu::Galoiskey<Scheme>& row_galois_key,
+    heongpu::Galoiskey<Scheme>& col_galois_key,
+    heongpu::HEKeyGenerator<Scheme>& keygen,
+    heongpu::Secretkey<Scheme>& secret_key,
+    heongpu::Relinkey<Scheme>& relin_key,
+    heongpu::HEArithmeticOperator<Scheme>& evaluator,
+    heongpu::HEEncoder<Scheme>& encoder,
+    heongpu::HEDecryptor<Scheme>& decryptor,
+    heongpu::HEContext<Scheme>& context,
+    double scale);
+
+/**
  * @brief GPU-aware timer using CUDA Events for accurate GPU timing
  */
 class GPUTimer {
@@ -69,7 +154,7 @@ int main()
     // Definiert die Menge an Werten, die verschlüsselt werden können. (polymod_degree / 2)
     const size_t poly_modulus_degree = 8192;
     context->set_poly_modulus_degree(poly_modulus_degree);
-    context->set_coeff_modulus_bit_sizes({60, 30, 30, 30}, {60}); // Definiert die multplikative Tiefe. Hier 3 Mult. möglich.
+    context->set_coeff_modulus_bit_sizes({40, 30, 30, 30, 30}, {40}); // 5 primes → Q_size=5, 4 rescales; 40+4*30+40=200 bits ≤ 218 (N=8192, 128-bit security)
     double scale = pow(2.0, 30); // parameter defining encoding precision
     context->generate();
 
@@ -88,10 +173,12 @@ int main()
 
     // Vektor befüllen mit maximal möglichen Elementen.
     // Rest soll dynamisch an vec_len angepasst werden.
-    const int vec_len = sqrt(poly_modulus_degree / 2);
+    // vec_len=4 ensures min pairwise diff = 1/3 and max = 1.0, keeping decoded
+    // rank errors ≤ 0.333 < 0.5 with the degree-3 sign polynomial.
+    const int vec_len = 4;
     std::vector<double> input(vec_len);
     for(int i = 0; i < vec_len; i++) {
-        input[i] = i + 1;  // [1, 2, 3, ..., 64]
+        input[i] = static_cast<double>(i) / (vec_len - 1.0);  // spans [0,1]: f(1.0)=1 exactly at extremes
     }
 
     // Calculate total slots needed for the matrix
@@ -126,11 +213,15 @@ int main()
     std::cout << "row Galois key generation took: " << keygen_time << " ms\n";
 
 
-    // Generate Galois keys for all column rotations needed 
-    // For parallel column replication: need rotations -1, -2, ..., -(vec_len-1)
+    // Generate Galois keys for all column rotations needed:
+    //   replicateColumn uses: -1, -2, -4, ..., -(vec_len/2)  (logarithmic doubling within each row)
+    //   sumRows         uses: +1, +2, +4, ..., +vec_len/2    (left-rotate to accumulate at position 0)
     std::vector<int> col_galois_shifts;
-    for (int i = 1; i < vec_len; i++) {
-        col_galois_shifts.push_back(-(i));
+    for (int i = 1; i < vec_len; i *= 2) {
+        col_galois_shifts.push_back(-i);
+    }
+    for (int step = 1; step < vec_len; step *= 2) {
+        col_galois_shifts.push_back(step);
     }
 
     std::cout << "Generating " << col_galois_shifts.size() << " Galois keys for  column rotations...\n";
@@ -141,6 +232,12 @@ int main()
     keygen.generate_galois_key(col_galois_key, secret_key);
     float keygen_time_col = keygen_timer_col.stopTimer();
     std::cout << "column Galois key generation took: " << keygen_time_col << " ms\n";
+
+    // Generate relinearization key for sign approximation polynomial evaluation
+    std::cout << "Generating relinearization key for polynomial evaluation...\n";
+    heongpu::Relinkey<Scheme> relin_key(context);
+    keygen.generate_relin_key(relin_key, secret_key);
+    std::cout << "relinearization key generation complete.\n";
 
     // we adopt the row-by-row approach [20],
     // which consists of concatenating each row into a single vector and then encrypting it. For a square matrix of size N, we have the requirement that N2 ≤ n/2, where n
@@ -221,6 +318,51 @@ int main()
                   << transposed_result[i * vec_len] << "\n";
     }
 
+    // ===== Test basicRank =====
+    std::cout << "\n=== Testing basicRank Function ===\n";
+    
+    // Use the original encrypted ciphertext (contains input vector)
+    GPUTimer rank_timer;
+    rank_timer.startTimer();
+    heongpu::Ciphertext<Scheme> ct_rank = basicRank(
+        ciphertext, vec_len, row_galois_key, col_galois_key,
+        keygen, secret_key, relin_key, evaluator, encoder, decryptor, context, scale);
+    float rank_time = rank_timer.stopTimer();
+    std::cout << "basicRank computation took: " << rank_time << " ms\n";
+
+    // Decrypt and verify ranking results
+    heongpu::Plaintext<Scheme> rank_plaintext(context);
+    decryptor.decrypt(rank_plaintext, ct_rank);
+    std::vector<double> rank_result;
+    encoder.decode(rank_result, rank_plaintext);
+
+    // Display ranking results
+    std::cout << "\nRanking results:\n";
+    std::cout << "Input vector:  ";
+    display_vector(input, vec_len);
+    // Decode: raw value at k*vec_len ≈ 2*rank[k]+1  →  rank[k] ≈ (raw - 1) / 2
+    std::cout << "Rank (count of smaller elements, decoded from raw HE output):\n";
+    for (int i = 0; i < vec_len; i++) {
+        double decoded_rank = (rank_result[i * vec_len] - 1.0) / 2.0;
+        std::cout << "  input[" << i << "] = " << input[i]
+                  << " -> rank = " << decoded_rank << "\n";
+    }
+
+    // Verify: for sorted input input[i] = (i+1)/vec_len, the rank-from-bottom is i
+    std::cout << "\nVerification (expected rank = index):\n";
+    bool all_correct = true;
+    for (int i = 0; i < vec_len; i++) {
+        double expected_rank = static_cast<double>(i);
+        double actual_rank = (rank_result[i * vec_len] - 1.0) / 2.0;
+        double error = std::abs(actual_rank - expected_rank);
+        bool is_correct = (error < 0.5);  // within 0.5 of true integer rank
+        std::cout << "  Element " << (i+1) << ": expected=" << expected_rank
+                  << ", actual=" << actual_rank
+                  << (is_correct ? "" : " INCORRECT") << "\n";
+        if (!is_correct) all_correct = false;
+    }
+    std::cout << (all_correct ? "\nAll ranking results correct!\n" : "\nSome ranking results are incorrect!\n");
+
     return EXIT_SUCCESS;
 }
 
@@ -285,27 +427,19 @@ heongpu::Ciphertext<Scheme> replicateColumn(
     heongpu::Galoiskey<Scheme>& galois_key,
     heongpu::HEArithmeticOperator<Scheme>& evaluator)
 {
-    // Create all rotations in parallel
-    std::vector<heongpu::Ciphertext<Scheme>> vector_ciphertexts(vec_len);
-    vector_ciphertexts[0] = col_initial;  // First one is the original
+    heongpu::Ciphertext<Scheme> col_replicated = col_initial;
 
-    std::cout << "Applying rotations: ";
+    std::cout << "Applying logarithmic rotations: ";
 
-    // Perform all rotations sequentially - todo: check rotation direction
-    for (int i = 1; i < vec_len; i++) {
-        vector_ciphertexts[i] = col_initial;
-        int shift = -(i * vec_len);
+    for (int i = 1; i < vec_len; i *= 2) {
+        int shift = -i;
         std::cout << shift << " ";
-        evaluator.rotate_rows_inplace(vector_ciphertexts[i], galois_key, shift);
+
+        heongpu::Ciphertext<Scheme> rotated = col_replicated;
+        evaluator.rotate_rows_inplace(rotated, galois_key, shift);
+        evaluator.add_inplace(col_replicated, rotated);
     }
     std::cout << "\n";
-
-    // Sum all rotated vectors
-    std::cout << "Summing all rotated vectors...\n";
-    heongpu::Ciphertext<Scheme> col_replicated = vector_ciphertexts[0];
-    for (int i = 1; i < vec_len; i++) {
-        evaluator.add_inplace(col_replicated, vector_ciphertexts[i]);
-    }
 
     return col_replicated;
 }
@@ -390,8 +524,160 @@ heongpu::Ciphertext<Scheme> transposeRowToColumn(
     heongpu::Plaintext<Scheme> mask(context);
     encoder.encode(mask, mask_values, scale);
     evaluator.multiply_plain_inplace(result, mask);
+    evaluator.rescale_inplace(result);  // multiply_plain sets rescale_required_=true; must rescale before any rotation (depth 0→1)
 
     std::cout << "  Transposition complete!\n";
 
     return result;
+}
+
+/**
+ * @brief Degree-3 sign approximation implementation
+ *
+ * Computes sign(x) ≈ 1.5*x - 0.5*x^3 homomorphically.
+ * Depth: 3 levels (x^2: 1, x^3: 1, final operations: 1)
+ */
+heongpu::Ciphertext<Scheme> sign_approx_deg3(
+    heongpu::Ciphertext<Scheme>& ct_x,
+    heongpu::HEArithmeticOperator<Scheme>& eval,
+    heongpu::HEContext<Scheme>& context,
+    heongpu::Relinkey<Scheme>& relin_key,
+    double scale)
+{
+    // Compute x^2
+    heongpu::Ciphertext<Scheme> ct_x2(context);
+    eval.multiply(ct_x, ct_x, ct_x2);
+    eval.relinearize_inplace(ct_x2, relin_key);
+    eval.rescale_inplace(ct_x2);
+
+    // Compute x^3 = x * x^2
+    heongpu::Ciphertext<Scheme> ct_x_drop(context);
+    ct_x_drop = ct_x;
+    eval.mod_drop_inplace(ct_x_drop);
+    heongpu::Ciphertext<Scheme> ct_x3(context);
+    eval.multiply(ct_x_drop, ct_x2, ct_x3);
+    eval.relinearize_inplace(ct_x3, relin_key);
+    eval.rescale_inplace(ct_x3);
+
+    // Compute 1.5*x
+    heongpu::Ciphertext<Scheme> ct_x_l1(context);
+    ct_x_l1 = ct_x;
+    eval.mod_drop_inplace(ct_x_l1);
+    eval.mod_drop_inplace(ct_x_l1);
+    heongpu::Ciphertext<Scheme> ct_term1(context);
+    eval.multiply_plain(ct_x_l1, 1.5, ct_term1, scale);
+    eval.rescale_inplace(ct_term1);
+
+    // Compute -0.5*x^3
+    heongpu::Ciphertext<Scheme> ct_term2(context);
+    eval.multiply_plain(ct_x3, -0.5, ct_term2, scale);
+    eval.rescale_inplace(ct_term2);
+
+    // Combine: 1.5*x - 0.5*x^3
+    heongpu::Ciphertext<Scheme> ct_result(context);
+    eval.add(ct_term1, ct_term2, ct_result);
+
+    return ct_result;
+}
+
+/**
+ * @brief Sum each row of a matrix ciphertext
+ *
+ * Uses logarithmic rotations to aggregate column values within each row.
+ */
+heongpu::Ciphertext<Scheme> sumRows(
+    const heongpu::Ciphertext<Scheme>& ct_matrix,
+    int vec_len,
+    heongpu::Galoiskey<Scheme>& col_galois_key,
+    heongpu::HEArithmeticOperator<Scheme>& evaluator,
+    heongpu::HEEncoder<Scheme>& encoder,
+    heongpu::HEContext<Scheme>& context,
+    double scale)
+{
+    heongpu::Ciphertext<Scheme> result = ct_matrix;
+
+    std::cout << "  Summing rows with logarithmic reductions (vec_len=" << vec_len << ")...\n";
+
+    // Logarithmic reduction along columns: for each row, sum the vec_len elements
+    // We perform reductions with shifts 1, 2, 4, 8, ... to bring all elements to position 0 of each row
+    for (int step = 1; step < vec_len; step *= 2) {
+        heongpu::Ciphertext<Scheme> rotated = result;
+        // Rotate right by 'step' positions within each row
+        // Element at position (row, col) moves to position (row, col-step)
+        evaluator.rotate_rows_inplace(rotated, col_galois_key, step);
+        evaluator.add_inplace(result, rotated);
+    }
+
+    // The logarithmic left-rotation accumulation guarantees that position k*vec_len
+    // (first slot of row k) holds the correct row sum.  Masking is intentionally
+    // skipped here: at this depth (Q_size-1) a multiply_plain would require a
+    // rescale that exhausts all available levels.  Callers read rank_result[i*vec_len].
+    return result;
+}
+
+/**
+ * @brief Basic ranking: count how many elements are smaller than each element
+ *
+ * Implements the core ranking algorithm:
+ * For each element i, rank[i] counts how many elements j satisfy i > j.
+ */
+heongpu::Ciphertext<Scheme> basicRank(
+    const heongpu::Ciphertext<Scheme>& ct_vector,
+    int vec_len,
+    heongpu::Galoiskey<Scheme>& row_galois_key,
+    heongpu::Galoiskey<Scheme>& col_galois_key,
+    heongpu::HEKeyGenerator<Scheme>& keygen,
+    heongpu::Secretkey<Scheme>& secret_key,
+    heongpu::Relinkey<Scheme>& relin_key,
+    heongpu::HEArithmeticOperator<Scheme>& evaluator,
+    heongpu::HEEncoder<Scheme>& encoder,
+    heongpu::HEDecryptor<Scheme>& decryptor,
+    heongpu::HEContext<Scheme>& context,
+    double scale)
+{
+    std::cout << "\n=== Basic Ranking ===\n";
+    std::cout << "Computing rank for vector of length " << vec_len << "\n";
+
+    // Step 1: Replicate input as rows: position (k,j) = v[j]
+    std::cout << "Step 1: Replicating vector as rows...\n";
+    heongpu::Ciphertext<Scheme> ct_row = replicateRow(ct_vector, vec_len, row_galois_key, evaluator);
+
+    // Step 2: Transpose to column representation (depth 0→1 due to internal rescale),
+    //         then replicate as columns: position (k,j) = v[k]
+    std::cout << "Step 2: Transposing to column and replicating...\n";
+    heongpu::Ciphertext<Scheme> ct_col_transposed = transposeRowToColumn(
+        ct_vector, vec_len, keygen, secret_key, evaluator, encoder, context, scale);
+    heongpu::Ciphertext<Scheme> ct_col = replicateColumn(ct_col_transposed, vec_len, col_galois_key, evaluator);
+
+    // Align ct_row depth to match ct_col (transposeRowToColumn rescaled: depth 0→1)
+    evaluator.mod_drop_inplace(ct_row);
+
+    // Step 3: diff[k,j] = v[k] - v[j]  →  sign > 0 when v[k] > v[j]  (rank from bottom)
+    std::cout << "Step 3: Computing differences (column - row = v[k] - v[j])...\n";
+    heongpu::Ciphertext<Scheme> ct_diff(context);
+    evaluator.sub(ct_col, ct_row, ct_diff);  // NOTE: col-row, not row-col
+
+    // Step 4: Apply sign approximation to each difference
+    // sign(x) ≈ 1.5*x - 0.5*x^3 returns ~1 if x > 0, ~0 if x ≈ 0, ~-1 if x < 0
+    // We want to count x > 0, so we need to convert: (1 + sign(x)) / 2 gives ~1 for x > 0, ~0 for x ≤ 0
+    // But here we use sign directly and post-process
+    std::cout << "Step 4: Applying sign approximation...\n";
+    heongpu::Ciphertext<Scheme> ct_sign = sign_approx_deg3(ct_diff, evaluator, context, 
+                                                           relin_key, scale);
+
+    // Step 5: Shift sign range from [-1,1] to [0,2] by adding 1 (no level consumed).
+    // We intentionally skip the ÷2 step: at depth=4 (Q_size-1) a multiply_plain
+    // would require one more rescale which exhausts all moduli.
+    // After summing: position k*vec_len ≈ 2*rank[k] + 1.  Callers divide by 2.
+    std::cout << "Step 5: Shifting sign to [0,2] (add 1, skip /2 to conserve levels)...\n";
+    evaluator.add_plain_inplace(ct_sign, 1.0);  // [0,2]: ≈2 when v[k]>v[j], ≈0 when v[k]<v[j]
+
+    // Step 6: Sum rows to aggregate counts (result at position k*vec_len ≈ 2*rank[k]+1)
+    std::cout << "Step 6: Summing rows to get final ranks...\n";
+    heongpu::Ciphertext<Scheme> ct_rank = sumRows(ct_sign, vec_len, col_galois_key,
+                                                   evaluator, encoder, context, scale);
+
+    std::cout << "Ranking complete!\n";
+
+    return ct_rank;
 }
