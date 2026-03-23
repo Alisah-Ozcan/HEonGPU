@@ -3,6 +3,7 @@
 #include "../example_util.h"
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <cmath>
 #include <omp.h>
 
@@ -126,7 +127,34 @@ sumRows(const heongpu::Ciphertext<Scheme>& ct_matrix, int vec_len,
         heongpu::HEContext<Scheme>& context, double scale);
 
 /**
+ * @brief Normalize a plaintext vector to [0,1] before encryption.
+ *
+ * This is a client-side operation that MUST be applied before encode/encrypt.
+ * The HE ranking protocol requires that all pairwise differences (v[k] - v[j])
+ * lie within [-1,1], which is the domain of the Chebyshev sign approximation.
+ * Normalizing input to [0,1] guarantees this: the maximum possible difference
+ * is 1 - 0 = 1. The server only ever receives normalized, encrypted data.
+ *
+ * @param input Raw values (any finite range; all-equal input is undefined)
+ * @return Values linearly rescaled to [0,1] via min-max normalization
+ */
+std::vector<double> normalizeForRanking(const std::vector<double>& input)
+{
+    double lo    = *std::min_element(input.begin(), input.end());
+    double hi    = *std::max_element(input.begin(), input.end());
+    double range = hi - lo;
+    std::vector<double> normalized(input.size());
+    for (size_t i = 0; i < input.size(); i++)
+        normalized[i] = (input[i] - lo) / range;
+    return normalized;
+}
+
+/**
  * @brief Basic ranking: counts how many elements each value is greater than.
+ *
+ * Precondition: ct_vector must encrypt values in [0,1]. The client is
+ * responsible for calling normalizeForRanking() before encode/encrypt.
+ * Passing un-normalized data silently breaks the Chebyshev sign step.
  *
  * Depth budget (14 levels available with poly_modulus_degree=32768, 15 primes):
  *   depth 0  → fresh ciphertext
@@ -221,11 +249,16 @@ int main()
     // min pairwise diff = 1/(vec_len-1) = 1/63 ≈ 0.016; degree-2048
     // Chebyshev correctly classifies sign for |x| ≥ 0.016. ✓
     const int vec_len = 64;
+
+    // Raw input: any finite values are valid here.
     std::vector<double> input(vec_len);
     for (int i = 0; i < vec_len; i++)
-    {
-        input[i] = static_cast<double>(i) / (vec_len - 1.0); // spans [0,1]
-    }
+        input[i] = static_cast<double>(i); // 0, 1, 2, ..., 63
+
+    // Client-side normalization: map to [0,1] before encryption so that all
+    // pairwise differences lie in [-1,1], matching the Chebyshev sign domain.
+    // The server never sees raw values — only normalized, encrypted data.
+    std::vector<double> normalized_input = normalizeForRanking(input);
 
     int matrix_slots  = vec_len * vec_len;
     int available_slots = poly_modulus_degree / 2;
@@ -282,10 +315,12 @@ int main()
     std::cout << "\n=== Homomorphic Row Replication ===\n";
     std::cout << "Original input vector: ";
     display_vector(input, vec_len);
+    std::cout << "Normalized input (sent to server): ";
+    display_vector(normalized_input, vec_len);
 
     std::vector<double> row_initial(poly_modulus_degree / 2, 0.0);
     for (int i = 0; i < vec_len; i++)
-        row_initial[i] = input[i];
+        row_initial[i] = normalized_input[i];
 
     heongpu::Plaintext<Scheme> plaintext(context);
     encoder.encode(plaintext, row_initial, scale);
@@ -618,7 +653,8 @@ basicRank(const heongpu::Ciphertext<Scheme>& ct_vector, int vec_len,
     evaluator.sub(ct_col, ct_row, ct_diff); // v[k] - v[j]: positive if v[k] > v[j]
 
     // Step 4: sign approximation using degree-2048 Chebyshev BSGS
-    // ct_diff is in [-1,1] (input in [0,1]) — no normalization needed
+    // ct_diff ∈ [-1,1] is guaranteed by the caller's normalizeForRanking()
+    // precondition (input in [0,1] → diffs bounded to [-1,1]).
     // Depth consumed: 12 levels → total depth ≈ 13
     std::cout << "Step 4: Applying Chebyshev sign approximation (degree 2048)...\n";
     heongpu::Ciphertext<Scheme> ct_sign = chebyshev_sign_approx(
