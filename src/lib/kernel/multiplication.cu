@@ -401,6 +401,43 @@ namespace heongpu
         out[location_ct] = sum_ctpt;
     }
 
+    // Indexed variant of cipherplain_multiply_accumulate_kernel.
+    // Instead of reading iteration_count consecutive ciphertexts at a fixed
+    // stride, reads from baby_results at positions given by ct_indices[i].
+    // This avoids the gather copy into a contiguous buffer.
+    // ct_indices[i] is the baby-step index; the ciphertext offset is
+    //   ct_indices[i] * ct_stride  (ct_stride = 2 * current_decomp_count * N).
+    // Grid: dim3((n >> 8), pql_count, 2), 256
+    __global__ void cipherplain_multiply_accumulate_indexed_kernel(
+        Data64* baby_results, Data64* plaintexts, Data64* out,
+        Modulus64* modulus, int* ct_indices, int iteration_count,
+        int current_decomp_count, int first_decomp_count, int n_power)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        int block_y = blockIdx.y;
+        int block_z = blockIdx.z;
+
+        int location_out =
+            idx + (block_y << n_power) + ((gridDim.y * block_z) << n_power);
+        int location_pt = idx + (block_y << n_power);
+
+        int ct_stride = (current_decomp_count << (n_power + 1));
+        int offset_pt = (first_decomp_count << n_power);
+
+        Data64 sum_ctpt = 0ULL;
+        for (int i = 0; i < iteration_count; i++)
+        {
+            int ct_offset = ct_indices[i] * ct_stride;
+            Data64 ct = baby_results[location_out + ct_offset];
+            Data64 pt = plaintexts[location_pt + (i * offset_pt)];
+            Data64 mul_ctpt = OPERATOR_GPU_64::mult(ct, pt, modulus[block_y]);
+            sum_ctpt =
+                OPERATOR_GPU_64::add(sum_ctpt, mul_ctpt, modulus[block_y]);
+        }
+
+        out[location_out] = sum_ctpt;
+    }
+
     __global__ void cipher_div_by_i_kernel(Data64* in1, Data64* out,
                                            Data64* ntt_table,
                                            Modulus64* modulus, int n_power)
