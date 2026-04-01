@@ -558,6 +558,12 @@ namespace heongpu
         }
     }
 
+    // Decomposes rotation indices into baby-step (N2) and giant-step (N1)
+    // components using the Baby-Step Giant-Step (BSGS) algorithm. Each rotation
+    // index r is split as: r = idx_n1 + idx_n2, where idx_n1 = floor(r/N1)*N1
+    // (giant-step) and idx_n2 = r % N1 (baby-step). The result is grouped by
+    // giant-step value, and the unique giant-step/baby-step rotations are
+    // collected into rot_n1/rot_n2 respectively.
     std::vector<std::vector<int>> bsgs_index(const std::vector<int>& array,
                                              int N1, std::vector<int>& rot_n1,
                                              std::vector<int>& rot_n2)
@@ -565,22 +571,25 @@ namespace heongpu
         std::vector<std::vector<int>> result;
         int n = array.size();
 
+        // Track unique giant-step and baby-step rotation values
         std::map<int, bool> rot_n1_map;
         std::map<int, bool> rot_n2_map;
 
+        // Group rotation indices by their giant-step component
         std::vector<int> temp;
         int prev_idx_n1 = (array[0] / N1) * N1;
         for (const auto& rot : array)
         {
-            int idx_n1 = (rot / N1) * N1;
+            int idx_n1 = (rot / N1) * N1; // giant-step component
             if (idx_n1 != prev_idx_n1)
             {
+                // Start a new group when the giant-step value changes
                 result.push_back(temp);
                 temp.clear();
                 prev_idx_n1 = idx_n1;
             }
 
-            int idx_n2 = rot % N1;
+            int idx_n2 = rot % N1; // baby-step component
 
             temp.push_back(idx_n1 + idx_n2);
 
@@ -588,12 +597,14 @@ namespace heongpu
             rot_n2_map[idx_n2] = true;
         }
 
-        result.push_back(temp);
+        result.push_back(temp); // push the last group
 
+        // Collect unique giant-step rotations (sorted by map key order)
         for (const auto& [key, _] : rot_n1_map)
         {
             rot_n1.push_back(key);
         }
+        // Collect unique baby-step rotations (sorted by map key order)
         for (const auto& [key, _] : rot_n2_map)
         {
             rot_n2.push_back(key);
@@ -601,10 +612,13 @@ namespace heongpu
         return result;
     }
 
+    // Find the N1 and N2 split that gives the closest ratio to the desired
+    // ratio
     int find_best_bsgs_split(const std::vector<int>& array, int max_N,
                              float bsgs_ratio)
     {
-        const float epsilon = 1e-8f;
+        int best_N1 = 1;
+        float best_diff = std::numeric_limits<float>::max();
 
         for (int N1 = 1; N1 < max_N; N1 <<= 1)
         {
@@ -612,22 +626,23 @@ namespace heongpu
             std::vector<int> rot_n2;
             bsgs_index(array, N1, rot_n1, rot_n2);
 
-            float current_ratio =
-                float(rot_n2.size() - 1) / float(rot_n1.size() - 1);
+            if (rot_n1.size() <= 1 || rot_n2.size() <= 1)
+                continue;
 
-            if (std::abs(current_ratio - bsgs_ratio) < epsilon)
+            float current_ratio = float(rot_n2.size()) / float(rot_n1.size());
+            float diff = std::abs(current_ratio - bsgs_ratio);
+
+            if (diff < best_diff)
             {
-                return N1;
-            }
-            if (current_ratio > bsgs_ratio)
-            {
-                return N1 / 2;
+                best_diff = diff;
+                best_N1 = N1;
             }
         }
 
-        return 1;
+        return best_N1;
     }
 
+    // Find a good N1 and N2 split as close as possible to the desired ratio
     std::vector<std::vector<int>> seperate_func_v2(const std::vector<int>& A,
                                                    int slots,
                                                    std::vector<int>& rot_n1,
@@ -635,7 +650,8 @@ namespace heongpu
                                                    float bsgs_ratio)
     {
         int N1 = find_best_bsgs_split(A, slots, bsgs_ratio);
-        return bsgs_index(A, N1, rot_n1, rot_n2);
+        auto result = bsgs_index(A, N1, rot_n1, rot_n2);
+        return result;
     }
 
     std::vector<int> unique_sort(const std::vector<int>& input)
