@@ -159,6 +159,28 @@ namespace heongpu
                                                           int n_power);
 
     ////////////////////////////////////////
+    // Double Hoisting Kernels
+
+    // NTT-domain Galois automorphism: permutes NTT slots directly,
+    // avoiding the INTT->coeff-permute->NTT round trip.
+    // perm_table: precomputed gather indices of size N, where
+    //   perm(j) = br((galois_elt * (2*br(j)+1) % 2N - 1) / 2)
+    // Grid: dim3((n >> 8), pql_count, 2), 256
+    __global__ void galois_permute_ntt_pql_kernel(Data64* input, Data64* output,
+                                                  int galois_elt, int n_power,
+                                                  int pql_count);
+
+    __global__ void broadcast_scale_P_kernel(Data64* c_ntt, Data64* output,
+                                             Data64* P_mod_q,
+                                             Modulus64* pq_modulus, int n_power,
+                                             int current_decomp_count,
+                                             int pql_count);
+
+    __global__ void addition_pql_kernel(Data64* in1, Data64* in2, Data64* out,
+                                        Modulus64* pq_modulus, int n_power,
+                                        int pql_count);
+
+    ////////////////////////////////////////
     // Optimized Hoisting-Rotations
 
     __global__ void ckks_duplicate_kernel(Data64* cipher, Data64* output,

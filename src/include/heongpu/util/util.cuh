@@ -153,16 +153,16 @@ namespace heongpu
         }
 
         EncodingMatrixConfig(LinearTransformType lt_type, int level_start)
-            : lt_type_(lt_type), level_start_(level_start), bsgs_ratio_(2.0)
+            : EncodingMatrixConfig(lt_type, level_start, 2.0)
         {
-            if (lt_type == LinearTransformType::COEFFS_TO_SLOTS)
-            {
-                piece_ = 4;
-            }
-            else
-            {
-                piece_ = 3;
-            }
+        }
+
+        EncodingMatrixConfig(LinearTransformType lt_type, int level_start,
+                             double bsgs_ratio)
+            : lt_type_(lt_type), level_start_(level_start),
+              bsgs_ratio_(bsgs_ratio)
+        {
+            piece_ = (lt_type == LinearTransformType::COEFFS_TO_SLOTS) ? 4 : 3;
         }
 
         EncodingMatrixConfig(LinearTransformType lt_type, int level_start,

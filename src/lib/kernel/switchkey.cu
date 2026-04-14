@@ -1456,6 +1456,103 @@ namespace heongpu
                    ((gridDim.y << n_power) * block_z)] = result_value;
     }
 
+    // Double Hoisting Kernels
+
+    // NTT-domain Galois automorphism X -> X^galois_elt, computed on the fly.
+    //
+    // In the bit-reversed NTT layout, slot j holds the evaluation of the
+    // polynomial at the primitive 2N-th root of unity psi raised to the
+    // odd power (2·br(j) + 1), where br(j) is the n_power-bit reversal
+    // of j.  The automorphism X -> X^k maps evaluation point psi^e to
+    // psi^(k·e mod 2N), so it becomes a pure index gather in NTT domain
+    // (no coefficient negation needed, unlike the coefficient-domain
+    // version).
+    //
+    // Per-thread formula (one output slot per thread):
+    //   1. br_j    = bit-reverse of destination index j      (via __brev)
+    //   2. exp_j   = 2·br_j + 1         (odd evaluation exponent at slot j)
+    //   3. new_exp = k · exp_j mod 2N    (automorphed exponent, still odd)
+    //   4. s       = (new_exp - 1) / 2   (logical NTT index of source slot)
+    //   5. src_idx = bit-reverse of s    (physical array position to gather)
+    //
+    // Grid: dim3((n >> 8), pql_count, 2), block: 256
+    //   blockIdx.x · 256 + threadIdx.x  ->  ring element index  (N threads)
+    //   blockIdx.y                       ->  RNS / PQ_l limb
+    //   blockIdx.z                       ->  ciphertext component (0 or 1)
+    __global__ void galois_permute_ntt_pql_kernel(Data64* input, Data64* output,
+                                                  int galois_elt, int n_power,
+                                                  int pql_count)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        int block_y = blockIdx.y;
+        int block_z = blockIdx.z;
+
+        // __brev returns a full 32-bit reversal; shift right to keep only
+        // the low n_power bits (i.e. an n_power-bit bit-reversal).
+        int shift = 32 - n_power;
+        int two_N = 2 << n_power; // = 2N
+        int br_j = __brev(idx) >> shift; // bit-reverse destination idx
+        int exp_j = 2 * br_j + 1; // odd eval exponent at slot j
+        int new_exp = (int) (((long long) galois_elt * exp_j) %
+                             two_N); // automorphed exponent
+        int s = (new_exp - 1) >> 1; // logical NTT index of source
+        int src_idx =
+            __brev(s) >> shift; // physical (bit-reversed) source position
+
+        output[idx + (block_y << n_power) +
+               ((pql_count << n_power) * block_z)] =
+            input[src_idx + (block_y << n_power) +
+                  ((pql_count << n_power) * block_z)];
+    }
+
+    // Creates P*c in PQ_l NTT domain from Q_l NTT input.
+    // Q limbs: (P mod q_j) * c[j]. P limbs: 0.
+    // Grid: dim3((n >> 8), pql_count, 1), 256
+    __global__ void broadcast_scale_P_kernel(Data64* c_ntt, Data64* output,
+                                             Data64* P_mod_q,
+                                             Modulus64* pq_modulus, int n_power,
+                                             int current_decomp_count,
+                                             int pql_count)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
+        int block_y = blockIdx.y; // PQ_l limb index
+
+        Data64 result;
+        if (block_y < current_decomp_count)
+        {
+            // Q limb: P_mod_q[j] * c[j] mod q_j
+            Data64 c_val = c_ntt[idx + (block_y << n_power)];
+            result = OPERATOR_GPU_64::mult(c_val, P_mod_q[block_y],
+                                           pq_modulus[block_y]);
+        }
+        else
+        {
+            // P limb: P mod p_k = 0
+            result = 0;
+        }
+
+        output[idx + (block_y << n_power)] = result;
+    }
+
+    // Element-wise modular addition for 2-component PQ_l polynomials.
+    // Grid: dim3((n >> 8), pql_count, 2), 256
+    __global__ void addition_pql_kernel(Data64* in1, Data64* in2, Data64* out,
+                                        Modulus64* pq_modulus, int n_power,
+                                        int pql_count)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x; // Ring Sizes
+        int block_y = blockIdx.y; // PQ_l limb index
+        int block_z = blockIdx.z; // Cipher component (0 or 1)
+
+        int offset =
+            idx + (block_y << n_power) + ((pql_count << n_power) * block_z);
+
+        Data64 val1 = in1[offset];
+        Data64 val2 = in2[offset];
+
+        out[offset] = OPERATOR_GPU_64::add(val1, val2, pq_modulus[block_y]);
+    }
+
     // Optimized Hoisting-Rotations
 
     __global__ void ckks_duplicate_kernel(Data64* cipher, Data64* output,

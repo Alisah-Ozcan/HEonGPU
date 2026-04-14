@@ -60,6 +60,11 @@ namespace heongpu
         int iteration_count, int current_decomp_count, int first_decomp_count,
         int n_power);
 
+    __global__ void cipherplain_multiply_accumulate_indexed_kernel(
+        Data64* baby_results, Data64* plaintexts, Data64* out,
+        Modulus64* modulus, int* ct_indices, int iteration_count,
+        int current_decomp_count, int first_decomp_count, int n_power);
+
     __global__ void cipher_div_by_i_kernel(Data64* in1, Data64* out,
                                            Data64* ntt_table,
                                            Modulus64* modulus, int n_power);
