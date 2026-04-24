@@ -3386,7 +3386,7 @@ namespace heongpu
 
             // Rescale
             double scale = static_cast<double>(
-                context_->prime_vector_[current_decomp_count].value);
+                context_->prime_vector_[current_decomp_count-1].value);
             result.scale_ = result.scale_ * scale;
             result.rescale_required_ = true;
             rescale_inplace(result, options);
